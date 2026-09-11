@@ -8,4 +8,5 @@ class SynkColors {
   static const Color orange = Color(0xFFFF9F5C);
   static const Color orangeDark = Color(0xFFFF7A36);
   static const Color teal = Color(0xFF4FA89B);
+  static const Color backgroundLight = Color(0xFFFFF5EF);
 }
