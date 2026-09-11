@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/welcome_model.dart';
+import '../views/login_view.dart';
 
 class WelcomeController extends ChangeNotifier {
   final PageController pageController = PageController();
@@ -49,8 +50,13 @@ class WelcomeController extends ChangeNotifier {
   }
 
   void onLogIn(BuildContext context) {
-    // Route to Log In screen
-  }
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => const LoginView(),
+    ),
+  );
+}
 
   @override
   void dispose() {
