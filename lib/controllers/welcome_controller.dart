@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/welcome_model.dart';
 import '../views/login_view.dart';
+import '../views/onboarding_screen.dart';
 
 class WelcomeController extends ChangeNotifier {
   final PageController pageController = PageController();
@@ -46,8 +47,13 @@ class WelcomeController extends ChangeNotifier {
   }
 
   void onSignUp(BuildContext context) {
-    // Route to Sign Up screen
-  }
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => const OnboardingScreen(),
+    ),
+  );
+}
 
   void onLogIn(BuildContext context) {
   Navigator.push(
