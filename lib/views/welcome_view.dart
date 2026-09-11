@@ -173,7 +173,7 @@ class _WelcomeViewState extends State<WelcomeView>
     );
   }
 
-  // Slide 1: Clean Headline + Floating Continuous Activity Marquee
+  // Slide 1: Headline on top, larger and shifted Puzzle Image below
   Widget _buildSlideOne(BuildContext context, double scrollProgress) {
     final activities = _controller.model.activities;
     final marqueeOpacity = (1.0 - (scrollProgress * 3.0)).clamp(0.0, 1.0);
@@ -184,7 +184,7 @@ class _WelcomeViewState extends State<WelcomeView>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 75),
+            const Spacer(flex: 2),
             const Text(
               'Find your\nmissing piece.',
               style: TextStyle(
@@ -195,9 +195,20 @@ class _WelcomeViewState extends State<WelcomeView>
                 color: SynkColors.textPrimary,
               ),
             ),
-            const Spacer(),
-
-            // Moving Horizontal Emoji Stream
+            const SizedBox(height: 20),
+            Align(
+              alignment: Alignment.center,
+              child: Container(
+                margin: const EdgeInsets.only(right: 20.0),
+                child: Image.asset(
+                  'assets/puzzle.png',
+                  width: 420,
+                  height: 420,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+            const Spacer(flex: 1),
             Opacity(
               opacity: marqueeOpacity,
               child: SizedBox(
