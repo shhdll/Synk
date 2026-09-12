@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'forgot_password_view.dart';
 
 import '../controllers/login_controller.dart';
 import '../core/constants/synk_colors.dart';
@@ -285,8 +286,15 @@ class _LoginViewState extends State<LoginView> {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () {
-                        // Password recovery navigation will be added later.
-                      },
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => ForgotPasswordView(
+        initialEmail: _emailController.text.trim(),
+      ),
+    ),
+  );
+},
                       child: const Text(
                         'Forgot Password?',
                         style: TextStyle(
