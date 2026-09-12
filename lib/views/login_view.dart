@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../controllers/login_controller.dart';
 import '../core/constants/synk_colors.dart';
-import 'onboarding_view.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -62,7 +61,9 @@ class _LoginViewState extends State<LoginView> {
           content: Row(
             children: [
               Icon(
-                success ? Icons.check_circle_outline : Icons.error_outline,
+                success
+                    ? Icons.check_circle_outline
+                    : Icons.error_outline,
                 color: Colors.white,
               ),
               const SizedBox(width: 12),
@@ -77,7 +78,9 @@ class _LoginViewState extends State<LoginView> {
               ),
             ],
           ),
-          backgroundColor: success ? SynkColors.teal : const Color(0xFFE85D5D),
+          backgroundColor: success
+              ? SynkColors.teal
+              : const Color(0xFFE85D5D),
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.all(20),
           padding: const EdgeInsets.symmetric(
@@ -107,9 +110,19 @@ class _LoginViewState extends State<LoginView> {
                 children: [
                   const SizedBox(height: 20),
 
-                  // Application branding.
+                  // Back button and application branding.
                   Row(
                     children: [
+                      IconButton(
+                        onPressed: () {
+                          _loginController.goBack(context);
+                        },
+                        icon: const Icon(
+                          Icons.arrow_back_rounded,
+                          color: SynkColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
                       Container(
                         width: 44,
                         height: 44,
@@ -286,7 +299,7 @@ class _LoginViewState extends State<LoginView> {
 
                   const SizedBox(height: 28),
 
-                  // Rebuilds the button when the authentication state changes.
+                  // Rebuilds the button when authentication state changes.
                   AnimatedBuilder(
                     animation: _loginController,
                     builder: (context, _) {
@@ -341,12 +354,7 @@ class _LoginViewState extends State<LoginView> {
                       ),
                       TextButton(
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const OnboardingView(),
-                            ),
-                          );
+                          _loginController.onSignUp(context);
                         },
                         child: const Text(
                           'Sign Up',
@@ -367,4 +375,3 @@ class _LoginViewState extends State<LoginView> {
     );
   }
 }
-
