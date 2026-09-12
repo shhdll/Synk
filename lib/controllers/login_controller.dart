@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/auth_model.dart';
+import '../views/onboarding_view.dart';
 
 class LoginController extends ChangeNotifier {
   LoginController({AuthModel? authModel})
@@ -40,6 +41,20 @@ class LoginController extends ChangeNotifier {
       _setLoading(false);
     }
   }
+
+  // Opens onboarding before account registration.
+  void onSignUp(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const OnboardingView(),
+      ),
+    );
+  }
+
+  void goBack(BuildContext context) {
+  Navigator.pop(context);
+}
 
   // Signs out the current user.
   Future<bool> logout() async {
