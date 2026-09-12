@@ -6,6 +6,10 @@ import 'package:flutter/material.dart';
 import '../controllers/onboarding_controller.dart';
 import '../core/constants/synk_colors.dart';
 
+import '../controllers/signup_controller.dart';
+import 'signup/personal_details_slide.dart';
+import 'signup/account_setup_slide.dart';
+
 class OnboardingView extends StatefulWidget {
   const OnboardingView({super.key});
 
@@ -16,6 +20,7 @@ class OnboardingView extends StatefulWidget {
 class _OnboardingViewState extends State<OnboardingView>
     with SingleTickerProviderStateMixin {
   late final OnboardingController _controller;
+  late final SignupController _signupController;
   late final AnimationController _blobAnimationController;
   late final PageController _pageController;
 
@@ -45,6 +50,8 @@ class _OnboardingViewState extends State<OnboardingView>
     _controller = OnboardingController();
     _controller.addListener(_onControllerChanged);
 
+    _signupController = SignupController();
+
     _pageController = PageController();
     _pageController.addListener(_onPageScrollChanged);
 
@@ -72,6 +79,8 @@ class _OnboardingViewState extends State<OnboardingView>
   void dispose() {
     _controller.removeListener(_onControllerChanged);
     _controller.dispose();
+
+    _signupController.dispose();
 
     _pageController.removeListener(_onPageScrollChanged);
     _pageController.dispose();
@@ -102,9 +111,7 @@ class _OnboardingViewState extends State<OnboardingView>
         body: SafeArea(
           child: Stack(
             children: [
-              Positioned.fill(
-                child: _buildAnimatedBackground(),
-              ),
+              Positioned.fill(child: _buildAnimatedBackground()),
               Positioned.fill(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 28),
@@ -122,8 +129,11 @@ class _OnboardingViewState extends State<OnboardingView>
                             _buildInterestsStep(),
                             _buildActivityTypeStep(),
                             _buildLocationStep(),
-                            _buildInfoStep(),
-                            _buildFinalStep(),
+                            PersonalDetailsSlide(controller: _signupController),
+                            AccountSetupSlide(
+                              signupController: _signupController,
+                              onboardingController: _controller,
+                            ),
                           ],
                         ),
                       ),
@@ -164,10 +174,7 @@ class _OnboardingViewState extends State<OnboardingView>
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(14),
-            child: Image.asset(
-              'assets/synk_logo.png',
-              fit: BoxFit.contain,
-            ),
+            child: Image.asset('assets/synk_logo.png', fit: BoxFit.contain),
           ),
         ),
         const SizedBox(width: 12),
@@ -235,10 +242,7 @@ class _OnboardingViewState extends State<OnboardingView>
               left: layout.pinkLeft,
               child: _buildBlob(
                 SynkColors.pink,
-                _diameterForBlob(
-                  clampedPage,
-                  0,
-                ),
+                _diameterForBlob(clampedPage, 0),
               ),
             ),
 
@@ -247,10 +251,7 @@ class _OnboardingViewState extends State<OnboardingView>
               right: layout.orangeRight,
               child: _buildBlob(
                 SynkColors.orange,
-                _diameterForBlob(
-                  clampedPage,
-                  1,
-                ),
+                _diameterForBlob(clampedPage, 1),
               ),
             ),
 
@@ -266,18 +267,12 @@ class _OnboardingViewState extends State<OnboardingView>
             Positioned(
               bottom: layout.tealBottom,
               left: layout.tealLeft,
-              child: _buildBlob(
-                SynkColors.teal,
-                _tealDiameter(clampedPage),
-              ),
+              child: _buildBlob(SynkColors.teal, _tealDiameter(clampedPage)),
             ),
 
             Positioned.fill(
               child: BackdropFilter(
-                filter: ImageFilter.blur(
-                  sigmaX: 55,
-                  sigmaY: 55,
-                ),
+                filter: ImageFilter.blur(sigmaX: 55, sigmaY: 55),
                 child: const SizedBox.expand(),
               ),
             ),
@@ -301,19 +296,11 @@ class _OnboardingViewState extends State<OnboardingView>
     final progress = page.clamp(0.0, 4.0);
 
     if (progress <= 1.0) {
-      return Color.lerp(
-        SynkColors.orange,
-        SynkColors.pink,
-        progress,
-      )!;
+      return Color.lerp(SynkColors.orange, SynkColors.pink, progress)!;
     }
 
     if (progress <= 2.0) {
-      return Color.lerp(
-        SynkColors.pink,
-        SynkColors.orange,
-        progress - 1.0,
-      )!;
+      return Color.lerp(SynkColors.pink, SynkColors.orange, progress - 1.0)!;
     }
 
     return SynkColors.orange;
@@ -492,10 +479,7 @@ class _OnboardingViewState extends State<OnboardingView>
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 15,
-          vertical: 12,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
         decoration: BoxDecoration(
           color: isSelected
               ? SynkColors.orange.withValues(alpha: 0.20)
@@ -511,17 +495,13 @@ class _OnboardingViewState extends State<OnboardingView>
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              emoji,
-              style: const TextStyle(fontSize: 20),
-            ),
+            Text(emoji, style: const TextStyle(fontSize: 20)),
             const SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
                 fontSize: 15,
-                fontWeight:
-                    isSelected ? FontWeight.w700 : FontWeight.w600,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
                 color: SynkColors.textPrimary,
               ),
             ),
@@ -621,8 +601,7 @@ class _OnboardingViewState extends State<OnboardingView>
           title: 'In the city',
           value: 'In the city',
           selectedValue: _controller.locationPreference,
-          onTap: () =>
-              _controller.setLocationPreference('In the city'),
+          onTap: () => _controller.setLocationPreference('In the city'),
         ),
         const SizedBox(height: 10),
         _buildChoiceCard(
@@ -630,9 +609,7 @@ class _OnboardingViewState extends State<OnboardingView>
           title: 'Away from the city',
           value: 'Away from the city',
           selectedValue: _controller.locationPreference,
-          onTap: () => _controller.setLocationPreference(
-            'Away from the city',
-          ),
+          onTap: () => _controller.setLocationPreference('Away from the city'),
         ),
         const SizedBox(height: 10),
         _buildChoiceCard(
@@ -640,9 +617,7 @@ class _OnboardingViewState extends State<OnboardingView>
           title: 'I don’t mind',
           value: 'I don’t mind',
           selectedValue: _controller.locationPreference,
-          onTap: () => _controller.setLocationPreference(
-            'I don’t mind',
-          ),
+          onTap: () => _controller.setLocationPreference('I don’t mind'),
         ),
       ],
     );
@@ -695,10 +670,7 @@ class _OnboardingViewState extends State<OnboardingView>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            emoji,
-            style: const TextStyle(fontSize: 28),
-          ),
+          Text(emoji, style: const TextStyle(fontSize: 28)),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -748,11 +720,8 @@ class _OnboardingViewState extends State<OnboardingView>
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
-        width: 320 ,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 18,
-          vertical: 14,
-        ),
+        width: 320,
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         decoration: BoxDecoration(
           color: isSelected
               ? SynkColors.orange.withValues(alpha: 0.20)
@@ -767,18 +736,14 @@ class _OnboardingViewState extends State<OnboardingView>
         ),
         child: Row(
           children: [
-            Text(
-              emoji,
-              style: const TextStyle(fontSize: 23),
-            ),
+            Text(emoji, style: const TextStyle(fontSize: 23)),
             const SizedBox(width: 16),
             Expanded(
               child: Text(
                 title,
                 style: TextStyle(
                   fontSize: 17,
-                  fontWeight:
-                      isSelected ? FontWeight.w800 : FontWeight.w600,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                   color: SynkColors.textPrimary,
                 ),
               ),
@@ -800,8 +765,16 @@ class _OnboardingViewState extends State<OnboardingView>
   }
 
   Future<void> _goToNextPage() async {
+    // 1. If on Slide 4 (Personal Details), validate name, age, and gender first
+    if (_controller.currentStep == 3) {
+      final isValid = _signupController.validatePersonalDetails();
+      if (!isValid) return; // Halts transition and displays inline errors
+    }
+
+    // 2. Check the existing continuation guard
     if (!_canContinue()) return;
 
+    // 3. Final step check
     if (_controller.currentStep == 4) {
       _finishOnboarding();
       return;
@@ -861,18 +834,26 @@ class _OnboardingViewState extends State<OnboardingView>
                 ),
               ),
               Center(
-                child: _PressedSkipButton(
-                  onTap: _skipQuestion,
+                child: Visibility(
+                  visible: _controller.currentStep < 3,
+                  maintainSize: true,
+                  maintainAnimation: true,
+                  maintainState: true,
+                  child: _PressedSkipButton(onTap: _skipQuestion),
                 ),
               ),
               Align(
                 alignment: Alignment.centerRight,
-                child: _PressedCircleButton(
-                  icon: isLastStep
-                      ? Icons.check_rounded
-                      : Icons.arrow_forward_rounded,
-                  enabled: canContinue,
-                  onTap: canContinue ? _goToNextPage : null,
+                child: Visibility(
+                  visible: !isLastStep, // Hides the arrow on Slide 5 (Registration button submits instead)
+                  maintainSize: true,
+                  maintainAnimation: true,
+                  maintainState: true,
+                  child: _PressedCircleButton(
+                    icon: Icons.arrow_forward_rounded,
+                    enabled: canContinue,
+                    onTap: canContinue ? _goToNextPage : null,
+                  ),
                 ),
               ),
             ],
@@ -887,7 +868,6 @@ class _OnboardingViewState extends State<OnboardingView>
   // ---------------------------------------------------------------------------
   // PROGRESS
   // ---------------------------------------------------------------------------
-
   Widget _buildProgress() {
     const stepCount = 5;
 
@@ -895,12 +875,8 @@ class _OnboardingViewState extends State<OnboardingView>
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(stepCount, (index) {
         return Padding(
-          padding: EdgeInsets.only(
-            right: index == stepCount - 1 ? 0 : 7,
-          ),
-          child: _buildProgressItem(
-            _controller.currentStep == index,
-          ),
+          padding: EdgeInsets.only(right: index == stepCount - 1 ? 0 : 7),
+          child: _buildProgressItem(_controller.currentStep == index),
         );
       }),
     );
@@ -952,7 +928,7 @@ class _OnboardingViewState extends State<OnboardingView>
   void _finishOnboarding() {
     final data = _controller.onboardingData;
 
-  print(data);
+    print(data);
   }
 }
 
@@ -981,26 +957,16 @@ class _BlobLayout {
     required this.tealLeft,
   });
 
-  static _BlobLayout lerp(
-    _BlobLayout a,
-    _BlobLayout b,
-    double t,
-  ) {
+  static _BlobLayout lerp(_BlobLayout a, _BlobLayout b, double t) {
     return _BlobLayout(
       pinkTop: lerpDouble(a.pinkTop, b.pinkTop, t)!,
       pinkLeft: lerpDouble(a.pinkLeft, b.pinkLeft, t)!,
-      orangeBottom:
-          lerpDouble(a.orangeBottom, b.orangeBottom, t)!,
-      orangeRight:
-          lerpDouble(a.orangeRight, b.orangeRight, t)!,
-      smallTop:
-          lerpDouble(a.smallTop, b.smallTop, t)!,
-      smallRight:
-          lerpDouble(a.smallRight, b.smallRight, t)!,
-      tealBottom:
-          lerpDouble(a.tealBottom, b.tealBottom, t)!,
-      tealLeft:
-          lerpDouble(a.tealLeft, b.tealLeft, t)!,
+      orangeBottom: lerpDouble(a.orangeBottom, b.orangeBottom, t)!,
+      orangeRight: lerpDouble(a.orangeRight, b.orangeRight, t)!,
+      smallTop: lerpDouble(a.smallTop, b.smallTop, t)!,
+      smallRight: lerpDouble(a.smallRight, b.smallRight, t)!,
+      tealBottom: lerpDouble(a.tealBottom, b.tealBottom, t)!,
+      tealLeft: lerpDouble(a.tealLeft, b.tealLeft, t)!,
     );
   }
 }
@@ -1021,12 +987,10 @@ class _PressedCircleButton extends StatefulWidget {
   });
 
   @override
-  State<_PressedCircleButton> createState() =>
-      _PressedCircleButtonState();
+  State<_PressedCircleButton> createState() => _PressedCircleButtonState();
 }
 
-class _PressedCircleButtonState
-    extends State<_PressedCircleButton> {
+class _PressedCircleButtonState extends State<_PressedCircleButton> {
   bool _isPressed = false;
 
   void _setPressed(bool value) {
@@ -1040,12 +1004,9 @@ class _PressedCircleButtonState
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown:
-          widget.enabled ? (_) => _setPressed(true) : null,
-      onTapUp:
-          widget.enabled ? (_) => _setPressed(false) : null,
-      onTapCancel:
-          widget.enabled ? () => _setPressed(false) : null,
+      onTapDown: widget.enabled ? (_) => _setPressed(true) : null,
+      onTapUp: widget.enabled ? (_) => _setPressed(false) : null,
+      onTapCancel: widget.enabled ? () => _setPressed(false) : null,
       onTap: widget.enabled ? widget.onTap : null,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 100),
@@ -1056,14 +1017,12 @@ class _PressedCircleButtonState
           color: !widget.enabled
               ? Colors.white.withValues(alpha: 0.35)
               : _isPressed
-                  ? SynkColors.orange
-                  : Colors.white.withValues(alpha: 0.82),
+              ? SynkColors.orange
+              : Colors.white.withValues(alpha: 0.82),
           boxShadow: widget.enabled
               ? [
                   BoxShadow(
-                    color: SynkColors.orangeDark.withValues(
-                      alpha: 0.18,
-                    ),
+                    color: SynkColors.orangeDark.withValues(alpha: 0.18),
                     blurRadius: 12,
                     offset: const Offset(0, 5),
                   ),
@@ -1076,8 +1035,8 @@ class _PressedCircleButtonState
           color: !widget.enabled
               ? SynkColors.textSecondary.withValues(alpha: 0.4)
               : _isPressed
-                  ? Colors.white
-                  : SynkColors.textPrimary,
+              ? Colors.white
+              : SynkColors.textPrimary,
         ),
       ),
     );
@@ -1090,18 +1049,15 @@ class _PressedCircleButtonState
 
 class _PressedSkipButton extends StatefulWidget {
   final VoidCallback onTap;
+  final bool isVisible;
 
-  const _PressedSkipButton({
-    required this.onTap,
-  });
+  const _PressedSkipButton({required this.onTap, this.isVisible = true});
 
   @override
-  State<_PressedSkipButton> createState() =>
-      _PressedSkipButtonState();
+  State<_PressedSkipButton> createState() => _PressedSkipButtonState();
 }
 
-class _PressedSkipButtonState
-    extends State<_PressedSkipButton> {
+class _PressedSkipButtonState extends State<_PressedSkipButton> {
   bool _isPressed = false;
 
   void _setPressed(bool value) {
@@ -1112,24 +1068,28 @@ class _PressedSkipButtonState
 
   @override
   Widget build(BuildContext context) {
+    // If not visible, render an empty SizedBox with identical padding/height
+    // so layout alignments (dots, back/forward buttons) remain stable.
+    if (!widget.isVisible) {
+      return const SizedBox(
+        height: 25, // Height of the text + padding
+        child: SizedBox.shrink(),
+      );
+    }
+
     return GestureDetector(
       onTapDown: (_) => _setPressed(true),
       onTapUp: (_) => _setPressed(false),
       onTapCancel: () => _setPressed(false),
       onTap: widget.onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 4,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         child: AnimatedDefaultTextStyle(
           duration: const Duration(milliseconds: 100),
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w700,
-            color: _isPressed
-                ? SynkColors.orange
-                : SynkColors.textSecondary,
+            color: _isPressed ? SynkColors.orange : SynkColors.textSecondary,
           ),
           child: const Text('Skip'),
         ),
