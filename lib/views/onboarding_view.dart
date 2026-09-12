@@ -6,14 +6,14 @@ import 'package:flutter/material.dart';
 import '../controllers/onboarding_controller.dart';
 import '../core/constants/synk_colors.dart';
 
-class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({super.key});
+class OnboardingView extends StatefulWidget {
+  const OnboardingView({super.key});
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
+  State<OnboardingView> createState() => _OnboardingViewState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen>
+class _OnboardingViewState extends State<OnboardingView>
     with SingleTickerProviderStateMixin {
   late final OnboardingController _controller;
   late final AnimationController _blobAnimationController;
@@ -46,6 +46,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     _controller.addListener(_onControllerChanged);
 
     _pageController = PageController();
+    _pageController.addListener(_onPageScrollChanged);
 
     _blobAnimationController = AnimationController(
       vsync: this,
@@ -59,6 +60,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     if (mounted) setState(() {});
   }
 
+  void _onPageScrollChanged() {
+    if (mounted) setState(() {});
+  }
+
   void _onAnimationChanged() {
     if (mounted) setState(() {});
   }
@@ -68,6 +73,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     _controller.removeListener(_onControllerChanged);
     _controller.dispose();
 
+    _pageController.removeListener(_onPageScrollChanged);
     _pageController.dispose();
 
     _blobAnimationController.removeListener(_onAnimationChanged);
@@ -97,7 +103,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           child: Stack(
             children: [
               Positioned.fill(
-                child: _buildAnimatedBackground(currentStep),
+                child: _buildAnimatedBackground(),
               ),
               Positioned.fill(
                 child: Padding(
@@ -181,14 +187,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   // ---------------------------------------------------------------------------
   // ANIMATED BACKGROUND
   // ---------------------------------------------------------------------------
-  //
-  // Each onboarding step arranges the four background blobs in a different
-  // layout. Rather than repeating near-identical position math per step, each
-  // step supplies a small set of offset/scale factors that are applied to a
-  // shared formula. This keeps the "shape" of the animation in one place and
-  // makes it easy to add or tweak a step's layout.
 
-  Widget _buildAnimatedBackground(int step) {
+  Widget _buildAnimatedBackground() {
     return AnimatedBuilder(
       animation: _blobAnimationController,
       builder: (context, _) {
@@ -198,36 +198,86 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         final wave = math.sin(anim * math.pi);
         final reverseWave = math.cos(anim * math.pi);
 
-        final layout = _blobLayoutForStep(step, size, wave, reverseWave);
+        final page = _pageController.hasClients
+            ? (_pageController.page ?? _controller.currentStep.toDouble())
+            : _controller.currentStep.toDouble();
+
+        final clampedPage = page.clamp(0.0, 4.0);
+
+        final lowerStep = clampedPage.floor();
+        final upperStep = clampedPage.ceil();
+        final pageProgress = clampedPage - lowerStep;
+
+        final firstLayout = _blobLayoutForStep(
+          lowerStep,
+          size,
+          wave,
+          reverseWave,
+        );
+
+        final secondLayout = _blobLayoutForStep(
+          upperStep,
+          size,
+          wave,
+          reverseWave,
+        );
+
+        final layout = _BlobLayout.lerp(
+          firstLayout,
+          secondLayout,
+          pageProgress,
+        );
 
         return Stack(
           children: [
             Positioned(
               top: layout.pinkTop,
               left: layout.pinkLeft,
-              child: _buildBlob(SynkColors.pink, step == 1 ? 310 : 280),
+              child: _buildBlob(
+                SynkColors.pink,
+                _diameterForBlob(
+                  clampedPage,
+                  0,
+                ),
+              ),
             ),
+
             Positioned(
               bottom: layout.orangeBottom,
               right: layout.orangeRight,
-              child: _buildBlob(SynkColors.orange, step == 2 ? 350 : 320),
+              child: _buildBlob(
+                SynkColors.orange,
+                _diameterForBlob(
+                  clampedPage,
+                  1,
+                ),
+              ),
             ),
+
             Positioned(
               top: layout.smallTop,
               right: layout.smallRight,
               child: _buildBlob(
-                step == 1 ? SynkColors.pink : SynkColors.orange,
-                step == 2 ? 140 : 120,
+                _smallBlobColor(clampedPage),
+                _smallBlobDiameter(clampedPage),
               ),
             ),
+
             Positioned(
               bottom: layout.tealBottom,
               left: layout.tealLeft,
-              child: _buildBlob(SynkColors.teal, _tealDiameterForStep(step)),
+              child: _buildBlob(
+                SynkColors.teal,
+                _tealDiameter(clampedPage),
+              ),
             ),
+
             Positioned.fill(
               child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 55, sigmaY: 55),
+                filter: ImageFilter.blur(
+                  sigmaX: 55,
+                  sigmaY: 55,
+                ),
                 child: const SizedBox.expand(),
               ),
             ),
@@ -237,15 +287,61 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     );
   }
 
-  double _tealDiameterForStep(int step) {
-    switch (step) {
-      case 0:
-        return 150;
-      case 1:
-        return 180;
-      default:
-        return 135;
+  double _diameterForBlob(double page, int blob) {
+    final step = page.round();
+
+    if (blob == 0) {
+      return step == 1 ? 310 : 280;
     }
+
+    return step == 2 ? 350 : 320;
+  }
+
+  Color _smallBlobColor(double page) {
+    final progress = page.clamp(0.0, 4.0);
+
+    if (progress <= 1.0) {
+      return Color.lerp(
+        SynkColors.orange,
+        SynkColors.pink,
+        progress,
+      )!;
+    }
+
+    if (progress <= 2.0) {
+      return Color.lerp(
+        SynkColors.pink,
+        SynkColors.orange,
+        progress - 1.0,
+      )!;
+    }
+
+    return SynkColors.orange;
+  }
+
+  double _smallBlobDiameter(double page) {
+    if (page >= 1.0 && page <= 2.0) {
+      final progress = page - 1.0;
+      return 120 + (20 * progress);
+    }
+
+    if (page > 2.0) {
+      return 140;
+    }
+
+    return 120;
+  }
+
+  double _tealDiameter(double page) {
+    if (page < 1.0) {
+      return 150;
+    }
+
+    if (page < 2.0) {
+      return 150 + ((page - 1.0) * 30);
+    }
+
+    return 135;
   }
 
   _BlobLayout _blobLayoutForStep(
@@ -396,7 +492,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 15,
+          vertical: 12,
+        ),
         decoration: BoxDecoration(
           color: isSelected
               ? SynkColors.orange.withValues(alpha: 0.20)
@@ -412,13 +511,17 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 20)),
+            Text(
+              emoji,
+              style: const TextStyle(fontSize: 20),
+            ),
             const SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
                 fontSize: 15,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                fontWeight:
+                    isSelected ? FontWeight.w700 : FontWeight.w600,
                 color: SynkColors.textPrimary,
               ),
             ),
@@ -464,7 +567,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           selectedValue: _controller.activityType,
           onTap: () => _controller.setActivityType('Indoor'),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 10),
         _buildChoiceCard(
           emoji: '🌳',
           title: 'Outdoor',
@@ -472,7 +575,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           selectedValue: _controller.activityType,
           onTap: () => _controller.setActivityType('Outdoor'),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 10),
         _buildChoiceCard(
           emoji: '✨',
           title: 'I don’t mind',
@@ -518,24 +621,28 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           title: 'In the city',
           value: 'In the city',
           selectedValue: _controller.locationPreference,
-          onTap: () => _controller.setLocationPreference('In the city'),
+          onTap: () =>
+              _controller.setLocationPreference('In the city'),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 10),
         _buildChoiceCard(
           emoji: '🛣️',
           title: 'Away from the city',
           value: 'Away from the city',
           selectedValue: _controller.locationPreference,
-          onTap: () =>
-              _controller.setLocationPreference('Away from the city'),
+          onTap: () => _controller.setLocationPreference(
+            'Away from the city',
+          ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 10),
         _buildChoiceCard(
           emoji: '✨',
           title: 'I don’t mind',
           value: 'I don’t mind',
           selectedValue: _controller.locationPreference,
-          onTap: () => _controller.setLocationPreference('I don’t mind'),
+          onTap: () => _controller.setLocationPreference(
+            'I don’t mind',
+          ),
         ),
       ],
     );
@@ -544,9 +651,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   // ---------------------------------------------------------------------------
   // PAGE 4 — INFORMATION
   // ---------------------------------------------------------------------------
-  //
-  // TODO: Not yet designed. `_buildInfoCard` below is ready to use once this
-  // page's content (copy + which info cards to show) is decided.
 
   Widget _buildInfoStep() {
     return const Center(
@@ -561,8 +665,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   // ---------------------------------------------------------------------------
   // PAGE 5 — FINAL INFORMATION
   // ---------------------------------------------------------------------------
-  //
-  // TODO: Not yet designed.
 
   Widget _buildFinalStep() {
     return const Center(
@@ -593,7 +695,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 28)),
+          Text(
+            emoji,
+            style: const TextStyle(fontSize: 28),
+          ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -643,8 +748,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 19),
+        width: 320 ,
+        padding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 14,
+        ),
         decoration: BoxDecoration(
           color: isSelected
               ? SynkColors.orange.withValues(alpha: 0.20)
@@ -659,14 +767,18 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         ),
         child: Row(
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 28)),
+            Text(
+              emoji,
+              style: const TextStyle(fontSize: 23),
+            ),
             const SizedBox(width: 16),
             Expanded(
               child: Text(
                 title,
                 style: TextStyle(
                   fontSize: 17,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  fontWeight:
+                      isSelected ? FontWeight.w800 : FontWeight.w600,
                   color: SynkColors.textPrimary,
                 ),
               ),
@@ -688,10 +800,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   }
 
   Future<void> _goToNextPage() async {
-    // Pages 1-3 require an answer.
     if (!_canContinue()) return;
 
-    // Page 5 is the final page.
     if (_controller.currentStep == 4) {
       _finishOnboarding();
       return;
@@ -704,7 +814,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   }
 
   Future<void> _goToPreviousPage() async {
-    // Page 1 returns to Create Account / Log In.
     if (_controller.currentStep == 0) {
       Navigator.pop(context);
       return;
@@ -717,7 +826,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   }
 
   Future<void> _skipQuestion() async {
-    // On the final page, Skip also finishes.
     if (_controller.currentStep == 4) {
       _finishOnboarding();
       return;
@@ -753,7 +861,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 ),
               ),
               Center(
-                child: _PressedSkipButton(onTap: _skipQuestion),
+                child: _PressedSkipButton(
+                  onTap: _skipQuestion,
+                ),
               ),
               Align(
                 alignment: Alignment.centerRight,
@@ -785,8 +895,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(stepCount, (index) {
         return Padding(
-          padding: EdgeInsets.only(right: index == stepCount - 1 ? 0 : 7),
-          child: _buildProgressItem(_controller.currentStep == index),
+          padding: EdgeInsets.only(
+            right: index == stepCount - 1 ? 0 : 7,
+          ),
+          child: _buildProgressItem(
+            _controller.currentStep == index,
+          ),
         );
       }),
     );
@@ -815,14 +929,17 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     switch (_controller.currentStep) {
       case 0:
         return _controller.selectedInterests.isNotEmpty;
+
       case 1:
         return _controller.activityType != null;
+
       case 2:
         return _controller.locationPreference != null;
+
       case 3:
       case 4:
-        // Pages 4 and 5 do not require a selection.
         return true;
+
       default:
         return false;
     }
@@ -833,15 +950,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   // ---------------------------------------------------------------------------
 
   void _finishOnboarding() {
-    // TODO:
-    // 1. Save the onboarding preferences.
-    // 2. Connect them to the newly created user account.
-    // 3. Navigate to the main Synk screen.
-    //
-    // Current saved values:
-    // _controller.selectedInterests
-    // _controller.activityType
-    // _controller.locationPreference
+    final data = _controller.onboardingData;
+
+  print(data);
   }
 }
 
@@ -849,7 +960,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 // BLOB LAYOUT
 // =============================================================================
 
-/// Position offsets for the four background blobs on a given onboarding step.
 class _BlobLayout {
   final double pinkTop;
   final double pinkLeft;
@@ -870,6 +980,29 @@ class _BlobLayout {
     required this.tealBottom,
     required this.tealLeft,
   });
+
+  static _BlobLayout lerp(
+    _BlobLayout a,
+    _BlobLayout b,
+    double t,
+  ) {
+    return _BlobLayout(
+      pinkTop: lerpDouble(a.pinkTop, b.pinkTop, t)!,
+      pinkLeft: lerpDouble(a.pinkLeft, b.pinkLeft, t)!,
+      orangeBottom:
+          lerpDouble(a.orangeBottom, b.orangeBottom, t)!,
+      orangeRight:
+          lerpDouble(a.orangeRight, b.orangeRight, t)!,
+      smallTop:
+          lerpDouble(a.smallTop, b.smallTop, t)!,
+      smallRight:
+          lerpDouble(a.smallRight, b.smallRight, t)!,
+      tealBottom:
+          lerpDouble(a.tealBottom, b.tealBottom, t)!,
+      tealLeft:
+          lerpDouble(a.tealLeft, b.tealLeft, t)!,
+    );
+  }
 }
 
 // =============================================================================
@@ -888,23 +1021,31 @@ class _PressedCircleButton extends StatefulWidget {
   });
 
   @override
-  State<_PressedCircleButton> createState() => _PressedCircleButtonState();
+  State<_PressedCircleButton> createState() =>
+      _PressedCircleButtonState();
 }
 
-class _PressedCircleButtonState extends State<_PressedCircleButton> {
+class _PressedCircleButtonState
+    extends State<_PressedCircleButton> {
   bool _isPressed = false;
 
   void _setPressed(bool value) {
     if (!widget.enabled) return;
-    if (mounted) setState(() => _isPressed = value);
+
+    if (mounted) {
+      setState(() => _isPressed = value);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown: widget.enabled ? (_) => _setPressed(true) : null,
-      onTapUp: widget.enabled ? (_) => _setPressed(false) : null,
-      onTapCancel: widget.enabled ? () => _setPressed(false) : null,
+      onTapDown:
+          widget.enabled ? (_) => _setPressed(true) : null,
+      onTapUp:
+          widget.enabled ? (_) => _setPressed(false) : null,
+      onTapCancel:
+          widget.enabled ? () => _setPressed(false) : null,
       onTap: widget.enabled ? widget.onTap : null,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 100),
@@ -920,7 +1061,9 @@ class _PressedCircleButtonState extends State<_PressedCircleButton> {
           boxShadow: widget.enabled
               ? [
                   BoxShadow(
-                    color: SynkColors.orangeDark.withValues(alpha: 0.18),
+                    color: SynkColors.orangeDark.withValues(
+                      alpha: 0.18,
+                    ),
                     blurRadius: 12,
                     offset: const Offset(0, 5),
                   ),
@@ -948,17 +1091,23 @@ class _PressedCircleButtonState extends State<_PressedCircleButton> {
 class _PressedSkipButton extends StatefulWidget {
   final VoidCallback onTap;
 
-  const _PressedSkipButton({required this.onTap});
+  const _PressedSkipButton({
+    required this.onTap,
+  });
 
   @override
-  State<_PressedSkipButton> createState() => _PressedSkipButtonState();
+  State<_PressedSkipButton> createState() =>
+      _PressedSkipButtonState();
 }
 
-class _PressedSkipButtonState extends State<_PressedSkipButton> {
+class _PressedSkipButtonState
+    extends State<_PressedSkipButton> {
   bool _isPressed = false;
 
   void _setPressed(bool value) {
-    if (mounted) setState(() => _isPressed = value);
+    if (mounted) {
+      setState(() => _isPressed = value);
+    }
   }
 
   @override
@@ -969,13 +1118,18 @@ class _PressedSkipButtonState extends State<_PressedSkipButton> {
       onTapCancel: () => _setPressed(false),
       onTap: widget.onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 4,
+        ),
         child: AnimatedDefaultTextStyle(
           duration: const Duration(milliseconds: 100),
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w700,
-            color: _isPressed ? SynkColors.orange : SynkColors.textSecondary,
+            color: _isPressed
+                ? SynkColors.orange
+                : SynkColors.textSecondary,
           ),
           child: const Text('Skip'),
         ),

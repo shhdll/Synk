@@ -1,20 +1,22 @@
 import 'package:flutter/foundation.dart';
 
 class OnboardingController extends ChangeNotifier {
+ 
+  static const int stepCount = 5;
+  static const int lastStepIndex = stepCount - 1;
+
   int _currentStep = 0;
 
-  // Step 1
   final List<String> _selectedInterests = [];
 
-  // Step 2
   String? _activityType;
 
-  // Step 3
   String? _locationPreference;
 
   int get currentStep => _currentStep;
 
-  List<String> get selectedInterests => _selectedInterests;
+  List<String> get selectedInterests =>
+      List.unmodifiable(_selectedInterests);
 
   String? get activityType => _activityType;
 
@@ -40,27 +42,16 @@ class OnboardingController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void next() {
-    if (_currentStep < 2) {
-      _currentStep++;
+  void goToStep(int step) {
+    if (step >= 0 && step <= lastStepIndex && step != _currentStep) {
+      _currentStep = step;
       notifyListeners();
     }
   }
 
-  void skipQuestion() {
-    next();
-  }
-
-  void previous() {
-  if (_currentStep > 0) {
-    _currentStep--;
-    notifyListeners();
-  }
-}
-void goToStep(int step) {
-  if (step >= 0 && step <= 4) {
-    _currentStep = step;
-    notifyListeners();
-  }
-}
+  Map<String, dynamic> get onboardingData => {
+        'interests': _selectedInterests,
+        'activityType': _activityType,
+        'locationPreference': _locationPreference,
+      };
 }

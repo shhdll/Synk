@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../models/welcome_model.dart';
+
 import '../views/login_view.dart';
-import '../views/onboarding_screen.dart';
+import '../views/onboarding_view.dart';
 
 class WelcomeController extends ChangeNotifier {
   final PageController pageController = PageController();
@@ -50,7 +51,7 @@ class WelcomeController extends ChangeNotifier {
   Navigator.push(
     context,
     MaterialPageRoute(
-      builder: (context) => const OnboardingScreen(),
+      builder: (context) => const OnboardingView(),
     ),
   );
 }
