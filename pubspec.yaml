@@ -30,3 +30,4 @@ flutter:
     - .env
     - assets/
     - assets/synk_logo.png
+    - assets/synk_logo_transparent.png

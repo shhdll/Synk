@@ -9,9 +9,17 @@ import 'widgets/empty_state.dart';
 import 'widgets/section_label.dart';
 
 class HomeView extends StatelessWidget {
-  const HomeView({super.key, required this.activityStore});
+  const HomeView({
+    super.key,
+    required this.activityStore,
+    this.isNewUser = false,
+  });
 
   final ActivityStore activityStore;
+
+  // True when arriving straight from registration, so the greeting reads
+  // as a first hello rather than a returning-user welcome.
+  final bool isNewUser;
 
   String get _firstName {
     final fullName =
@@ -43,7 +51,9 @@ class HomeView extends StatelessWidget {
                         _buildSearchBar(),
                         const SizedBox(height: 24),
                         Text(
-                          'Hey, $_firstName 👋',
+                          isNewUser
+                              ? 'Welcome, $_firstName 👋'
+                              : 'Hey, $_firstName 👋',
                           style: const TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.w900,
@@ -52,9 +62,11 @@ class HomeView extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 6),
-                        const Text(
-                          "Here's what's coming up for you.",
-                          style: TextStyle(
+                        Text(
+                          isNewUser
+                              ? "You're all set. Here's what's coming up for you."
+                              : "Here's what's coming up for you.",
+                          style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
                             color: SynkColors.textSecondary,

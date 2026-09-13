@@ -11,9 +11,17 @@ import 'profile_view.dart';
 enum HomeTab { profile, map, activities, home }
 
 class MainShell extends StatefulWidget {
-  const MainShell({super.key, this.initialTab = HomeTab.home});
+  const MainShell({
+    super.key,
+    this.initialTab = HomeTab.home,
+    this.isNewUser = false,
+  });
 
   final HomeTab initialTab;
+
+  // True when arriving straight from registration, so the Home tab's
+  // greeting reads as a first hello rather than a returning-user welcome.
+  final bool isNewUser;
 
   @override
   State<MainShell> createState() => _MainShellState();
@@ -53,7 +61,7 @@ class _MainShellState extends State<MainShell> {
       const ProfileView(),
       const MapView(),
       ActivitiesView(activityStore: _activityStore),
-      HomeView(activityStore: _activityStore),
+      HomeView(activityStore: _activityStore, isNewUser: widget.isNewUser),
     ];
     final stackIndex = switch (_tab) {
       HomeTab.profile => 0,

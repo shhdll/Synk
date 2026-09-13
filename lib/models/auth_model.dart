@@ -5,6 +5,13 @@ class AuthModel {
   // Provides access to Supabase authentication.
   final SupabaseClient _supabase = Supabase.instance.client;
 
+  // Email of the currently signed-in user, if any.
+  String? get currentUserEmail => _supabase.auth.currentUser?.email;
+
+  // Display name of the currently signed-in user, set at sign-up.
+  String? get currentUserName =>
+      _supabase.auth.currentUser?.userMetadata?['full_name'] as String?;
+
   // Signs in an existing user with an email and password.
   Future<AuthResponse> signIn({
     required String email,

@@ -142,7 +142,8 @@ class AccountSetupSlide extends StatelessWidget {
                             if (res?.user != null && context.mounted) {
                               Navigator.of(context).pushAndRemoveUntil(
                                 MaterialPageRoute(
-                                  builder: (context) => const MainShell(),
+                                  builder: (context) =>
+                                      const MainShell(isNewUser: true),
                                 ),
                                 (route) => false,
                               );
