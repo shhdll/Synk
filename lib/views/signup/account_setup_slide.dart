@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../controllers/signup_controller.dart';
 import '../../controllers/onboarding_controller.dart';
 import '../../core/constants/synk_colors.dart';
+import '../home/main_shell.dart';
 
 class AccountSetupSlide extends StatelessWidget {
   final SignupController signupController;
@@ -139,10 +140,11 @@ class AccountSetupSlide extends StatelessWidget {
                               context: context,
                             );
                             if (res?.user != null && context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Welcome to Synk!'),
+                              Navigator.of(context).pushAndRemoveUntil(
+                                MaterialPageRoute(
+                                  builder: (context) => const MainShell(),
                                 ),
+                                (route) => false,
                               );
                             }
                           },

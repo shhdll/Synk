@@ -39,4 +39,18 @@ class AuthModel {
       UserAttributes(password: newPassword),
     );
   }
+
+  // Merges the given fields into the current user's metadata (existing
+  // keys not included here are left untouched).
+  Future<UserResponse> updateMetadata(Map<String, dynamic> data) async {
+    return await _supabase.auth.updateUser(UserAttributes(data: data));
+  }
+
+  // Requests an email change. Supabase emails the new address a
+  // confirmation link before the change actually takes effect.
+  Future<UserResponse> updateEmail(String newEmail) async {
+    return await _supabase.auth.updateUser(
+      UserAttributes(email: newEmail.trim()),
+    );
+  }
 }

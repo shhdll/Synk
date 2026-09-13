@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'forgot_password_view.dart';
+import 'home/main_shell.dart';
 
 import '../controllers/login_controller.dart';
 import '../core/constants/synk_colors.dart';
@@ -50,27 +51,26 @@ class _LoginViewState extends State<LoginView> {
       return;
     }
 
-    final message = success
-        ? 'Logged in successfully.'
-        : _loginController.errorMessage ?? 'Unable to log in.';
+    if (success) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const MainShell()),
+        (route) => false,
+      );
+      return;
+    }
 
-    // Displays the result of the login attempt.
+    // Displays the login error.
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
           content: Row(
             children: [
-              Icon(
-                success
-                    ? Icons.check_circle_outline
-                    : Icons.error_outline,
-                color: Colors.white,
-              ),
+              const Icon(Icons.error_outline, color: Colors.white),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  message,
+                  _loginController.errorMessage ?? 'Unable to log in.',
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -79,9 +79,7 @@ class _LoginViewState extends State<LoginView> {
               ),
             ],
           ),
-          backgroundColor: success
-              ? SynkColors.teal
-              : const Color(0xFFE85D5D),
+          backgroundColor: const Color(0xFFE85D5D),
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.all(20),
           padding: const EdgeInsets.symmetric(
