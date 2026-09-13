@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'forgot_password_view.dart';
+import 'home_view.dart';
 
 import '../controllers/login_controller.dart';
 import '../core/constants/synk_colors.dart';
@@ -94,6 +95,15 @@ class _LoginViewState extends State<LoginView> {
           duration: const Duration(seconds: 3),
         ),
       );
+
+    // Takes the user to the home screen after a successful login, clearing
+    // the auth screens from the stack so Back cannot return to them.
+    if (success) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const HomeView()),
+        (route) => false,
+      );
+    }
   }
 
   @override
