@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
+//
 import '../../core/constants/synk_colors.dart';
 import '../../models/activity_model.dart';
 import 'widgets/activity_card.dart';
@@ -17,8 +17,7 @@ class HomeView extends StatelessWidget {
 
   final ActivityStore activityStore;
 
-  // True when arriving straight from registration, so the greeting reads
-  // as a first hello rather than a returning-user welcome.
+ 
   final bool isNewUser;
 
   String get _firstName {
