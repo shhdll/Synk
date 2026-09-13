@@ -25,35 +25,6 @@ class _HomeViewState extends State<HomeView> {
     super.dispose();
   }
 
-  Future<void> _handleLogout() async {
-    await _homeController.logout(context);
-
-    if (!mounted) return;
-
-    final error = _homeController.errorMessage;
-    if (error != null) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(
-              error,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            backgroundColor: const Color(0xFFE85D5D),
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.all(20),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-        );
-    }
-  }
-
   // Placeholder for sections that don't have a screen yet.
   void _showComingSoon(String feature) {
     ScaffoldMessenger.of(context)
@@ -83,47 +54,59 @@ class _HomeViewState extends State<HomeView> {
     required VoidCallback onPressed,
     bool selected = false,
   }) {
-    final color = selected ? SynkColors.orangeDark : SynkColors.textSecondary;
-    return IconButton(
-      onPressed: onPressed,
-      icon: Icon(icon, color: color, size: 30),
-      tooltip: label,
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: 48,
+        height: 48,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected
+              ? SynkColors.orange.withValues(alpha: 0.18)
+              : Colors.transparent,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: SynkColors.textSecondary, size: 26),
+      ),
     );
   }
 
   Widget _buildBottomNav() {
-    return BottomAppBar(
-      color: Colors.white,
-      shape: const CircularNotchedRectangle(),
-      notchMargin: 8,
-      height: 64,
-      padding: EdgeInsets.zero,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _navIcon(
-            icon: Icons.person_outline_rounded,
-            label: 'Profile',
-            onPressed: () => _showComingSoon('Profile'),
-          ),
-          _navIcon(
-            icon: Icons.location_on_outlined,
-            label: 'Location',
-            onPressed: () => _showComingSoon('Location'),
-          ),
-          const SizedBox(width: 40), // Space for the notched FAB.
-          _navIcon(
-            icon: Icons.chat_bubble_outline_rounded,
-            label: 'Chat',
-            onPressed: () => _showComingSoon('Chat'),
-          ),
-          _navIcon(
-            icon: Icons.home_rounded,
-            label: 'Home',
-            selected: true,
-            onPressed: () {},
-          ),
-        ],
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      child: BottomAppBar(
+        color: Colors.white,
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8,
+        height: 64,
+        padding: EdgeInsets.zero,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _navIcon(
+              icon: Icons.person_outline_rounded,
+              label: 'Profile',
+              onPressed: () => _showComingSoon('Profile'),
+            ),
+            _navIcon(
+              icon: Icons.location_on_outlined,
+              label: 'Location',
+              onPressed: () => _showComingSoon('Location'),
+            ),
+            const SizedBox(width: 64), // Space for the notched button.
+            _navIcon(
+              icon: Icons.calendar_today_outlined,
+              label: 'Calendar',
+              onPressed: () => _showComingSoon('Calendar'),
+            ),
+            _navIcon(
+              icon: Icons.home_rounded,
+              label: 'Home',
+              selected: true,
+              onPressed: () {},
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -133,11 +116,31 @@ class _HomeViewState extends State<HomeView> {
     return Scaffold(
       backgroundColor: SynkColors.background,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showComingSoon('Create Activity'),
-        backgroundColor: SynkColors.orangeDark,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add_rounded, color: Colors.white, size: 32),
+      floatingActionButton: GestureDetector(
+        onTap: () => _showComingSoon('Create Activity'),
+        child: Container(
+          width: 58,
+          height: 58,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            // A muted, pastel tint of the brand orange rather than the
+            // full-strength color, to sit quietly on the bar.
+            color: Color.lerp(SynkColors.orange, Colors.white, 0.45),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.10),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.add_rounded,
+            color: SynkColors.orangeDark,
+            size: 26,
+          ),
+        ),
       ),
       bottomNavigationBar: _buildBottomNav(),
       body: SafeArea(
@@ -174,29 +177,6 @@ class _HomeViewState extends State<HomeView> {
                       color: SynkColors.textPrimary,
                     ),
                   ),
-                  const Spacer(),
-                  AnimatedBuilder(
-                    animation: _homeController,
-                    builder: (context, _) {
-                      return IconButton(
-                        onPressed:
-                            _homeController.isLoading ? null : _handleLogout,
-                        icon: _homeController.isLoading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: SynkColors.textSecondary,
-                                ),
-                              )
-                            : const Icon(
-                                Icons.logout_rounded,
-                                color: SynkColors.textSecondary,
-                              ),
-                      );
-                    },
-                  ),
                 ],
               ),
 
@@ -205,15 +185,11 @@ class _HomeViewState extends State<HomeView> {
               // Search bar.
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Colors.white.withValues(alpha: 0.45),
                   borderRadius: BorderRadius.circular(30),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                  border: Border.all(
+                    color: SynkColors.textSecondary.withValues(alpha: 0.10),
+                  ),
                 ),
                 child: TextField(
                   controller: _searchController,
@@ -231,7 +207,7 @@ class _HomeViewState extends State<HomeView> {
                 ),
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 20),
 
               Text(
                 widget.isNewUser ? 'Welcome to Synk,' : 'Welcome back,',
@@ -241,8 +217,6 @@ class _HomeViewState extends State<HomeView> {
                   color: SynkColors.textSecondary,
                 ),
               ),
-
-              const SizedBox(height: 2),
 
               Text(
                 _homeController.userName ?? 'there',
