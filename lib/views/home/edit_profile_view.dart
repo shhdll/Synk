@@ -3,7 +3,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../controllers/edit_profile_controller.dart';
 import '../../core/constants/synk_colors.dart';
-import 'change_password_view.dart';
+import 'widgets/age_editor_sheet.dart';
+import 'widgets/editable_row.dart';
+import 'widgets/field_editor_sheet.dart';
 
 class EditProfileView extends StatefulWidget {
   const EditProfileView({super.key});
@@ -14,6 +16,12 @@ class EditProfileView extends StatefulWidget {
 
 class _EditProfileViewState extends State<EditProfileView> {
   final EditProfileController _controller = EditProfileController();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.loadProfile();
+  }
 
   @override
   void dispose() {
@@ -32,10 +40,9 @@ class _EditProfileViewState extends State<EditProfileView> {
   Future<void> _editName() async {
     await _editField(
       title: 'Edit name',
-      initialValue: (_controller.metadata['full_name'] as String?) ?? '',
+      initialValue: (_controller.profile['full_name'] as String?) ?? '',
       hint: 'Your name',
-      validator: (value) =>
-          value.trim().isEmpty ? 'Enter your name' : null,
+      validator: (value) => value.trim().isEmpty ? 'Enter your name' : null,
       onSave: _controller.updateName,
     );
   }
@@ -43,7 +50,7 @@ class _EditProfileViewState extends State<EditProfileView> {
   Future<void> _editBio() async {
     await _editField(
       title: 'Edit bio',
-      initialValue: (_controller.metadata['bio'] as String?) ?? '',
+      initialValue: (_controller.profile['bio'] as String?) ?? '',
       hint: 'Tell people a bit about yourself...',
       maxLines: 4,
       maxLength: 160,
@@ -58,8 +65,7 @@ class _EditProfileViewState extends State<EditProfileView> {
       initialValue: currentEmail,
       hint: 'you@example.com',
       keyboardType: TextInputType.emailAddress,
-      helperText:
-          "We'll send a confirmation link to your new address before it takes effect.",
+      helperText: "We'll send a confirmation link to your new address before it takes effect.",
       validator: (value) {
         final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
         if (value.trim().isEmpty) return 'Enter your email';
@@ -73,10 +79,35 @@ class _EditProfileViewState extends State<EditProfileView> {
     );
   }
 
-  Future<void> _openChangePassword() async {
-    await Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (context) => const ChangePasswordView()));
+  Future<void> _editAge() async {
+    final currentAge = _controller.profile['age'];
+    final age = await showModalBottomSheet<int>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) =>
+          AgeEditorSheet(currentAge: currentAge is int ? currentAge : null),
+    );
+
+    if (age == null || !mounted) return;
+
+    try {
+      await _controller.updateAge(age);
+    } on AuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(content: Text('Unable to save. Please try again.')),
+          );
+      }
+    }
   }
 
   // Shared bottom-sheet editor for a single text field (name, bio, email).
@@ -99,7 +130,7 @@ class _EditProfileViewState extends State<EditProfileView> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (sheetContext) => _FieldEditorSheet(
+      builder: (sheetContext) => FieldEditorSheet(
         title: title,
         controller: controller,
         hint: hint,
@@ -142,13 +173,22 @@ class _EditProfileViewState extends State<EditProfileView> {
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _controller,
-      builder: (context, _) => _buildScaffold(context),
+      builder: (context, _) {
+        if (_controller.isLoading && _controller.profile.isEmpty) {
+          return const Scaffold(
+            backgroundColor: SynkColors.background,
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        return _buildScaffold(context);
+      },
     );
   }
 
   Widget _buildScaffold(BuildContext context) {
-    final fullName = (_controller.metadata['full_name'] as String?)?.trim();
-    final bio = (_controller.metadata['bio'] as String?)?.trim();
+    final fullName = (_controller.profile['full_name'] as String?)?.trim();
+    final bio = (_controller.profile['bio'] as String?)?.trim();
+    final age = _controller.profile['age'];
     final email = _controller.email;
     final avatarImage = _controller.avatarImage;
     final isUploadingPhoto = _controller.isUploadingPhoto;
@@ -289,7 +329,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                     ),
                     child: Column(
                       children: [
-                        _EditableRow(
+                        EditableRow(
                           label: 'Name',
                           value: (fullName?.isNotEmpty ?? false)
                               ? fullName!
@@ -297,7 +337,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                           onEdit: _editName,
                         ),
                         const Divider(height: 1, indent: 20, endIndent: 20),
-                        _EditableRow(
+                        EditableRow(
                           label: 'Bio',
                           value: (bio?.isNotEmpty ?? false)
                               ? bio!
@@ -305,16 +345,16 @@ class _EditProfileViewState extends State<EditProfileView> {
                           onEdit: _editBio,
                         ),
                         const Divider(height: 1, indent: 20, endIndent: 20),
-                        _EditableRow(
+                        EditableRow(
+                          label: 'Age',
+                          value: age is int ? '$age yrs' : 'Add your age',
+                          onEdit: _editAge,
+                        ),
+                        const Divider(height: 1, indent: 20, endIndent: 20),
+                        EditableRow(
                           label: 'Email',
                           value: email,
                           onEdit: _editEmail,
-                        ),
-                        const Divider(height: 1, indent: 20, endIndent: 20),
-                        _EditableRow(
-                          label: 'Password',
-                          value: '••••••••',
-                          onEdit: _openChangePassword,
                         ),
                       ],
                     ),
@@ -323,196 +363,6 @@ class _EditProfileViewState extends State<EditProfileView> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _EditableRow extends StatelessWidget {
-  const _EditableRow({
-    required this.label,
-    required this.value,
-    required this.onEdit,
-  });
-
-  final String label;
-  final String value;
-  final VoidCallback onEdit;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 12, 12),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: SynkColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: SynkColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            onPressed: onEdit,
-            icon: const Icon(
-              Icons.edit_rounded,
-              size: 18,
-              color: SynkColors.orangeDark,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FieldEditorSheet extends StatelessWidget {
-  const _FieldEditorSheet({
-    required this.title,
-    required this.controller,
-    required this.hint,
-    required this.formKey,
-    this.validator,
-    this.helperText,
-    this.keyboardType,
-    this.maxLines = 1,
-    this.maxLength,
-  });
-
-  final String title;
-  final TextEditingController controller;
-  final String hint;
-  final GlobalKey<FormState> formKey;
-  final String? Function(String value)? validator;
-  final String? helperText;
-  final TextInputType? keyboardType;
-  final int maxLines;
-  final int? maxLength;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-        decoration: const BoxDecoration(
-          color: SynkColors.background,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        ),
-        child: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 18),
-                  decoration: BoxDecoration(
-                    color: SynkColors.textSecondary.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-              ),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: SynkColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 14),
-              TextFormField(
-                controller: controller,
-                autofocus: true,
-                maxLines: maxLines,
-                maxLength: maxLength,
-                keyboardType: keyboardType,
-                validator: validator == null
-                    ? null
-                    : (value) => validator!(value ?? ''),
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: SynkColors.textPrimary,
-                ),
-                decoration: InputDecoration(
-                  hintText: hint,
-                  hintStyle: const TextStyle(color: SynkColors.textSecondary),
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
-                  ),
-                ),
-              ),
-              if (helperText != null) ...[
-                const SizedBox(height: 6),
-                Text(
-                  helperText!,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: SynkColors.textSecondary.withValues(alpha: 0.85),
-                    height: 1.3,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 52,
-                child: ElevatedButton(
-                  onPressed: () {
-                    if (formKey.currentState?.validate() ?? true) {
-                      Navigator.of(context).pop(true);
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: SynkColors.orangeDark,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: const Text(
-                    'Save',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );

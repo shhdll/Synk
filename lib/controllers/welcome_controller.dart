@@ -48,22 +48,18 @@ class WelcomeController extends ChangeNotifier {
   }
 
   void onSignUp(BuildContext context) {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => const OnboardingView(),
-    ),
-  );
-}
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const OnboardingView()),
+    );
+  }
 
   void onLogIn(BuildContext context) {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => const LoginView(),
-    ),
-  );
-}
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginView()),
+    );
+  }
 
   @override
   void dispose() {

@@ -6,7 +6,7 @@ import '../views/onboarding_view.dart';
 
 class LoginController extends ChangeNotifier {
   LoginController({AuthModel? authModel})
-      : _authModel = authModel ?? AuthModel();
+    : _authModel = authModel ?? AuthModel();
 
   final AuthModel _authModel;
 
@@ -17,10 +17,7 @@ class LoginController extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   // Attempts to sign in and returns true when authentication succeeds.
-  Future<bool> login({
-    required String email,
-    required String password,
-  }) async {
+  Future<bool> login({required String email, required String password}) async {
     _setLoading(true);
     _errorMessage = null;
 
@@ -46,30 +43,12 @@ class LoginController extends ChangeNotifier {
   void onSignUp(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const OnboardingView(),
-      ),
+      MaterialPageRoute(builder: (context) => const OnboardingView()),
     );
   }
 
   void goBack(BuildContext context) {
-  Navigator.pop(context);
-}
-
-  // Signs out the current user.
-  Future<bool> logout() async {
-    _setLoading(true);
-    _errorMessage = null;
-
-    try {
-      await _authModel.signOut();
-      return true;
-    } catch (_) {
-      _errorMessage = 'Unable to log out. Please try again.';
-      return false;
-    } finally {
-      _setLoading(false);
-    }
+    Navigator.pop(context);
   }
 
   void _setLoading(bool value) {

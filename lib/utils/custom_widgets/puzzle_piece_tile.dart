@@ -149,9 +149,8 @@ class _PuzzlePieceTileState extends State<PuzzlePieceTile>
             Positioned.fill(
               child: AnimatedBuilder(
                 animation: _once,
-                builder: (context, _) => CustomPaint(
-                  painter: _RipplePainter(progress: _once.value),
-                ),
+                builder: (context, _) =>
+                    CustomPaint(painter: _RipplePainter(progress: _once.value)),
               ),
             ),
 
@@ -164,7 +163,10 @@ class _PuzzlePieceTileState extends State<PuzzlePieceTile>
               top: -6,
               right: -6,
               child: ScaleTransition(
-                scale: CurvedAnimation(parent: _once, curve: Curves.easeOutBack),
+                scale: CurvedAnimation(
+                  parent: _once,
+                  curve: Curves.easeOutBack,
+                ),
                 child: Container(
                   width: 24,
                   height: 24,

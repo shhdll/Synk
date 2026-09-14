@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import '../../controllers/profile_controller.dart';
 import '../../core/constants/synk_colors.dart';
 import '../../models/avatar_uploader.dart';
-import '../welcome_view.dart';
 import 'edit_profile_view.dart';
+import 'logout_view.dart';
 import 'widgets/app_header.dart';
+import 'widgets/profile_info_row.dart';
 import 'widgets/section_label.dart';
 
 class ProfileView extends StatefulWidget {
@@ -19,55 +20,58 @@ class _ProfileViewState extends State<ProfileView> {
   final ProfileController _controller = ProfileController();
 
   @override
+  void initState() {
+    super.initState();
+    _controller.loadProfile();
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
 
-  Future<void> _logout() async {
-    final success = await _controller.logout();
-    if (!mounted) return;
-
-    if (success) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const WelcomeView()),
-        (route) => false,
-      );
-      return;
-    }
-
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(_controller.errorMessage ?? 'Unable to log out.'),
-        ),
-      );
+  Future<void> _openLogout() async {
+    await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) => const LogoutView()));
   }
 
   Future<void> _openEditProfile() async {
-    await Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (context) => const EditProfileView()));
-    // The edited fields live on the Supabase user session, so simply
-    // rebuilding picks up whatever changed.
-    if (mounted) setState(() {});
+    await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) => const EditProfileView()));
+    // Picks up whatever changed while Edit Profile was open.
+    await _controller.loadProfile();
   }
 
   @override
   Widget build(BuildContext context) {
-    final metadata = _controller.metadata;
-    final fullName = (metadata['full_name'] as String?)?.trim();
-    final bio = (metadata['bio'] as String?)?.trim();
-    final age = metadata['age'];
-    final gender = (metadata['gender'] as String?)?.trim();
-    final activityType = (metadata['activityType'] as String?)?.trim();
-    final locationPreference =
-        (metadata['locationPreference'] as String?)?.trim();
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        if (_controller.isLoading && _controller.profile.isEmpty) {
+          return const Scaffold(
+            backgroundColor: SynkColors.background,
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        return _buildScaffold(context);
+      },
+    );
+  }
+
+  Widget _buildScaffold(BuildContext context) {
+    final profile = _controller.profile;
+    final fullName = (profile['full_name'] as String?)?.trim();
+    final bio = (profile['bio'] as String?)?.trim();
+    final age = profile['age'];
+    final gender = (profile['gender'] as String?)?.trim();
+    final activityType = (profile['activity_type'] as String?)?.trim();
+    final locationPreference = (profile['location_preference'] as String?)
+        ?.trim();
     final interests =
-        (metadata['interests'] as List?)?.cast<String>() ?? const [];
+        (profile['interests'] as List?)?.cast<String>() ?? const [];
     final email = _controller.email;
-    final avatarImage = AvatarUploader.imageFor(metadata);
+    final avatarImage = AvatarUploader.imageFor(profile);
 
     return Scaffold(
       backgroundColor: SynkColors.background,
@@ -287,7 +291,7 @@ class _ProfileViewState extends State<ProfileView> {
                 child: Column(
                   children: [
                     if (activityType?.isNotEmpty ?? false)
-                      _InfoRow(
+                      ProfileInfoRow(
                         icon: Icons.local_activity_rounded,
                         label: 'Preferred activity type',
                         value: activityType!,
@@ -296,7 +300,7 @@ class _ProfileViewState extends State<ProfileView> {
                         (locationPreference?.isNotEmpty ?? false))
                       const Divider(height: 20),
                     if (locationPreference?.isNotEmpty ?? false)
-                      _InfoRow(
+                      ProfileInfoRow(
                         icon: Icons.place_rounded,
                         label: 'Preferred location',
                         value: locationPreference!,
@@ -306,88 +310,27 @@ class _ProfileViewState extends State<ProfileView> {
               ),
             ],
             const SizedBox(height: 28),
-            AnimatedBuilder(
-              animation: _controller,
-              builder: (context, _) {
-                final isLoggingOut = _controller.isLoggingOut;
-                return SizedBox(
-                  height: 52,
-                  child: OutlinedButton.icon(
-                    onPressed: isLoggingOut ? null : _logout,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: SynkColors.orangeDark,
-                      side: const BorderSide(color: SynkColors.orangeDark),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    icon: isLoggingOut
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2.5),
-                          )
-                        : const Icon(Icons.logout_rounded),
-                    label: const Text(
-                      'Log Out',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+            SizedBox(
+              height: 52,
+              child: OutlinedButton.icon(
+                onPressed: _openLogout,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: SynkColors.orangeDark,
+                  side: const BorderSide(color: SynkColors.orangeDark),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                );
-              },
+                ),
+                icon: const Icon(Icons.logout_rounded),
+                label: const Text(
+                  'Log Out',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                ),
+              ),
             ),
           ],
         ),
       ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: SynkColors.orangeDark),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: SynkColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: SynkColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

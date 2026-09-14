@@ -33,10 +33,7 @@ class PersonalDetailsSlide extends StatelessWidget {
                 const SizedBox(height: 10),
                 const Text(
                   'This helps customize your community experience.',
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: Color(0xFF6B7280),
-                  ),
+                  style: TextStyle(fontSize: 15, color: Color(0xFF6B7280)),
                 ),
                 const SizedBox(height: 32),
 
@@ -47,12 +44,7 @@ class PersonalDetailsSlide extends StatelessWidget {
                   hint: 'Sarah',
                   icon: Icons.person_outline,
                   errorText: controller.nameError,
-                  onChanged: (_) {
-                    if (controller.nameError != null) {
-                      controller.nameError = null;
-                      controller.notifyListeners();
-                    }
-                  },
+                  onChanged: (_) => controller.clearNameError(),
                 ),
                 const SizedBox(height: 16),
 
@@ -91,19 +83,16 @@ class PersonalDetailsSlide extends StatelessWidget {
 
                     if (controller.birthdayController.text.isNotEmpty) {
                       try {
-                        final parts =
-                            controller.birthdayController.text.split('/');
+                        final parts = controller.birthdayController.text.split(
+                          '/',
+                        );
 
                         if (parts.length == 3) {
                           final day = int.parse(parts[0]);
                           final month = int.parse(parts[1]);
                           final year = int.parse(parts[2]);
 
-                          final existingDate = DateTime(
-                            year,
-                            month,
-                            day,
-                          );
+                          final existingDate = DateTime(year, month, day);
 
                           if (!existingDate.isBefore(firstDate) &&
                               !existingDate.isAfter(lastDate)) {
@@ -124,19 +113,15 @@ class PersonalDetailsSlide extends StatelessWidget {
                     );
 
                     if (selectedDate != null) {
-                      final day =
-                          selectedDate.day.toString().padLeft(2, '0');
-                      final month =
-                          selectedDate.month.toString().padLeft(2, '0');
+                      final day = selectedDate.day.toString().padLeft(2, '0');
+                      final month = selectedDate.month.toString().padLeft(
+                        2,
+                        '0',
+                      );
                       final year = selectedDate.year.toString();
 
-                      controller.birthdayController.text =
-                          '$day/$month/$year';
-
-                      if (controller.birthdayError != null) {
-                        controller.birthdayError = null;
-                        controller.notifyListeners();
-                      }
+                      controller.birthdayController.text = '$day/$month/$year';
+                      controller.clearBirthdayError();
                     }
                   },
                 ),
@@ -156,8 +141,7 @@ class PersonalDetailsSlide extends StatelessWidget {
                 // Gender selector row
                 Row(
                   children: ['Female', 'Male'].map((gender) {
-                    final isSelected =
-                        controller.selectedGender == gender;
+                    final isSelected = controller.selectedGender == gender;
 
                     return Expanded(
                       child: GestureDetector(
@@ -178,8 +162,7 @@ class PersonalDetailsSlide extends StatelessWidget {
                                 : null,
                             boxShadow: [
                               BoxShadow(
-                                color:
-                                    Colors.black.withValues(alpha: 0.04),
+                                color: Colors.black.withValues(alpha: 0.04),
                                 blurRadius: 8,
                                 offset: const Offset(0, 3),
                               ),
@@ -245,10 +228,7 @@ class PersonalDetailsSlide extends StatelessWidget {
             color: Colors.white.withValues(alpha: 0.95),
             borderRadius: BorderRadius.circular(16),
             border: errorText != null
-                ? Border.all(
-                    color: const Color(0xFFE53935),
-                    width: 1.2,
-                  )
+                ? Border.all(color: const Color(0xFFE53935), width: 1.2)
                 : null,
             boxShadow: [
               BoxShadow(
@@ -270,11 +250,7 @@ class PersonalDetailsSlide extends StatelessWidget {
               color: Color(0xFF1E1E1E),
             ),
             decoration: InputDecoration(
-              prefixIcon: Icon(
-                icon,
-                size: 20,
-                color: const Color(0xFF6B7280),
-              ),
+              prefixIcon: Icon(icon, size: 20, color: const Color(0xFF6B7280)),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,

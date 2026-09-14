@@ -55,11 +55,12 @@ class _NewPasswordViewState extends State<NewPasswordView>
   }
 
   // Live form status used by the indicators, the tile and the button.
-  bool get _lengthOk => _controller.meetsMinimumLength(_passwordController.text);
+  bool get _lengthOk =>
+      _controller.meetsMinimumLength(_passwordController.text);
   bool get _matchOk => _controller.passwordsMatch(
-        _passwordController.text,
-        _confirmController.text,
-      );
+    _passwordController.text,
+    _confirmController.text,
+  );
   bool get _formReady => _lengthOk && _matchOk;
 
   // ---------------------------------------------------------------------------
@@ -138,8 +139,8 @@ class _NewPasswordViewState extends State<NewPasswordView>
                 success
                     ? Icons.check_circle_outline
                     : neutral
-                        ? Icons.info_outline
-                        : Icons.error_outline,
+                    ? Icons.info_outline
+                    : Icons.error_outline,
                 color: Colors.white,
               ),
               const SizedBox(width: 12),
@@ -157,8 +158,8 @@ class _NewPasswordViewState extends State<NewPasswordView>
           backgroundColor: success
               ? SynkColors.teal
               : neutral
-                  ? SynkColors.textSecondary
-                  : const Color(0xFFE85D5D),
+              ? SynkColors.textSecondary
+              : const Color(0xFFE85D5D),
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.all(20),
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
@@ -209,7 +210,9 @@ class _NewPasswordViewState extends State<NewPasswordView>
                                 )
                               : PuzzlePieceTile(
                                   state: PieceState.almost,
-                                  fit: _formReady ? 1.0 : (_lengthOk ? 0.5 : 0.0),
+                                  fit: _formReady
+                                      ? 1.0
+                                      : (_lengthOk ? 0.5 : 0.0),
                                 ),
                         ),
                         const SizedBox(height: 20),
@@ -358,11 +361,14 @@ class _NewPasswordViewState extends State<NewPasswordView>
 
         // Enabled only once both fields are valid and matching.
         ElevatedButton(
-          onPressed: (_controller.isLoading || !_formReady) ? null : _handleUpdate,
+          onPressed: (_controller.isLoading || !_formReady)
+              ? null
+              : _handleUpdate,
           style: ElevatedButton.styleFrom(
             backgroundColor: SynkColors.orangeDark,
-            disabledBackgroundColor:
-                SynkColors.orangeDark.withValues(alpha: 0.6),
+            disabledBackgroundColor: SynkColors.orangeDark.withValues(
+              alpha: 0.6,
+            ),
             foregroundColor: Colors.white,
             disabledForegroundColor: Colors.white,
             elevation: 0,
@@ -439,7 +445,10 @@ class _NewPasswordViewState extends State<NewPasswordView>
           ),
           onPressed: onToggle,
         ),
-        contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 18,
+          horizontal: 20,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30),
           borderSide: BorderSide.none,

@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/synk_colors.dart';
 import '../../models/activity_model.dart';
-import 'widgets/activity_card.dart';
-import 'widgets/empty_state.dart';
+import 'widgets/activity_list.dart';
 
 class ActivitiesView extends StatelessWidget {
   const ActivitiesView({super.key, required this.activityStore});
@@ -43,7 +42,10 @@ class ActivitiesView extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const TabBar(
-                    tabs: [Tab(text: 'Upcoming'), Tab(text: 'Past')],
+                    tabs: [
+                      Tab(text: 'Upcoming'),
+                      Tab(text: 'Past'),
+                    ],
                     labelColor: Colors.white,
                     unselectedLabelColor: SynkColors.textSecondary,
                     labelStyle: TextStyle(
@@ -65,13 +67,13 @@ class ActivitiesView extends StatelessWidget {
                   builder: (context, _) {
                     return TabBarView(
                       children: [
-                        _ActivityList(
+                        ActivityList(
                           activities: activityStore.upcoming,
                           emptyIcon: Icons.event_available_rounded,
                           emptyTitle: 'No upcoming activities',
                           emptyMessage: 'Tap the + button to plan one.',
                         ),
-                        _ActivityList(
+                        ActivityList(
                           activities: activityStore.past,
                           emptyIcon: Icons.history_rounded,
                           emptyTitle: 'No past activities',
@@ -87,39 +89,6 @@ class ActivitiesView extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _ActivityList extends StatelessWidget {
-  const _ActivityList({
-    required this.activities,
-    required this.emptyIcon,
-    required this.emptyTitle,
-    required this.emptyMessage,
-  });
-
-  final List<Activity> activities;
-  final IconData emptyIcon;
-  final String emptyTitle;
-  final String emptyMessage;
-
-  @override
-  Widget build(BuildContext context) {
-    if (activities.isEmpty) {
-      return EmptyState(
-        icon: emptyIcon,
-        title: emptyTitle,
-        message: emptyMessage,
-      );
-    }
-
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-      itemCount: activities.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 14),
-      itemBuilder: (context, index) =>
-          ActivityCard(activity: activities[index]),
     );
   }
 }

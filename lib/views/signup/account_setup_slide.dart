@@ -52,12 +52,7 @@ class AccountSetupSlide extends StatelessWidget {
                   icon: Icons.alternate_email_rounded,
                   keyboardType: TextInputType.emailAddress,
                   errorText: signupController.emailError,
-                  onChanged: (_) {
-                    if (signupController.emailError != null) {
-                      signupController.emailError = null;
-                      signupController.notifyListeners();
-                    }
-                  },
+                  onChanged: (_) => signupController.clearEmailError(),
                 ),
                 const SizedBox(height: 14),
 
@@ -69,12 +64,7 @@ class AccountSetupSlide extends StatelessWidget {
                   icon: Icons.lock_outline_rounded,
                   obscureText: signupController.obscurePassword,
                   errorText: signupController.passwordError,
-                  onChanged: (_) {
-                    if (signupController.passwordError != null) {
-                      signupController.passwordError = null;
-                      signupController.notifyListeners();
-                    }
-                  },
+                  onChanged: (_) => signupController.clearPasswordError(),
                   suffixIcon: IconButton(
                     icon: Icon(
                       signupController.obscurePassword
@@ -95,12 +85,8 @@ class AccountSetupSlide extends StatelessWidget {
                   icon: Icons.lock_outline_rounded,
                   obscureText: signupController.obscurePassword,
                   errorText: signupController.confirmPasswordError,
-                  onChanged: (_) {
-                    if (signupController.confirmPasswordError != null) {
-                      signupController.confirmPasswordError = null;
-                      signupController.notifyListeners();
-                    }
-                  },
+                  onChanged: (_) =>
+                      signupController.clearConfirmPasswordError(),
                 ),
 
                 if (signupController.generalError != null) ...[

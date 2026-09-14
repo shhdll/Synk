@@ -82,9 +82,7 @@ class _MapViewState extends State<MapView> {
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(
-                                      alpha: 0.08,
-                                    ),
+                                    color: Colors.black.withValues(alpha: 0.08),
                                     blurRadius: 16,
                                     offset: const Offset(0, 6),
                                   ),
@@ -144,7 +142,11 @@ class _MapViewState extends State<MapView> {
     );
   }
 
-  Widget _pin({required double top, required double left, required Color color}) {
+  Widget _pin({
+    required double top,
+    required double left,
+    required Color color,
+  }) {
     return Positioned(
       top: top,
       left: left,

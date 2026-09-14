@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-//
+
 import '../../core/constants/synk_colors.dart';
 import '../../models/activity_model.dart';
+import '../../models/user_profile_model.dart';
 import 'widgets/activity_card.dart';
 import 'widgets/app_header.dart';
 import 'widgets/empty_state.dart';
 import 'widgets/section_label.dart';
 
-class HomeView extends StatelessWidget {
+class HomeView extends StatefulWidget {
   const HomeView({
     super.key,
     required this.activityStore,
@@ -17,15 +17,28 @@ class HomeView extends StatelessWidget {
 
   final ActivityStore activityStore;
 
- 
   final bool isNewUser;
 
-  String get _firstName {
-    final fullName =
-        Supabase.instance.client.auth.currentUser?.userMetadata?['full_name']
-            as String?;
-    if (fullName == null || fullName.trim().isEmpty) return 'there';
-    return fullName.trim().split(' ').first;
+  @override
+  State<HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<HomeView> {
+  final UserProfileModel _profileModel = UserProfileModel();
+  String _firstName = 'there';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFirstName();
+  }
+
+  Future<void> _loadFirstName() async {
+    final profile = await _profileModel.fetchProfile();
+    final fullName = (profile['full_name'] as String?)?.trim();
+    if (mounted && (fullName?.isNotEmpty ?? false)) {
+      setState(() => _firstName = fullName!.split(' ').first);
+    }
   }
 
   @override
@@ -34,9 +47,9 @@ class HomeView extends StatelessWidget {
       backgroundColor: SynkColors.background,
       body: SafeArea(
         child: AnimatedBuilder(
-          animation: activityStore,
+          animation: widget.activityStore,
           builder: (context, _) {
-            final upcoming = activityStore.upcoming;
+            final upcoming = widget.activityStore.upcoming;
             return CustomScrollView(
               slivers: [
                 SliverPadding(
@@ -50,7 +63,7 @@ class HomeView extends StatelessWidget {
                         _buildSearchBar(),
                         const SizedBox(height: 24),
                         Text(
-                          isNewUser
+                          widget.isNewUser
                               ? 'Welcome, $_firstName 👋'
                               : 'Hey, $_firstName 👋',
                           style: const TextStyle(
@@ -62,7 +75,7 @@ class HomeView extends StatelessWidget {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          isNewUser
+                          widget.isNewUser
                               ? "You're all set. Here's what's coming up for you."
                               : "Here's what's coming up for you.",
                           style: const TextStyle(
@@ -87,9 +100,7 @@ class HomeView extends StatelessWidget {
                 else ...[
                   const SliverPadding(
                     padding: EdgeInsets.fromLTRB(24, 8, 24, 4),
-                    sliver: SliverToBoxAdapter(
-                      child: SectionLabel('Upcoming'),
-                    ),
+                    sliver: SliverToBoxAdapter(child: SectionLabel('Upcoming')),
                   ),
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),

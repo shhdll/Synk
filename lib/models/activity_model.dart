@@ -29,11 +29,13 @@ class ActivityStore extends ChangeNotifier {
 
   List<Activity> get all => List.unmodifiable(_activities);
 
-  List<Activity> get upcoming => _activities.where((a) => !a.isPast).toList()
-    ..sort((a, b) => a.dateTime.compareTo(b.dateTime));
+  List<Activity> get upcoming =>
+      _activities.where((a) => !a.isPast).toList()
+        ..sort((a, b) => a.dateTime.compareTo(b.dateTime));
 
-  List<Activity> get past => _activities.where((a) => a.isPast).toList()
-    ..sort((a, b) => b.dateTime.compareTo(a.dateTime));
+  List<Activity> get past =>
+      _activities.where((a) => a.isPast).toList()
+        ..sort((a, b) => b.dateTime.compareTo(a.dateTime));
 
   void add(Activity activity) {
     _activities.add(activity);

@@ -1,43 +1,30 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../models/auth_model.dart';
+import '../models/user_profile_model.dart';
 
 class ProfileController extends ChangeNotifier {
-  ProfileController({AuthModel? authModel})
-    : _authModel = authModel ?? AuthModel();
+  ProfileController({UserProfileModel? profileModel})
+    : _profileModel = profileModel ?? UserProfileModel();
 
-  final AuthModel _authModel;
+  final UserProfileModel _profileModel;
 
-  bool _isLoggingOut = false;
-  String? _errorMessage;
+  Map<String, dynamic> _profile = {};
+  Map<String, dynamic> get profile => _profile;
 
-  bool get isLoggingOut => _isLoggingOut;
-  String? get errorMessage => _errorMessage;
-
-  Map<String, dynamic> get metadata =>
-      Supabase.instance.client.auth.currentUser?.userMetadata ?? {};
+  bool _isLoading = true;
+  bool get isLoading => _isLoading;
 
   String? get email => Supabase.instance.client.auth.currentUser?.email;
 
-  // Signs the current user out and reports whether it succeeded.
-  Future<bool> logout() async {
-    _setLoggingOut(true);
-    _errorMessage = null;
+  // Loads the current user's row from the public "users" table.
+  Future<void> loadProfile() async {
+    _isLoading = true;
+    notifyListeners();
 
-    try {
-      await _authModel.signOut();
-      return true;
-    } catch (_) {
-      _errorMessage = 'Unable to log out. Please try again.';
-      return false;
-    } finally {
-      _setLoggingOut(false);
-    }
-  }
+    _profile = await _profileModel.fetchProfile();
 
-  void _setLoggingOut(bool value) {
-    _isLoggingOut = value;
+    _isLoading = false;
     notifyListeners();
   }
 }

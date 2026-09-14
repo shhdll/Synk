@@ -11,7 +11,7 @@ enum UpdatePasswordResult { success, failure, sessionMissing }
 
 class ResetPasswordController extends ChangeNotifier {
   ResetPasswordController({AuthModel? authModel})
-      : _authModel = authModel ?? AuthModel();
+    : _authModel = authModel ?? AuthModel();
 
   final AuthModel _authModel;
 
@@ -30,8 +30,6 @@ class ResetPasswordController extends ChangeNotifier {
   String get sentToEmail => _sentToEmail;
   int get resendSecondsLeft => _resendSecondsLeft;
   bool get canResend => _resendSecondsLeft == 0 && !_isLoading;
-
-
 
   String? validateEmail(String? value) {
     final email = value?.trim() ?? '';
@@ -74,7 +72,6 @@ class ResetPasswordController extends ChangeNotifier {
   bool passwordsMatch(String password, String confirm) =>
       confirm.isNotEmpty && password == confirm;
 
- 
   // Forgot Password: send the reset email
   // ---------------------------------------------------------------------------
 
@@ -94,7 +91,8 @@ class ResetPasswordController extends ChangeNotifier {
       _errorMessage = _messageForSendError(e);
       return false;
     } catch (_) {
-      _errorMessage = 'Couldn\'t send the link. Check your connection and try again.';
+      _errorMessage =
+          'Couldn\'t send the link. Check your connection and try again.';
       return false;
     } finally {
       _setLoading(false);
@@ -136,9 +134,7 @@ class ResetPasswordController extends ChangeNotifier {
     return 'Couldn\'t send the link. Check your connection and try again.';
   }
 
-
   // New Password: update the password on the recovery session
-  
 
   Future<UpdatePasswordResult> updatePassword(String newPassword) async {
     _setLoading(true);
@@ -152,7 +148,8 @@ class ResetPasswordController extends ChangeNotifier {
       // opened on a different device.
       return UpdatePasswordResult.sessionMissing;
     } on AuthWeakPasswordException {
-      _errorMessage = 'Password is too weak. Please use at least '
+      _errorMessage =
+          'Password is too weak. Please use at least '
           '${AuthConstants.minPasswordLength} characters.';
       return UpdatePasswordResult.failure;
     } on AuthException catch (e) {

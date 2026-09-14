@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'auth_model.dart';
+import 'user_profile_model.dart';
 
 class AvatarUpdateResult {
   const AvatarUpdateResult({required this.picked, this.warning});
@@ -22,7 +22,7 @@ class AvatarUploader {
   AvatarUploader._();
 
   static final ImagePicker _picker = ImagePicker();
-  static final AuthModel _authModel = AuthModel();
+  static final UserProfileModel _profileModel = UserProfileModel();
 
   static Future<AvatarUpdateResult> pickAndSave() async {
     final picked = await _picker.pickImage(
@@ -36,9 +36,8 @@ class AvatarUploader {
     final extension = picked.path.split('.').last;
 
     final documentsDir = await getApplicationDocumentsDirectory();
-    final localFile = await File(
-      picked.path,
-    ).copy('${documentsDir.path}/avatar_$userId.$extension');
+    final localFile = await File(picked.path)
+        .copy('${documentsDir.path}/avatar_$userId.$extension');
 
     String? avatarUrl;
     try {
@@ -58,7 +57,7 @@ class AvatarUploader {
       // still makes the photo show up on this device.
     }
 
-    await _authModel.updateMetadata({
+    await _profileModel.updateProfile({
       'avatar_local_path': localFile.path,
       'avatar_url': ?avatarUrl,
     });

@@ -9,6 +9,9 @@ import '../core/constants/synk_colors.dart';
 import '../controllers/signup_controller.dart';
 import 'signup/personal_details_slide.dart';
 import 'signup/account_setup_slide.dart';
+import 'widgets/blob_layout.dart';
+import 'widgets/pressed_circle_button.dart';
+import 'widgets/pressed_skip_button.dart';
 
 class OnboardingView extends StatefulWidget {
   const OnboardingView({super.key});
@@ -229,11 +232,7 @@ class _OnboardingViewState extends State<OnboardingView>
           reverseWave,
         );
 
-        final layout = _BlobLayout.lerp(
-          firstLayout,
-          secondLayout,
-          pageProgress,
-        );
+        final layout = BlobLayout.lerp(firstLayout, secondLayout, pageProgress);
 
         return Stack(
           children: [
@@ -331,7 +330,7 @@ class _OnboardingViewState extends State<OnboardingView>
     return 135;
   }
 
-  _BlobLayout _blobLayoutForStep(
+  BlobLayout _blobLayoutForStep(
     int step,
     Size screenSize,
     double wave,
@@ -342,7 +341,7 @@ class _OnboardingViewState extends State<OnboardingView>
 
     switch (step) {
       case 0:
-        return _BlobLayout(
+        return BlobLayout(
           pinkTop: -70 + (wave * 35),
           pinkLeft: -55 + (reverseWave * 30),
           orangeBottom: -90 - (wave * 30),
@@ -354,7 +353,7 @@ class _OnboardingViewState extends State<OnboardingView>
         );
 
       case 1:
-        return _BlobLayout(
+        return BlobLayout(
           pinkTop: 80 + (reverseWave * 45),
           pinkLeft: width - 170 + (wave * 40),
           orangeBottom: height * 0.28 + (wave * 35),
@@ -366,7 +365,7 @@ class _OnboardingViewState extends State<OnboardingView>
         );
 
       case 2:
-        return _BlobLayout(
+        return BlobLayout(
           pinkTop: -100 + (wave * 50),
           pinkLeft: width * 0.35 - (reverseWave * 55),
           orangeBottom: -40 - (reverseWave * 45),
@@ -378,7 +377,7 @@ class _OnboardingViewState extends State<OnboardingView>
         );
 
       case 3:
-        return _BlobLayout(
+        return BlobLayout(
           pinkTop: height * 0.15 + (wave * 40),
           pinkLeft: -70 + (reverseWave * 45),
           orangeBottom: height * 0.05 - (wave * 40),
@@ -390,7 +389,7 @@ class _OnboardingViewState extends State<OnboardingView>
         );
 
       case 4:
-        return _BlobLayout(
+        return BlobLayout(
           pinkTop: -80 + (reverseWave * 40),
           pinkLeft: width * 0.55 + (wave * 35),
           orangeBottom: height * 0.20 + (wave * 35),
@@ -402,7 +401,7 @@ class _OnboardingViewState extends State<OnboardingView>
         );
 
       default:
-        return _BlobLayout(
+        return BlobLayout(
           pinkTop: -70,
           pinkLeft: -55,
           orangeBottom: -90,
@@ -624,85 +623,6 @@ class _OnboardingViewState extends State<OnboardingView>
   }
 
   // ---------------------------------------------------------------------------
-  // PAGE 4 — INFORMATION
-  // ---------------------------------------------------------------------------
-
-  Widget _buildInfoStep() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [],
-      ),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // PAGE 5 — FINAL INFORMATION
-  // ---------------------------------------------------------------------------
-
-  Widget _buildFinalStep() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [],
-      ),
-    );
-  }
-
-  Widget _buildInfoCard({
-    required String emoji,
-    required String title,
-    required String description,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.70),
-          width: 1.5,
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(emoji, style: const TextStyle(fontSize: 28)),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                    color: SynkColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  description,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: SynkColors.textSecondary,
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
   // CHOICE CARD
   // ---------------------------------------------------------------------------
 
@@ -827,7 +747,7 @@ class _OnboardingViewState extends State<OnboardingView>
             children: [
               Align(
                 alignment: Alignment.centerLeft,
-                child: _PressedCircleButton(
+                child: PressedCircleButton(
                   icon: Icons.arrow_back_rounded,
                   enabled: true,
                   onTap: _goToPreviousPage,
@@ -839,7 +759,7 @@ class _OnboardingViewState extends State<OnboardingView>
                   maintainSize: true,
                   maintainAnimation: true,
                   maintainState: true,
-                  child: _PressedSkipButton(onTap: _skipQuestion),
+                  child: PressedSkipButton(onTap: _skipQuestion),
                 ),
               ),
               Align(
@@ -849,7 +769,7 @@ class _OnboardingViewState extends State<OnboardingView>
                   maintainSize: true,
                   maintainAnimation: true,
                   maintainState: true,
-                  child: _PressedCircleButton(
+                  child: PressedCircleButton(
                     icon: Icons.arrow_forward_rounded,
                     enabled: canContinue,
                     onTap: canContinue ? _goToNextPage : null,
@@ -925,173 +845,8 @@ class _OnboardingViewState extends State<OnboardingView>
   // FINISH
   // ---------------------------------------------------------------------------
 
-  void _finishOnboarding() {
-    final data = _controller.onboardingData;
-  }
-}
-
-// =============================================================================
-// BLOB LAYOUT
-// =============================================================================
-
-class _BlobLayout {
-  final double pinkTop;
-  final double pinkLeft;
-  final double orangeBottom;
-  final double orangeRight;
-  final double smallTop;
-  final double smallRight;
-  final double tealBottom;
-  final double tealLeft;
-
-  const _BlobLayout({
-    required this.pinkTop,
-    required this.pinkLeft,
-    required this.orangeBottom,
-    required this.orangeRight,
-    required this.smallTop,
-    required this.smallRight,
-    required this.tealBottom,
-    required this.tealLeft,
-  });
-
-  static _BlobLayout lerp(_BlobLayout a, _BlobLayout b, double t) {
-    return _BlobLayout(
-      pinkTop: lerpDouble(a.pinkTop, b.pinkTop, t)!,
-      pinkLeft: lerpDouble(a.pinkLeft, b.pinkLeft, t)!,
-      orangeBottom: lerpDouble(a.orangeBottom, b.orangeBottom, t)!,
-      orangeRight: lerpDouble(a.orangeRight, b.orangeRight, t)!,
-      smallTop: lerpDouble(a.smallTop, b.smallTop, t)!,
-      smallRight: lerpDouble(a.smallRight, b.smallRight, t)!,
-      tealBottom: lerpDouble(a.tealBottom, b.tealBottom, t)!,
-      tealLeft: lerpDouble(a.tealLeft, b.tealLeft, t)!,
-    );
-  }
-}
-
-// =============================================================================
-// PRESSED CIRCLE BUTTON
-// =============================================================================
-
-class _PressedCircleButton extends StatefulWidget {
-  final IconData icon;
-  final bool enabled;
-  final VoidCallback? onTap;
-
-  const _PressedCircleButton({
-    required this.icon,
-    required this.enabled,
-    required this.onTap,
-  });
-
-  @override
-  State<_PressedCircleButton> createState() => _PressedCircleButtonState();
-}
-
-class _PressedCircleButtonState extends State<_PressedCircleButton> {
-  bool _isPressed = false;
-
-  void _setPressed(bool value) {
-    if (!widget.enabled) return;
-
-    if (mounted) {
-      setState(() => _isPressed = value);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: widget.enabled ? (_) => _setPressed(true) : null,
-      onTapUp: widget.enabled ? (_) => _setPressed(false) : null,
-      onTapCancel: widget.enabled ? () => _setPressed(false) : null,
-      onTap: widget.enabled ? widget.onTap : null,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 100),
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: !widget.enabled
-              ? Colors.white.withValues(alpha: 0.35)
-              : _isPressed
-              ? SynkColors.orange
-              : Colors.white.withValues(alpha: 0.82),
-          boxShadow: widget.enabled
-              ? [
-                  BoxShadow(
-                    color: SynkColors.orangeDark.withValues(alpha: 0.18),
-                    blurRadius: 12,
-                    offset: const Offset(0, 5),
-                  ),
-                ]
-              : null,
-        ),
-        child: Icon(
-          widget.icon,
-          size: 24,
-          color: !widget.enabled
-              ? SynkColors.textSecondary.withValues(alpha: 0.4)
-              : _isPressed
-              ? Colors.white
-              : SynkColors.textPrimary,
-        ),
-      ),
-    );
-  }
-}
-
-// =============================================================================
-// PRESSED SKIP BUTTON
-// =============================================================================
-
-class _PressedSkipButton extends StatefulWidget {
-  final VoidCallback onTap;
-  final bool isVisible;
-
-  const _PressedSkipButton({required this.onTap, this.isVisible = true});
-
-  @override
-  State<_PressedSkipButton> createState() => _PressedSkipButtonState();
-}
-
-class _PressedSkipButtonState extends State<_PressedSkipButton> {
-  bool _isPressed = false;
-
-  void _setPressed(bool value) {
-    if (mounted) {
-      setState(() => _isPressed = value);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // If not visible, render an empty SizedBox with identical padding/height
-    // so layout alignments (dots, back/forward buttons) remain stable.
-    if (!widget.isVisible) {
-      return const SizedBox(
-        height: 25, // Height of the text + padding
-        child: SizedBox.shrink(),
-      );
-    }
-
-    return GestureDetector(
-      onTapDown: (_) => _setPressed(true),
-      onTapUp: (_) => _setPressed(false),
-      onTapCancel: () => _setPressed(false),
-      onTap: widget.onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        child: AnimatedDefaultTextStyle(
-          duration: const Duration(milliseconds: 100),
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: _isPressed ? SynkColors.orange : SynkColors.textSecondary,
-          ),
-          child: const Text('Skip'),
-        ),
-      ),
-    );
-  }
+  // No-op: AccountSetupSlide (the last page) has its own "Create Account"
+  // button that calls SignupController.registerUser directly, so tapping
+  // Next/Skip while already on that page has nothing left to do.
+  void _finishOnboarding() {}
 }

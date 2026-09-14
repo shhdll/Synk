@@ -103,7 +103,8 @@ class _ResetSuccessViewState extends State<ResetSuccessView>
                       child: _buildBlob(SynkColors.orange, 320),
                     ),
                     Positioned(
-                      top: MediaQuery.of(context).size.height * 0.45 +
+                      top:
+                          MediaQuery.of(context).size.height * 0.45 +
                           (anim * 18),
                       right: 40 - (anim * 24),
                       child: _buildBlob(SynkColors.orange, 120),
@@ -192,13 +193,18 @@ class _ResetSuccessViewState extends State<ResetSuccessView>
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(28),
                             gradient: const LinearGradient(
-                              colors: [SynkColors.orange, SynkColors.orangeDark],
+                              colors: [
+                                SynkColors.orange,
+                                SynkColors.orangeDark,
+                              ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: SynkColors.orange.withValues(alpha: 0.40),
+                                color: SynkColors.orange.withValues(
+                                  alpha: 0.40,
+                                ),
                                 blurRadius: 18,
                                 offset: const Offset(0, 6),
                               ),

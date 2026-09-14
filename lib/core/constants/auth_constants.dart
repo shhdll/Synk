@@ -1,10 +1,10 @@
 class AuthConstants {
   AuthConstants._();
 
-    /// Minimum password length used for authentication.
+  /// Minimum password length used for authentication.
   static const int minPasswordLength = 6;
 
- /// Email validation pattern.
+  /// Email validation pattern.
   static final RegExp emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
 
   /// Redirect URL used for password recovery.

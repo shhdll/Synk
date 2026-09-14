@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'forgot_password_view.dart';
 import 'home/main_shell.dart';
 
@@ -82,10 +83,7 @@ class _LoginViewState extends State<LoginView> {
           backgroundColor: const Color(0xFFE85D5D),
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.all(20),
-          padding: const EdgeInsets.symmetric(
-            horizontal: 18,
-            vertical: 14,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -190,9 +188,7 @@ class _LoginViewState extends State<LoginView> {
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    style: const TextStyle(
-                      color: SynkColors.textPrimary,
-                    ),
+                    style: const TextStyle(color: SynkColors.textPrimary),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
                         return 'Please enter your email';
@@ -232,9 +228,7 @@ class _LoginViewState extends State<LoginView> {
                   TextFormField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
-                    style: const TextStyle(
-                      color: SynkColors.textPrimary,
-                    ),
+                    style: const TextStyle(color: SynkColors.textPrimary),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your password';
@@ -284,15 +278,15 @@ class _LoginViewState extends State<LoginView> {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => ForgotPasswordView(
-        initialEmail: _emailController.text.trim(),
-      ),
-    ),
-  );
-},
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ForgotPasswordView(
+                              initialEmail: _emailController.text.trim(),
+                            ),
+                          ),
+                        );
+                      },
                       child: const Text(
                         'Forgot Password?',
                         style: TextStyle(
@@ -315,13 +309,11 @@ class _LoginViewState extends State<LoginView> {
                             : _handleLogin,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: SynkColors.orangeDark,
-                          disabledBackgroundColor:
-                              SynkColors.orangeDark.withValues(alpha: 0.6),
+                          disabledBackgroundColor: SynkColors.orangeDark
+                              .withValues(alpha: 0.6),
                           foregroundColor: Colors.white,
                           elevation: 0,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 18,
-                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 18),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
                           ),
@@ -354,9 +346,7 @@ class _LoginViewState extends State<LoginView> {
                     children: [
                       const Text(
                         "Don't have an account?",
-                        style: TextStyle(
-                          color: SynkColors.textSecondary,
-                        ),
+                        style: TextStyle(color: SynkColors.textSecondary),
                       ),
                       TextButton(
                         onPressed: () {

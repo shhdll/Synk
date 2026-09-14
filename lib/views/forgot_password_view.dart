@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../controllers/reset_password_controller.dart';
 import '../core/constants/synk_colors.dart';
 import '../utils/custom_widgets/puzzle_piece_tile.dart';
+import 'widgets/reset_link_info_row.dart';
 
 class ForgotPasswordView extends StatefulWidget {
   const ForgotPasswordView({super.key, this.initialEmail = ''});
@@ -66,8 +67,10 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
     if (!mounted) return;
 
     if (!success) {
-      _showSnackBar(_controller.errorMessage ?? 'Unable to send the link.',
-          success: false);
+      _showSnackBar(
+        _controller.errorMessage ?? 'Unable to send the link.',
+        success: false,
+      );
     }
   }
 
@@ -152,10 +155,11 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
                           state: sent
                               ? PieceState.sent
                               : _controller.isLoading
-                                  ? PieceState.sending
-                                  : PieceState.missing,
-                          badgeIcon:
-                              sent ? Icons.mark_email_read_rounded : null,
+                              ? PieceState.sending
+                              : PieceState.missing,
+                          badgeIcon: sent
+                              ? Icons.mark_email_read_rounded
+                              : null,
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -178,15 +182,15 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
                           switchOutCurve: Curves.easeInCubic,
                           transitionBuilder: (child, animation) =>
                               FadeTransition(
-                            opacity: animation,
-                            child: SlideTransition(
-                              position: Tween<Offset>(
-                                begin: const Offset(0, 0.04),
-                                end: Offset.zero,
-                              ).animate(animation),
-                              child: child,
-                            ),
-                          ),
+                                opacity: animation,
+                                child: SlideTransition(
+                                  position: Tween<Offset>(
+                                    begin: const Offset(0, 0.04),
+                                    end: Offset.zero,
+                                  ).animate(animation),
+                                  child: child,
+                                ),
+                              ),
                           child: sent
                               ? _buildSentBody(key: const ValueKey('sent'))
                               : _buildFormBody(key: const ValueKey('form')),
@@ -336,10 +340,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
 
         const SizedBox(height: 28),
 
-        _buildPrimaryButton(
-          label: 'Send reset link',
-          onPressed: _handleSend,
-        ),
+        _buildPrimaryButton(label: 'Send reset link', onPressed: _handleSend),
 
         const SizedBox(height: 16),
 
@@ -433,17 +434,17 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
           ),
           child: const Column(
             children: [
-              _InfoRow(
+              ResetLinkInfoRow(
                 icon: Icons.link_rounded,
                 text: 'The link can only be used once',
               ),
               SizedBox(height: 16),
-              _InfoRow(
+              ResetLinkInfoRow(
                 icon: Icons.phone_android_rounded,
                 text: 'Open it on this device so Synk can sign you in',
               ),
               SizedBox(height: 16),
-              _InfoRow(
+              ResetLinkInfoRow(
                 icon: Icons.forward_to_inbox_rounded,
                 text: 'Not there? Check your spam folder',
               ),
@@ -514,9 +515,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
         foregroundColor: Colors.white,
         elevation: 0,
         padding: const EdgeInsets.symmetric(vertical: 18),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
       ),
       child: loading
           ? const SizedBox(
@@ -529,47 +528,8 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
             )
           : Text(
               label,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.icon, required this.text});
-
-  final IconData icon;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: SynkColors.teal.withValues(alpha: 0.15),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, size: 20, color: SynkColors.teal),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Text(
-            text,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              height: 1.4,
-              color: SynkColors.textPrimary,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

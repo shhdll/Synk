@@ -1,16 +1,10 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../core/constants/auth_constants.dart'; 
+
+import '../core/constants/auth_constants.dart';
 
 class AuthModel {
   // Provides access to Supabase authentication.
   final SupabaseClient _supabase = Supabase.instance.client;
-
-  // Email of the currently signed-in user, if any.
-  String? get currentUserEmail => _supabase.auth.currentUser?.email;
-
-  // Display name of the currently signed-in user, set at sign-up.
-  String? get currentUserName =>
-      _supabase.auth.currentUser?.userMetadata?['full_name'] as String?;
 
   // Signs in an existing user with an email and password.
   Future<AuthResponse> signIn({
@@ -27,7 +21,7 @@ class AuthModel {
   Future<void> signOut() async {
     await _supabase.auth.signOut();
   }
-    // Password recovery
+  // Password recovery
 
   // Listens for authentication state changes, including password recovery.
   Stream<AuthState> get authStateChanges => _supabase.auth.onAuthStateChange;
@@ -45,12 +39,6 @@ class AuthModel {
     return await _supabase.auth.updateUser(
       UserAttributes(password: newPassword),
     );
-  }
-
-  // Merges the given fields into the current user's metadata (existing
-  // keys not included here are left untouched).
-  Future<UserResponse> updateMetadata(Map<String, dynamic> data) async {
-    return await _supabase.auth.updateUser(UserAttributes(data: data));
   }
 
   // Requests an email change. Supabase emails the new address a

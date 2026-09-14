@@ -41,6 +41,36 @@ class SignupController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void clearNameError() {
+    if (nameError == null) return;
+    nameError = null;
+    notifyListeners();
+  }
+
+  void clearBirthdayError() {
+    if (birthdayError == null) return;
+    birthdayError = null;
+    notifyListeners();
+  }
+
+  void clearEmailError() {
+    if (emailError == null) return;
+    emailError = null;
+    notifyListeners();
+  }
+
+  void clearPasswordError() {
+    if (passwordError == null) return;
+    passwordError = null;
+    notifyListeners();
+  }
+
+  void clearConfirmPasswordError() {
+    if (confirmPasswordError == null) return;
+    confirmPasswordError = null;
+    notifyListeners();
+  }
+
   void toggleObscurePassword() {
     obscurePassword = !obscurePassword;
     notifyListeners();
@@ -71,8 +101,7 @@ class SignupController extends ChangeNotifier {
 
       // Birthday has not happened yet this year.
       if (today.month < birthday.month ||
-          (today.month == birthday.month &&
-              today.day < birthday.day)) {
+          (today.month == birthday.month && today.day < birthday.day)) {
         age--;
       }
 
@@ -190,8 +219,7 @@ class SignupController extends ChangeNotifier {
 
       return response;
     } on AuthWeakPasswordException {
-      passwordError =
-          'Password is too weak. Please use at least 6 characters.';
+      passwordError = 'Password is too weak. Please use at least 6 characters.';
     } on AuthException catch (e) {
       final msg = e.message.toLowerCase();
 
