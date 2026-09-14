@@ -33,7 +33,10 @@ class PersonalDetailsSlide extends StatelessWidget {
                 const SizedBox(height: 10),
                 const Text(
                   'This helps customize your community experience.',
-                  style: TextStyle(fontSize: 15, color: Color(0xFF6B7280)),
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Color(0xFF6B7280),
+                  ),
                 ),
                 const SizedBox(height: 32),
 
@@ -53,18 +56,87 @@ class PersonalDetailsSlide extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
 
-                // Age
+                // Birthday
                 _buildField(
-                  controller: controller.ageController,
-                  label: 'Age',
-                  hint: '21',
+                  controller: controller.birthdayController,
+                  label: 'Birthday',
+                  hint: 'DD/MM/YYYY',
                   icon: Icons.cake_outlined,
-                  keyboardType: TextInputType.number,
-                  errorText: controller.ageError,
-                  onChanged: (_) {
-                    if (controller.ageError != null) {
-                      controller.ageError = null;
-                      controller.notifyListeners();
+                  readOnly: true,
+                  errorText: controller.birthdayError,
+                  onTap: () async {
+                    final today = DateTime.now();
+
+                    // Oldest allowed: 90 years old
+                    final firstDate = DateTime(
+                      today.year - 90,
+                      today.month,
+                      today.day,
+                    );
+
+                    // Youngest allowed: 16 years old
+                    final lastDate = DateTime(
+                      today.year - 16,
+                      today.month,
+                      today.day,
+                    );
+
+                    // If there is already a birthday selected,
+                    // use it as the initial date.
+                    DateTime initialDate = DateTime(
+                      today.year - 21,
+                      today.month,
+                      today.day,
+                    );
+
+                    if (controller.birthdayController.text.isNotEmpty) {
+                      try {
+                        final parts =
+                            controller.birthdayController.text.split('/');
+
+                        if (parts.length == 3) {
+                          final day = int.parse(parts[0]);
+                          final month = int.parse(parts[1]);
+                          final year = int.parse(parts[2]);
+
+                          final existingDate = DateTime(
+                            year,
+                            month,
+                            day,
+                          );
+
+                          if (!existingDate.isBefore(firstDate) &&
+                              !existingDate.isAfter(lastDate)) {
+                            initialDate = existingDate;
+                          }
+                        }
+                      } catch (_) {
+                        // Keep the default initial date.
+                      }
+                    }
+
+                    final selectedDate = await showDatePicker(
+                      context: context,
+                      initialDate: initialDate,
+                      firstDate: firstDate,
+                      lastDate: lastDate,
+                      helpText: 'Select birthday',
+                    );
+
+                    if (selectedDate != null) {
+                      final day =
+                          selectedDate.day.toString().padLeft(2, '0');
+                      final month =
+                          selectedDate.month.toString().padLeft(2, '0');
+                      final year = selectedDate.year.toString();
+
+                      controller.birthdayController.text =
+                          '$day/$month/$year';
+
+                      if (controller.birthdayError != null) {
+                        controller.birthdayError = null;
+                        controller.notifyListeners();
+                      }
                     }
                   },
                 ),
@@ -80,10 +152,13 @@ class PersonalDetailsSlide extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
+
                 // Gender selector row
                 Row(
                   children: ['Female', 'Male'].map((gender) {
-                    final isSelected = controller.selectedGender == gender;
+                    final isSelected =
+                        controller.selectedGender == gender;
+
                     return Expanded(
                       child: GestureDetector(
                         onTap: () => controller.setGender(gender),
@@ -103,7 +178,8 @@ class PersonalDetailsSlide extends StatelessWidget {
                                 : null,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.04),
+                                color:
+                                    Colors.black.withValues(alpha: 0.04),
                                 blurRadius: 8,
                                 offset: const Offset(0, 3),
                               ),
@@ -125,6 +201,7 @@ class PersonalDetailsSlide extends StatelessWidget {
                     );
                   }).toList(),
                 ),
+
                 if (controller.genderError != null) ...[
                   const SizedBox(height: 6),
                   Padding(
@@ -139,6 +216,7 @@ class PersonalDetailsSlide extends StatelessWidget {
                     ),
                   ),
                 ],
+
                 const SizedBox(height: 120),
               ],
             );
@@ -155,6 +233,8 @@ class PersonalDetailsSlide extends StatelessWidget {
     required IconData icon,
     String? errorText,
     ValueChanged<String>? onChanged,
+    VoidCallback? onTap,
+    bool readOnly = false,
     TextInputType keyboardType = TextInputType.text,
   }) {
     return Column(
@@ -165,7 +245,10 @@ class PersonalDetailsSlide extends StatelessWidget {
             color: Colors.white.withValues(alpha: 0.95),
             borderRadius: BorderRadius.circular(16),
             border: errorText != null
-                ? Border.all(color: const Color(0xFFE53935), width: 1.2)
+                ? Border.all(
+                    color: const Color(0xFFE53935),
+                    width: 1.2,
+                  )
                 : null,
             boxShadow: [
               BoxShadow(
@@ -179,13 +262,19 @@ class PersonalDetailsSlide extends StatelessWidget {
             controller: controller,
             keyboardType: keyboardType,
             onChanged: onChanged,
+            onTap: onTap,
+            readOnly: readOnly,
             style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
               color: Color(0xFF1E1E1E),
             ),
             decoration: InputDecoration(
-              prefixIcon: Icon(icon, size: 20, color: const Color(0xFF6B7280)),
+              prefixIcon: Icon(
+                icon,
+                size: 20,
+                color: const Color(0xFF6B7280),
+              ),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
