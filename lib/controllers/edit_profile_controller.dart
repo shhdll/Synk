@@ -58,6 +58,25 @@ class EditProfileController extends ChangeNotifier {
     return message;
   }
 
+  // Removes the current photo and returns a message to show the user on
+  // failure, or null on success.
+  Future<String?> removePhoto() async {
+    _isUploadingPhoto = true;
+    notifyListeners();
+
+    String? message;
+    try {
+      await AvatarUploader.removePhoto(_profile);
+      _profile = await _profileModel.fetchProfile();
+    } catch (_) {
+      message = 'Unable to remove your photo. Please try again.';
+    } finally {
+      _isUploadingPhoto = false;
+      notifyListeners();
+    }
+    return message;
+  }
+
   Future<void> updateName(String value) async {
     await _profileModel.updateProfile({'full_name': value});
     _profile = {..._profile, 'full_name': value};

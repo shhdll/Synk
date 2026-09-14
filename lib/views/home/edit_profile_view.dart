@@ -6,6 +6,7 @@ import '../../core/constants/synk_colors.dart';
 import 'widgets/age_editor_sheet.dart';
 import 'widgets/editable_row.dart';
 import 'widgets/field_editor_sheet.dart';
+import 'widgets/photo_options_sheet.dart';
 
 class EditProfileView extends StatefulWidget {
   const EditProfileView({super.key});
@@ -35,6 +36,32 @@ class _EditProfileViewState extends State<EditProfileView> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _removePhoto() async {
+    final message = await _controller.removePhoto();
+    if (!mounted || message == null) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _openPhotoOptions() async {
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) =>
+          PhotoOptionsSheet(hasPhoto: _controller.avatarImage != null),
+    );
+
+    if (action == null || !mounted) return;
+
+    if (action == 'change') {
+      await _changePhoto();
+    } else if (action == 'remove') {
+      await _removePhoto();
+    }
   }
 
   Future<void> _editName() async {
@@ -228,7 +255,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                 children: [
                   Center(
                     child: GestureDetector(
-                      onTap: isUploadingPhoto ? null : _changePhoto,
+                      onTap: isUploadingPhoto ? null : _openPhotoOptions,
                       child: Stack(
                         clipBehavior: Clip.none,
                         children: [
@@ -267,15 +294,10 @@ class _EditProfileViewState extends State<EditProfileView> {
                                     ),
                                   )
                                 : avatarImage == null
-                                ? Text(
-                                    (fullName?.isNotEmpty ?? false)
-                                        ? fullName![0].toUpperCase()
-                                        : '?',
-                                    style: const TextStyle(
-                                      fontSize: 34,
-                                      fontWeight: FontWeight.w900,
-                                      color: Colors.white,
-                                    ),
+                                ? const Icon(
+                                    Icons.person_rounded,
+                                    size: 44,
+                                    color: Colors.white,
                                   )
                                 : null,
                           ),

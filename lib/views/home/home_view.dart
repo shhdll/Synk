@@ -125,15 +125,11 @@ class _HomeViewState extends State<HomeView> {
       height: 50,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 14,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        border: Border.all(
+          color: SynkColors.textSecondary.withValues(alpha: 0.10),
+        ),
       ),
       child: Row(
         children: [

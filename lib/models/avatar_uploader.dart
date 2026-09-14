@@ -70,6 +70,43 @@ class AvatarUploader {
     );
   }
 
+  // Deletes the local copy, best-effort clears the cloud copy, and clears
+  // the profile's avatar fields so the UI falls back to the default icon.
+  static Future<void> removePhoto(Map<String, dynamic> metadata) async {
+    final localPath = (metadata['avatar_local_path'] as String?)?.trim();
+    if (localPath != null && localPath.isNotEmpty) {
+      final file = File(localPath);
+      if (await file.exists()) {
+        try {
+          await file.delete();
+        } catch (_) {
+          // Fine either way — the profile fields below are the source of
+          // truth for whether an avatar is set.
+        }
+      }
+    }
+
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId != null) {
+      try {
+        final objects = await Supabase.instance.client.storage
+            .from('avatars')
+            .list(path: userId);
+        final paths = objects.map((o) => '$userId/${o.name}').toList();
+        if (paths.isNotEmpty) {
+          await Supabase.instance.client.storage.from('avatars').remove(paths);
+        }
+      } catch (_) {
+        // No 'avatars' bucket, no permission, or nothing to remove.
+      }
+    }
+
+    await _profileModel.updateProfile({
+      'avatar_local_path': null,
+      'avatar_url': null,
+    });
+  }
+
   static ImageProvider? imageFor(Map<String, dynamic> metadata) {
     final avatarUrl = (metadata['avatar_url'] as String?)?.trim();
     if (avatarUrl != null && avatarUrl.isNotEmpty) {
