@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class SignupController extends ChangeNotifier {
   // Fields
   final TextEditingController nameController = TextEditingController();
-  final TextEditingController ageController = TextEditingController();
+  final TextEditingController birthdayController = TextEditingController();
   String? selectedGender;
 
   final TextEditingController emailController = TextEditingController();
@@ -17,7 +17,7 @@ class SignupController extends ChangeNotifier {
 
   // Inline error states
   String? nameError;
-  String? ageError;
+  String? birthdayError;
   String? genderError;
   String? emailError;
   String? passwordError;
@@ -26,7 +26,7 @@ class SignupController extends ChangeNotifier {
 
   void clearErrors() {
     nameError = null;
-    ageError = null;
+    birthdayError = null;
     genderError = null;
     emailError = null;
     passwordError = null;
@@ -46,25 +46,71 @@ class SignupController extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Calculate age from birthday
+  int? _calculateAge(String birthdayText) {
+    try {
+      final parts = birthdayText.split('/');
+
+      if (parts.length != 3) return null;
+
+      final day = int.parse(parts[0]);
+      final month = int.parse(parts[1]);
+      final year = int.parse(parts[2]);
+
+      final birthday = DateTime(year, month, day);
+      final today = DateTime.now();
+
+      // Make sure the date itself is valid.
+      if (birthday.year != year ||
+          birthday.month != month ||
+          birthday.day != day) {
+        return null;
+      }
+
+      int age = today.year - birthday.year;
+
+      // Birthday has not happened yet this year.
+      if (today.month < birthday.month ||
+          (today.month == birthday.month &&
+              today.day < birthday.day)) {
+        age--;
+      }
+
+      return age;
+    } catch (_) {
+      return null;
+    }
+  }
+
   bool validatePersonalDetails() {
     clearErrors();
     bool isValid = true;
 
+    // Validate name
     if (nameController.text.trim().isEmpty) {
       nameError = 'Full name is required';
       isValid = false;
     }
 
-    final ageText = ageController.text.trim();
-    final age = int.tryParse(ageText);
-    if (ageText.isEmpty) {
-      ageError = 'Age is required';
+    // Validate birthday
+    final birthdayText = birthdayController.text.trim();
+
+    if (birthdayText.isEmpty) {
+      birthdayError = 'Birthday is required';
       isValid = false;
-    } else if (age == null || age < 10 || age > 100) {
-      ageError = 'Enter a valid age (10-100)';
-      isValid = false;
+    } else {
+      final age = _calculateAge(birthdayText);
+
+      if (age == null) {
+        birthdayError = 'Please enter a valid birthday';
+        isValid = false;
+      } else if (age < 16 || age > 90) {
+        birthdayError = 'Adult must be between 16 and 90 years old';
+        isValid = false;
+      }
     }
 
+    // Validate gender
     if (selectedGender == null) {
       genderError = 'Please select your gender';
       isValid = false;
@@ -79,6 +125,7 @@ class SignupController extends ChangeNotifier {
     passwordError = null;
     confirmPasswordError = null;
     generalError = null;
+
     bool isValid = true;
 
     final email = emailController.text.trim();
@@ -86,6 +133,8 @@ class SignupController extends ChangeNotifier {
     final confirmPassword = confirmPasswordController.text.trim();
 
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+
+    // Validate email
     if (email.isEmpty) {
       emailError = 'Email address is required';
       isValid = false;
@@ -94,6 +143,7 @@ class SignupController extends ChangeNotifier {
       isValid = false;
     }
 
+    // Validate password
     if (password.isEmpty) {
       passwordError = 'Password is required';
       isValid = false;
@@ -102,6 +152,7 @@ class SignupController extends ChangeNotifier {
       isValid = false;
     }
 
+    // Validate confirm password
     if (confirmPassword.isEmpty) {
       confirmPasswordError = 'Please confirm your password';
       isValid = false;
@@ -124,21 +175,26 @@ class SignupController extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final age = _calculateAge(birthdayController.text.trim());
+
       final response = await Supabase.instance.client.auth.signUp(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
         data: {
           'full_name': nameController.text.trim(),
-          'age': int.tryParse(ageController.text.trim()),
+          'age': age,
           'gender': selectedGender,
           ...onboardingPreferences,
         },
       );
+
       return response;
     } on AuthWeakPasswordException {
-      passwordError = 'Password is too weak. Please use at least 6 characters.';
+      passwordError =
+          'Password is too weak. Please use at least 6 characters.';
     } on AuthException catch (e) {
       final msg = e.message.toLowerCase();
+
       if (msg.contains('already registered') ||
           msg.contains('user already exists')) {
         emailError = 'An account with this email already exists';
@@ -155,13 +211,14 @@ class SignupController extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     }
+
     return null;
   }
 
   @override
   void dispose() {
     nameController.dispose();
-    ageController.dispose();
+    birthdayController.dispose();
     emailController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();

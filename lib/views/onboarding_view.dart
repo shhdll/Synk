@@ -557,7 +557,7 @@ class _OnboardingViewState extends State<OnboardingView>
         ),
         const SizedBox(height: 10),
         _buildChoiceCard(
-          emoji: '✨',
+          emoji: '🤙🏻',
           title: 'I don’t mind',
           value: 'I don’t mind',
           selectedValue: _controller.activityType,
@@ -613,7 +613,7 @@ class _OnboardingViewState extends State<OnboardingView>
         ),
         const SizedBox(height: 10),
         _buildChoiceCard(
-          emoji: '✨',
+          emoji: '🤙🏻',
           title: 'I don’t mind',
           value: 'I don’t mind',
           selectedValue: _controller.locationPreference,
@@ -927,8 +927,6 @@ class _OnboardingViewState extends State<OnboardingView>
 
   void _finishOnboarding() {
     final data = _controller.onboardingData;
-
-    print(data);
   }
 }
 
