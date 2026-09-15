@@ -267,8 +267,8 @@ class _EditProfileViewState extends State<EditProfileView> {
                               gradient: avatarImage == null
                                   ? const LinearGradient(
                                       colors: [
-                                        SynkColors.orange,
-                                        SynkColors.orangeDark,
+                                        SynkColors.beige,
+                                        SynkColors.beigeDark,
                                       ],
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,

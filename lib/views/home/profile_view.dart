@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../controllers/profile_controller.dart';
+import '../../core/constants/interest_emojis.dart';
 import '../../core/constants/synk_colors.dart';
 import '../../models/avatar_uploader.dart';
 import 'edit_profile_view.dart';
@@ -72,6 +73,15 @@ class _ProfileViewState extends State<ProfileView> {
         (profile['interests'] as List?)?.cast<String>() ?? const [];
     final email = _controller.email;
     final avatarImage = AvatarUploader.imageFor(profile);
+    final friendsCount = profile['friends_count'] as int? ?? 0;
+    final activitiesCount = profile['activities_count'] as int? ?? 0;
+    final ratingValue = profile['rating'];
+    final ratingText = ratingValue is num ? ratingValue.toStringAsFixed(1) : '—';
+    final subtitle = [
+      ?email,
+      if (age != null) '$age yrs',
+      if (gender?.isNotEmpty ?? false) gender!,
+    ].join(' · ');
 
     return Scaffold(
       backgroundColor: SynkColors.background,
@@ -81,43 +91,65 @@ class _ProfileViewState extends State<ProfileView> {
           children: [
             const AppHeader(),
             const SizedBox(height: 20),
-            const SectionLabel('Profile'),
-            const SizedBox(height: 12),
             GestureDetector(
               onTap: _openEditProfile,
               behavior: HitTestBehavior.opaque,
               child: Container(
-                padding: const EdgeInsets.all(20),
+                clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Colors.white.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 14,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
+                  border: Border.all(
+                    color: SynkColors.textSecondary.withValues(alpha: 0.10),
+                  ),
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    // Synk-gradient banner with the avatar hanging off its
+                    // bottom edge. Kept taller than the summary content
+                    // below it so the color dominates the card.
+                    Stack(
+                      clipBehavior: Clip.none,
+                      alignment: Alignment.bottomLeft,
                       children: [
-                        Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Container(
-                              width: 64,
-                              height: 64,
+                        Container(
+                          height: 180,
+                          width: double.infinity,
+                          decoration: const BoxDecoration(
+                            // Warm, blurred lava-glow gradient for the header.
+                            gradient: LinearGradient(
+                              colors: [
+                                Color(0xFFB6350F),
+                                Color(0xFFFF8A1E),
+                                Color(0xFFFFE3B0),
+                                Color(0xFFFF7A1A),
+                                Color(0xFFB6350F),
+                              ],
+                              stops: [0.0, 0.3, 0.55, 0.78, 1.0],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          left: 20,
+                          bottom: -40,
+                          child: Container(
+                            width: 84,
+                            height: 84,
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Container(
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 gradient: avatarImage == null
                                     ? const LinearGradient(
                                         colors: [
-                                          SynkColors.orange,
-                                          SynkColors.orangeDark,
+                                          SynkColors.beige,
+                                          SynkColors.beigeDark,
                                         ],
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
@@ -132,107 +164,107 @@ class _ProfileViewState extends State<ProfileView> {
                               ),
                               alignment: Alignment.center,
                               child: avatarImage == null
-                                  ? Text(
-                                      (fullName?.isNotEmpty ?? false)
-                                          ? fullName![0].toUpperCase()
-                                          : '?',
-                                      style: const TextStyle(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.w900,
-                                        color: Colors.white,
-                                      ),
+                                  ? const Icon(
+                                      Icons.person_rounded,
+                                      size: 34,
+                                      color: Colors.white,
                                     )
                                   : null,
                             ),
-                            Positioned(
-                              right: -2,
-                              bottom: -2,
-                              child: Container(
-                                padding: const EdgeInsets.all(5),
-                                decoration: BoxDecoration(
-                                  color: SynkColors.orangeDark,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white,
-                                    width: 2,
-                                  ),
-                                ),
-                                child: const Icon(
-                                  Icons.camera_alt_rounded,
-                                  size: 12,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                (fullName?.isNotEmpty ?? false)
-                                    ? fullName!
-                                    : 'Synk member',
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w800,
-                                  color: SynkColors.textPrimary,
-                                ),
-                              ),
-                              if (email != null) ...[
-                                const SizedBox(height: 2),
-                                Text(
-                                  email,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                    color: SynkColors.textSecondary,
-                                  ),
-                                ),
-                              ],
-                              if (age != null ||
-                                  (gender?.isNotEmpty ?? false)) ...[
-                                const SizedBox(height: 6),
-                                Text(
-                                  [
-                                    if (age != null) '$age yrs',
-                                    if (gender?.isNotEmpty ?? false) gender!,
-                                  ].join(' · '),
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: SynkColors.orangeDark,
-                                  ),
-                                ),
-                              ],
-                            ],
                           ),
-                        ),
-                        const Icon(
-                          Icons.chevron_right_rounded,
-                          color: SynkColors.textSecondary,
                         ),
                       ],
                     ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: _EditInfoButton(),
+                      ),
+                    ),
                     const SizedBox(height: 16),
-                    const Divider(height: 1),
-                    const SizedBox(height: 14),
-                    Text(
-                      (bio?.isNotEmpty ?? false)
-                          ? bio!
-                          : 'Add a short bio so people get to know you.',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        fontStyle: (bio?.isNotEmpty ?? false)
-                            ? FontStyle.normal
-                            : FontStyle.italic,
-                        height: 1.4,
-                        color: (bio?.isNotEmpty ?? false)
-                            ? SynkColors.textPrimary
-                            : SynkColors.textSecondary,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            (fullName?.isNotEmpty ?? false)
+                                ? fullName!
+                                : 'Synk member',
+                            style: const TextStyle(
+                              fontSize: 19,
+                              fontWeight: FontWeight.w800,
+                              color: SynkColors.textPrimary,
+                            ),
+                          ),
+                          if (subtitle.isNotEmpty) ...[
+                            const SizedBox(height: 3),
+                            Text(
+                              subtitle,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: SynkColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 18),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _StatItem(
+                                  icon: Icons.people_alt_rounded,
+                                  value: '$friendsCount',
+                                  label: 'Friends',
+                                ),
+                              ),
+                              const _StatDivider(),
+                              Expanded(
+                                child: _StatItem(
+                                  icon: Icons.local_activity_rounded,
+                                  value: '$activitiesCount',
+                                  label: 'Activities',
+                                ),
+                              ),
+                              const _StatDivider(),
+                              Expanded(
+                                child: _StatItem(
+                                  icon: Icons.star_rounded,
+                                  value: ratingText,
+                                  label: 'Rating',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Divider(height: 1),
+                          const SizedBox(height: 14),
+                          Text(
+                            (bio?.isNotEmpty ?? false)
+                                ? bio!
+                                : 'Add a short bio so people get to know you.',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              fontStyle: (bio?.isNotEmpty ?? false)
+                                  ? FontStyle.normal
+                                  : FontStyle.italic,
+                              height: 1.4,
+                              color: (bio?.isNotEmpty ?? false)
+                                  ? SynkColors.textPrimary
+                                  : SynkColors.textSecondary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -243,31 +275,58 @@ class _ProfileViewState extends State<ProfileView> {
               const SizedBox(height: 24),
               const SectionLabel('Interests'),
               const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: interests
-                    .map(
-                      (interest) => Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: SynkColors.teal.withValues(alpha: 0.14),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          interest,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: SynkColors.teal,
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: SynkColors.textSecondary.withValues(alpha: 0.10),
+                  ),
+                ),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: interests
+                      .map(
+                        (interest) => Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                              color: SynkColors.textSecondary.withValues(
+                                alpha: 0.35,
+                              ),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (kInterestEmojis[interest] != null) ...[
+                                Text(
+                                  kInterestEmojis[interest]!,
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                                const SizedBox(width: 6),
+                              ],
+                              Text(
+                                interest,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: SynkColors.textPrimary,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                    )
-                    .toList(),
+                      )
+                      .toList(),
+                ),
               ),
             ],
             if ((activityType?.isNotEmpty ?? false) ||
@@ -278,15 +337,11 @@ class _ProfileViewState extends State<ProfileView> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Colors.white.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 14,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
+                  border: Border.all(
+                    color: SynkColors.textSecondary.withValues(alpha: 0.10),
+                  ),
                 ),
                 child: Column(
                   children: [
@@ -331,6 +386,95 @@ class _ProfileViewState extends State<ProfileView> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _EditInfoButton extends StatelessWidget {
+  const _EditInfoButton();
+
+  @override
+  Widget build(BuildContext context) {
+    // Purely a visual affordance — the whole card already opens Edit
+    // Profile on tap.
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: SynkColors.textSecondary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.edit_rounded, size: 14, color: SynkColors.textSecondary),
+          SizedBox(width: 4),
+          Text(
+            'Edit info',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: SynkColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatDivider extends StatelessWidget {
+  const _StatDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 1,
+      height: 32,
+      color: SynkColors.textSecondary.withValues(alpha: 0.15),
+    );
+  }
+}
+
+class _StatItem extends StatelessWidget {
+  const _StatItem({
+    required this.icon,
+    required this.value,
+    required this.label,
+  });
+
+  final IconData icon;
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 16, color: SynkColors.orangeDark),
+            const SizedBox(width: 4),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: SynkColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: SynkColors.textSecondary,
+          ),
+        ),
+      ],
     );
   }
 }
