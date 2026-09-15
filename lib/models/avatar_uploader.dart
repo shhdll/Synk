@@ -24,6 +24,11 @@ class AvatarUploader {
   static final ImagePicker _picker = ImagePicker();
   static final UserProfileModel _profileModel = UserProfileModel();
 
+  // Shown in place of a real photo until the user sets one.
+  static const ImageProvider defaultImage = AssetImage(
+    'assets/synk_one_jumping.png',
+  );
+
   static Future<AvatarUpdateResult> pickAndSave() async {
     final picked = await _picker.pickImage(
       source: ImageSource.gallery,

@@ -27,4 +27,16 @@ class ProfileController extends ChangeNotifier {
     _isLoading = false;
     notifyListeners();
   }
+
+  Future<void> updateActivityType(String value) async {
+    await _profileModel.updateProfile({'activity_type': value});
+    _profile = {..._profile, 'activity_type': value};
+    notifyListeners();
+  }
+
+  Future<void> updateLocationPreference(String value) async {
+    await _profileModel.updateProfile({'location_preference': value});
+    _profile = {..._profile, 'location_preference': value};
+    notifyListeners();
+  }
 }

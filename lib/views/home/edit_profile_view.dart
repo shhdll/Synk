@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../controllers/edit_profile_controller.dart';
 import '../../core/constants/synk_colors.dart';
+import '../../models/avatar_uploader.dart';
 import 'widgets/age_editor_sheet.dart';
 import 'widgets/editable_row.dart';
 import 'widgets/field_editor_sheet.dart';
@@ -218,6 +219,7 @@ class _EditProfileViewState extends State<EditProfileView> {
     final age = _controller.profile['age'];
     final email = _controller.email;
     final avatarImage = _controller.avatarImage;
+    final displayImage = avatarImage ?? AvatarUploader.defaultImage;
     final isUploadingPhoto = _controller.isUploadingPhoto;
 
     return Scaffold(
@@ -264,40 +266,29 @@ class _EditProfileViewState extends State<EditProfileView> {
                             height: 96,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              gradient: avatarImage == null
-                                  ? const LinearGradient(
-                                      colors: [
-                                        SynkColors.beige,
-                                        SynkColors.beigeDark,
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    )
-                                  : null,
-                              image: avatarImage != null
-                                  ? DecorationImage(
-                                      image: avatarImage,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : null,
+                              image: DecorationImage(
+                                image: displayImage,
+                                fit: BoxFit.cover,
+                              ),
                             ),
                             alignment: Alignment.center,
                             child: isUploadingPhoto
-                                ? const SizedBox(
-                                    width: 26,
-                                    height: 26,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.5,
-                                      valueColor: AlwaysStoppedAnimation(
-                                        Colors.white,
+                                ? Container(
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.black38,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: const SizedBox(
+                                      width: 26,
+                                      height: 26,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.5,
+                                        valueColor: AlwaysStoppedAnimation(
+                                          Colors.white,
+                                        ),
                                       ),
                                     ),
-                                  )
-                                : avatarImage == null
-                                ? const Icon(
-                                    Icons.person_rounded,
-                                    size: 44,
-                                    color: Colors.white,
                                   )
                                 : null,
                           ),

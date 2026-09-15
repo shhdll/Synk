@@ -4,9 +4,11 @@ import '../../controllers/profile_controller.dart';
 import '../../core/constants/interest_emojis.dart';
 import '../../core/constants/synk_colors.dart';
 import '../../models/avatar_uploader.dart';
+import 'edit_interests_view.dart';
 import 'edit_profile_view.dart';
 import 'logout_view.dart';
 import 'widgets/app_header.dart';
+import 'widgets/option_picker_sheet.dart';
 import 'widgets/profile_info_row.dart';
 import 'widgets/section_label.dart';
 
@@ -44,6 +46,83 @@ class _ProfileViewState extends State<ProfileView> {
     await _controller.loadProfile();
   }
 
+  Future<void> _openEditInterests(List<String> currentInterests) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) =>
+            EditInterestsView(initialInterests: currentInterests),
+      ),
+    );
+    // Picks up whatever changed while Edit Interests was open.
+    await _controller.loadProfile();
+  }
+
+  Future<void> _editActivityType(String? current) async {
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => OptionPickerSheet(
+        title: 'Activity type',
+        initialValue: current,
+        options: const [
+          PickerOption(emoji: '🏠', label: 'Indoor'),
+          PickerOption(emoji: '🌳', label: 'Outdoor'),
+          PickerOption(emoji: '🤙🏻', label: 'I don’t mind'),
+        ],
+      ),
+    );
+
+    if (result == null || !mounted) return;
+
+    try {
+      await _controller.updateActivityType(result);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text('Unable to save. Please try again.'),
+            ),
+          );
+      }
+    }
+  }
+
+  Future<void> _editLocationPreference(String? current) async {
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => OptionPickerSheet(
+        title: 'Preferred location',
+        initialValue: current,
+        options: const [
+          PickerOption(emoji: '🏙️', label: 'In the city'),
+          PickerOption(emoji: '🛣️', label: 'Away from the city'),
+          PickerOption(emoji: '🤙🏻', label: 'I don’t mind'),
+        ],
+      ),
+    );
+
+    if (result == null || !mounted) return;
+
+    try {
+      await _controller.updateLocationPreference(result);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text('Unable to save. Please try again.'),
+            ),
+          );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
@@ -73,6 +152,7 @@ class _ProfileViewState extends State<ProfileView> {
         (profile['interests'] as List?)?.cast<String>() ?? const [];
     final email = _controller.email;
     final avatarImage = AvatarUploader.imageFor(profile);
+    final displayImage = avatarImage ?? AvatarUploader.defaultImage;
     final friendsCount = profile['friends_count'] as int? ?? 0;
     final activitiesCount = profile['activities_count'] as int? ?? 0;
     final ratingValue = profile['rating'];
@@ -105,75 +185,61 @@ class _ProfileViewState extends State<ProfileView> {
                 ),
                 child: Column(
                   children: [
-                    // Synk-gradient banner with the avatar hanging off its
-                    // bottom edge. Kept taller than the summary content
-                    // below it so the color dominates the card.
-                    Stack(
-                      clipBehavior: Clip.none,
-                      alignment: Alignment.bottomLeft,
-                      children: [
-                        Container(
-                          height: 180,
-                          width: double.infinity,
-                          decoration: const BoxDecoration(
-                            // Warm, blurred lava-glow gradient for the header.
-                            gradient: LinearGradient(
-                              colors: [
-                                Color(0xFFB6350F),
-                                Color(0xFFFF8A1E),
-                                Color(0xFFFFE3B0),
-                                Color(0xFFFF7A1A),
-                                Color(0xFFB6350F),
-                              ],
-                              stops: [0.0, 0.3, 0.55, 0.78, 1.0],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          left: 20,
-                          bottom: -40,
-                          child: Container(
-                            width: 84,
-                            height: 84,
-                            padding: const EdgeInsets.all(4),
+                    // Synk-gradient banner, framed by the card's own white
+                    // padding rather than flush with its edges, with the
+                    // avatar hanging off its bottom edge.
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        alignment: Alignment.bottomLeft,
+                        children: [
+                          Container(
+                            height: 120,
+                            width: double.infinity,
                             decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: avatarImage == null
-                                    ? const LinearGradient(
-                                        colors: [
-                                          SynkColors.beige,
-                                          SynkColors.beigeDark,
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      )
-                                    : null,
-                                image: avatarImage != null
-                                    ? DecorationImage(
-                                        image: avatarImage,
-                                        fit: BoxFit.cover,
-                                      )
-                                    : null,
+                              // Warm, blurred lava-glow gradient for the header.
+                              gradient: LinearGradient(
+                                colors: [
+                                  Color(0xFFB6350F),
+                                  Color(0xFFFF8A1E),
+                                  Color(0xFFFFE3B0),
+                                  Color(0xFFFF7A1A),
+                                  Color(0xFFB6350F),
+                                ],
+                                stops: [0.0, 0.3, 0.55, 0.78, 1.0],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
                               ),
-                              alignment: Alignment.center,
-                              child: avatarImage == null
-                                  ? const Icon(
-                                      Icons.person_rounded,
-                                      size: 34,
-                                      color: Colors.white,
-                                    )
-                                  : null,
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(20),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                          Positioned(
+                            left: 4,
+                            bottom: -40,
+                            child: Container(
+                              width: 84,
+                              height: 84,
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  image: DecorationImage(
+                                    image: displayImage,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
@@ -271,10 +337,30 @@ class _ProfileViewState extends State<ProfileView> {
                 ),
               ),
             ),
-            if (interests.isNotEmpty) ...[
-              const SizedBox(height: 24),
-              const SectionLabel('Interests'),
-              const SizedBox(height: 10),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                const SectionLabel('Interests'),
+                const Spacer(),
+                GestureDetector(
+                  onTap: () => _openEditInterests(interests),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: SynkColors.textSecondary.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.add_rounded,
+                      size: 18,
+                      color: SynkColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            if (interests.isNotEmpty)
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -327,43 +413,64 @@ class _ProfileViewState extends State<ProfileView> {
                       )
                       .toList(),
                 ),
-              ),
-            ],
-            if ((activityType?.isNotEmpty ?? false) ||
-                (locationPreference?.isNotEmpty ?? false)) ...[
-              const SizedBox(height: 24),
-              const SectionLabel('Preferences'),
-              const SizedBox(height: 10),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: SynkColors.textSecondary.withValues(alpha: 0.10),
+              )
+            else
+              GestureDetector(
+                onTap: () => _openEditInterests(interests),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: SynkColors.textSecondary.withValues(alpha: 0.10),
+                    ),
+                  ),
+                  child: const Text(
+                    "Add interests so people get to know what you're into.",
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontStyle: FontStyle.italic,
+                      color: SynkColors.textSecondary,
+                    ),
                   ),
                 ),
-                child: Column(
-                  children: [
-                    if (activityType?.isNotEmpty ?? false)
-                      ProfileInfoRow(
-                        icon: Icons.local_activity_rounded,
-                        label: 'Preferred activity type',
-                        value: activityType!,
-                      ),
-                    if ((activityType?.isNotEmpty ?? false) &&
-                        (locationPreference?.isNotEmpty ?? false))
-                      const Divider(height: 20),
-                    if (locationPreference?.isNotEmpty ?? false)
-                      ProfileInfoRow(
-                        icon: Icons.place_rounded,
-                        label: 'Preferred location',
-                        value: locationPreference!,
-                      ),
-                  ],
+              ),
+            const SizedBox(height: 24),
+            const SectionLabel('Preferences'),
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: SynkColors.textSecondary.withValues(alpha: 0.10),
                 ),
               ),
-            ],
+              child: Column(
+                children: [
+                  ProfileInfoRow(
+                    icon: Icons.local_activity_rounded,
+                    label: 'Activity type',
+                    value: (activityType?.isNotEmpty ?? false)
+                        ? activityType!
+                        : 'Not set',
+                    onEdit: () => _editActivityType(activityType),
+                  ),
+                  const Divider(height: 20),
+                  ProfileInfoRow(
+                    icon: Icons.place_rounded,
+                    label: 'Preferred location',
+                    value: (locationPreference?.isNotEmpty ?? false)
+                        ? locationPreference!
+                        : 'Not set',
+                    onEdit: () => _editLocationPreference(locationPreference),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 28),
             SizedBox(
               height: 52,

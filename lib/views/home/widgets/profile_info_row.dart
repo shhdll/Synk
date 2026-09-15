@@ -10,11 +10,13 @@ class ProfileInfoRow extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
+    this.onEdit,
   });
 
   final IconData icon;
   final String label;
   final String value;
+  final VoidCallback? onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +48,22 @@ class ProfileInfoRow extends StatelessWidget {
             ],
           ),
         ),
+        if (onEdit != null)
+          GestureDetector(
+            onTap: onEdit,
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: SynkColors.textSecondary.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.edit_rounded,
+                size: 14,
+                color: SynkColors.textSecondary,
+              ),
+            ),
+          ),
       ],
     );
   }
