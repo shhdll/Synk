@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../core/constants/auth_constants.dart';
-
 class SignupController extends ChangeNotifier {
   // Fields
   final TextEditingController nameController = TextEditingController();
@@ -17,6 +15,28 @@ class SignupController extends ChangeNotifier {
 
   bool obscurePassword = true;
   bool isLoading = false;
+
+  SignupController() {
+    nameController.addListener(_onFieldChanged);
+    birthdayController.addListener(_onFieldChanged);
+  }
+
+  void _onFieldChanged() {
+    notifyListeners();
+  }
+
+  bool get isPersonalDetailsValid {
+    final name = nameController.text.trim();
+    final birthday = birthdayController.text.trim();
+    if (name.isEmpty || birthday.isEmpty || selectedGender == null) {
+      return false;
+    }
+    final age = _calculateAge(birthday);
+    if (age == null || age < 16 || age > 90) {
+      return false;
+    }
+    return true;
+  }
 
   // Inline error states
   String? nameError;
@@ -169,27 +189,20 @@ class SignupController extends ChangeNotifier {
 
     bool isValid = true;
 
-    final username = usernameController.text.trim().replaceAll('@', '');
+    final username = usernameController.text.trim();
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
     final confirmPassword = confirmPasswordController.text.trim();
 
-    final usernameRegex = RegExp(r'^[a-zA-Z0-9_.]+$');
+    final usernameRegex = RegExp(r'^[a-zA-Z0-9._]{3,30}$');
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
 
-    // Validate username
+    // Validate username format
     if (username.isEmpty) {
       usernameError = 'Username is required';
       isValid = false;
-    } else if (username.length < 3) {
-      usernameError = 'Username must be at least 3 characters';
-      isValid = false;
-    } else if (username.length > 30) {
-      usernameError = 'Username must be 30 characters or less';
-      isValid = false;
     } else if (!usernameRegex.hasMatch(username)) {
-      usernameError =
-          'Username can only contain letters, numbers, underscores, and dots';
+      usernameError = '3-30 characters: letters, numbers, dots, or underscores';
       isValid = false;
     }
 
@@ -203,9 +216,11 @@ class SignupController extends ChangeNotifier {
     }
 
     // Validate password
-    final passwordValidation = AuthConstants.validatePassword(password);
-    if (passwordValidation != null) {
-      passwordError = passwordValidation;
+    if (password.isEmpty) {
+      passwordError = 'Password is required';
+      isValid = false;
+    } else if (password.length < 6) {
+      passwordError = 'Password must be at least 6 characters';
       isValid = false;
     }
 
@@ -222,22 +237,57 @@ class SignupController extends ChangeNotifier {
     return isValid;
   }
 
+  // Checks if the username is taken immediately when user leaves the field
+  Future<void> checkUsernameAvailability() async {
+    final username = usernameController.text.trim().toLowerCase();
+
+    if (username.isEmpty) {
+      usernameError = 'Username is required';
+      notifyListeners();
+      return;
+    }
+
+    final usernameRegex = RegExp(r'^[a-zA-Z0-9._]{3,30}$');
+    if (!usernameRegex.hasMatch(username)) {
+      usernameError = '3-30 characters: letters, numbers, dots, or underscores';
+      notifyListeners();
+      return;
+    }
+
+    try {
+      final existingUser = await Supabase.instance.client
+          .from('users')
+          .select('id')
+          .ilike('username', username)
+          .maybeSingle();
+
+      if (existingUser != null) {
+        usernameError = 'This username is already taken';
+      } else {
+        usernameError = null;
+      }
+    } catch (_) {
+      // Ignore network dropouts here; full validation will catch it on register
+    }
+
+    notifyListeners();
+  }
+
   Future<AuthResponse?> registerUser({
     required Map<String, dynamic> onboardingPreferences,
     required BuildContext context,
   }) async {
-    if (!validateCredentials()) return null;
+    final personalValid = validatePersonalDetails();
+    final credentialsValid = validateCredentials();
+    if (!personalValid || !credentialsValid) return null;
 
     isLoading = true;
     notifyListeners();
 
-    final cleanUsername = usernameController.text
-        .trim()
-        .replaceAll('@', '')
-        .toLowerCase();
-
     try {
-      // Check if username is already taken in the users table
+      final cleanUsername = usernameController.text.trim().toLowerCase();
+
+      // Check whether this username is already taken
       final existingUser = await Supabase.instance.client
           .from('users')
           .select('id')
@@ -257,36 +307,29 @@ class SignupController extends ChangeNotifier {
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
         data: {
-          'full_name': nameController.text.trim(),
           'username': cleanUsername,
-          'email': emailController.text.trim().toLowerCase(),
+          'full_name': nameController.text.trim(),
           'age': age,
           'gender': selectedGender,
           ...onboardingPreferences,
         },
       );
 
+      // If user profile row is created explicitly or updated:
       if (response.user != null) {
         try {
           await Supabase.instance.client.from('users').upsert({
             'id': response.user!.id,
             'username': cleanUsername,
-            'email': emailController.text.trim().toLowerCase(),
+            'email': emailController.text.trim(),
             'full_name': nameController.text.trim(),
             'age': age,
             'gender': selectedGender,
-            ...onboardingPreferences,
           });
-        } catch (_) {
-          try {
-            await Supabase.instance.client
-                .from('users')
-                .update({
-                  'username': cleanUsername,
-                  'email': emailController.text.trim().toLowerCase(),
-                })
-                .eq('id', response.user!.id);
-          } catch (_) {}
+        } catch (e) {
+          debugPrint(
+            'Notice: public.users upsert skipped or handled by trigger: $e',
+          );
         }
       }
 
@@ -306,8 +349,15 @@ class SignupController extends ChangeNotifier {
       } else {
         generalError = e.message;
       }
-    } catch (_) {
-      generalError = 'An unexpected error occurred. Please try again.';
+    } on PostgrestException catch (e) {
+      debugPrint('PostgrestException during signup: ${e.message}');
+      generalError = e.message;
+    } catch (e) {
+      debugPrint('Unexpected signup error: $e');
+      final errorStr = e.toString().replaceFirst('Exception: ', '');
+      generalError = errorStr.isNotEmpty
+          ? errorStr
+          : 'An unexpected error occurred. Please try again.';
     } finally {
       isLoading = false;
       notifyListeners();
@@ -318,6 +368,9 @@ class SignupController extends ChangeNotifier {
 
   @override
   void dispose() {
+    nameController.removeListener(_onFieldChanged);
+    birthdayController.removeListener(_onFieldChanged);
+
     nameController.dispose();
     birthdayController.dispose();
     usernameController.dispose();
