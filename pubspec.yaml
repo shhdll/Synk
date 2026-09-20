@@ -1,5 +1,7 @@
 name: synk
+
 description: "A new Flutter project."
+
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -22,6 +24,7 @@ dev_dependencies:
     sdk: flutter
 
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
@@ -32,3 +35,10 @@ flutter:
     - assets/synk_logo.png
     - assets/synk_logo_transparent.png
     - assets/synk_one_jumping.png
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/synk_logo.png"
+  adaptive_icon_background: "#F6F1E6"
+  adaptive_icon_foreground: "assets/synk_logo_transparent.png"
