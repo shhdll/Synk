@@ -16,20 +16,57 @@ class LoginController extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  // Attempts to sign in and returns true when authentication succeeds.
-  Future<bool> login({required String email, required String password}) async {
+  // Clear previous error message when user retypes or switches tabs
+  void clearError() {
+    if (_errorMessage != null) {
+      _errorMessage = null;
+      notifyListeners();
+    }
+  }
+
+  // Signs in strictly using email
+  Future<bool> loginWithEmail({
+    required String email,
+    required String password,
+  }) async {
     _setLoading(true);
     _errorMessage = null;
 
     try {
-      final response = await _authModel.signIn(
+      final response = await _authModel.signInWithEmail(
         email: email,
         password: password,
       );
 
       return response.user != null;
-    } on AuthException {
-      _errorMessage = 'Invalid email or password.';
+    } on AuthException catch (e) {
+      _errorMessage = e.message;
+      return false;
+    } catch (_) {
+      _errorMessage = 'Unable to log in. Please try again.';
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // Signs in strictly using username
+  Future<bool> loginWithUsername({
+    required String username,
+    required String password,
+  }) async {
+    _setLoading(true);
+    _errorMessage = null;
+
+    try {
+      final response = await _authModel.signInWithUsername(
+        username: username,
+        password: password,
+      );
+
+      return response.user != null;
+    } on AuthException catch (e) {
+      _errorMessage = e.message;
       return false;
     } catch (_) {
       _errorMessage = 'Unable to log in. Please try again.';

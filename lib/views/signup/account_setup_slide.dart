@@ -5,7 +5,7 @@ import '../../controllers/onboarding_controller.dart';
 import '../../core/constants/synk_colors.dart';
 import '../home/main_shell.dart';
 
-class AccountSetupSlide extends StatelessWidget {
+class AccountSetupSlide extends StatefulWidget {
   final SignupController signupController;
   final OnboardingController onboardingController;
 
@@ -16,12 +16,36 @@ class AccountSetupSlide extends StatelessWidget {
   });
 
   @override
+  State<AccountSetupSlide> createState() => _AccountSetupSlideState();
+}
+
+class _AccountSetupSlideState extends State<AccountSetupSlide> {
+  final FocusNode _usernameFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    // Checks uniqueness the moment the user finishes typing and leaves the box
+    _usernameFocusNode.addListener(() {
+      if (!_usernameFocusNode.hasFocus) {
+        widget.signupController.checkUsernameAvailability();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _usernameFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 28.0),
         child: ListenableBuilder(
-          listenable: signupController,
+          listenable: widget.signupController,
           builder: (context, _) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -44,56 +68,70 @@ class AccountSetupSlide extends StatelessWidget {
                 ),
                 const SizedBox(height: 28),
 
+                // Username
+                _buildField(
+                  controller: widget.signupController.usernameController,
+                  focusNode: _usernameFocusNode,
+                  label: 'Username',
+                  hint: 'e.g. johndoe',
+                  icon: Icons.person_outline_rounded,
+                  errorText: widget.signupController.usernameError,
+                  onChanged: (_) =>
+                      widget.signupController.clearUsernameError(),
+                ),
+                const SizedBox(height: 14),
+
                 // Email
                 _buildField(
-                  controller: signupController.emailController,
+                  controller: widget.signupController.emailController,
                   label: 'Email',
                   hint: 'name@example.com',
                   icon: Icons.alternate_email_rounded,
                   keyboardType: TextInputType.emailAddress,
-                  errorText: signupController.emailError,
-                  onChanged: (_) => signupController.clearEmailError(),
+                  errorText: widget.signupController.emailError,
+                  onChanged: (_) => widget.signupController.clearEmailError(),
                 ),
                 const SizedBox(height: 14),
 
                 // Password
                 _buildField(
-                  controller: signupController.passwordController,
+                  controller: widget.signupController.passwordController,
                   label: 'Password',
                   hint: 'Min. 6 characters',
                   icon: Icons.lock_outline_rounded,
-                  obscureText: signupController.obscurePassword,
-                  errorText: signupController.passwordError,
-                  onChanged: (_) => signupController.clearPasswordError(),
+                  obscureText: widget.signupController.obscurePassword,
+                  errorText: widget.signupController.passwordError,
+                  onChanged: (_) =>
+                      widget.signupController.clearPasswordError(),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      signupController.obscurePassword
+                      widget.signupController.obscurePassword
                           ? Icons.visibility_off_outlined
                           : Icons.visibility_outlined,
                       size: 20,
                     ),
-                    onPressed: signupController.toggleObscurePassword,
+                    onPressed: widget.signupController.toggleObscurePassword,
                   ),
                 ),
                 const SizedBox(height: 14),
 
                 // Confirm Password
                 _buildField(
-                  controller: signupController.confirmPasswordController,
+                  controller: widget.signupController.confirmPasswordController,
                   label: 'Confirm Password',
                   hint: 'Re-type password',
                   icon: Icons.lock_outline_rounded,
-                  obscureText: signupController.obscurePassword,
-                  errorText: signupController.confirmPasswordError,
+                  obscureText: widget.signupController.obscurePassword,
+                  errorText: widget.signupController.confirmPasswordError,
                   onChanged: (_) =>
-                      signupController.clearConfirmPasswordError(),
+                      widget.signupController.clearConfirmPasswordError(),
                 ),
 
-                if (signupController.generalError != null) ...[
+                if (widget.signupController.generalError != null) ...[
                   const SizedBox(height: 12),
                   Center(
                     child: Text(
-                      signupController.generalError!,
+                      widget.signupController.generalError!,
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -117,14 +155,16 @@ class AccountSetupSlide extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    onPressed: signupController.isLoading
+                    onPressed: widget.signupController.isLoading
                         ? null
                         : () async {
-                            final res = await signupController.registerUser(
-                              onboardingPreferences:
-                                  onboardingController.onboardingData,
-                              context: context,
-                            );
+                            final res = await widget.signupController
+                                .registerUser(
+                                  onboardingPreferences: widget
+                                      .onboardingController
+                                      .onboardingData,
+                                  context: context,
+                                );
                             if (res?.user != null && context.mounted) {
                               Navigator.of(context).pushAndRemoveUntil(
                                 MaterialPageRoute(
@@ -135,7 +175,7 @@ class AccountSetupSlide extends StatelessWidget {
                               );
                             }
                           },
-                    child: signupController.isLoading
+                    child: widget.signupController.isLoading
                         ? const SizedBox(
                             height: 22,
                             width: 22,
@@ -168,6 +208,7 @@ class AccountSetupSlide extends StatelessWidget {
     required String label,
     required String hint,
     required IconData icon,
+    FocusNode? focusNode,
     bool obscureText = false,
     Widget? suffixIcon,
     String? errorText,
@@ -194,6 +235,7 @@ class AccountSetupSlide extends StatelessWidget {
           ),
           child: TextField(
             controller: controller,
+            focusNode: focusNode,
             obscureText: obscureText,
             keyboardType: keyboardType,
             onChanged: onChanged,

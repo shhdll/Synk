@@ -20,7 +20,11 @@ class _LoginViewState extends State<LoginView> {
   // Handles login requests and authentication state.
   final LoginController _loginController = LoginController();
 
-  // Stores the values entered in the email and password fields.
+  // Controls whether user logs in via username or email.
+  bool _loginWithUsernameMode = true;
+
+  // Stores the values entered in the respective input fields.
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
@@ -31,6 +35,7 @@ class _LoginViewState extends State<LoginView> {
   void dispose() {
     // Releases the controllers when the screen is removed.
     _loginController.dispose();
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -42,10 +47,18 @@ class _LoginViewState extends State<LoginView> {
       return;
     }
 
-    final success = await _loginController.login(
-      email: _emailController.text,
-      password: _passwordController.text,
-    );
+    final bool success;
+    if (_loginWithUsernameMode) {
+      success = await _loginController.loginWithUsername(
+        username: _usernameController.text.trim(),
+        password: _passwordController.text,
+      );
+    } else {
+      success = await _loginController.loginWithEmail(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+    }
 
     // Prevents the screen from updating after it has been removed.
     if (!mounted) {
@@ -161,7 +174,7 @@ class _LoginViewState extends State<LoginView> {
                     ],
                   ),
 
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 40),
 
                   const Text(
                     'Welcome Back',
@@ -182,45 +195,157 @@ class _LoginViewState extends State<LoginView> {
                     ),
                   ),
 
-                  const SizedBox(height: 36),
+                  const SizedBox(height: 28),
 
-                  // Email input field.
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    style: const TextStyle(color: SynkColors.textPrimary),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Please enter your email';
-                      }
-
-                      if (!value.trim().contains('@')) {
-                        return 'Please enter a valid email';
-                      }
-
-                      return null;
-                    },
-                    decoration: InputDecoration(
-                      hintText: 'Email address',
-                      hintStyle: const TextStyle(
-                        color: SynkColors.textSecondary,
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                      prefixIcon: const Icon(
-                        Icons.email_outlined,
-                        color: SynkColors.textSecondary,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: 18,
-                        horizontal: 20,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide.none,
-                      ),
+                  // Mode Toggle: Username vs Email
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    padding: const EdgeInsets.all(4),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              if (!_loginWithUsernameMode) {
+                                setState(() {
+                                  _loginWithUsernameMode = true;
+                                });
+                                _loginController.clearError();
+                              }
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              decoration: BoxDecoration(
+                                color: _loginWithUsernameMode
+                                    ? SynkColors.orangeDark
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(22),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                'Username',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  color: _loginWithUsernameMode
+                                      ? Colors.white
+                                      : SynkColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              if (_loginWithUsernameMode) {
+                                setState(() {
+                                  _loginWithUsernameMode = false;
+                                });
+                                _loginController.clearError();
+                              }
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              decoration: BoxDecoration(
+                                color: !_loginWithUsernameMode
+                                    ? SynkColors.orangeDark
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(22),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                'Email',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  color: !_loginWithUsernameMode
+                                      ? Colors.white
+                                      : SynkColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
+
+                  const SizedBox(height: 20),
+
+                  // Dedicated Username input field
+                  if (_loginWithUsernameMode)
+                    TextFormField(
+                      controller: _usernameController,
+                      style: const TextStyle(color: SynkColors.textPrimary),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter your username';
+                        }
+                        return null;
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Username',
+                        hintStyle: const TextStyle(
+                          color: SynkColors.textSecondary,
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                        prefixIcon: const Icon(
+                          Icons.alternate_email,
+                          color: SynkColors.textSecondary,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 18,
+                          horizontal: 20,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    )
+                  // Dedicated Email input field
+                  else
+                    TextFormField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      style: const TextStyle(color: SynkColors.textPrimary),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter your email';
+                        }
+                        if (!value.trim().contains('@')) {
+                          return 'Please enter a valid email';
+                        }
+                        return null;
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Email address',
+                        hintStyle: const TextStyle(
+                          color: SynkColors.textSecondary,
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                        prefixIcon: const Icon(
+                          Icons.email_outlined,
+                          color: SynkColors.textSecondary,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 18,
+                          horizontal: 20,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
 
                   const SizedBox(height: 16),
 
@@ -233,7 +358,6 @@ class _LoginViewState extends State<LoginView> {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your password';
                       }
-
                       return null;
                     },
                     decoration: InputDecoration(
