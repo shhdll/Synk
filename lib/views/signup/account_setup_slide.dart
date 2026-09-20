@@ -5,7 +5,7 @@ import '../../controllers/onboarding_controller.dart';
 import '../../core/constants/synk_colors.dart';
 import '../home/main_shell.dart';
 
-class AccountSetupSlide extends StatefulWidget {
+class AccountSetupSlide extends StatelessWidget {
   final SignupController signupController;
   final OnboardingController onboardingController;
 
@@ -16,36 +16,12 @@ class AccountSetupSlide extends StatefulWidget {
   });
 
   @override
-  State<AccountSetupSlide> createState() => _AccountSetupSlideState();
-}
-
-class _AccountSetupSlideState extends State<AccountSetupSlide> {
-  final FocusNode _usernameFocusNode = FocusNode();
-
-  @override
-  void initState() {
-    super.initState();
-    // Checks uniqueness the moment the user finishes typing and leaves the box
-    _usernameFocusNode.addListener(() {
-      if (!_usernameFocusNode.hasFocus) {
-        widget.signupController.checkUsernameAvailability();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _usernameFocusNode.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 28.0),
         child: ListenableBuilder(
-          listenable: widget.signupController,
+          listenable: signupController,
           builder: (context, _) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -70,68 +46,66 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
 
                 // Username
                 _buildField(
-                  controller: widget.signupController.usernameController,
-                  focusNode: _usernameFocusNode,
+                  controller: signupController.usernameController,
                   label: 'Username',
-                  hint: 'e.g. johndoe',
-                  icon: Icons.person_outline_rounded,
-                  errorText: widget.signupController.usernameError,
-                  onChanged: (_) =>
-                      widget.signupController.clearUsernameError(),
+                  hint: 'e.g. alex_99',
+                  icon: Icons.alternate_email_rounded,
+                  keyboardType: TextInputType.text,
+                  errorText: signupController.usernameError,
+                  onChanged: (_) => signupController.clearUsernameError(),
                 ),
                 const SizedBox(height: 14),
 
                 // Email
                 _buildField(
-                  controller: widget.signupController.emailController,
+                  controller: signupController.emailController,
                   label: 'Email',
                   hint: 'name@example.com',
-                  icon: Icons.alternate_email_rounded,
+                  icon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
-                  errorText: widget.signupController.emailError,
-                  onChanged: (_) => widget.signupController.clearEmailError(),
+                  errorText: signupController.emailError,
+                  onChanged: (_) => signupController.clearEmailError(),
                 ),
                 const SizedBox(height: 14),
 
                 // Password
                 _buildField(
-                  controller: widget.signupController.passwordController,
+                  controller: signupController.passwordController,
                   label: 'Password',
-                  hint: 'Min. 6 characters',
+                  hint: 'Min. 8 characters',
                   icon: Icons.lock_outline_rounded,
-                  obscureText: widget.signupController.obscurePassword,
-                  errorText: widget.signupController.passwordError,
-                  onChanged: (_) =>
-                      widget.signupController.clearPasswordError(),
+                  obscureText: signupController.obscurePassword,
+                  errorText: signupController.passwordError,
+                  onChanged: (_) => signupController.clearPasswordError(),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      widget.signupController.obscurePassword
+                      signupController.obscurePassword
                           ? Icons.visibility_off_outlined
                           : Icons.visibility_outlined,
                       size: 20,
                     ),
-                    onPressed: widget.signupController.toggleObscurePassword,
+                    onPressed: signupController.toggleObscurePassword,
                   ),
                 ),
                 const SizedBox(height: 14),
 
                 // Confirm Password
                 _buildField(
-                  controller: widget.signupController.confirmPasswordController,
+                  controller: signupController.confirmPasswordController,
                   label: 'Confirm Password',
                   hint: 'Re-type password',
                   icon: Icons.lock_outline_rounded,
-                  obscureText: widget.signupController.obscurePassword,
-                  errorText: widget.signupController.confirmPasswordError,
+                  obscureText: signupController.obscurePassword,
+                  errorText: signupController.confirmPasswordError,
                   onChanged: (_) =>
-                      widget.signupController.clearConfirmPasswordError(),
+                      signupController.clearConfirmPasswordError(),
                 ),
 
-                if (widget.signupController.generalError != null) ...[
+                if (signupController.generalError != null) ...[
                   const SizedBox(height: 12),
                   Center(
                     child: Text(
-                      widget.signupController.generalError!,
+                      signupController.generalError!,
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -155,16 +129,14 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    onPressed: widget.signupController.isLoading
+                    onPressed: signupController.isLoading
                         ? null
                         : () async {
-                            final res = await widget.signupController
-                                .registerUser(
-                                  onboardingPreferences: widget
-                                      .onboardingController
-                                      .onboardingData,
-                                  context: context,
-                                );
+                            final res = await signupController.registerUser(
+                              onboardingPreferences:
+                                  onboardingController.onboardingData,
+                              context: context,
+                            );
                             if (res?.user != null && context.mounted) {
                               Navigator.of(context).pushAndRemoveUntil(
                                 MaterialPageRoute(
@@ -175,7 +147,7 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                               );
                             }
                           },
-                    child: widget.signupController.isLoading
+                    child: signupController.isLoading
                         ? const SizedBox(
                             height: 22,
                             width: 22,
@@ -208,7 +180,6 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
     required String label,
     required String hint,
     required IconData icon,
-    FocusNode? focusNode,
     bool obscureText = false,
     Widget? suffixIcon,
     String? errorText,
@@ -235,7 +206,6 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
           ),
           child: TextField(
             controller: controller,
-            focusNode: focusNode,
             obscureText: obscureText,
             keyboardType: keyboardType,
             onChanged: onChanged,
