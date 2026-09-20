@@ -10,30 +10,24 @@ class EditProfileView extends StatefulWidget {
   const EditProfileView({super.key});
 
   @override
-  State<EditProfileView> createState() =>
-      _EditProfileViewState();
+  State<EditProfileView> createState() => _EditProfileViewState();
 }
 
-class _EditProfileViewState
-    extends State<EditProfileView> {
-  final EditProfileController _controller =
-      EditProfileController();
+class _EditProfileViewState extends State<EditProfileView> {
+  final EditProfileController _controller = EditProfileController();
 
-  late final TextEditingController _nameController;
-  late final TextEditingController _bioController;
-  late final TextEditingController _ageController;
-  late final TextEditingController _emailController;
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _bioController = TextEditingController();
+  final TextEditingController _birthdayController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
 
+  String? _usernameError;
   bool _pageReady = false;
 
   @override
   void initState() {
     super.initState();
-
-    _nameController = TextEditingController();
-    _bioController = TextEditingController();
-    _ageController = TextEditingController();
-    _emailController = TextEditingController();
 
     _loadProfile();
   }
@@ -41,8 +35,9 @@ class _EditProfileViewState
   @override
   void dispose() {
     _nameController.dispose();
+    _usernameController.dispose();
     _bioController.dispose();
-    _ageController.dispose();
+    _birthdayController.dispose();
     _emailController.dispose();
 
     _controller.dispose();
@@ -62,9 +57,11 @@ class _EditProfileViewState
     }
 
     _nameController.text = _controller.name;
+    _usernameController.text = _controller.username;
     _bioController.text = _controller.bio;
-    _ageController.text =
-        _controller.age?.toString() ?? '';
+    _birthdayController.text = _controller.age != null
+        ? '${_controller.age} yrs'
+        : '';
     _emailController.text = _controller.email;
 
     setState(() {
@@ -88,12 +85,78 @@ class _EditProfileViewState
     _controller.setName(value);
   }
 
+  void _onUsernameChanged(String value) {
+    if (_usernameError != null) {
+      setState(() {
+        _usernameError = null;
+      });
+    }
+    _controller.setUsername(value);
+  }
+
   void _onBioChanged(String value) {
     _controller.setBio(value);
   }
 
-  void _onAgeChanged(String value) {
-    _controller.setAge(value);
+  Future<void> _pickBirthday() async {
+    final today = DateTime.now();
+
+    // Oldest allowed: 90 years old
+    final firstDate = DateTime(today.year - 90, today.month, today.day);
+
+    // Youngest allowed: 16 years old
+    final lastDate = DateTime(today.year - 16, today.month, today.day);
+
+    DateTime initialDate = DateTime(
+      today.year - (_controller.age ?? 21),
+      today.month,
+      today.day,
+    );
+
+    if (_birthdayController.text.isNotEmpty &&
+        _birthdayController.text.contains('/')) {
+      try {
+        final parts = _birthdayController.text.split('/');
+        if (parts.length == 3) {
+          final day = int.parse(parts[0]);
+          final month = int.parse(parts[1]);
+          final year = int.parse(parts[2]);
+
+          final existingDate = DateTime(year, month, day);
+          if (!existingDate.isBefore(firstDate) &&
+              !existingDate.isAfter(lastDate)) {
+            initialDate = existingDate;
+          }
+        }
+      } catch (_) {}
+    }
+
+    final selectedDate = await showDatePicker(
+      context: context,
+      initialDate: initialDate.isBefore(firstDate)
+          ? firstDate
+          : (initialDate.isAfter(lastDate) ? lastDate : initialDate),
+      firstDate: firstDate,
+      lastDate: lastDate,
+      helpText: 'Select birthday',
+    );
+
+    if (selectedDate != null) {
+      var age = today.year - selectedDate.year;
+      if (today.month < selectedDate.month ||
+          (today.month == selectedDate.month && today.day < selectedDate.day)) {
+        age--;
+      }
+
+      final day = selectedDate.day.toString().padLeft(2, '0');
+      final month = selectedDate.month.toString().padLeft(2, '0');
+      final formatted = '$day/$month/${selectedDate.year}';
+
+      setState(() {
+        _birthdayController.text = formatted;
+      });
+      _controller.setAge(age.toString());
+    }
   }
 
   void _onEmailChanged(String value) {
@@ -135,8 +198,7 @@ class _EditProfileViewState
               height: 1.5,
             ),
           ),
-          actionsPadding:
-              const EdgeInsets.fromLTRB(20, 0, 20, 16),
+          actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
           actions: [
             TextButton(
               onPressed: () {
@@ -189,9 +251,27 @@ class _EditProfileViewState
   Future<void> _saveChanges() async {
     FocusScope.of(context).unfocus();
 
+    // ---------------------------------------------------------
+    // Username validation & uniqueness check
+    // ---------------------------------------------------------
+
+    final usernameError = await _controller.updateUsername(
+      _usernameController.text.trim(),
+    );
+
+    if (usernameError != null) {
+      setState(() {
+        _usernameError = usernameError;
+      });
+      return;
+    } else if (_usernameError != null) {
+      setState(() {
+        _usernameError = null;
+      });
+    }
+
     final name = _nameController.text.trim();
     final bio = _bioController.text.trim();
-    final ageText = _ageController.text.trim();
     final email = _emailController.text.trim();
 
     // ---------------------------------------------------------
@@ -204,21 +284,12 @@ class _EditProfileViewState
     }
 
     // ---------------------------------------------------------
-    // Age validation
+    // Birthday / Age validation
     // ---------------------------------------------------------
 
-    if (ageText.isNotEmpty) {
-      final age = int.tryParse(ageText);
-
-      if (age == null) {
-        _showMessage('Please enter a valid age.');
-        return;
-      }
-
-      if (age < 13 || age > 120) {
-        _showMessage(
-          'Please enter a valid age between 13 and 120.',
-        );
+    if (_controller.age != null) {
+      if (_controller.age! < 16 || _controller.age! > 90) {
+        _showMessage('Adult must be between 16 and 90 years old.');
         return;
       }
     }
@@ -227,9 +298,7 @@ class _EditProfileViewState
     // Email validation
     // ---------------------------------------------------------
 
-    final emailRegex = RegExp(
-      r'^[\w\-.]+@([\w-]+\.)+[\w-]{2,4}$',
-    );
+    final emailRegex = RegExp(r'^[\w\-.]+@([\w-]+\.)+[\w-]{2,4}$');
 
     if (email.isEmpty) {
       _showMessage('Please enter your email.');
@@ -237,9 +306,7 @@ class _EditProfileViewState
     }
 
     if (!emailRegex.hasMatch(email)) {
-      _showMessage(
-        'Please enter a valid email address.',
-      );
+      _showMessage('Please enter a valid email address.');
       return;
     }
 
@@ -248,14 +315,15 @@ class _EditProfileViewState
     // ---------------------------------------------------------
 
     if (!_hasUnsavedChanges) {
-      Navigator.of(context).pop();
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
       return;
     }
 
     // Make sure controller has latest values.
     _controller.setName(name);
     _controller.setBio(bio);
-    _controller.setAge(ageText);
     _controller.setEmail(email);
 
     try {
@@ -265,14 +333,10 @@ class _EditProfileViewState
         return;
       }
 
-      _showMessage(
-        'Profile updated successfully.',
-      );
+      _showMessage('Profile updated successfully.');
 
       // Give the snackbar a moment to appear before leaving.
-      await Future<void>.delayed(
-        const Duration(milliseconds: 350),
-      );
+      await Future<void>.delayed(const Duration(milliseconds: 350));
 
       if (!mounted) {
         return;
@@ -290,9 +354,7 @@ class _EditProfileViewState
         return;
       }
 
-      _showMessage(
-        'Unable to save your changes. Please try again.',
-      );
+      _showMessage('Unable to save your changes. Please try again.');
     }
   }
 
@@ -301,8 +363,7 @@ class _EditProfileViewState
   // ---------------------------------------------------------------------------
 
   Future<void> _changePhoto() async {
-    final message =
-        await _controller.changePhoto();
+    final message = await _controller.changePhoto();
 
     if (!mounted || message == null) {
       return;
@@ -312,8 +373,7 @@ class _EditProfileViewState
   }
 
   Future<void> _removePhoto() async {
-    final message =
-        await _controller.removePhoto();
+    final message = await _controller.removePhoto();
 
     if (!mounted || message == null) {
       return;
@@ -323,16 +383,12 @@ class _EditProfileViewState
   }
 
   Future<void> _openPhotoOptions() async {
-    final action =
-        await showModalBottomSheet<String>(
+    final action = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
-        return PhotoOptionsSheet(
-          hasPhoto:
-              _controller.avatarImage != null,
-        );
+        return PhotoOptionsSheet(hasPhoto: _controller.avatarImage != null);
       },
     );
 
@@ -358,11 +414,7 @@ class _EditProfileViewState
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-        ),
-      );
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   // ---------------------------------------------------------------------------
@@ -374,21 +426,16 @@ class _EditProfileViewState
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, _) {
-        if (!_pageReady ||
-            _controller.isLoading) {
+        if (!_pageReady || _controller.isLoading) {
           return const Scaffold(
-            backgroundColor:
-                SynkColors.background,
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
+            backgroundColor: SynkColors.background,
+            body: Center(child: CircularProgressIndicator()),
           );
         }
 
         return PopScope(
           canPop: false,
-          onPopInvokedWithResult:
-              (didPop, result) async {
+          onPopInvokedWithResult: (didPop, result) async {
             if (didPop) {
               return;
             }
@@ -402,41 +449,31 @@ class _EditProfileViewState
   }
 
   Widget _buildScaffold() {
-    final avatarImage =
-        _controller.avatarImage;
+    final avatarImage = _controller.avatarImage;
 
     final displayImage =
-        avatarImage ??
-        AvatarUploader.defaultImage;
+        avatarImage ?? AvatarUploader.defaultImageForGender(_controller.gender);
 
-    final isUploadingPhoto =
-        _controller.isUploadingPhoto;
+    final isUploadingPhoto = _controller.isUploadingPhoto;
 
-    final isSaving =
-        _controller.isSaving;
+    final isSaving = _controller.isSaving;
 
     return Scaffold(
-      backgroundColor:
-          SynkColors.background,
+      backgroundColor: SynkColors.background,
 
       // -----------------------------------------------------------------------
       // App bar
       // -----------------------------------------------------------------------
-
       appBar: AppBar(
-        backgroundColor:
-            SynkColors.background,
+        backgroundColor: SynkColors.background,
         elevation: 0,
-        surfaceTintColor:
-            Colors.transparent,
+        surfaceTintColor: Colors.transparent,
 
         leading: IconButton(
-          onPressed:
-              isSaving ? null : _handleBack,
+          onPressed: isSaving ? null : _handleBack,
           icon: const Icon(
             Icons.arrow_back_rounded,
-            color:
-                SynkColors.textPrimary,
+            color: SynkColors.textPrimary,
           ),
         ),
 
@@ -446,8 +483,7 @@ class _EditProfileViewState
             fontSize: 20,
             fontWeight: FontWeight.w900,
             letterSpacing: -0.6,
-            color:
-                SynkColors.textPrimary,
+            color: SynkColors.textPrimary,
           ),
         ),
 
@@ -457,22 +493,14 @@ class _EditProfileViewState
       // -----------------------------------------------------------------------
       // Body
       // -----------------------------------------------------------------------
-
       body: SafeArea(
         child: Column(
           children: [
             Expanded(
               child: ListView(
                 keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior
-                        .onDrag,
-                padding:
-                    const EdgeInsets.fromLTRB(
-                  24,
-                  12,
-                  24,
-                  24,
-                ),
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
                 children: [
                   // -------------------------------------------------------------
                   // Profile photo
@@ -480,91 +508,60 @@ class _EditProfileViewState
 
                   Center(
                     child: GestureDetector(
-                      onTap:
-                          isUploadingPhoto
-                              ? null
-                              : _openPhotoOptions,
+                      onTap: isUploadingPhoto ? null : _openPhotoOptions,
                       child: Stack(
-                        clipBehavior:
-                            Clip.none,
+                        clipBehavior: Clip.none,
                         children: [
                           Container(
                             width: 104,
                             height: 104,
-                            decoration:
-                                BoxDecoration(
-                              shape:
-                                  BoxShape.circle,
-                              image:
-                                  DecorationImage(
-                                image:
-                                    displayImage,
-                                fit:
-                                    BoxFit.cover,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              image: DecorationImage(
+                                image: displayImage,
+                                fit: BoxFit.cover,
                               ),
                             ),
-                            alignment:
-                                Alignment.center,
-                            child:
-                                isUploadingPhoto
-                                    ? Container(
-                                        decoration:
-                                            const BoxDecoration(
-                                          shape:
-                                              BoxShape.circle,
-                                          color:
-                                              Colors.black38,
-                                        ),
-                                        alignment:
-                                            Alignment.center,
-                                        child:
-                                            const SizedBox(
-                                          width: 26,
-                                          height: 26,
-                                          child:
-                                              CircularProgressIndicator(
-                                            strokeWidth:
-                                                2.5,
-                                            valueColor:
-                                                AlwaysStoppedAnimation<
-                                                    Color>(
+                            alignment: Alignment.center,
+                            child: isUploadingPhoto
+                                ? Container(
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.black38,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: const SizedBox(
+                                      width: 26,
+                                      height: 26,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.5,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
                                               Colors.white,
                                             ),
-                                          ),
-                                        ),
-                                      )
-                                    : null,
+                                      ),
+                                    ),
+                                  )
+                                : null,
                           ),
 
                           Positioned(
                             right: -2,
                             bottom: -2,
                             child: Container(
-                              padding:
-                                  const EdgeInsets
-                                      .all(8),
-                              decoration:
-                                  BoxDecoration(
-                                color:
-                                    SynkColors
-                                        .orangeDark,
-                                shape:
-                                    BoxShape.circle,
-                                border:
-                                    Border.all(
-                                  color:
-                                      SynkColors
-                                          .background,
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: SynkColors.orangeDark,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: SynkColors.background,
                                   width: 3,
                                 ),
                               ),
-                              child:
-                                  const Icon(
-                                Icons
-                                    .camera_alt_rounded,
+                              child: const Icon(
+                                Icons.camera_alt_rounded,
                                 size: 17,
-                                color:
-                                    Colors.white,
+                                color: Colors.white,
                               ),
                             ),
                           ),
@@ -580,11 +577,8 @@ class _EditProfileViewState
                       'Tap to change photo',
                       style: TextStyle(
                         fontSize: 12,
-                        fontWeight:
-                            FontWeight.w600,
-                        color:
-                            SynkColors
-                                .textSecondary,
+                        fontWeight: FontWeight.w600,
+                        color: SynkColors.textSecondary,
                       ),
                     ),
                   ),
@@ -594,20 +588,37 @@ class _EditProfileViewState
                   // -------------------------------------------------------------
                   // Name
                   // -------------------------------------------------------------
-
                   _buildFieldLabel('Name'),
 
                   const SizedBox(height: 8),
 
                   _buildTextField(
-                    controller:
-                        _nameController,
-                    hintText:
-                        'Your name',
-                    textInputAction:
-                        TextInputAction.next,
-                    onChanged:
-                        _onNameChanged,
+                    controller: _nameController,
+                    hintText: 'Your name',
+                    textInputAction: TextInputAction.next,
+                    onChanged: _onNameChanged,
+                  ),
+
+                  const SizedBox(height: 22),
+
+                  // -------------------------------------------------------------
+                  // Username
+                  // -------------------------------------------------------------
+                  _buildFieldLabel('Username'),
+
+                  const SizedBox(height: 8),
+
+                  _buildTextField(
+                    controller: _usernameController,
+                    hintText: 'alex_99',
+                    prefixIcon: const Icon(
+                      Icons.alternate_email_rounded,
+                      size: 18,
+                      color: SynkColors.textSecondary,
+                    ),
+                    errorText: _usernameError,
+                    textInputAction: TextInputAction.next,
+                    onChanged: _onUsernameChanged,
                   ),
 
                   const SizedBox(height: 22),
@@ -615,45 +626,37 @@ class _EditProfileViewState
                   // -------------------------------------------------------------
                   // Bio
                   // -------------------------------------------------------------
-
                   _buildFieldLabel('Bio'),
 
                   const SizedBox(height: 8),
 
                   _buildTextField(
-                    controller:
-                        _bioController,
-                    hintText:
-                        'Tell people a bit about yourself...',
+                    controller: _bioController,
+                    hintText: 'Tell people a bit about yourself...',
                     maxLines: 4,
                     maxLength: 160,
-                    textInputAction:
-                        TextInputAction.newline,
-                    onChanged:
-                        _onBioChanged,
+                    textInputAction: TextInputAction.newline,
+                    onChanged: _onBioChanged,
                   ),
 
                   const SizedBox(height: 22),
 
                   // -------------------------------------------------------------
-                  // Age
+                  // Birthday
                   // -------------------------------------------------------------
-
-                  _buildFieldLabel('Age'),
+                  _buildFieldLabel('Birthday'),
 
                   const SizedBox(height: 8),
 
                   _buildTextField(
-                    controller:
-                        _ageController,
-                    hintText:
-                        'Your age',
-                    keyboardType:
-                        TextInputType.number,
-                    textInputAction:
-                        TextInputAction.next,
-                    onChanged:
-                        _onAgeChanged,
+                    controller: _birthdayController,
+                    hintText: 'DD/MM/YYYY',
+                    readOnly: true,
+                    onTap: _pickBirthday,
+                    prefixIcon: const Icon(
+                      Icons.cake_outlined,
+                      color: SynkColors.textSecondary,
+                    ),
                   ),
 
                   const SizedBox(height: 22),
@@ -661,22 +664,16 @@ class _EditProfileViewState
                   // -------------------------------------------------------------
                   // Email
                   // -------------------------------------------------------------
-
                   _buildFieldLabel('Email'),
 
                   const SizedBox(height: 8),
 
                   _buildTextField(
-                    controller:
-                        _emailController,
-                    hintText:
-                        'you@example.com',
-                    keyboardType:
-                        TextInputType.emailAddress,
-                    textInputAction:
-                        TextInputAction.done,
-                    onChanged:
-                        _onEmailChanged,
+                    controller: _emailController,
+                    hintText: 'you@example.com',
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.done,
+                    onChanged: _onEmailChanged,
                   ),
 
                   const SizedBox(height: 12),
@@ -688,9 +685,7 @@ class _EditProfileViewState
                     style: TextStyle(
                       fontSize: 12,
                       height: 1.4,
-                      color:
-                          SynkColors
-                              .textSecondary,
+                      color: SynkColors.textSecondary,
                     ),
                   ),
 
@@ -702,88 +697,50 @@ class _EditProfileViewState
             // -----------------------------------------------------------------
             // ONE SAVE BUTTON FOR THE WHOLE PAGE
             // -----------------------------------------------------------------
-
             Container(
-              padding:
-                  const EdgeInsets.fromLTRB(
-                24,
-                12,
-                24,
-                16,
-              ),
-              decoration:
-                  BoxDecoration(
-                color:
-                    SynkColors.background,
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+              decoration: BoxDecoration(
+                color: SynkColors.background,
                 boxShadow: [
                   BoxShadow(
-                    color:
-                        Colors.black
-                            .withValues(
-                      alpha: 0.04,
-                    ),
+                    color: Colors.black.withValues(alpha: 0.04),
                     blurRadius: 12,
-                    offset:
-                        const Offset(0, -4),
+                    offset: const Offset(0, -4),
                   ),
                 ],
               ),
               child: SizedBox(
-                width:
-                    double.infinity,
+                width: double.infinity,
                 height: 54,
-                child:
-                    ElevatedButton(
-                  onPressed:
-                      isSaving
-                          ? null
-                          : _saveChanges,
-                  style:
-                      ElevatedButton.styleFrom(
-                    backgroundColor:
-                        SynkColors
-                            .orangeDark,
-                    foregroundColor:
-                        Colors.white,
-                    disabledBackgroundColor:
-                        SynkColors
-                            .orangeDark
-                            .withValues(
+                child: ElevatedButton(
+                  onPressed: isSaving ? null : _saveChanges,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: SynkColors.orangeDark,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: SynkColors.orangeDark.withValues(
                       alpha: 0.45,
                     ),
                     elevation: 0,
-                    shape:
-                        RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius
-                              .circular(
-                        17,
-                      ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(17),
                     ),
                   ),
                   child: isSaving
                       ? const SizedBox(
                           width: 22,
                           height: 22,
-                          child:
-                              CircularProgressIndicator(
-                            strokeWidth:
-                                2.5,
-                            valueColor:
-                                AlwaysStoppedAnimation<
-                                    Color>(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            valueColor: AlwaysStoppedAnimation<Color>(
                               Colors.white,
                             ),
                           ),
                         )
                       : const Text(
                           'Save changes',
-                          style:
-                              TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
-                            fontWeight:
-                                FontWeight
-                                    .w800,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                 ),
@@ -799,17 +756,13 @@ class _EditProfileViewState
   // Field label
   // ---------------------------------------------------------------------------
 
-  Widget _buildFieldLabel(
-    String text,
-  ) {
+  Widget _buildFieldLabel(String text) {
     return Text(
       text,
       style: const TextStyle(
         fontSize: 14,
-        fontWeight:
-            FontWeight.w800,
-        color:
-            SynkColors.textPrimary,
+        fontWeight: FontWeight.w800,
+        color: SynkColors.textPrimary,
       ),
     );
   }
@@ -819,107 +772,94 @@ class _EditProfileViewState
   // ---------------------------------------------------------------------------
 
   Widget _buildTextField({
-    required TextEditingController
-        controller,
+    required TextEditingController controller,
     required String hintText,
-    required ValueChanged<String>
-        onChanged,
+    ValueChanged<String>? onChanged,
     TextInputType? keyboardType,
-    TextInputAction?
-        textInputAction,
+    TextInputAction? textInputAction,
     int maxLines = 1,
     int? maxLength,
+    String? errorText,
+    Widget? prefixIcon,
+    bool readOnly = false,
+    VoidCallback? onTap,
   }) {
-    return TextField(
-      controller: controller,
-      onChanged: onChanged,
-      keyboardType:
-          keyboardType,
-      textInputAction:
-          textInputAction,
-      maxLines: maxLines,
-      maxLength: maxLength,
-      style: const TextStyle(
-        fontSize: 15,
-        fontWeight:
-            FontWeight.w500,
-        color:
-            SynkColors.textPrimary,
-      ),
-      decoration:
-          InputDecoration(
-        hintText: hintText,
-        hintStyle:
-            const TextStyle(
-          color:
-              SynkColors
-                  .textSecondary,
-        ),
-        filled: true,
-        fillColor:
-            Colors.white.withValues(
-          alpha: 0.55,
-        ),
-        contentPadding:
-            const EdgeInsets
-                .symmetric(
-          horizontal: 16,
-          vertical: 15,
-        ),
-        counterStyle:
-            const TextStyle(
-          color:
-              SynkColors
-                  .textSecondary,
-          fontSize: 11,
-        ),
-        border:
-            OutlineInputBorder(
-          borderRadius:
-              BorderRadius.circular(
-            16,
+    final hasError = errorText != null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: controller,
+          onChanged: onChanged,
+          readOnly: readOnly,
+          onTap: onTap,
+          keyboardType: keyboardType,
+          textInputAction: textInputAction,
+          maxLines: maxLines,
+          maxLength: maxLength,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: SynkColors.textPrimary,
           ),
-          borderSide:
-              BorderSide(
-            color:
-                SynkColors
-                    .textSecondary
-                    .withValues(
-              alpha: 0.15,
+          decoration: InputDecoration(
+            prefixIcon: prefixIcon,
+            hintText: hintText,
+            hintStyle: const TextStyle(color: SynkColors.textSecondary),
+            filled: true,
+            fillColor: Colors.white.withValues(alpha: 0.55),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 15,
+            ),
+            counterStyle: const TextStyle(
+              color: SynkColors.textSecondary,
+              fontSize: 11,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: hasError
+                    ? const Color(0xFFE53935)
+                    : SynkColors.textSecondary.withValues(alpha: 0.15),
+                width: hasError ? 1.5 : 1.0,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: hasError
+                    ? const Color(0xFFE53935)
+                    : SynkColors.textSecondary.withValues(alpha: 0.15),
+                width: hasError ? 1.5 : 1.0,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: hasError
+                    ? const Color(0xFFE53935)
+                    : SynkColors.orangeDark,
+                width: 1.5,
+              ),
             ),
           ),
         ),
-        enabledBorder:
-            OutlineInputBorder(
-          borderRadius:
-              BorderRadius.circular(
-            16,
-          ),
-          borderSide:
-              BorderSide(
-            color:
-                SynkColors
-                    .textSecondary
-                    .withValues(
-              alpha: 0.15,
+        if (hasError) ...[
+          const SizedBox(height: 5),
+          Padding(
+            padding: const EdgeInsets.only(left: 12),
+            child: Text(
+              errorText,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFFE53935),
+              ),
             ),
           ),
-        ),
-        focusedBorder:
-            OutlineInputBorder(
-          borderRadius:
-              BorderRadius.circular(
-            16,
-          ),
-          borderSide:
-              const BorderSide(
-            color:
-                SynkColors
-                    .orangeDark,
-            width: 1.5,
-          ),
-        ),
-      ),
+        ],
+      ],
     );
   }
 }

@@ -17,6 +17,14 @@ class ProfileController extends ChangeNotifier {
 
   String? get email => Supabase.instance.client.auth.currentUser?.email;
 
+  // Reads username from profile map or auth metadata
+  String? get username {
+    final name = _profile['username'] as String?;
+    if (name != null && name.isNotEmpty) return name;
+    return Supabase.instance.client.auth.currentUser?.userMetadata?['username']
+        as String?;
+  }
+
   // Loads the current user's row from the public "users" table.
   Future<void> loadProfile() async {
     _isLoading = true;
@@ -26,6 +34,34 @@ class ProfileController extends ChangeNotifier {
 
     _isLoading = false;
     notifyListeners();
+  }
+
+  /// Updates the username after format validation and uniqueness check.
+  /// Returns null on success, or an error message string on failure.
+  Future<String?> updateUsername(String newUsername) async {
+    final cleanUsername = newUsername.trim().toLowerCase();
+
+    final usernameRegex = RegExp(r'^[a-zA-Z0-9._]{3,30}$');
+    if (cleanUsername.isEmpty) {
+      return 'Username cannot be empty';
+    }
+    if (!usernameRegex.hasMatch(cleanUsername)) {
+      return '3-30 characters: letters, numbers, dots, or underscores only';
+    }
+
+    if (cleanUsername == username?.toLowerCase()) {
+      return null; // No change
+    }
+
+    final isTaken = await _profileModel.isUsernameTaken(cleanUsername);
+    if (isTaken) {
+      return 'This username is already taken';
+    }
+
+    await _profileModel.updateProfile({'username': cleanUsername});
+    _profile = {..._profile, 'username': cleanUsername};
+    notifyListeners();
+    return null;
   }
 
   Future<void> updateActivityType(String value) async {

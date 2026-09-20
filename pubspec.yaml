@@ -35,6 +35,8 @@ flutter:
     - assets/synk_logo.png
     - assets/synk_logo_transparent.png
     - assets/synk_one_jumping.png
+    - assets/avatar_female.png
+    - assets/avatar_male.png
 
 flutter_launcher_icons:
   android: true

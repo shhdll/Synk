@@ -24,10 +24,26 @@ class AvatarUploader {
   static final ImagePicker _picker = ImagePicker();
   static final UserProfileModel _profileModel = UserProfileModel();
 
-  // Shown in place of a real photo until the user sets one.
-  static const ImageProvider defaultImage = AssetImage(
-    'assets/synk_one_jumping.png',
+  // Default avatar images based on gender.
+  static const ImageProvider defaultFemaleImage = AssetImage(
+    'assets/avatar_female.png',
   );
+
+  static const ImageProvider defaultMaleImage = AssetImage(
+    'assets/avatar_male.png',
+  );
+
+  static const ImageProvider defaultImage = AssetImage(
+    'assets/avatar_female.png',
+  );
+
+  static ImageProvider defaultImageForGender(String? gender) {
+    final clean = gender?.trim().toLowerCase();
+    if (clean == 'male') {
+      return defaultMaleImage;
+    }
+    return defaultFemaleImage;
+  }
 
   static Future<AvatarUpdateResult> pickAndSave() async {
     final picked = await _picker.pickImage(

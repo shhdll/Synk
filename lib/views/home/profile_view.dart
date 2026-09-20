@@ -82,9 +82,7 @@ class _ProfileViewState extends State<ProfileView> {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
           ..showSnackBar(
-            const SnackBar(
-              content: Text('Unable to save. Please try again.'),
-            ),
+            const SnackBar(content: Text('Unable to save. Please try again.')),
           );
       }
     }
@@ -115,9 +113,7 @@ class _ProfileViewState extends State<ProfileView> {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
           ..showSnackBar(
-            const SnackBar(
-              content: Text('Unable to save. Please try again.'),
-            ),
+            const SnackBar(content: Text('Unable to save. Please try again.')),
           );
       }
     }
@@ -150,15 +146,21 @@ class _ProfileViewState extends State<ProfileView> {
         ?.trim();
     final interests =
         (profile['interests'] as List?)?.cast<String>() ?? const [];
-    final email = _controller.email;
+    final username = _controller.username;
     final avatarImage = AvatarUploader.imageFor(profile);
-    final displayImage = avatarImage ?? AvatarUploader.defaultImage;
+    final displayImage =
+        avatarImage ?? AvatarUploader.defaultImageForGender(gender);
     final friendsCount = profile['friends_count'] as int? ?? 0;
     final activitiesCount = profile['activities_count'] as int? ?? 0;
     final ratingValue = profile['rating'];
-    final ratingText = ratingValue is num ? ratingValue.toStringAsFixed(1) : '—';
+    final ratingText = ratingValue is num
+        ? ratingValue.toStringAsFixed(1)
+        : '—';
+    final handle = (username != null && username.isNotEmpty)
+        ? '@$username'
+        : _controller.email;
     final subtitle = [
-      ?email,
+      if (handle != null) handle,
       if (age != null) '$age yrs',
       if (gender?.isNotEmpty ?? false) gender!,
     ].join(' · ');

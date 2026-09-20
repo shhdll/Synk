@@ -293,16 +293,21 @@ class SignupController extends ChangeNotifier {
 
       // If user profile row is created explicitly or updated:
       if (response.user != null) {
-        await Supabase.instance.client.from('users').upsert({
-          'id': response.user!.id,
-          'username': cleanUsername,
-          'email': emailController.text.trim(),
-          'full_name': nameController.text.trim(),
-          'age': age,
-          'gender': selectedGender,
-        });
+        try {
+          await Supabase.instance.client.from('users').upsert({
+            'id': response.user!.id,
+            'username': cleanUsername,
+            'email': emailController.text.trim(),
+            'full_name': nameController.text.trim(),
+            'age': age,
+            'gender': selectedGender,
+          });
+        } catch (e) {
+          debugPrint(
+            'Notice: public.users upsert skipped or handled by trigger: $e',
+          );
+        }
       }
-
       return response;
     } on AuthWeakPasswordException {
       passwordError = 'Password is too weak. Please use at least 6 characters.';
@@ -319,8 +324,15 @@ class SignupController extends ChangeNotifier {
       } else {
         generalError = e.message;
       }
-    } catch (_) {
-      generalError = 'An unexpected error occurred. Please try again.';
+    } on PostgrestException catch (e) {
+      debugPrint('PostgrestException during signup: ${e.message}');
+      generalError = e.message;
+    } catch (e) {
+      debugPrint('Unexpected signup error: $e');
+      final errorStr = e.toString().replaceFirst('Exception: ', '');
+      generalError = errorStr.isNotEmpty
+          ? errorStr
+          : 'An unexpected error occurred. Please try again.';
     } finally {
       isLoading = false;
       notifyListeners();
