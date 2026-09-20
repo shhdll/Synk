@@ -7,6 +7,7 @@ class SignupController extends ChangeNotifier {
   final TextEditingController birthdayController = TextEditingController();
   String? selectedGender;
 
+  final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
@@ -19,6 +20,7 @@ class SignupController extends ChangeNotifier {
   String? nameError;
   String? birthdayError;
   String? genderError;
+  String? usernameError;
   String? emailError;
   String? passwordError;
   String? confirmPasswordError;
@@ -28,6 +30,7 @@ class SignupController extends ChangeNotifier {
     nameError = null;
     birthdayError = null;
     genderError = null;
+    usernameError = null;
     emailError = null;
     passwordError = null;
     confirmPasswordError = null;
@@ -50,6 +53,12 @@ class SignupController extends ChangeNotifier {
   void clearBirthdayError() {
     if (birthdayError == null) return;
     birthdayError = null;
+    notifyListeners();
+  }
+
+  void clearUsernameError() {
+    if (usernameError == null) return;
+    usernameError = null;
     notifyListeners();
   }
 
@@ -150,6 +159,7 @@ class SignupController extends ChangeNotifier {
   }
 
   bool validateCredentials() {
+    usernameError = null;
     emailError = null;
     passwordError = null;
     confirmPasswordError = null;
@@ -157,11 +167,22 @@ class SignupController extends ChangeNotifier {
 
     bool isValid = true;
 
+    final username = usernameController.text.trim();
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
     final confirmPassword = confirmPasswordController.text.trim();
 
+    final usernameRegex = RegExp(r'^[a-zA-Z0-9._]{3,30}$');
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+
+    // Validate username format
+    if (username.isEmpty) {
+      usernameError = 'Username is required';
+      isValid = false;
+    } else if (!usernameRegex.hasMatch(username)) {
+      usernameError = '3-30 characters: letters, numbers, dots, or underscores';
+      isValid = false;
+    }
 
     // Validate email
     if (email.isEmpty) {
@@ -194,6 +215,42 @@ class SignupController extends ChangeNotifier {
     return isValid;
   }
 
+  // Checks if the username is taken immediately when user leaves the field
+  Future<void> checkUsernameAvailability() async {
+    final username = usernameController.text.trim().toLowerCase();
+
+    if (username.isEmpty) {
+      usernameError = 'Username is required';
+      notifyListeners();
+      return;
+    }
+
+    final usernameRegex = RegExp(r'^[a-zA-Z0-9._]{3,30}$');
+    if (!usernameRegex.hasMatch(username)) {
+      usernameError = '3-30 characters: letters, numbers, dots, or underscores';
+      notifyListeners();
+      return;
+    }
+
+    try {
+      final existingUser = await Supabase.instance.client
+          .from('users')
+          .select('id')
+          .ilike('username', username)
+          .maybeSingle();
+
+      if (existingUser != null) {
+        usernameError = 'This username is already taken';
+      } else {
+        usernameError = null;
+      }
+    } catch (_) {
+      // Ignore network dropouts here; full validation will catch it on register
+    }
+
+    notifyListeners();
+  }
+
   Future<AuthResponse?> registerUser({
     required Map<String, dynamic> onboardingPreferences,
     required BuildContext context,
@@ -204,12 +261,29 @@ class SignupController extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final cleanUsername = usernameController.text.trim().toLowerCase();
+
+      // Check whether this username is already taken
+      final existingUser = await Supabase.instance.client
+          .from('users')
+          .select('id')
+          .ilike('username', cleanUsername)
+          .maybeSingle();
+
+      if (existingUser != null) {
+        usernameError = 'This username is already taken';
+        isLoading = false;
+        notifyListeners();
+        return null;
+      }
+
       final age = _calculateAge(birthdayController.text.trim());
 
       final response = await Supabase.instance.client.auth.signUp(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
         data: {
+          'username': cleanUsername,
           'full_name': nameController.text.trim(),
           'age': age,
           'gender': selectedGender,
@@ -217,6 +291,23 @@ class SignupController extends ChangeNotifier {
         },
       );
 
+      // If user profile row is created explicitly or updated:
+      if (response.user != null) {
+        try {
+          await Supabase.instance.client.from('users').upsert({
+            'id': response.user!.id,
+            'username': cleanUsername,
+            'email': emailController.text.trim(),
+            'full_name': nameController.text.trim(),
+            'age': age,
+            'gender': selectedGender,
+          });
+        } catch (e) {
+          debugPrint(
+            'Notice: public.users upsert skipped or handled by trigger: $e',
+          );
+        }
+      }
       return response;
     } on AuthWeakPasswordException {
       passwordError = 'Password is too weak. Please use at least 6 characters.';
@@ -233,8 +324,15 @@ class SignupController extends ChangeNotifier {
       } else {
         generalError = e.message;
       }
-    } catch (_) {
-      generalError = 'An unexpected error occurred. Please try again.';
+    } on PostgrestException catch (e) {
+      debugPrint('PostgrestException during signup: ${e.message}');
+      generalError = e.message;
+    } catch (e) {
+      debugPrint('Unexpected signup error: $e');
+      final errorStr = e.toString().replaceFirst('Exception: ', '');
+      generalError = errorStr.isNotEmpty
+          ? errorStr
+          : 'An unexpected error occurred. Please try again.';
     } finally {
       isLoading = false;
       notifyListeners();
@@ -247,6 +345,7 @@ class SignupController extends ChangeNotifier {
   void dispose() {
     nameController.dispose();
     birthdayController.dispose();
+    usernameController.dispose();
     emailController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();

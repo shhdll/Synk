@@ -7,11 +7,9 @@ import '../models/avatar_uploader.dart';
 import '../models/user_profile_model.dart';
 
 class EditProfileController extends ChangeNotifier {
-  EditProfileController({
-    AuthModel? authModel,
-    UserProfileModel? profileModel,
-  })  : _authModel = authModel ?? AuthModel(),
-        _profileModel = profileModel ?? UserProfileModel();
+  EditProfileController({AuthModel? authModel, UserProfileModel? profileModel})
+    : _authModel = authModel ?? AuthModel(),
+      _profileModel = profileModel ?? UserProfileModel();
 
   final AuthModel _authModel;
   final UserProfileModel _profileModel;
@@ -34,6 +32,7 @@ class EditProfileController extends ChangeNotifier {
   // ---------------------------------------------------------------------------
 
   String _originalName = '';
+  String _originalUsername = '';
   String _originalBio = '';
   int? _originalAge;
   String _originalGender = '';
@@ -44,12 +43,14 @@ class EditProfileController extends ChangeNotifier {
   // ---------------------------------------------------------------------------
 
   String _name = '';
+  String _username = '';
   String _bio = '';
   int? _age;
   String _gender = '';
   String _email = '';
 
   String get name => _name;
+  String get username => _username;
   String get bio => _bio;
   int? get age => _age;
   String get gender => _gender;
@@ -75,21 +76,21 @@ class EditProfileController extends ChangeNotifier {
     try {
       _profile = await _profileModel.fetchProfile();
 
-      _originalName =
-          (_profile['full_name'] as String?)?.trim() ?? '';
+      _originalName = (_profile['full_name'] as String?)?.trim() ?? '';
 
-      _originalBio =
-          (_profile['bio'] as String?)?.trim() ?? '';
+      _originalUsername = (_profile['username'] as String?)?.trim() ?? '';
+
+      _originalBio = (_profile['bio'] as String?)?.trim() ?? '';
 
       _originalAge = _parseAge(_profile['age']);
 
-      _originalGender =
-          (_profile['gender'] as String?)?.trim() ?? '';
+      _originalGender = (_profile['gender'] as String?)?.trim() ?? '';
 
       _originalEmail = email;
 
       // Start draft with saved values.
       _name = _originalName;
+      _username = _originalUsername;
       _bio = _originalBio;
       _age = _originalAge;
       _gender = _originalGender;
@@ -125,6 +126,56 @@ class EditProfileController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setUsername(String value) {
+    _username = value;
+    notifyListeners();
+  }
+
+  Future<String?> updateUsername(String newUsername) async {
+    final clean = newUsername.trim().replaceAll('@', '').toLowerCase();
+
+    if (clean.isEmpty) {
+      return 'Please enter your username.';
+    }
+
+    if (clean.length < 3) {
+      return 'Username must be at least 3 characters.';
+    }
+
+    if (clean.length > 30) {
+      return 'Username must be 30 characters or less.';
+    }
+
+    final usernameRegex = RegExp(r'^[a-zA-Z0-9_.]+$');
+    if (!usernameRegex.hasMatch(clean)) {
+      return 'Username can only contain letters, numbers, underscores, and dots.';
+    }
+
+    if (clean != _originalUsername.toLowerCase()) {
+      final currentUid = Supabase.instance.client.auth.currentUser?.id;
+      if (currentUid != null) {
+        try {
+          final existing = await Supabase.instance.client
+              .from('users')
+              .select('id')
+              .ilike('username', clean)
+              .neq('id', currentUid)
+              .maybeSingle();
+
+          if (existing != null) {
+            return 'This username is already taken.';
+          }
+        } catch (_) {
+          // If query fails, continue
+        }
+      }
+    }
+
+    _username = clean;
+    notifyListeners();
+    return null;
+  }
+
   void setBio(String value) {
     _bio = value;
     notifyListeners();
@@ -158,6 +209,8 @@ class EditProfileController extends ChangeNotifier {
 
   bool get hasUnsavedChanges {
     return _name.trim() != _originalName ||
+        _username.trim().replaceAll('@', '') !=
+            _originalUsername.replaceAll('@', '') ||
         _bio.trim() != _originalBio ||
         _age != _originalAge ||
         _gender.trim() != _originalGender ||
@@ -178,35 +231,53 @@ class EditProfileController extends ChangeNotifier {
 
     try {
       final trimmedName = _name.trim();
+      final trimmedUsername = _username
+          .trim()
+          .replaceAll('@', '')
+          .toLowerCase();
       final trimmedBio = _bio.trim();
       final trimmedGender = _gender.trim();
       final trimmedEmail = _email.trim();
 
+      if (trimmedUsername.isNotEmpty &&
+          trimmedUsername != _originalUsername.toLowerCase()) {
+        final currentUid = Supabase.instance.client.auth.currentUser?.id;
+        if (currentUid != null) {
+          final existing = await Supabase.instance.client
+              .from('users')
+              .select('id')
+              .ilike('username', trimmedUsername)
+              .neq('id', currentUid)
+              .maybeSingle();
+
+          if (existing != null) {
+            throw const AuthException('This username is already taken.');
+          }
+        }
+      }
+
       final profileChanges = <String, dynamic>{
         'full_name': trimmedName,
+        'username': trimmedUsername.isEmpty ? null : trimmedUsername,
         'bio': trimmedBio,
         'age': _age,
-        'gender':
-            trimmedGender.isEmpty ? null : trimmedGender,
+        'gender': trimmedGender.isEmpty ? null : trimmedGender,
       };
 
       // Update users table.
       await _profileModel.updateProfile(profileChanges);
 
       // Email belongs to Supabase Auth.
-      if (trimmedEmail.isNotEmpty &&
-          trimmedEmail != _originalEmail) {
+      if (trimmedEmail.isNotEmpty && trimmedEmail != _originalEmail) {
         await _authModel.updateEmail(trimmedEmail);
       }
 
       // Update local profile immediately.
-      _profile = {
-        ..._profile,
-        ...profileChanges,
-      };
+      _profile = {..._profile, ...profileChanges};
 
       // Update original values.
       _originalName = trimmedName;
+      _originalUsername = trimmedUsername;
       _originalBio = trimmedBio;
       _originalAge = _age;
       _originalGender = trimmedGender;
@@ -214,6 +285,7 @@ class EditProfileController extends ChangeNotifier {
 
       // Keep draft values synchronized.
       _name = trimmedName;
+      _username = trimmedUsername;
       _bio = trimmedBio;
       _gender = trimmedGender;
       _email = trimmedEmail;
@@ -240,8 +312,7 @@ class EditProfileController extends ChangeNotifier {
 
       _profile = await _profileModel.fetchProfile();
     } catch (_) {
-      message =
-          'Unable to update your photo. Please try again.';
+      message = 'Unable to update your photo. Please try again.';
     } finally {
       _isUploadingPhoto = false;
       notifyListeners();
@@ -261,8 +332,7 @@ class EditProfileController extends ChangeNotifier {
 
       _profile = await _profileModel.fetchProfile();
     } catch (_) {
-      message =
-          'Unable to remove your photo. Please try again.';
+      message = 'Unable to remove your photo. Please try again.';
     } finally {
       _isUploadingPhoto = false;
       notifyListeners();
