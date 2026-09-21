@@ -43,15 +43,7 @@ class ResetPasswordController extends ChangeNotifier {
   }
 
   String? validatePassword(String? value) {
-    final password = value ?? '';
-    if (password.isEmpty) {
-      return 'Password is required';
-    }
-    if (password.length < AuthConstants.minPasswordLength) {
-      return 'Password must be at least '
-          '${AuthConstants.minPasswordLength} characters';
-    }
-    return null;
+    return AuthConstants.validatePassword(value);
   }
 
   String? validateConfirmPassword(String? value, String password) {
@@ -67,7 +59,7 @@ class ResetPasswordController extends ChangeNotifier {
 
   // Live helpers for the inline indicators under the password fields.
   bool meetsMinimumLength(String password) =>
-      password.length >= AuthConstants.minPasswordLength;
+      AuthConstants.validatePassword(password) == null;
 
   bool passwordsMatch(String password, String confirm) =>
       confirm.isNotEmpty && password == confirm;
