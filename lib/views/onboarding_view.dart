@@ -54,6 +54,7 @@ class _OnboardingViewState extends State<OnboardingView>
     _controller.addListener(_onControllerChanged);
 
     _signupController = SignupController();
+    _signupController.addListener(_onControllerChanged);
 
     _pageController = PageController();
     _pageController.addListener(_onPageScrollChanged);
@@ -83,6 +84,7 @@ class _OnboardingViewState extends State<OnboardingView>
     _controller.removeListener(_onControllerChanged);
     _controller.dispose();
 
+    _signupController.removeListener(_onControllerChanged);
     _signupController.dispose();
 
     _pageController.removeListener(_onPageScrollChanged);
@@ -679,6 +681,16 @@ class _OnboardingViewState extends State<OnboardingView>
   // ---------------------------------------------------------------------------
 
   void _onPageChanged(int page) {
+    if (page == 4 && !_signupController.isPersonalDetailsValid) {
+      _signupController.validatePersonalDetails();
+      _pageController.animateToPage(
+        3,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+      );
+      return;
+    }
+
     if (_controller.currentStep != page) {
       _controller.goToStep(page);
     }
@@ -833,6 +845,8 @@ class _OnboardingViewState extends State<OnboardingView>
         return _controller.locationPreference != null;
 
       case 3:
+        return _signupController.isPersonalDetailsValid;
+
       case 4:
         return true;
 
