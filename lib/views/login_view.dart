@@ -296,9 +296,17 @@ class _LoginViewState extends State<LoginView> {
                         ),
                         filled: true,
                         fillColor: Colors.white,
-                        prefixIcon: const Icon(
-                          Icons.alternate_email,
-                          color: SynkColors.textSecondary,
+                        prefixIcon: const Padding(
+                          padding: EdgeInsets.only(left: 18, right: 10),
+                          child: Icon(
+                            Icons.alternate_email,
+                            color: SynkColors.textSecondary,
+                            size: 20,
+                          ),
+                        ),
+                        prefixIconConstraints: const BoxConstraints(
+                          minWidth: 0,
+                          minHeight: 0,
                         ),
                         contentPadding: const EdgeInsets.symmetric(
                           vertical: 18,
@@ -332,9 +340,17 @@ class _LoginViewState extends State<LoginView> {
                         ),
                         filled: true,
                         fillColor: Colors.white,
-                        prefixIcon: const Icon(
-                          Icons.email_outlined,
-                          color: SynkColors.textSecondary,
+                        prefixIcon: const Padding(
+                          padding: EdgeInsets.only(left: 18, right: 10),
+                          child: Icon(
+                            Icons.email_outlined,
+                            color: SynkColors.textSecondary,
+                            size: 20,
+                          ),
+                        ),
+                        prefixIconConstraints: const BoxConstraints(
+                          minWidth: 0,
+                          minHeight: 0,
                         ),
                         contentPadding: const EdgeInsets.symmetric(
                           vertical: 18,
@@ -367,9 +383,17 @@ class _LoginViewState extends State<LoginView> {
                       ),
                       filled: true,
                       fillColor: Colors.white,
-                      prefixIcon: const Icon(
-                        Icons.lock_outline,
-                        color: SynkColors.textSecondary,
+                      prefixIcon: const Padding(
+                        padding: EdgeInsets.only(left: 18, right: 10),
+                        child: Icon(
+                          Icons.lock_outline,
+                          color: SynkColors.textSecondary,
+                          size: 20,
+                        ),
+                      ),
+                      prefixIconConstraints: const BoxConstraints(
+                        minWidth: 0,
+                        minHeight: 0,
                       ),
                       suffixIcon: IconButton(
                         icon: Icon(

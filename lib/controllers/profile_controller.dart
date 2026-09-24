@@ -64,6 +64,13 @@ class ProfileController extends ChangeNotifier {
     return null;
   }
 
+  Future<void> updateBio(String value) async {
+    final cleanBio = value.trim();
+    await _profileModel.updateProfile({'bio': cleanBio});
+    _profile = {..._profile, 'bio': cleanBio};
+    notifyListeners();
+  }
+
   Future<void> updateActivityType(String value) async {
     await _profileModel.updateProfile({'activity_type': value});
     _profile = {..._profile, 'activity_type': value};

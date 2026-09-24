@@ -8,6 +8,7 @@ import 'edit_interests_view.dart';
 import 'edit_profile_view.dart';
 import 'logout_view.dart';
 import 'widgets/app_header.dart';
+import 'widgets/field_editor_sheet.dart';
 import 'widgets/option_picker_sheet.dart';
 import 'widgets/profile_info_row.dart';
 import 'widgets/section_label.dart';
@@ -55,6 +56,41 @@ class _ProfileViewState extends State<ProfileView> {
     );
     // Picks up whatever changed while Edit Interests was open.
     await _controller.loadProfile();
+  }
+
+  Future<void> _editBio(String? currentBio) async {
+    final controller = TextEditingController(text: currentBio ?? '');
+    final formKey = GlobalKey<FormState>();
+
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => FieldEditorSheet(
+        title: 'Bio',
+        controller: controller,
+        hint: 'Add a short bio so people get to know you.',
+        formKey: formKey,
+        maxLines: 4,
+        maxLength: 160,
+      ),
+    );
+
+    if (saved == true && mounted) {
+      try {
+        await _controller.updateBio(controller.text);
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              const SnackBar(
+                content: Text('Unable to save bio. Please try again.'),
+              ),
+            );
+        }
+      }
+    }
   }
 
   Future<void> _editActivityType(String? current) async {
@@ -159,11 +195,7 @@ class _ProfileViewState extends State<ProfileView> {
     final handle = (username != null && username.isNotEmpty)
         ? '@$username'
         : _controller.email;
-    final subtitle = [
-      if (handle != null) handle,
-      if (age != null) '$age yrs',
-      if (gender?.isNotEmpty ?? false) gender!,
-    ].join(' · ');
+    final subtitle = [?handle, if (age != null) '$age yrs'].join(' · ');
 
     return Scaffold(
       backgroundColor: SynkColors.background,
@@ -173,170 +205,169 @@ class _ProfileViewState extends State<ProfileView> {
           children: [
             const AppHeader(),
             const SizedBox(height: 20),
-            GestureDetector(
-              onTap: _openEditProfile,
-              behavior: HitTestBehavior.opaque,
-              child: Container(
-                clipBehavior: Clip.antiAlias,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: SynkColors.textSecondary.withValues(alpha: 0.10),
-                  ),
+            Container(
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: SynkColors.textSecondary.withValues(alpha: 0.10),
                 ),
-                child: Column(
-                  children: [
-                    // Synk-gradient banner, framed by the card's own white
-                    // padding rather than flush with its edges, with the
-                    // avatar hanging off its bottom edge.
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        alignment: Alignment.bottomLeft,
-                        children: [
-                          Container(
-                            height: 120,
-                            width: double.infinity,
-                            decoration: const BoxDecoration(
-                              // Warm, blurred lava-glow gradient for the header.
-                              gradient: LinearGradient(
-                                colors: [
-                                  Color(0xFFB6350F),
-                                  Color(0xFFFF8A1E),
-                                  Color(0xFFFFE3B0),
-                                  Color(0xFFFF7A1A),
-                                  Color(0xFFB6350F),
-                                ],
-                                stops: [0.0, 0.3, 0.55, 0.78, 1.0],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(20),
-                              ),
+              ),
+              child: Column(
+                children: [
+                  // Synk-gradient banner, framed by the card's own white
+                  // padding rather than flush with its edges, with the
+                  // avatar hanging off its bottom edge.
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      alignment: Alignment.bottomLeft,
+                      children: [
+                        Container(
+                          height: 120,
+                          width: double.infinity,
+                          decoration: const BoxDecoration(
+                            // Warm, blurred lava-glow gradient for the header.
+                            gradient: LinearGradient(
+                              colors: [
+                                Color(0xFFB6350F),
+                                Color(0xFFFF8A1E),
+                                Color(0xFFFFE3B0),
+                                Color(0xFFFF7A1A),
+                                Color(0xFFB6350F),
+                              ],
+                              stops: [0.0, 0.3, 0.55, 0.78, 1.0],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
+                            borderRadius: BorderRadius.all(Radius.circular(20)),
                           ),
-                          Positioned(
-                            left: 4,
-                            bottom: -40,
+                        ),
+                        Positioned(
+                          left: 4,
+                          bottom: -40,
+                          child: Container(
+                            width: 84,
+                            height: 84,
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
                             child: Container(
-                              width: 84,
-                              height: 84,
-                              padding: const EdgeInsets.all(4),
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
+                              decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                              ),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  image: DecorationImage(
-                                    image: displayImage,
-                                    fit: BoxFit.cover,
-                                  ),
+                                image: DecorationImage(
+                                  image: displayImage,
+                                  fit: BoxFit.cover,
                                 ),
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: _EditInfoButton(),
-                      ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: _EditInfoButton(onTap: _openEditProfile),
                     ),
-                    const SizedBox(height: 16),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
+                  ),
+                  const SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          (fullName?.isNotEmpty ?? false)
+                              ? fullName!
+                              : 'Synk member',
+                          style: const TextStyle(
+                            fontSize: 19,
+                            fontWeight: FontWeight.w800,
+                            color: SynkColors.textPrimary,
+                          ),
+                        ),
+                        if (subtitle.isNotEmpty) ...[
+                          const SizedBox(height: 3),
                           Text(
-                            (fullName?.isNotEmpty ?? false)
-                                ? fullName!
-                                : 'Synk member',
+                            subtitle,
                             style: const TextStyle(
-                              fontSize: 19,
-                              fontWeight: FontWeight.w800,
-                              color: SynkColors.textPrimary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: SynkColors.textSecondary,
                             ),
                           ),
-                          if (subtitle.isNotEmpty) ...[
-                            const SizedBox(height: 3),
-                            Text(
-                              subtitle,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: SynkColors.textSecondary,
+                        ],
+                        const SizedBox(height: 18),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _StatItem(
+                                icon: Icons.people_alt_rounded,
+                                value: '$friendsCount',
+                                label: 'Friends',
+                              ),
+                            ),
+                            const _StatDivider(),
+                            Expanded(
+                              child: _StatItem(
+                                icon: Icons.local_activity_rounded,
+                                value: '$activitiesCount',
+                                label: 'Activities',
+                              ),
+                            ),
+                            const _StatDivider(),
+                            Expanded(
+                              child: _StatItem(
+                                icon: Icons.star_rounded,
+                                value: ratingText,
+                                label: 'Rating',
                               ),
                             ),
                           ],
-                          const SizedBox(height: 18),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _StatItem(
-                                  icon: Icons.people_alt_rounded,
-                                  value: '$friendsCount',
-                                  label: 'Friends',
-                                ),
-                              ),
-                              const _StatDivider(),
-                              Expanded(
-                                child: _StatItem(
-                                  icon: Icons.local_activity_rounded,
-                                  value: '$activitiesCount',
-                                  label: 'Activities',
-                                ),
-                              ),
-                              const _StatDivider(),
-                              Expanded(
-                                child: _StatItem(
-                                  icon: Icons.star_rounded,
-                                  value: ratingText,
-                                  label: 'Rating',
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 12),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Divider(height: 1),
-                          const SizedBox(height: 14),
-                          Text(
-                            (bio?.isNotEmpty ?? false)
-                                ? bio!
-                                : 'Add a short bio so people get to know you.',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              fontStyle: (bio?.isNotEmpty ?? false)
-                                  ? FontStyle.normal
-                                  : FontStyle.italic,
-                              height: 1.4,
-                              color: (bio?.isNotEmpty ?? false)
-                                  ? SynkColors.textPrimary
-                                  : SynkColors.textSecondary,
+                  ),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Divider(height: 1),
+                        const SizedBox(height: 14),
+                        GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => _editBio(bio),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: Text(
+                              (bio?.isNotEmpty ?? false) ? bio! : 'Add a short bio so people get to know you.',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                fontStyle: (bio?.isNotEmpty ?? false)
+                                    ? FontStyle.normal
+                                    : FontStyle.italic,
+                                height: 1.4,
+                                color: (bio?.isNotEmpty ?? false)
+                                    ? SynkColors.textPrimary
+                                    : SynkColors.textSecondary,
+                              ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 24),
@@ -500,32 +531,26 @@ class _ProfileViewState extends State<ProfileView> {
 }
 
 class _EditInfoButton extends StatelessWidget {
-  const _EditInfoButton();
+  const _EditInfoButton({required this.onTap});
+
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    // Purely a visual affordance — the whole card already opens Edit
-    // Profile on tap.
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: SynkColors.textSecondary.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: const Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.edit_rounded, size: 14, color: SynkColors.textSecondary),
-          SizedBox(width: 4),
-          Text(
-            'Edit info',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: SynkColors.textSecondary,
-            ),
-          ),
-        ],
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: SynkColors.textSecondary.withValues(alpha: 0.12),
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(
+          Icons.edit_rounded,
+          size: 16,
+          color: SynkColors.textSecondary,
+        ),
       ),
     );
   }

@@ -610,7 +610,7 @@ class _EditProfileViewState extends State<EditProfileView> {
 
                   _buildTextField(
                     controller: _usernameController,
-                    hintText: 'alex_99',
+                    hintText: 'Username',
                     prefixIcon: const Icon(
                       Icons.alternate_email_rounded,
                       size: 18,
@@ -670,7 +670,7 @@ class _EditProfileViewState extends State<EditProfileView> {
 
                   _buildTextField(
                     controller: _emailController,
-                    hintText: 'you@example.com',
+                    hintText: 'Email address',
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.done,
                     onChanged: _onEmailChanged,
@@ -803,7 +803,16 @@ class _EditProfileViewState extends State<EditProfileView> {
             color: SynkColors.textPrimary,
           ),
           decoration: InputDecoration(
-            prefixIcon: prefixIcon,
+            prefixIcon: prefixIcon != null
+                ? Padding(
+                    padding: const EdgeInsets.only(left: 14, right: 8),
+                    child: prefixIcon,
+                  )
+                : null,
+            prefixIconConstraints: const BoxConstraints(
+              minWidth: 0,
+              minHeight: 0,
+            ),
             hintText: hintText,
             hintStyle: const TextStyle(color: SynkColors.textSecondary),
             filled: true,

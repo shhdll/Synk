@@ -41,7 +41,7 @@ class PersonalDetailsSlide extends StatelessWidget {
                 _buildField(
                   controller: controller.nameController,
                   label: 'Name',
-                  hint: 'Sarah',
+                  hint: 'Full name',
                   icon: Icons.person_outline,
                   errorText: controller.nameError,
                   onChanged: (_) => controller.clearNameError(),
@@ -250,7 +250,14 @@ class PersonalDetailsSlide extends StatelessWidget {
               color: Color(0xFF1E1E1E),
             ),
             decoration: InputDecoration(
-              prefixIcon: Icon(icon, size: 20, color: const Color(0xFF6B7280)),
+              prefixIcon: Padding(
+                padding: const EdgeInsets.only(left: 14, right: 8),
+                child: Icon(icon, size: 20, color: const Color(0xFF6B7280)),
+              ),
+              prefixIconConstraints: const BoxConstraints(
+                minWidth: 0,
+                minHeight: 0,
+              ),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,

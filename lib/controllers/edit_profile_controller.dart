@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart' show ImageProvider;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../core/constants/auth_constants.dart';
 import '../models/auth_model.dart';
 import '../models/avatar_uploader.dart';
 import '../models/user_profile_model.dart';
@@ -76,9 +77,23 @@ class EditProfileController extends ChangeNotifier {
     try {
       _profile = await _profileModel.fetchProfile();
 
-      _originalName = (_profile['full_name'] as String?)?.trim() ?? '';
+      final rawName = (_profile['full_name'] as String?)?.trim();
+      final metaName =
+          (Supabase.instance.client.auth.currentUser?.userMetadata?['full_name']
+                  as String?)
+              ?.trim();
+      _originalName = (rawName != null && rawName.isNotEmpty)
+          ? rawName
+          : (metaName ?? '');
 
-      _originalUsername = (_profile['username'] as String?)?.trim() ?? '';
+      final rawUsername = (_profile['username'] as String?)?.trim();
+      final metaUsername =
+          (Supabase.instance.client.auth.currentUser?.userMetadata?['username']
+                  as String?)
+              ?.trim();
+      _originalUsername = (rawUsername != null && rawUsername.isNotEmpty)
+          ? rawUsername
+          : (metaUsername ?? '');
 
       _originalBio = (_profile['bio'] as String?)?.trim() ?? '';
 
@@ -269,6 +284,9 @@ class EditProfileController extends ChangeNotifier {
 
       // Email belongs to Supabase Auth.
       if (trimmedEmail.isNotEmpty && trimmedEmail != _originalEmail) {
+        if (!AuthConstants.emailRegex.hasMatch(trimmedEmail)) {
+          throw const AuthException('Please enter a valid email address.');
+        }
         await _authModel.updateEmail(trimmedEmail);
       }
 
