@@ -82,6 +82,18 @@ class FieldEditorSheet extends StatelessWidget {
                 decoration: InputDecoration(
                   hintText: hint,
                   hintStyle: const TextStyle(color: SynkColors.textSecondary),
+                  helperText: helperText,
+                  helperMaxLines: 2,
+                  helperStyle: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: SynkColors.textSecondary.withValues(alpha: 0.85),
+                  ),
+                  counterStyle: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: SynkColors.textSecondary.withValues(alpha: 0.85),
+                  ),
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
@@ -94,18 +106,6 @@ class FieldEditorSheet extends StatelessWidget {
                   ),
                 ),
               ),
-              if (helperText != null) ...[
-                const SizedBox(height: 6),
-                Text(
-                  helperText!,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: SynkColors.textSecondary.withValues(alpha: 0.85),
-                    height: 1.3,
-                  ),
-                ),
-              ],
               const SizedBox(height: 12),
               SizedBox(
                 height: 52,

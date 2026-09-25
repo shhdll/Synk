@@ -22,20 +22,14 @@ class AuthConstants {
     if (password == null || password.isEmpty) {
       return 'Password is required';
     }
-    if (password.length < minPasswordLength) {
-      return 'Password must be at least $minPasswordLength characters';
-    }
-    if (!hasUppercase.hasMatch(password)) {
-      return 'Password must contain at least 1 uppercase letter';
-    }
-    if (!hasLowercase.hasMatch(password)) {
-      return 'Password must contain at least 1 lowercase letter';
-    }
-    if (!hasDigit.hasMatch(password)) {
-      return 'Password must contain at least 1 number';
-    }
-    if (!hasSpecialChar.hasMatch(password)) {
-      return 'Password must contain at least 1 special character (e.g., @\$!%*?&)';
+    final isLongEnough = password.length >= minPasswordLength;
+    final hasUpper = hasUppercase.hasMatch(password);
+    final hasLower = hasLowercase.hasMatch(password);
+    final hasNum = hasDigit.hasMatch(password);
+    final hasSpecial = hasSpecialChar.hasMatch(password);
+
+    if (!isLongEnough || !hasUpper || !hasLower || !hasNum || !hasSpecial) {
+      return 'Password must be at least 8 characters and include uppercase, lowercase, a number, and a special character';
     }
     return null;
   }

@@ -5,7 +5,7 @@ import '../../controllers/onboarding_controller.dart';
 import '../../core/constants/synk_colors.dart';
 import '../home/main_shell.dart';
 
-class AccountSetupSlide extends StatelessWidget {
+class AccountSetupSlide extends StatefulWidget {
   final SignupController signupController;
   final OnboardingController onboardingController;
 
@@ -16,7 +16,36 @@ class AccountSetupSlide extends StatelessWidget {
   });
 
   @override
+  State<AccountSetupSlide> createState() => _AccountSetupSlideState();
+}
+
+class _AccountSetupSlideState extends State<AccountSetupSlide> {
+  final FocusNode _usernameFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _usernameFocusNode.addListener(_onUsernameFocusChange);
+  }
+
+  void _onUsernameFocusChange() {
+    if (!_usernameFocusNode.hasFocus) {
+      widget.signupController.checkUsernameAvailability();
+    }
+  }
+
+  @override
+  void dispose() {
+    _usernameFocusNode.removeListener(_onUsernameFocusChange);
+    _usernameFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final signupController = widget.signupController;
+    final onboardingController = widget.onboardingController;
+
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 28.0),
@@ -47,8 +76,9 @@ class AccountSetupSlide extends StatelessWidget {
                 // Username
                 _buildField(
                   controller: signupController.usernameController,
+                  focusNode: _usernameFocusNode,
                   label: 'Username',
-                  hint: 'e.g. alex_99',
+                  hint: 'Username',
                   icon: Icons.alternate_email_rounded,
                   keyboardType: TextInputType.text,
                   errorText: signupController.usernameError,
@@ -60,7 +90,7 @@ class AccountSetupSlide extends StatelessWidget {
                 _buildField(
                   controller: signupController.emailController,
                   label: 'Email',
-                  hint: 'name@example.com',
+                  hint: 'Email address',
                   icon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                   errorText: signupController.emailError,
@@ -72,7 +102,7 @@ class AccountSetupSlide extends StatelessWidget {
                 _buildField(
                   controller: signupController.passwordController,
                   label: 'Password',
-                  hint: 'Min. 8 characters',
+                  hint: '••••••••',
                   icon: Icons.lock_outline_rounded,
                   obscureText: signupController.obscurePassword,
                   errorText: signupController.passwordError,
@@ -180,6 +210,7 @@ class AccountSetupSlide extends StatelessWidget {
     required String label,
     required String hint,
     required IconData icon,
+    FocusNode? focusNode,
     bool obscureText = false,
     Widget? suffixIcon,
     String? errorText,
@@ -206,6 +237,7 @@ class AccountSetupSlide extends StatelessWidget {
           ),
           child: TextField(
             controller: controller,
+            focusNode: focusNode,
             obscureText: obscureText,
             keyboardType: keyboardType,
             onChanged: onChanged,
@@ -215,7 +247,14 @@ class AccountSetupSlide extends StatelessWidget {
               color: Color(0xFF1E1E1E),
             ),
             decoration: InputDecoration(
-              prefixIcon: Icon(icon, size: 20, color: const Color(0xFF6B7280)),
+              prefixIcon: Padding(
+                padding: const EdgeInsets.only(left: 14, right: 8),
+                child: Icon(icon, size: 20, color: const Color(0xFF6B7280)),
+              ),
+              prefixIconConstraints: const BoxConstraints(
+                minWidth: 0,
+                minHeight: 0,
+              ),
               suffixIcon: suffixIcon,
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(
@@ -238,12 +277,13 @@ class AccountSetupSlide extends StatelessWidget {
         if (errorText != null) ...[
           const SizedBox(height: 5),
           Padding(
-            padding: const EdgeInsets.only(left: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Text(
               errorText,
               style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
+                height: 1.35,
                 color: Color(0xFFE53935),
               ),
             ),

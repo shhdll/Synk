@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../core/constants/auth_constants.dart';
+
 class SignupController extends ChangeNotifier {
   // Fields
   final TextEditingController nameController = TextEditingController();
@@ -195,7 +197,6 @@ class SignupController extends ChangeNotifier {
     final confirmPassword = confirmPasswordController.text.trim();
 
     final usernameRegex = RegExp(r'^[a-zA-Z0-9._]{3,30}$');
-    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
 
     // Validate username format
     if (username.isEmpty) {
@@ -210,17 +211,15 @@ class SignupController extends ChangeNotifier {
     if (email.isEmpty) {
       emailError = 'Email address is required';
       isValid = false;
-    } else if (!emailRegex.hasMatch(email)) {
+    } else if (!AuthConstants.emailRegex.hasMatch(email)) {
       emailError = 'Please enter a valid email address';
       isValid = false;
     }
 
-    // Validate password
-    if (password.isEmpty) {
-      passwordError = 'Password is required';
-      isValid = false;
-    } else if (password.length < 6) {
-      passwordError = 'Password must be at least 6 characters';
+    // Validate password using AuthConstants
+    final passwordValidation = AuthConstants.validatePassword(password);
+    if (passwordValidation != null) {
+      passwordError = passwordValidation;
       isValid = false;
     }
 
@@ -325,6 +324,9 @@ class SignupController extends ChangeNotifier {
             'full_name': nameController.text.trim(),
             'age': age,
             'gender': selectedGender,
+            'interests': onboardingPreferences['interests'],
+            'activity_type': onboardingPreferences['activity_type'],
+            'location_preference': onboardingPreferences['location_preference'],
           });
         } catch (e) {
           debugPrint(
@@ -335,7 +337,8 @@ class SignupController extends ChangeNotifier {
 
       return response;
     } on AuthWeakPasswordException {
-      passwordError = 'Password is too weak. Please use at least 6 characters.';
+      passwordError =
+          'Password is too weak. Please use at least ${AuthConstants.minPasswordLength} characters with a mix of letters, numbers, and symbols.';
     } on AuthException catch (e) {
       final msg = e.message.toLowerCase();
 
