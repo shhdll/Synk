@@ -50,3 +50,5 @@ app.*.map.json
 # Environment variables and secrets
 .env
 .env*.local
+# Supabase local development files
+supabase/.temp/
