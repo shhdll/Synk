@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../controllers/reset_password_controller.dart';
-import '../core/constants/auth_constants.dart';
 import '../core/constants/synk_colors.dart';
 import '../utils/custom_widgets/puzzle_piece_tile.dart';
 import 'forgot_password_view.dart';
@@ -54,7 +53,10 @@ class _NewPasswordViewState extends State<NewPasswordView>
     super.dispose();
   }
 
-  // Live form status used by the indicators, the tile and the button.
+  String? _passwordError;
+  String? _confirmPasswordError;
+
+  // Live form status used by the tile.
   bool get _lengthOk =>
       _controller.meetsMinimumLength(_passwordController.text);
   bool get _matchOk => _controller.passwordsMatch(
@@ -70,12 +72,23 @@ class _NewPasswordViewState extends State<NewPasswordView>
   Future<void> _handleUpdate() async {
     FocusScope.of(context).unfocus();
 
-    if (!_formKey.currentState!.validate()) {
+    final password = _passwordController.text;
+    final confirm = _confirmController.text;
+
+    final pErr = _controller.validatePassword(password);
+    final cErr = _controller.validateConfirmPassword(confirm, password);
+
+    setState(() {
+      _passwordError = pErr;
+      _confirmPasswordError = cErr;
+    });
+
+    if (pErr != null || cErr != null) {
       _shakeController.forward(from: 0);
       return;
     }
 
-    final result = await _controller.updatePassword(_passwordController.text);
+    final result = await _controller.updatePassword(password);
     if (!mounted) return;
 
     switch (result) {
@@ -299,34 +312,38 @@ class _NewPasswordViewState extends State<NewPasswordView>
             color: SynkColors.textPrimary,
           ),
         ),
-        const SizedBox(height: 8),
-        const Text(
-          "Choose something you'll remember — and nobody else could guess.",
-          style: TextStyle(fontSize: 15, color: SynkColors.textSecondary),
-        ),
-        const SizedBox(height: 36),
 
-        // New password.
-        _buildPasswordField(
+        const SizedBox(height: 28),
+
+        // New password
+        _buildField(
           controller: _passwordController,
-          hint: 'New password',
-          icon: Icons.lock_outline,
-          obscure: _obscurePassword,
-          onToggle: () => setState(() => _obscurePassword = !_obscurePassword),
-          validator: _controller.validatePassword,
-          autofillHint: AutofillHints.newPassword,
+          label: 'Password',
+          hint: '••••••••',
+          icon: Icons.lock_outline_rounded,
+          obscureText: _obscurePassword,
+          errorText: _passwordError,
           textInputAction: TextInputAction.next,
+          onChanged: (_) {
+            if (_passwordError != null) {
+              setState(() => _passwordError = null);
+            }
+          },
+          suffixIcon: IconButton(
+            icon: Icon(
+              _obscurePassword
+                  ? Icons.visibility_off_outlined
+                  : Icons.visibility_outlined,
+              size: 20,
+              color: const Color(0xFF6B7280),
+            ),
+            onPressed: () =>
+                setState(() => _obscurePassword = !_obscurePassword),
+          ),
         ),
-        const SizedBox(height: 12),
-        _buildStatusLine(
-          ok: _lengthOk,
-          okText: 'At least ${AuthConstants.minPasswordLength} characters',
-          pendingText: 'At least ${AuthConstants.minPasswordLength} characters',
-        ),
+        const SizedBox(height: 14),
 
-        const SizedBox(height: 16),
-
-        // Confirm password (shakes on mismatch).
+        // Confirm password (shakes on mismatch or error)
         AnimatedBuilder(
           animation: _shakeController,
           builder: (context, child) {
@@ -334,62 +351,67 @@ class _NewPasswordViewState extends State<NewPasswordView>
             final dx = math.sin(t * math.pi * 4) * 4 * (1 - t);
             return Transform.translate(offset: Offset(dx, 0), child: child);
           },
-          child: _buildPasswordField(
+          child: _buildField(
             controller: _confirmController,
-            hint: 'Confirm password',
-            icon: Icons.lock_reset_rounded,
-            obscure: _obscureConfirm,
-            onToggle: () => setState(() => _obscureConfirm = !_obscureConfirm),
-            validator: (value) => _controller.validateConfirmPassword(
-              value,
-              _passwordController.text,
-            ),
-            autofillHint: AutofillHints.newPassword,
+            label: 'Confirm Password',
+            hint: 'Re-type password',
+            icon: Icons.lock_outline_rounded,
+            obscureText: _obscureConfirm,
+            errorText: _confirmPasswordError,
             textInputAction: TextInputAction.done,
             onSubmitted: (_) => _handleUpdate(),
+            onChanged: (_) {
+              if (_confirmPasswordError != null) {
+                setState(() => _confirmPasswordError = null);
+              }
+            },
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscureConfirm
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
+                size: 20,
+                color: const Color(0xFF6B7280),
+              ),
+              onPressed: () =>
+                  setState(() => _obscureConfirm = !_obscureConfirm),
+            ),
           ),
         ),
-        const SizedBox(height: 12),
-        if (_confirmController.text.isNotEmpty)
-          _buildStatusLine(
-            ok: _matchOk,
-            okText: 'Passwords match',
-            pendingText: "Passwords don't match yet",
-          ),
 
         const SizedBox(height: 28),
 
-        // Enabled only once both fields are valid and matching.
-        ElevatedButton(
-          onPressed: (_controller.isLoading || !_formReady)
-              ? null
-              : _handleUpdate,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: SynkColors.orangeDark,
-            disabledBackgroundColor: SynkColors.orangeDark.withValues(
-              alpha: 0.6,
+        // Update password button
+        SizedBox(
+          width: double.infinity,
+          height: 54,
+          child: ElevatedButton(
+            onPressed: _controller.isLoading ? null : _handleUpdate,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFF6F43),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
             ),
-            foregroundColor: Colors.white,
-            disabledForegroundColor: Colors.white,
-            elevation: 0,
-            padding: const EdgeInsets.symmetric(vertical: 18),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
-            ),
-          ),
-          child: _controller.isLoading
-              ? const SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
+            child: _controller.isLoading
+                ? const SizedBox(
+                    height: 22,
+                    width: 22,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2.5,
+                    ),
+                  )
+                : const Text(
+                    'Update password',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
                   ),
-                )
-              : const Text(
-                  'Update password',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
+          ),
         ),
 
         const SizedBox(height: 16),
@@ -410,84 +432,91 @@ class _NewPasswordViewState extends State<NewPasswordView>
     );
   }
 
-  Widget _buildPasswordField({
+  Widget _buildField({
     required TextEditingController controller,
+    required String label,
     required String hint,
     required IconData icon,
-    required bool obscure,
-    required VoidCallback onToggle,
-    required FormFieldValidator<String> validator,
-    required String autofillHint,
-    required TextInputAction textInputAction,
+    bool obscureText = false,
+    Widget? suffixIcon,
+    String? errorText,
+    ValueChanged<String>? onChanged,
+    TextInputAction textInputAction = TextInputAction.next,
     ValueChanged<String>? onSubmitted,
   }) {
-    return TextFormField(
-      controller: controller,
-      obscureText: obscure,
-      enabled: !_controller.isLoading,
-      autofillHints: [autofillHint],
-      textInputAction: textInputAction,
-      onFieldSubmitted: onSubmitted,
-      // Rebuilds the live indicators and the tile as the user types.
-      onChanged: (_) => setState(() {}),
-      style: const TextStyle(color: SynkColors.textPrimary),
-      validator: validator,
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: const TextStyle(color: SynkColors.textSecondary),
-        filled: true,
-        fillColor: Colors.white,
-        prefixIcon: Icon(icon, color: SynkColors.textSecondary),
-        suffixIcon: IconButton(
-          icon: Icon(
-            obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-            color: SynkColors.textSecondary,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.95),
+            borderRadius: BorderRadius.circular(16),
+            border: errorText != null
+                ? Border.all(color: const Color(0xFFE53935), width: 1.2)
+                : null,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          onPressed: onToggle,
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 18,
-          horizontal: 20,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: const BorderSide(color: SynkColors.orange, width: 1.5),
-        ),
-      ),
-    );
-  }
-
-  // Teal check when satisfied, quiet grey while still typing (never red).
-  Widget _buildStatusLine({
-    required bool ok,
-    required String okText,
-    required String pendingText,
-  }) {
-    final color = ok ? SynkColors.teal : SynkColors.textSecondary;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 6),
-      child: Row(
-        children: [
-          Icon(
-            ok ? Icons.check_circle_rounded : Icons.error_outline_rounded,
-            size: 18,
-            color: color,
-          ),
-          const SizedBox(width: 8),
-          Text(
-            ok ? okText : pendingText,
-            style: TextStyle(
-              fontSize: 13,
+          child: TextField(
+            controller: controller,
+            obscureText: obscureText,
+            onChanged: onChanged,
+            textInputAction: textInputAction,
+            onSubmitted: onSubmitted,
+            style: const TextStyle(
+              fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: color,
+              color: Color(0xFF1E1E1E),
+            ),
+            decoration: InputDecoration(
+              prefixIcon: Padding(
+                padding: const EdgeInsets.only(left: 14, right: 8),
+                child: Icon(icon, size: 20, color: const Color(0xFF6B7280)),
+              ),
+              prefixIconConstraints: const BoxConstraints(
+                minWidth: 0,
+                minHeight: 0,
+              ),
+              suffixIcon: suffixIcon,
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
+              ),
+              labelText: label,
+              labelStyle: const TextStyle(
+                fontSize: 14,
+                color: Color(0xFF6B7280),
+              ),
+              hintText: hint,
+              hintStyle: const TextStyle(
+                fontSize: 14,
+                color: Color(0xFF9CA3AF),
+              ),
+            ),
+          ),
+        ),
+        if (errorText != null) ...[
+          const SizedBox(height: 5),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Text(
+              errorText,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                height: 1.35,
+                color: Color(0xFFE53935),
+              ),
             ),
           ),
         ],
-      ),
+      ],
     );
   }
 
