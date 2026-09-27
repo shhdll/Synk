@@ -4,6 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../controllers/edit_profile_controller.dart';
 import '../../core/constants/synk_colors.dart';
 import '../../models/avatar_uploader.dart';
+import '../../utils/custom_widgets/synk_feedback.dart';
+import 'change_password_view.dart';
 import 'widgets/photo_options_sheet.dart';
 
 class EditProfileView extends StatefulWidget {
@@ -21,9 +23,17 @@ class _EditProfileViewState extends State<EditProfileView> {
   final TextEditingController _bioController = TextEditingController();
   final TextEditingController _birthdayController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  // Display-only: the real password is never loaded.
+  final TextEditingController _passwordController = TextEditingController(
+    text: '••••••••',
+  );
 
   String? _usernameError;
   bool _pageReady = false;
+
+  // Only the age is stored, so a picked date that gives the same age would
+  // otherwise not count as a change.
+  String _originalBirthdayText = '';
 
   @override
   void initState() {
@@ -39,6 +49,7 @@ class _EditProfileViewState extends State<EditProfileView> {
     _bioController.dispose();
     _birthdayController.dispose();
     _emailController.dispose();
+    _passwordController.dispose();
 
     _controller.dispose();
 
@@ -63,6 +74,7 @@ class _EditProfileViewState extends State<EditProfileView> {
         ? '${_controller.age} yrs'
         : '';
     _emailController.text = _controller.email;
+    _originalBirthdayText = _birthdayController.text;
 
     setState(() {
       _pageReady = true;
@@ -74,7 +86,8 @@ class _EditProfileViewState extends State<EditProfileView> {
   // ---------------------------------------------------------------------------
 
   bool get _hasUnsavedChanges {
-    return _controller.hasUnsavedChanges;
+    return _controller.hasUnsavedChanges ||
+        _birthdayController.text != _originalBirthdayText;
   }
 
   // ---------------------------------------------------------------------------
@@ -172,67 +185,14 @@ class _EditProfileViewState extends State<EditProfileView> {
       return true;
     }
 
-    final result = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: SynkColors.background,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
-          ),
-          title: const Text(
-            'Leave without saving?',
-            style: TextStyle(
-              color: SynkColors.textPrimary,
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          content: const Text(
-            'You have unsaved changes. If you leave now, '
-            'your changes will be lost.',
-            style: TextStyle(
-              color: SynkColors.textSecondary,
-              fontSize: 14,
-              height: 1.5,
-            ),
-          ),
-          actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop(false);
-              },
-              child: const Text(
-                'Keep editing',
-                style: TextStyle(
-                  color: SynkColors.textPrimary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop(true);
-              },
-              child: const Text(
-                'Leave',
-                style: TextStyle(
-                  color: SynkColors.orangeDark,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-
-    return result ?? false;
+    return SynkFeedback.confirmDiscardChanges(context);
   }
 
   Future<void> _handleBack() async {
+    if (_controller.isSaving) {
+      return;
+    }
+
     FocusScope.of(context).unfocus();
 
     final canLeave = await _confirmLeave();
@@ -314,7 +274,15 @@ class _EditProfileViewState extends State<EditProfileView> {
     // Nothing changed
     // ---------------------------------------------------------
 
+    // Still confirm, so tapping Save always gives feedback (a photo change,
+    // for example, is already saved on its own).
     if (!_hasUnsavedChanges) {
+      if (!mounted) {
+        return;
+      }
+
+      await SynkFeedback.showSaved(context);
+
       if (mounted) {
         Navigator.of(context).pop();
       }
@@ -326,6 +294,9 @@ class _EditProfileViewState extends State<EditProfileView> {
     _controller.setBio(bio);
     _controller.setEmail(email);
 
+    // Read before saving: saving resets the "original" email.
+    final emailChanged = email != _controller.email;
+
     try {
       await _controller.saveChanges();
 
@@ -333,10 +304,13 @@ class _EditProfileViewState extends State<EditProfileView> {
         return;
       }
 
-      _showMessage('Profile updated successfully.');
-
-      // Give the snackbar a moment to appear before leaving.
-      await Future<void>.delayed(const Duration(milliseconds: 350));
+      await SynkFeedback.showSaved(
+        context,
+        message: emailChanged
+            ? '${SynkFeedback.savedMessage} Check your new email '
+                  'to confirm the address change.'
+            : SynkFeedback.savedMessage,
+      );
 
       if (!mounted) {
         return;
@@ -404,6 +378,18 @@ class _EditProfileViewState extends State<EditProfileView> {
   }
 
   // ---------------------------------------------------------------------------
+  // Password
+  // ---------------------------------------------------------------------------
+
+  Future<void> _openChangePassword() async {
+    FocusScope.of(context).unfocus();
+
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const ChangePasswordView()));
+  }
+
+  // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
 
@@ -412,9 +398,7 @@ class _EditProfileViewState extends State<EditProfileView> {
       return;
     }
 
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+    SynkFeedback.showError(context, message);
   }
 
   // ---------------------------------------------------------------------------
@@ -689,6 +673,31 @@ class _EditProfileViewState extends State<EditProfileView> {
                     ),
                   ),
 
+                  const SizedBox(height: 22),
+
+                  // -------------------------------------------------------------
+                  // Password
+                  // -------------------------------------------------------------
+                  _buildFieldLabel('Password'),
+
+                  const SizedBox(height: 8),
+
+                  _buildTextField(
+                    controller: _passwordController,
+                    hintText: 'Change password',
+                    readOnly: true,
+                    onTap: isSaving ? null : _openChangePassword,
+                    prefixIcon: const Icon(
+                      Icons.lock_outline_rounded,
+                      size: 18,
+                      color: SynkColors.textSecondary,
+                    ),
+                    suffixIcon: const Icon(
+                      Icons.chevron_right_rounded,
+                      color: SynkColors.textSecondary,
+                    ),
+                  ),
+
                   const SizedBox(height: 24),
                 ],
               ),
@@ -781,6 +790,7 @@ class _EditProfileViewState extends State<EditProfileView> {
     int? maxLength,
     String? errorText,
     Widget? prefixIcon,
+    Widget? suffixIcon,
     bool readOnly = false,
     VoidCallback? onTap,
   }) {
@@ -813,6 +823,7 @@ class _EditProfileViewState extends State<EditProfileView> {
               minWidth: 0,
               minHeight: 0,
             ),
+            suffixIcon: suffixIcon,
             hintText: hintText,
             hintStyle: const TextStyle(color: SynkColors.textSecondary),
             filled: true,
