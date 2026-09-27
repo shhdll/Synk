@@ -153,17 +153,9 @@ class EditProfileController extends ChangeNotifier {
       return 'Please enter your username.';
     }
 
-    if (clean.length < 3) {
-      return 'Username must be at least 3 characters.';
-    }
-
-    if (clean.length > 30) {
-      return 'Username must be 30 characters or less.';
-    }
-
-    final usernameRegex = RegExp(r'^[a-zA-Z0-9_.]+$');
+    final usernameRegex = RegExp(r'^[a-zA-Z0-9._]{3,30}$');
     if (!usernameRegex.hasMatch(clean)) {
-      return 'Username can only contain letters, numbers, underscores, and dots.';
+      return 'Username must be 3–30 characters and can only include letters, numbers, dots, and underscores.';
     }
 
     if (clean != _originalUsername.toLowerCase()) {

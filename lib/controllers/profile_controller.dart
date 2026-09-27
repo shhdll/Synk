@@ -46,7 +46,7 @@ class ProfileController extends ChangeNotifier {
       return 'Username cannot be empty';
     }
     if (!usernameRegex.hasMatch(cleanUsername)) {
-      return '3-30 characters: letters, numbers, dots, or underscores only';
+      return 'Username must be 3–30 characters and can only include letters, numbers, dots, and underscores.';
     }
 
     if (cleanUsername == username?.toLowerCase()) {
