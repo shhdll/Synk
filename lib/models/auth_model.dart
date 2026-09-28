@@ -82,6 +82,20 @@ class AuthModel {
     );
   }
 
+  // Confirms the signed-in user's current password by signing in again
+  // with it. Throws AuthException when the password is wrong.
+  Future<void> verifyCurrentPassword(String currentPassword) async {
+    final email = _supabase.auth.currentUser?.email;
+    if (email == null || email.isEmpty) {
+      throw AuthSessionMissingException();
+    }
+
+    await _supabase.auth.signInWithPassword(
+      email: email,
+      password: currentPassword,
+    );
+  }
+
   // Requests an email change. Supabase emails the new address a
   // confirmation link before the change actually takes effect.
   Future<UserResponse> updateEmail(String newEmail) async {

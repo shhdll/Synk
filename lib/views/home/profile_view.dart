@@ -371,117 +371,77 @@ class _ProfileViewState extends State<ProfileView> {
               ),
             ),
             const SizedBox(height: 24),
-            Row(
-              children: [
-                const SectionLabel('Interests'),
-                const Spacer(),
-                GestureDetector(
-                  onTap: () => _openEditInterests(interests),
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: SynkColors.textSecondary.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.add_rounded,
-                      size: 18,
-                      color: SynkColors.textSecondary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            if (interests.isNotEmpty)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: SynkColors.textSecondary.withValues(alpha: 0.10),
-                  ),
-                ),
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: interests
-                      .map(
-                        (interest) => Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.transparent,
-                            borderRadius: BorderRadius.circular(999),
-                            border: Border.all(
-                              color: SynkColors.textSecondary.withValues(
-                                alpha: 0.35,
+            _ExpandableSection(
+              title: 'Interests',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (interests.isNotEmpty)
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: interests
+                          .map(
+                            (interest) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.transparent,
+                                borderRadius: BorderRadius.circular(999),
+                                border: Border.all(
+                                  color: SynkColors.textSecondary.withValues(
+                                    alpha: 0.35,
+                                  ),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (kInterestEmojis[interest] != null) ...[
+                                    Text(
+                                      kInterestEmojis[interest]!,
+                                      style: const TextStyle(fontSize: 14),
+                                    ),
+                                    const SizedBox(width: 6),
+                                  ],
+                                  Text(
+                                    interest,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: SynkColors.textPrimary,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (kInterestEmojis[interest] != null) ...[
-                                Text(
-                                  kInterestEmojis[interest]!,
-                                  style: const TextStyle(fontSize: 14),
-                                ),
-                                const SizedBox(width: 6),
-                              ],
-                              Text(
-                                interest,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: SynkColors.textPrimary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                      .toList(),
-                ),
-              )
-            else
-              GestureDetector(
-                onTap: () => _openEditInterests(interests),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: SynkColors.textSecondary.withValues(alpha: 0.10),
+                          )
+                          .toList(),
+                    )
+                  else
+                    const Text(
+                      "Add interests so people get to know what you're into.",
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontStyle: FontStyle.italic,
+                        color: SynkColors.textSecondary,
+                      ),
+                    ),
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: _EditInfoButton(
+                      onTap: () => _openEditInterests(interests),
                     ),
                   ),
-                  child: const Text(
-                    "Add interests so people get to know what you're into.",
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontStyle: FontStyle.italic,
-                      color: SynkColors.textSecondary,
-                    ),
-                  ),
-                ),
+                ],
               ),
-            const SizedBox(height: 24),
-            const SectionLabel('Preferences'),
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: SynkColors.textSecondary.withValues(alpha: 0.10),
-                ),
-              ),
+            ),
+            const SizedBox(height: 16),
+            _ExpandableSection(
+              title: 'Preferences',
               child: Column(
                 children: [
                   ProfileInfoRow(
@@ -523,6 +483,74 @@ class _ProfileViewState extends State<ProfileView> {
                 ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Card with its title and an expand/collapse arrow inside; [child] is shown
+/// below the header only while expanded.
+class _ExpandableSection extends StatefulWidget {
+  const _ExpandableSection({required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  State<_ExpandableSection> createState() => _ExpandableSectionState();
+}
+
+class _ExpandableSectionState extends State<_ExpandableSection> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: SynkColors.textSecondary.withValues(alpha: 0.10),
+        ),
+      ),
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        alignment: Alignment.topCenter,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => setState(() => _expanded = !_expanded),
+              child: Row(
+                children: [
+                  SectionLabel(widget.title),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: SynkColors.textSecondary.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: AnimatedRotation(
+                      turns: _expanded ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 200),
+                      child: const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        size: 18,
+                        color: SynkColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (_expanded) ...[const SizedBox(height: 14), widget.child],
           ],
         ),
       ),

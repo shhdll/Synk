@@ -203,7 +203,7 @@ class SignupController extends ChangeNotifier {
       usernameError = 'Username is required';
       isValid = false;
     } else if (!usernameRegex.hasMatch(username)) {
-      usernameError = '3-30 characters: letters, numbers, dots, or underscores';
+      usernameError = 'Username must be 3–30 characters and can only include letters, numbers, dots, and underscores.';
       isValid = false;
     }
 
@@ -248,7 +248,7 @@ class SignupController extends ChangeNotifier {
 
     final usernameRegex = RegExp(r'^[a-zA-Z0-9._]{3,30}$');
     if (!usernameRegex.hasMatch(username)) {
-      usernameError = '3-30 characters: letters, numbers, dots, or underscores';
+      usernameError = 'Username must be 3–30 characters and can only include letters, numbers, dots, and underscores.';
       notifyListeners();
       return;
     }
