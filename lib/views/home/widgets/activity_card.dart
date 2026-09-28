@@ -30,13 +30,64 @@ class ActivityCard extends StatelessWidget {
     return '${months[d.month - 1]} ${d.day} · $hour:$minute $period';
   }
 
+  // Height of the wide cover image. Kept compact so roughly two to two and
+  // a half cards fit on the Home screen at once.
+  static const double _coverHeight = 128;
+
+  // Crop position for uploaded photos: horizontally centred, biased towards
+  // the top so faces and the upper part of portrait photos stay in view.
+  // (-1 = top edge, 0 = centre.) The default cover is not affected.
+  static const Alignment _photoAlignment = Alignment(0, -0.3);
+
+  // Shown when the activity has no photo, or its photo fails to load.
+  static const String _defaultCoverAsset = 'assets/synk_jumping.png';
+
+  // Date text colour from the approved card proposal (a darker orange that
+  // stays readable on white at this size).
+  static const Color _dateColor = Color(0xFFC4531A);
+
+  // The activity photo as a full-width cover. While it loads, a soft neutral
+  // fill is shown; if it fails to load, the Synk default cover is shown.
+  Widget _buildCover() {
+    final photoUrl = activity.photoUrl;
+    if (photoUrl == null || photoUrl.isEmpty) return _buildDefaultCover();
+
+    return Image.network(
+      photoUrl,
+      width: double.infinity,
+      height: _coverHeight,
+      fit: BoxFit.cover,
+      alignment: _photoAlignment,
+      loadingBuilder: (context, child, progress) => progress == null
+          ? child
+          : Container(
+              width: double.infinity,
+              height: _coverHeight,
+              color: SynkColors.backgroundLight,
+            ),
+      errorBuilder: (context, error, stackTrace) => _buildDefaultCover(),
+    );
+  }
+
+  // The Synk banner, cropped (never stretched) from the left so the logo and
+  // name stay visible; the tagline on the far right may be cut off.
+  Widget _buildDefaultCover() {
+    return Image.asset(
+      _defaultCoverAsset,
+      width: double.infinity,
+      height: _coverHeight,
+      fit: BoxFit.cover,
+      alignment: Alignment.centerLeft,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -45,53 +96,53 @@ class ActivityCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: SynkColors.orange.withValues(alpha: 0.16),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              activity.categoryEmoji,
-              style: const TextStyle(fontSize: 22),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
+          _buildCover(),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   activity.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
                     color: SynkColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  _dateLabel,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: SynkColors.orangeDark,
-                  ),
-                ),
                 const SizedBox(height: 6),
                 Row(
                   children: [
                     const Icon(
-                      Icons.place_rounded,
+                      Icons.calendar_today_rounded,
                       size: 14,
+                      color: _dateColor,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      _dateLabel,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: _dateColor,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 5),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.place_rounded,
+                      size: 15,
                       color: SynkColors.textSecondary,
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: 5),
                     Expanded(
                       child: Text(
                         activity.location,
