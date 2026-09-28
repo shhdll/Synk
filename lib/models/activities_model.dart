@@ -34,12 +34,16 @@ class ActivitiesModel {
     return _mapRows(rows);
   }
 
-  // Public activities from every user, soonest first. Used by the Home feed.
+  // Upcoming public activities from every user, soonest first. Used by the
+  // Home feed. Past rows are excluded server-side so they can't use up the
+  // limit and push upcoming activities out of the results.
   Future<List<Activity>> fetchPublicFeed({int limit = 50}) async {
+    final nowUtc = DateTime.now().toUtc().toIso8601String();
     final rows = await _supabase
         .from(_table)
         .select()
         .eq('is_public', true)
+        .gte('starts_at', nowUtc)
         .order('starts_at', ascending: true)
         .limit(limit);
 

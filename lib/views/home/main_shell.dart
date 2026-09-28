@@ -43,6 +43,7 @@ class _MainShellState extends State<MainShell> {
     _activityStore.currentUserId = Supabase.instance.client.auth.currentUser?.id;
     _tab = widget.initialTab;
     _loadMyActivities();
+    _loadPublicFeed();
   }
 
   // Populates the store with the signed-in user's existing activities from
@@ -57,6 +58,19 @@ class _MainShellState extends State<MainShell> {
       final mine = await _activitiesModel.fetchMine();
       if (!mounted) return;
       _activityStore.setMine(mine);
+    } catch (_) {
+      // Swallowed intentionally — see method comment.
+    }
+  }
+
+  // Populates the Home feed with upcoming public activities from every user.
+  // Same best-effort handling as _loadMyActivities(): a failed fetch leaves
+  // the feed as-is.
+  Future<void> _loadPublicFeed() async {
+    try {
+      final feed = await _activitiesModel.fetchPublicFeed();
+      if (!mounted) return;
+      _activityStore.setFeed(feed);
     } catch (_) {
       // Swallowed intentionally — see method comment.
     }

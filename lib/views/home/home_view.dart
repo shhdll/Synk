@@ -49,7 +49,7 @@ class _HomeViewState extends State<HomeView> {
         child: AnimatedBuilder(
           animation: widget.activityStore,
           builder: (context, _) {
-            final upcoming = widget.activityStore.upcoming;
+            final upcoming = widget.activityStore.feedUpcoming;
             return CustomScrollView(
               slivers: [
                 SliverPadding(
@@ -76,8 +76,8 @@ class _HomeViewState extends State<HomeView> {
                         const SizedBox(height: 6),
                         Text(
                           widget.isNewUser
-                              ? "You're all set. Here's what's coming up for you."
-                              : "Here's what's coming up for you.",
+                              ? "You're all set. Discover what's happening around you."
+                              : "Discover what's happening around you.",
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
