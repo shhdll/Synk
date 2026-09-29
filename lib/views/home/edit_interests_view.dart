@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../controllers/edit_interests_controller.dart';
 import '../../core/constants/interest_emojis.dart';
 import '../../core/constants/synk_colors.dart';
+import '../../utils/custom_widgets/synk_feedback.dart';
 
 class EditInterestsView extends StatefulWidget {
   const EditInterestsView({super.key, required this.initialInterests});
@@ -24,18 +25,42 @@ class _EditInterestsViewState extends State<EditInterestsView> {
     super.dispose();
   }
 
-  Future<void> _toggle(String interest) async {
+  // ---------------------------------------------------------------------------
+  // Back / exit
+  // ---------------------------------------------------------------------------
+
+  Future<void> _handleBack() async {
+    if (_controller.isSaving) {
+      return;
+    }
+
+    if (_controller.hasUnsavedChanges &&
+        !await SynkFeedback.confirmDiscardChanges(context)) {
+      return;
+    }
+
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Save
+  // ---------------------------------------------------------------------------
+
+  Future<void> _save() async {
     try {
-      await _controller.toggle(interest);
+      await _controller.save();
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text('Unable to save. Please try again.'),
-          ),
-        );
+      SynkFeedback.showError(context, 'Unable to save. Please try again.');
+      return;
+    }
+
+    if (!mounted) return;
+    await SynkFeedback.showSaved(context);
+    if (mounted) {
+      Navigator.of(context).pop();
     }
   }
 
@@ -49,112 +74,176 @@ class _EditInterestsViewState extends State<EditInterestsView> {
             .where((interest) => !selected.contains(interest))
             .toList();
 
-        return Scaffold(
-          backgroundColor: SynkColors.background,
-          body: SafeArea(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(4, 8, 20, 8),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        icon: const Icon(
-                          Icons.arrow_back_rounded,
-                          color: SynkColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Text(
-                        'Edit Interests',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -0.6,
-                          color: SynkColors.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-                    children: [
-                      const Text(
-                        'Your interests',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: SynkColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      if (selected.isEmpty)
-                        const Text(
-                          'Tap an interest below to add it.',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontStyle: FontStyle.italic,
-                            color: SynkColors.textSecondary,
+        final isSaving = _controller.isSaving;
+
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) async {
+            if (didPop) {
+              return;
+            }
+
+            await _handleBack();
+          },
+          child: Scaffold(
+            backgroundColor: SynkColors.background,
+            body: SafeArea(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 8, 20, 8),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          onPressed: _handleBack,
+                          icon: const Icon(
+                            Icons.arrow_back_rounded,
+                            color: SynkColors.textPrimary,
                           ),
-                        )
-                      else
-                        Wrap(
-                          spacing: 10,
-                          runSpacing: 12,
-                          children: selected
-                              .map(
-                                (interest) => _SelectedChip(
-                                  interest: interest,
-                                  emoji: kInterestEmojis[interest],
-                                  onRemove: () => _toggle(interest),
-                                ),
-                              )
-                              .toList(),
                         ),
-                      const SizedBox(height: 28),
-                      const Text(
-                        'Add more',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: SynkColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      if (available.isEmpty)
+                        const SizedBox(width: 4),
                         const Text(
-                          "You've added every interest.",
+                          'Edit Interests',
                           style: TextStyle(
-                            fontSize: 13,
-                            fontStyle: FontStyle.italic,
-                            color: SynkColors.textSecondary,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.6,
+                            color: SynkColors.textPrimary,
                           ),
-                        )
-                      else
-                        Wrap(
-                          spacing: 10,
-                          runSpacing: 10,
-                          children: available
-                              .map(
-                                (interest) => _AvailableChip(
-                                  interest: interest,
-                                  emoji: kInterestEmojis[interest],
-                                  onTap: () => _toggle(interest),
-                                ),
-                              )
-                              .toList(),
                         ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                  Expanded(
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                      children: [
+                        const Text(
+                          'Your interests',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: SynkColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        if (selected.isEmpty)
+                          const Text(
+                            'Tap an interest below to add it.',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontStyle: FontStyle.italic,
+                              color: SynkColors.textSecondary,
+                            ),
+                          )
+                        else
+                          Wrap(
+                            spacing: 10,
+                            runSpacing: 12,
+                            children: selected
+                                .map(
+                                  (interest) => _SelectedChip(
+                                    interest: interest,
+                                    emoji: kInterestEmojis[interest],
+                                    onRemove: () =>
+                                        _controller.toggle(interest),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        const SizedBox(height: 28),
+                        const Text(
+                          'Add more',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: SynkColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        if (available.isEmpty)
+                          const Text(
+                            "You've added every interest.",
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontStyle: FontStyle.italic,
+                              color: SynkColors.textSecondary,
+                            ),
+                          )
+                        else
+                          Wrap(
+                            spacing: 10,
+                            runSpacing: 10,
+                            children: available
+                                .map(
+                                  (interest) => _AvailableChip(
+                                    interest: interest,
+                                    emoji: kInterestEmojis[interest],
+                                    onTap: () => _controller.toggle(interest),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                      ],
+                    ),
+                  ),
+                  _buildSaveBar(isSaving),
+                ],
+              ),
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildSaveBar(bool isSaving) {
+    final canSave = _controller.hasUnsavedChanges && !isSaving;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+      decoration: BoxDecoration(
+        color: SynkColors.background,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: SizedBox(
+        width: double.infinity,
+        height: 54,
+        child: ElevatedButton(
+          onPressed: canSave ? _save : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: SynkColors.orangeDark,
+            foregroundColor: Colors.white,
+            disabledBackgroundColor: SynkColors.orangeDark.withValues(
+              alpha: 0.45,
+            ),
+            disabledForegroundColor: Colors.white,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(17),
+            ),
+          ),
+          child: isSaving
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : const Text(
+                  'Save',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                ),
+        ),
+      ),
     );
   }
 }
