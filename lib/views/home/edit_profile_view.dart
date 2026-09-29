@@ -201,6 +201,8 @@ class _EditProfileViewState extends State<EditProfileView> {
       return;
     }
 
+    await _controller.discardPhotoChanges();
+    if (!mounted) return;
     Navigator.of(context).pop();
   }
 
@@ -274,8 +276,7 @@ class _EditProfileViewState extends State<EditProfileView> {
     // Nothing changed
     // ---------------------------------------------------------
 
-    // Still confirm, so tapping Save always gives feedback (a photo change,
-    // for example, is already saved on its own).
+    // Still confirm, so tapping Save always gives feedback.
     if (!_hasUnsavedChanges) {
       if (!mounted) {
         return;

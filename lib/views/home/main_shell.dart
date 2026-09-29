@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/constants/synk_colors.dart';
 import '../../models/activities_model.dart';
 import '../../models/activity_model.dart';
 import '../../models/home_tab.dart';
@@ -40,7 +41,8 @@ class _MainShellState extends State<MainShell> {
     // The store starts empty; ownership checks (used by upsert() when a new
     // activity is created) need to know who "mine" means before anything
     // else touches the store.
-    _activityStore.currentUserId = Supabase.instance.client.auth.currentUser?.id;
+    _activityStore.currentUserId =
+        Supabase.instance.client.auth.currentUser?.id;
     _tab = widget.initialTab;
     _loadMyActivities();
     _loadPublicFeed();
@@ -109,6 +111,8 @@ class _MainShellState extends State<MainShell> {
     };
 
     return Scaffold(
+      backgroundColor: SynkColors.background,
+      extendBody: true,
       body: IndexedStack(index: stackIndex, children: pages),
       bottomNavigationBar: BottomBar(
         selected: _tab,

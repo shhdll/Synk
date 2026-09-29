@@ -21,6 +21,8 @@ class AccountSetupSlide extends StatefulWidget {
 
 class _AccountSetupSlideState extends State<AccountSetupSlide> {
   final FocusNode _usernameFocusNode = FocusNode();
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   @override
   void initState() {
@@ -104,17 +106,18 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                   label: 'Password',
                   hint: '••••••••',
                   icon: Icons.lock_outline_rounded,
-                  obscureText: signupController.obscurePassword,
+                  obscureText: _obscurePassword,
                   errorText: signupController.passwordError,
                   onChanged: (_) => signupController.clearPasswordError(),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      signupController.obscurePassword
+                      _obscurePassword
                           ? Icons.visibility_off_outlined
                           : Icons.visibility_outlined,
                       size: 20,
                     ),
-                    onPressed: signupController.toggleObscurePassword,
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -125,10 +128,20 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                   label: 'Confirm Password',
                   hint: 'Re-type password',
                   icon: Icons.lock_outline_rounded,
-                  obscureText: signupController.obscurePassword,
+                  obscureText: _obscureConfirmPassword,
                   errorText: signupController.confirmPasswordError,
                   onChanged: (_) =>
                       signupController.clearConfirmPasswordError(),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscureConfirmPassword
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      size: 20,
+                    ),
+                    onPressed: () => setState(() =>
+                        _obscureConfirmPassword = !_obscureConfirmPassword),
+                  ),
                 ),
 
                 if (signupController.generalError != null) ...[
