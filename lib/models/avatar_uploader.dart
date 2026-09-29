@@ -91,6 +91,59 @@ class AvatarUploader {
     );
   }
 
+  // Picks a photo for an edit form without changing the saved profile.
+  static Future<String?> pickDraft() async {
+    final picked = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1024,
+      imageQuality: 85,
+    );
+    if (picked == null) return null;
+
+    final userId = Supabase.instance.client.auth.currentUser?.id ?? 'me';
+    final extension = picked.path.split('.').last;
+    final documentsDir = await getApplicationDocumentsDirectory();
+    final draftPath =
+        '${documentsDir.path}/avatar_${userId}_draft_${DateTime.now().microsecondsSinceEpoch}.$extension';
+    return (await File(picked.path).copy(draftPath)).path;
+  }
+
+  // Commits a previously picked draft photo and returns its profile metadata.
+  static Future<Map<String, dynamic>> saveDraft(String draftPath) async {
+    final userId = Supabase.instance.client.auth.currentUser?.id ?? 'me';
+    final draftFile = File(draftPath);
+    final extension = draftPath.split('.').last;
+    final documentsDir = await getApplicationDocumentsDirectory();
+    final localFile = await draftFile.copy(
+      '${documentsDir.path}/avatar_$userId.$extension',
+    );
+
+    String? avatarUrl;
+    try {
+      final storagePath = '$userId/avatar.$extension';
+      await Supabase.instance.client.storage
+          .from('avatars')
+          .upload(
+            storagePath,
+            localFile,
+            fileOptions: const FileOptions(upsert: true),
+          );
+      avatarUrl = Supabase.instance.client.storage
+          .from('avatars')
+          .getPublicUrl(storagePath);
+    } catch (_) {
+      // Local avatar still works when cloud storage is unavailable.
+    }
+    if (await draftFile.exists()) await draftFile.delete();
+    return {'avatar_local_path': localFile.path, 'avatar_url': ?avatarUrl};
+  }
+
+  static Future<void> discardDraft(String? draftPath) async {
+    if (draftPath == null) return;
+    final file = File(draftPath);
+    if (await file.exists()) await file.delete();
+  }
+
   // Deletes the local copy, best-effort clears the cloud copy, and clears
   // the profile's avatar fields so the UI falls back to the default icon.
   static Future<void> removePhoto(Map<String, dynamic> metadata) async {
@@ -138,5 +191,10 @@ class AvatarUploader {
       return FileImage(File(localPath));
     }
     return null;
+  }
+
+  static ImageProvider? imageForPath(String path) {
+    final file = File(path);
+    return file.existsSync() ? FileImage(file) : null;
   }
 }

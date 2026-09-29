@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'models/auth_model.dart';
+import 'views/home/main_shell.dart';
 import 'views/new_password_view.dart';
 import 'views/welcome_view.dart';
 
@@ -118,7 +119,14 @@ class _MyAppState extends State<MyApp> {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFFF9F5C)),
       ),
-      home: const WelcomeView(),
+      home: StreamBuilder<AuthState>(
+        stream: _authModel.authStateChanges,
+        builder: (context, snapshot) {
+          final session = Supabase.instance.client.auth.currentSession;
+          return session == null ? const WelcomeView() : const MainShell();
+        },
+      ),
     );
   }
 }
+

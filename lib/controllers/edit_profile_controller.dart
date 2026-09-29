@@ -49,6 +49,8 @@ class EditProfileController extends ChangeNotifier {
   int? _age;
   String _gender = '';
   String _email = '';
+  String? _draftAvatarPath;
+  bool _removeAvatarDraft = false;
 
   String get name => _name;
   String get username => _username;
@@ -63,6 +65,9 @@ class EditProfileController extends ChangeNotifier {
   String get draftEmail => _email;
 
   ImageProvider? get avatarImage {
+    if (_removeAvatarDraft) return null;
+    if (_draftAvatarPath != null)
+      return AvatarUploader.imageForPath(_draftAvatarPath!);
     return AvatarUploader.imageFor(_profile);
   }
 
@@ -221,7 +226,12 @@ class EditProfileController extends ChangeNotifier {
         _bio.trim() != _originalBio ||
         _age != _originalAge ||
         _gender.trim() != _originalGender ||
-        _email.trim() != _originalEmail;
+        _email.trim() != _originalEmail ||
+        _draftAvatarPath != null ||
+        (_removeAvatarDraft &&
+            (((_profile['avatar_local_path'] as String?)?.isNotEmpty ??
+                    false) ||
+                ((_profile['avatar_url'] as String?)?.isNotEmpty ?? false)));
   }
 
   // ---------------------------------------------------------------------------
@@ -271,8 +281,22 @@ class EditProfileController extends ChangeNotifier {
         'gender': trimmedGender.isEmpty ? null : trimmedGender,
       };
 
+      if (_draftAvatarPath != null) {
+        profileChanges.addAll(
+          await AvatarUploader.saveDraft(_draftAvatarPath!),
+        );
+      } else if (_removeAvatarDraft) {
+        await AvatarUploader.removePhoto(_profile);
+        profileChanges.addAll({'avatar_local_path': null, 'avatar_url': null});
+      }
+
       // Update users table.
       await _profileModel.updateProfile(profileChanges);
+      if (_draftAvatarPath != null) {
+        await AvatarUploader.discardDraft(_draftAvatarPath);
+        _draftAvatarPath = null;
+      }
+      _removeAvatarDraft = false;
 
       // Email belongs to Supabase Auth.
       if (trimmedEmail.isNotEmpty && trimmedEmail != _originalEmail) {
@@ -316,11 +340,12 @@ class EditProfileController extends ChangeNotifier {
     String? message;
 
     try {
-      final result = await AvatarUploader.pickAndSave();
-
-      message = result.warning;
-
-      _profile = await _profileModel.fetchProfile();
+      final pickedPath = await AvatarUploader.pickDraft();
+      if (pickedPath != null) {
+        await AvatarUploader.discardDraft(_draftAvatarPath);
+        _draftAvatarPath = pickedPath;
+        _removeAvatarDraft = false;
+      }
     } catch (_) {
       message = 'Unable to update your photo. Please try again.';
     } finally {
@@ -338,9 +363,9 @@ class EditProfileController extends ChangeNotifier {
     String? message;
 
     try {
-      await AvatarUploader.removePhoto(_profile);
-
-      _profile = await _profileModel.fetchProfile();
+      await AvatarUploader.discardDraft(_draftAvatarPath);
+      _draftAvatarPath = null;
+      _removeAvatarDraft = true;
     } catch (_) {
       message = 'Unable to remove your photo. Please try again.';
     } finally {
@@ -349,5 +374,12 @@ class EditProfileController extends ChangeNotifier {
     }
 
     return message;
+  }
+
+  Future<void> discardPhotoChanges() async {
+    await AvatarUploader.discardDraft(_draftAvatarPath);
+    _draftAvatarPath = null;
+    _removeAvatarDraft = false;
+    notifyListeners();
   }
 }
