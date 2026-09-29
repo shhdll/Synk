@@ -177,6 +177,8 @@ class _WelcomeViewState extends State<WelcomeView>
   Widget _buildSlideOne(BuildContext context, double scrollProgress) {
     final activities = _controller.model.activities;
     final marqueeOpacity = (1.0 - (scrollProgress * 3.0)).clamp(0.0, 1.0);
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final puzzleSize = (screenHeight * 0.42).clamp(240.0, 420.0);
 
     return SafeArea(
       child: Padding(
@@ -184,7 +186,8 @@ class _WelcomeViewState extends State<WelcomeView>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Spacer(flex: 2),
+            // Keep the headline below the logo and app name layered above it.
+            const SizedBox(height: 72),
             const Text(
               'Find your\nmissing piece.',
               style: TextStyle(
@@ -202,8 +205,8 @@ class _WelcomeViewState extends State<WelcomeView>
                 margin: const EdgeInsets.only(right: 20.0),
                 child: Image.asset(
                   'assets/puzzle.png',
-                  width: 420,
-                  height: 420,
+                  width: puzzleSize,
+                  height: puzzleSize,
                   fit: BoxFit.contain,
                 ),
               ),
