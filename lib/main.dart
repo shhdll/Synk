@@ -123,10 +123,16 @@ class _MyAppState extends State<MyApp> {
         stream: _authModel.authStateChanges,
         builder: (context, snapshot) {
           final session = Supabase.instance.client.auth.currentSession;
-          return session == null ? const WelcomeView() : const MainShell();
+          final user = session?.user;
+          final isConfirmed =
+              session != null &&
+              user != null &&
+              user.emailConfirmedAt != null &&
+              user.emailConfirmedAt!.isNotEmpty;
+
+          return isConfirmed ? const MainShell() : const WelcomeView();
         },
       ),
     );
   }
 }
-

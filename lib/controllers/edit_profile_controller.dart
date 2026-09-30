@@ -62,6 +62,18 @@ class EditProfileController extends ChangeNotifier {
     return Supabase.instance.client.auth.currentUser?.email ?? '';
   }
 
+  String? get newEmail {
+    final pending = Supabase.instance.client.auth.currentUser?.newEmail;
+    if (pending == null || pending.isEmpty) return null;
+    if (AuthModel.isEmailChangeCancelled(pending)) return null;
+    return pending;
+  }
+
+  bool get hasPendingEmailChange {
+    final pending = newEmail;
+    return pending != null && pending.isNotEmpty;
+  }
+
   String get draftEmail => _email;
 
   ImageProvider? get avatarImage {
@@ -80,6 +92,10 @@ class EditProfileController extends ChangeNotifier {
     notifyListeners();
 
     try {
+      try {
+        await Supabase.instance.client.auth.getUser();
+      } catch (_) {}
+
       _profile = await _profileModel.fetchProfile();
 
       final rawName = (_profile['full_name'] as String?)?.trim();

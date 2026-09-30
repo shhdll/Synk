@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../controllers/signup_controller.dart';
 import '../../controllers/onboarding_controller.dart';
 import '../../core/constants/synk_colors.dart';
+import '../../screens/auth/email_verification_screen.dart';
 import '../home/main_shell.dart';
 
 class AccountSetupSlide extends StatefulWidget {
@@ -139,8 +140,9 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                           : Icons.visibility_outlined,
                       size: 20,
                     ),
-                    onPressed: () => setState(() =>
-                        _obscureConfirmPassword = !_obscureConfirmPassword),
+                    onPressed: () => setState(
+                      () => _obscureConfirmPassword = !_obscureConfirmPassword,
+                    ),
                   ),
                 ),
 
@@ -181,13 +183,38 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                               context: context,
                             );
                             if (res?.user != null && context.mounted) {
-                              Navigator.of(context).pushAndRemoveUntil(
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const MainShell(isNewUser: true),
-                                ),
-                                (route) => false,
-                              );
+                              final user = res?.user;
+                              final isConfirmed =
+                                  res?.session != null &&
+                                  user != null &&
+                                  user.emailConfirmedAt != null &&
+                                  user.emailConfirmedAt!.isNotEmpty;
+
+                              if (isConfirmed) {
+                                // Direct entry if confirmation is turned off or auto-confirmed
+                                Navigator.of(context).pushAndRemoveUntil(
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const MainShell(isNewUser: true),
+                                  ),
+                                  (route) => false,
+                                );
+                              } else {
+                                // Email confirmation is required
+                                final cleanEmail = signupController
+                                    .emailController
+                                    .text
+                                    .trim();
+                                Navigator.of(context).pushAndRemoveUntil(
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        EmailVerificationScreen(
+                                          email: cleanEmail,
+                                        ),
+                                  ),
+                                  (route) => false,
+                                );
+                              }
                             }
                           },
                     child: signupController.isLoading

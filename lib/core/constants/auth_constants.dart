@@ -28,8 +28,20 @@ class AuthConstants {
     final hasNum = hasDigit.hasMatch(password);
     final hasSpecial = hasSpecialChar.hasMatch(password);
 
-    if (!isLongEnough || !hasUpper || !hasLower || !hasNum || !hasSpecial) {
-      return 'Password must be at least 8 characters and include uppercase, lowercase, a number, and a special character';
+    if (!isLongEnough) {
+      return 'Password must be at least 8 characters';
+    }
+    if (!hasUpper) {
+      return 'Password must contain at least 1 uppercase letter';
+    }
+    if (!hasLower) {
+      return 'Password must contain at least 1 lowercase letter';
+    }
+    if (!hasNum) {
+      return 'Password must contain at least 1 number';
+    }
+    if (!hasSpecial) {
+      return 'Password must contain at least 1 special character (e.g., @\$!%*?&)';
     }
     return null;
   }
@@ -40,6 +52,9 @@ class AuthConstants {
   /// Redirect URL used for password recovery.
   static const String resetPasswordRedirectUrl =
       'io.supabase.synk://reset-password';
+
+  /// Redirect URL used for email confirmation / signup.
+  static const String emailRedirectUrl = 'io.supabase.synk://login-callback';
 
   /// Seconds the user must wait before requesting another reset email.
   static const int resendCooldownSeconds = 60;

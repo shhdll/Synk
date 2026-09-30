@@ -202,8 +202,12 @@ class SignupController extends ChangeNotifier {
     if (username.isEmpty) {
       usernameError = 'Username is required';
       isValid = false;
+    } else if (username.length < 3) {
+      usernameError = 'Username must be at least 3 characters';
+      isValid = false;
     } else if (!usernameRegex.hasMatch(username)) {
-      usernameError = 'Username must be 3–30 characters and can only include letters, numbers, dots, and underscores.';
+      usernameError =
+          'Username can only contain letters, numbers, underscores, and dots';
       isValid = false;
     }
 
@@ -305,6 +309,7 @@ class SignupController extends ChangeNotifier {
       final response = await Supabase.instance.client.auth.signUp(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
+        emailRedirectTo: AuthConstants.emailRedirectUrl,
         data: {
           'username': cleanUsername,
           'full_name': nameController.text.trim(),
@@ -314,11 +319,19 @@ class SignupController extends ChangeNotifier {
         },
       );
 
-      // If user profile row is created explicitly or updated:
-      if (response.user != null) {
+      // Only attempt authenticated client-side upsert if user is already confirmed
+      // (otherwise, unauthenticated RLS will reject it; the Postgres trigger or
+      // EmailVerificationScreen handles profile creation).
+      final user = response.user;
+      final isConfirmed =
+          user != null &&
+          user.emailConfirmedAt != null &&
+          user.emailConfirmedAt!.isNotEmpty;
+
+      if (response.session != null && isConfirmed) {
         try {
           await Supabase.instance.client.from('users').upsert({
-            'id': response.user!.id,
+            'id': user.id,
             'username': cleanUsername,
             'email': emailController.text.trim(),
             'full_name': nameController.text.trim(),
@@ -333,6 +346,10 @@ class SignupController extends ChangeNotifier {
             'Notice: public.users upsert skipped or handled by trigger: $e',
           );
         }
+      } else {
+        debugPrint(
+          'Email confirmation required: user metadata stored in auth.users, public.users handled by database trigger or post-confirmation sync.',
+        );
       }
 
       return response;

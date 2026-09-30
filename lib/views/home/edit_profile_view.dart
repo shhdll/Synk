@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -6,6 +8,7 @@ import '../../core/constants/synk_colors.dart';
 import '../../models/avatar_uploader.dart';
 import '../../utils/custom_widgets/synk_feedback.dart';
 import 'change_password_view.dart';
+import 'widgets/change_email_bottom_sheet.dart';
 import 'widgets/photo_options_sheet.dart';
 
 class EditProfileView extends StatefulWidget {
@@ -35,11 +38,22 @@ class _EditProfileViewState extends State<EditProfileView> {
   // otherwise not count as a change.
   String _originalBirthdayText = '';
 
+  StreamSubscription<AuthState>? _authSubscription;
+
   @override
   void initState() {
     super.initState();
 
     _loadProfile();
+
+    try {
+      _authSubscription = Supabase.instance.client.auth.onAuthStateChange
+          .listen((data) {
+            if (data.event == AuthChangeEvent.userUpdated && mounted) {
+              _loadProfile();
+            }
+          });
+    } catch (_) {}
   }
 
   @override
@@ -51,6 +65,7 @@ class _EditProfileViewState extends State<EditProfileView> {
     _emailController.dispose();
     _passwordController.dispose();
 
+    _authSubscription?.cancel();
     _controller.dispose();
 
     super.dispose();
@@ -172,8 +187,19 @@ class _EditProfileViewState extends State<EditProfileView> {
     }
   }
 
-  void _onEmailChanged(String value) {
-    _controller.setEmail(value);
+  Future<void> _openChangeEmailSheet() async {
+    final updated = await ChangeEmailBottomSheet.show(
+      context,
+      currentEmail: _controller.email,
+      pendingEmail: _controller.newEmail,
+    );
+
+    if (updated == true && mounted) {
+      await _loadProfile();
+      if (mounted) {
+        setState(() {});
+      }
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -649,30 +675,122 @@ class _EditProfileViewState extends State<EditProfileView> {
                   // -------------------------------------------------------------
                   // Email
                   // -------------------------------------------------------------
-                  _buildFieldLabel('Email'),
+                  Row(
+                    children: [
+                      _buildFieldLabel('Email'),
+                      const Spacer(),
+                      if (_controller.hasPendingEmailChange)
+                        GestureDetector(
+                          onTap: _openChangeEmailSheet,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFBD4B4)
+                                  .withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: const Color(0xFFFF9F5C)
+                                    .withValues(alpha: 0.4),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.access_time_rounded,
+                                  size: 13,
+                                  color: SynkColors.orangeDark,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Pending: ${_controller.newEmail}',
+                                  style: const TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF8A3B00),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
 
                   const SizedBox(height: 8),
 
                   _buildTextField(
                     controller: _emailController,
                     hintText: 'Email address',
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.done,
-                    onChanged: _onEmailChanged,
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  const Text(
-                    'If you change your email, Supabase '
-                    'will send a confirmation link to '
-                    'the new address.',
-                    style: TextStyle(
-                      fontSize: 12,
-                      height: 1.4,
+                    readOnly: true,
+                    onTap: isSaving ? null : _openChangeEmailSheet,
+                    prefixIcon: const Icon(
+                      Icons.mail_outline_rounded,
+                      size: 18,
+                      color: SynkColors.textSecondary,
+                    ),
+                    suffixIcon: const Icon(
+                      Icons.edit_outlined,
+                      size: 18,
                       color: SynkColors.textSecondary,
                     ),
                   ),
+
+                  if (_controller.hasPendingEmailChange) ...[
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: _openChangeEmailSheet,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFBD4B4)
+                              .withValues(alpha: 0.35),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.info_outline_rounded,
+                              size: 15,
+                              color: SynkColors.orangeDark,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Awaiting confirmation on ${_controller.newEmail}. Tap to resend or cancel.',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF8A3B00),
+                                ),
+                              ),
+                            ),
+                            const Icon(
+                              Icons.chevron_right_rounded,
+                              size: 16,
+                              color: Color(0xFF8A3B00),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ] else ...[
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Tap to change your email address.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        height: 1.4,
+                        color: SynkColors.textSecondary,
+                      ),
+                    ),
+                  ],
 
                   const SizedBox(height: 22),
 
