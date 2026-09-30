@@ -57,6 +57,16 @@ class ChangePasswordController extends ChangeNotifier {
     required String currentPassword,
     required String newPassword,
   }) async {
+    // Keep this rule at the controller boundary as well as in the form
+    // validator so every caller gets the same protection.
+    if (newPassword == currentPassword) {
+      _setError(
+        'New password must be different from your current one',
+        ChangePasswordErrorField.newPassword,
+      );
+      return false;
+    }
+
     _setLoading(true);
     _errorMessage = null;
 
@@ -87,8 +97,7 @@ class ChangePasswordController extends ChangeNotifier {
       );
       return false;
     } on AuthException catch (e) {
-      final msg = e.message.toLowerCase();
-      if (e.code == 'same_password' || msg.contains('different from the old')) {
+      if (_isSamePasswordError(e)) {
         _setError(
           'New password must be different from your current one',
           ChangePasswordErrorField.newPassword,
@@ -109,6 +118,14 @@ class ChangePasswordController extends ChangeNotifier {
     } finally {
       _setLoading(false);
     }
+  }
+
+  bool _isSamePasswordError(AuthException e) {
+    final msg = e.message.toLowerCase();
+    return e.code == 'same_password' ||
+        msg.contains('same password') ||
+        msg.contains('different from the old') ||
+        msg.contains('must be different from your current');
   }
 
   void clearError() {

@@ -209,7 +209,7 @@ class _GroupLabel extends StatelessWidget {
               color: SynkColors.textSecondary,
             ),
           ),
-          if (trailing != null) trailing!,
+          ?trailing,
         ],
       ),
     );
