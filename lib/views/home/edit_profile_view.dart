@@ -675,50 +675,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                   // -------------------------------------------------------------
                   // Email
                   // -------------------------------------------------------------
-                  Row(
-                    children: [
-                      _buildFieldLabel('Email'),
-                      const Spacer(),
-                      if (_controller.hasPendingEmailChange)
-                        GestureDetector(
-                          onTap: _openChangeEmailSheet,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFBD4B4)
-                                  .withValues(alpha: 0.5),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: const Color(0xFFFF9F5C)
-                                    .withValues(alpha: 0.4),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.access_time_rounded,
-                                  size: 13,
-                                  color: SynkColors.orangeDark,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Pending: ${_controller.newEmail}',
-                                  style: const TextStyle(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF8A3B00),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+                  _buildFieldLabel('Email'),
 
                   const SizedBox(height: 8),
 
