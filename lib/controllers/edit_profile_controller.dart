@@ -79,7 +79,9 @@ class EditProfileController extends ChangeNotifier {
   ImageProvider? get avatarImage {
     if (_removeAvatarDraft) return null;
     if (_draftAvatarPath != null)
+    {
       return AvatarUploader.imageForPath(_draftAvatarPath!);
+      }
     return AvatarUploader.imageFor(_profile);
   }
 
