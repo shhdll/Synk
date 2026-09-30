@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../models/auth_model.dart';
 import '../models/user_profile_model.dart';
 
 class ProfileController extends ChangeNotifier {
@@ -16,6 +17,15 @@ class ProfileController extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   String? get email => Supabase.instance.client.auth.currentUser?.email;
+
+  String? get newEmail {
+    final pending = Supabase.instance.client.auth.currentUser?.newEmail;
+    if (pending == null || pending.isEmpty) return null;
+    if (AuthModel.isEmailChangeCancelled(pending)) return null;
+    return pending;
+  }
+
+  bool get hasPendingEmailChange => newEmail != null && newEmail!.isNotEmpty;
 
   // Reads username from profile map or auth metadata
   String? get username {

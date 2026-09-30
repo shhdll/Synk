@@ -10,12 +10,14 @@ class ProfileInfoRow extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
+    this.subtitleWidget,
     this.onEdit,
   });
 
   final IconData icon;
   final String label;
   final String value;
+  final Widget? subtitleWidget;
   final VoidCallback? onEdit;
 
   @override
@@ -45,6 +47,10 @@ class ProfileInfoRow extends StatelessWidget {
                   color: SynkColors.textPrimary,
                 ),
               ),
+              if (subtitleWidget != null) ...[
+                const SizedBox(height: 4),
+                subtitleWidget!,
+              ],
             ],
           ),
         ),

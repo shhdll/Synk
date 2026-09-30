@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../controllers/profile_controller.dart';
 import '../../core/constants/interest_emojis.dart';
@@ -22,15 +25,26 @@ class ProfileView extends StatefulWidget {
 
 class _ProfileViewState extends State<ProfileView> {
   final ProfileController _controller = ProfileController();
+  StreamSubscription<AuthState>? _authSubscription;
 
   @override
   void initState() {
     super.initState();
     _controller.loadProfile();
+
+    try {
+      _authSubscription = Supabase.instance.client.auth.onAuthStateChange
+          .listen((data) {
+            if (data.event == AuthChangeEvent.userUpdated && mounted) {
+              _controller.loadProfile();
+            }
+          });
+    } catch (_) {}
   }
 
   @override
   void dispose() {
+    _authSubscription?.cancel();
     _controller.dispose();
     super.dispose();
   }

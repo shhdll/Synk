@@ -3,8 +3,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/constants/auth_constants.dart';
 
 class AuthModel {
-  // Provides access to Supabase authentication.
-  final SupabaseClient _supabase = Supabase.instance.client;
+  AuthModel({this.supabaseClient});
+
+  final SupabaseClient? supabaseClient;
+  SupabaseClient get _supabase => supabaseClient ?? Supabase.instance.client;
 
   // 1. Signs in directly with email and password.
   Future<AuthResponse> signInWithEmail({
@@ -55,6 +57,7 @@ class AuthModel {
     return await _supabase.auth.signUp(
       email: cleanEmail,
       password: password,
+      emailRedirectTo: AuthConstants.emailRedirectUrl,
       data: {'username': cleanUsername, 'email': cleanEmail},
     );
   }
@@ -96,11 +99,63 @@ class AuthModel {
     );
   }
 
+  static String? _locallyCancelledPendingEmail;
+
+  static void setLocallyCancelledEmail(String? email) {
+    _locallyCancelledPendingEmail = email;
+  }
+
+  static bool isEmailChangeCancelled(String? pendingEmail) {
+    if (pendingEmail == null || pendingEmail.isEmpty) return false;
+    if (_locallyCancelledPendingEmail != null &&
+        _locallyCancelledPendingEmail == pendingEmail) {
+      return true;
+    }
+    try {
+      final metaCancelled =
+          Supabase
+                  .instance
+                  .client
+                  .auth
+                  .currentUser
+                  ?.userMetadata?['cancelled_email_change']
+              as String?;
+      if (metaCancelled != null && metaCancelled == pendingEmail) {
+        return true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
   // Requests an email change. Supabase emails the new address a
   // confirmation link before the change actually takes effect.
   Future<UserResponse> updateEmail(String newEmail) async {
+    final cleanEmail = newEmail.trim();
+    setLocallyCancelledEmail(null);
     return await _supabase.auth.updateUser(
-      UserAttributes(email: newEmail.trim()),
+      UserAttributes(email: cleanEmail, data: {'cancelled_email_change': null}),
     );
+  }
+
+  // Cancels a pending email change request.
+  Future<void> cancelEmailChange(String pendingEmail) async {
+    setLocallyCancelledEmail(pendingEmail);
+
+    // 1. Mark as cancelled in Supabase user metadata so it persists across sessions
+    try {
+      await _supabase.auth.updateUser(
+        UserAttributes(data: {'cancelled_email_change': pendingEmail}),
+      );
+    } catch (_) {}
+
+    // 2. Attempt PostgreSQL RPC function if deployed
+    try {
+      await _supabase.rpc('cancel_email_change');
+    } catch (_) {}
+
+    // 3. Refresh user session
+    try {
+      await _supabase.auth.getUser();
+    } catch (_) {}
   }
 }
