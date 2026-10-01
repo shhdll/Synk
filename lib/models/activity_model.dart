@@ -183,6 +183,18 @@ class ActivityStore extends ChangeNotifier {
       _feed.where((a) => !a.isPast).toList()
         ..sort((a, b) => a.dateTime.compareTo(b.dateTime));
 
+  // The Home page includes the public feed plus the signed-in user's private
+  // activities, which remain visible only to their host.
+  List<Activity> get homeUpcoming {
+    final activities = <String, Activity>{
+      for (final activity in feedUpcoming) activity.id: activity,
+      for (final activity in _mine.where((a) => !a.isPublic && !a.isPast))
+        activity.id: activity,
+    };
+    return activities.values.toList()
+      ..sort((a, b) => a.dateTime.compareTo(b.dateTime));
+  }
+
   // Replaces the signed-in user's activities with rows fetched from Supabase.
   void setMine(List<Activity> activities) {
     _mine

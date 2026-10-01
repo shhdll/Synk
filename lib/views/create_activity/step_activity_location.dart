@@ -81,7 +81,7 @@ class _StepActivityLocationState extends State<StepActivityLocation> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
       children: <Widget>[
-        const _GroupLabel(text: 'ACTIVITY'),
+        const _GroupLabel(text: 'ACTIVITY', isRequired: true),
         const SizedBox(height: 10),
         _Card(
           child: Row(
@@ -100,12 +100,20 @@ class _StepActivityLocationState extends State<StepActivityLocation> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    const Text(
-                      'Activity title',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: SynkColors.textSecondary,
+                    const Text.rich(
+                      TextSpan(
+                        children: <InlineSpan>[
+                          TextSpan(text: 'Activity title'),
+                          TextSpan(
+                            text: ' *',
+                            style: TextStyle(color: Color(0xFFE53935)),
+                          ),
+                        ],
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: SynkColors.textSecondary,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -161,6 +169,7 @@ class _StepActivityLocationState extends State<StepActivityLocation> {
         const SizedBox(height: 26),
         _GroupLabel(
           text: 'LOCATION',
+          isRequired: true,
           trailing: hasLocation ? const _SelectedBadge() : null,
         ),
         const SizedBox(height: 10),
@@ -188,10 +197,11 @@ class _StepActivityLocationState extends State<StepActivityLocation> {
 // Small caps section header ("ACTIVITY" / "LOCATION"), matching Step 2's
 // label style and the approved mockup.
 class _GroupLabel extends StatelessWidget {
-  const _GroupLabel({required this.text, this.trailing});
+  const _GroupLabel({required this.text, this.trailing, this.isRequired = false});
 
   final String text;
   final Widget? trailing;
+  final bool isRequired;
 
   @override
   Widget build(BuildContext context) {
@@ -200,13 +210,22 @@ class _GroupLabel extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
-          Text(
-            text,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.5,
-              color: SynkColors.textSecondary,
+          Text.rich(
+            TextSpan(
+              children: <InlineSpan>[
+                TextSpan(text: text),
+                if (isRequired)
+                  const TextSpan(
+                    text: ' *',
+                    style: TextStyle(color: Color(0xFFE53935)),
+                  ),
+              ],
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.5,
+                color: SynkColors.textSecondary,
+              ),
             ),
           ),
           ?trailing,

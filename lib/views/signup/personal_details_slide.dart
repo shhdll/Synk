@@ -40,6 +40,7 @@ class PersonalDetailsSlide extends StatelessWidget {
                 // Name
                 _buildField(
                   controller: controller.nameController,
+                  focusNode: controller.nameFocusNode,
                   label: 'Name',
                   hint: 'Full name',
                   icon: Icons.person_outline,
@@ -51,6 +52,7 @@ class PersonalDetailsSlide extends StatelessWidget {
                 // Birthday
                 _buildField(
                   controller: controller.birthdayController,
+                  focusNode: controller.birthdayFocusNode,
                   label: 'Birthday',
                   hint: 'DD/MM/YYYY',
                   icon: Icons.cake_outlined,
@@ -59,9 +61,9 @@ class PersonalDetailsSlide extends StatelessWidget {
                   onTap: () async {
                     final today = DateTime.now();
 
-                    // Oldest allowed: 90 years old
+                    // Oldest allowed: 50 years old
                     final firstDate = DateTime(
-                      today.year - 90,
+                      today.year - 50,
                       today.month,
                       today.day,
                     );
@@ -121,19 +123,29 @@ class PersonalDetailsSlide extends StatelessWidget {
                       final year = selectedDate.year.toString();
 
                       controller.birthdayController.text = '$day/$month/$year';
-                      controller.clearBirthdayError();
                     }
+                    // The picker is read-only, so validate when it closes to
+                    // give the same blur feedback as the editable fields.
+                    controller.validateBirthday();
                   },
                 ),
                 const SizedBox(height: 24),
 
                 // Gender
-                const Text(
-                  'Gender',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: SynkColors.textPrimary,
+                const Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(text: 'Gender'),
+                      TextSpan(
+                        text: ' *',
+                        style: TextStyle(color: Color(0xFFE53935)),
+                      ),
+                    ],
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: SynkColors.textPrimary,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -214,6 +226,7 @@ class PersonalDetailsSlide extends StatelessWidget {
     required String label,
     required String hint,
     required IconData icon,
+    FocusNode? focusNode,
     String? errorText,
     ValueChanged<String>? onChanged,
     VoidCallback? onTap,
@@ -240,6 +253,7 @@ class PersonalDetailsSlide extends StatelessWidget {
           ),
           child: TextField(
             controller: controller,
+            focusNode: focusNode,
             keyboardType: keyboardType,
             onChanged: onChanged,
             onTap: onTap,
@@ -263,10 +277,20 @@ class PersonalDetailsSlide extends StatelessWidget {
                 horizontal: 16,
                 vertical: 16,
               ),
-              labelText: label,
-              labelStyle: const TextStyle(
-                fontSize: 14,
-                color: Color(0xFF6B7280),
+              label: Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(text: label),
+                    const TextSpan(
+                      text: ' *',
+                      style: TextStyle(color: Color(0xFFE53935)),
+                    ),
+                  ],
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF6B7280),
+                  ),
+                ),
               ),
               hintText: hint,
               hintStyle: const TextStyle(

@@ -123,7 +123,8 @@ class StepSchedulePeople extends StatelessWidget {
               flex: 6,
               child: _FieldCard(
                 icon: Icons.calendar_today_rounded,
-                label: 'Date',
+                label: 'Date *',
+                isRequired: true,
                 value: date == null ? 'Choose a date' : _formatDate(date),
                 onTap: () => _pickDate(context),
               ),
@@ -133,7 +134,8 @@ class StepSchedulePeople extends StatelessWidget {
               flex: 5,
               child: _FieldCard(
                 icon: Icons.access_time_rounded,
-                label: 'Start',
+                label: 'Start *',
+                isRequired: true,
                 value: time == null
                     ? 'Choose a time'
                     : _formatTime(context, time),
@@ -296,12 +298,14 @@ class _FieldCard extends StatelessWidget {
   const _FieldCard({
     required this.icon,
     required this.label,
+    this.isRequired = false,
     required this.value,
     required this.onTap,
   });
 
   final IconData icon;
   final String label;
+  final bool isRequired;
   final String value;
   final VoidCallback onTap;
 
@@ -341,12 +345,21 @@ class _FieldCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
-                      Text(
-                        label,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: SynkColors.textSecondary,
+                      Text.rich(
+                        TextSpan(
+                          children: <InlineSpan>[
+                            TextSpan(text: label.replaceAll(' *', '')),
+                            if (isRequired)
+                              const TextSpan(
+                                text: ' *',
+                                style: TextStyle(color: Color(0xFFE53935)),
+                              ),
+                          ],
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: SynkColors.textSecondary,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 3),
