@@ -7,6 +7,8 @@ class SignupController extends ChangeNotifier {
   // Fields
   final TextEditingController nameController = TextEditingController();
   final TextEditingController birthdayController = TextEditingController();
+  final FocusNode nameFocusNode = FocusNode();
+  final FocusNode birthdayFocusNode = FocusNode();
   String? selectedGender;
 
   final TextEditingController usernameController = TextEditingController();
@@ -14,6 +16,10 @@ class SignupController extends ChangeNotifier {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
+  final FocusNode usernameFocusNode = FocusNode();
+  final FocusNode emailFocusNode = FocusNode();
+  final FocusNode passwordFocusNode = FocusNode();
+  final FocusNode confirmPasswordFocusNode = FocusNode();
 
   bool obscurePassword = true;
   bool isLoading = false;
@@ -21,6 +27,24 @@ class SignupController extends ChangeNotifier {
   SignupController() {
     nameController.addListener(_onFieldChanged);
     birthdayController.addListener(_onFieldChanged);
+    nameFocusNode.addListener(() {
+      if (!nameFocusNode.hasFocus) validateName();
+    });
+    birthdayFocusNode.addListener(() {
+      if (!birthdayFocusNode.hasFocus) validateBirthday();
+    });
+    usernameFocusNode.addListener(() {
+      if (!usernameFocusNode.hasFocus) checkUsernameAvailability();
+    });
+    emailFocusNode.addListener(() {
+      if (!emailFocusNode.hasFocus) validateEmail();
+    });
+    passwordFocusNode.addListener(() {
+      if (!passwordFocusNode.hasFocus) validatePassword();
+    });
+    confirmPasswordFocusNode.addListener(() {
+      if (!confirmPasswordFocusNode.hasFocus) validateConfirmPassword();
+    });
   }
 
   void _onFieldChanged() {
@@ -30,11 +54,13 @@ class SignupController extends ChangeNotifier {
   bool get isPersonalDetailsValid {
     final name = nameController.text.trim();
     final birthday = birthdayController.text.trim();
-    if (name.isEmpty || birthday.isEmpty || selectedGender == null) {
+    if (_nameValidationError(name) != null ||
+        birthday.isEmpty ||
+        selectedGender == null) {
       return false;
     }
     final age = _calculateAge(birthday);
-    if (age == null || age < 16 || age > 90) {
+    if (age == null || age < 16 || age > 50) {
       return false;
     }
     return true;
@@ -104,6 +130,61 @@ class SignupController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void validateName() {
+    nameError = _nameValidationError(nameController.text.trim());
+    notifyListeners();
+  }
+
+  String? _nameValidationError(String name) {
+    if (name.isEmpty) return 'Full name is required';
+    if (!RegExp(r'^[\p{L}\p{M} ]+$', unicode: true).hasMatch(name)) {
+      return 'Name can only contain letters and spaces';
+    }
+    return null;
+  }
+
+  void validateBirthday() {
+    final text = birthdayController.text.trim();
+    if (text.isEmpty) {
+      birthdayError = 'Birthday is required';
+    } else {
+      final age = _calculateAge(text);
+      if (age == null) {
+        birthdayError = 'Please enter a valid birthday';
+      } else if (age < 16 || age > 50) {
+        birthdayError = 'Age must be between 16 and 50 years';
+      } else {
+        birthdayError = null;
+      }
+    }
+    notifyListeners();
+  }
+
+  void validateEmail() {
+    final email = emailController.text.trim();
+    emailError = email.isEmpty
+        ? 'Email address is required'
+        : !AuthConstants.emailRegex.hasMatch(email)
+        ? 'Please enter a valid email address'
+        : null;
+    notifyListeners();
+  }
+
+  void validatePassword() {
+    passwordError = AuthConstants.validatePassword(passwordController.text.trim());
+    notifyListeners();
+  }
+
+  void validateConfirmPassword() {
+    final confirmation = confirmPasswordController.text.trim();
+    confirmPasswordError = confirmation.isEmpty
+        ? 'Please confirm your password'
+        : confirmation != passwordController.text.trim()
+        ? 'Passwords do not match'
+        : null;
+    notifyListeners();
+  }
+
   void toggleObscurePassword() {
     obscurePassword = !obscurePassword;
     notifyListeners();
@@ -149,8 +230,10 @@ class SignupController extends ChangeNotifier {
     bool isValid = true;
 
     // Validate name
-    if (nameController.text.trim().isEmpty) {
-      nameError = 'Full name is required';
+    final name = nameController.text.trim();
+    final nameValidationError = _nameValidationError(name);
+    if (nameValidationError != null) {
+      nameError = nameValidationError;
       isValid = false;
     }
 
@@ -166,8 +249,8 @@ class SignupController extends ChangeNotifier {
       if (age == null) {
         birthdayError = 'Please enter a valid birthday';
         isValid = false;
-      } else if (age < 16 || age > 90) {
-        birthdayError = 'Adult must be between 16 and 90 years old';
+      } else if (age < 16 || age > 50) {
+        birthdayError = 'Age must be between 16 and 50 years';
         isValid = false;
       }
     }
@@ -319,6 +402,13 @@ class SignupController extends ChangeNotifier {
         },
       );
 
+      // With email enumeration protection enabled, Supabase can return a user
+      // with no identities instead of throwing an "already registered" error.
+      if (response.user?.identities?.isEmpty == true) {
+        emailError = 'An account with this email already exists';
+        return null;
+      }
+
       // Only attempt authenticated client-side upsert if user is already confirmed
       // (otherwise, unauthenticated RLS will reject it; the Postgres trigger or
       // EmailVerificationScreen handles profile creation).
@@ -393,10 +483,16 @@ class SignupController extends ChangeNotifier {
 
     nameController.dispose();
     birthdayController.dispose();
+    nameFocusNode.dispose();
+    birthdayFocusNode.dispose();
     usernameController.dispose();
     emailController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
+    usernameFocusNode.dispose();
+    emailFocusNode.dispose();
+    passwordFocusNode.dispose();
+    confirmPasswordFocusNode.dispose();
     super.dispose();
   }
 }

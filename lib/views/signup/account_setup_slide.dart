@@ -21,26 +21,16 @@ class AccountSetupSlide extends StatefulWidget {
 }
 
 class _AccountSetupSlideState extends State<AccountSetupSlide> {
-  final FocusNode _usernameFocusNode = FocusNode();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
   @override
   void initState() {
     super.initState();
-    _usernameFocusNode.addListener(_onUsernameFocusChange);
-  }
-
-  void _onUsernameFocusChange() {
-    if (!_usernameFocusNode.hasFocus) {
-      widget.signupController.checkUsernameAvailability();
-    }
   }
 
   @override
   void dispose() {
-    _usernameFocusNode.removeListener(_onUsernameFocusChange);
-    _usernameFocusNode.dispose();
     super.dispose();
   }
 
@@ -79,7 +69,7 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                 // Username
                 _buildField(
                   controller: signupController.usernameController,
-                  focusNode: _usernameFocusNode,
+                  focusNode: signupController.usernameFocusNode,
                   label: 'Username',
                   hint: 'Username',
                   icon: Icons.alternate_email_rounded,
@@ -92,6 +82,7 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                 // Email
                 _buildField(
                   controller: signupController.emailController,
+                  focusNode: signupController.emailFocusNode,
                   label: 'Email',
                   hint: 'Email address',
                   icon: Icons.email_outlined,
@@ -104,12 +95,16 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                 // Password
                 _buildField(
                   controller: signupController.passwordController,
+                  focusNode: signupController.passwordFocusNode,
                   label: 'Password',
                   hint: '••••••••',
                   icon: Icons.lock_outline_rounded,
                   obscureText: _obscurePassword,
-                  errorText: signupController.passwordError,
-                  onChanged: (_) => signupController.clearPasswordError(),
+                  errorText: null,
+                  onChanged: (_) {
+                    signupController.clearPasswordError();
+                    setState(() {});
+                  },
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword
@@ -126,13 +121,16 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                 // Confirm Password
                 _buildField(
                   controller: signupController.confirmPasswordController,
+                  focusNode: signupController.confirmPasswordFocusNode,
                   label: 'Confirm Password',
                   hint: 'Re-type password',
                   icon: Icons.lock_outline_rounded,
                   obscureText: _obscureConfirmPassword,
-                  errorText: signupController.confirmPasswordError,
-                  onChanged: (_) =>
-                      signupController.clearConfirmPasswordError(),
+                  errorText: null,
+                  onChanged: (_) {
+                    signupController.clearConfirmPasswordError();
+                    setState(() {});
+                  },
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscureConfirmPassword
@@ -145,6 +143,8 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 8),
+                _buildPasswordRequirements(signupController),
 
                 if (signupController.generalError != null) ...[
                   const SizedBox(height: 12),
@@ -182,6 +182,109 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                                   onboardingController.onboardingData,
                               context: context,
                             );
+                            if (context.mounted &&
+                                signupController.emailError ==
+                                    'An account with this email already exists') {
+                              await showDialog<void>(
+                                context: context,
+                                barrierColor: Colors.black54,
+                                builder: (dialogContext) => Dialog(
+                                  backgroundColor: Colors.transparent,
+                                  insetPadding: const EdgeInsets.symmetric(
+                                    horizontal: 28,
+                                  ),
+                                  child: Container(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      24,
+                                      26,
+                                      24,
+                                      20,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(26),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.16,
+                                          ),
+                                          blurRadius: 28,
+                                          offset: const Offset(0, 12),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          height: 58,
+                                          width: 58,
+                                          decoration: BoxDecoration(
+                                            color: SynkColors.orange.withValues(
+                                              alpha: 0.14,
+                                            ),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.mark_email_read_outlined,
+                                            size: 28,
+                                            color: SynkColors.orangeDark,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 18),
+                                        const Text(
+                                          'Email already registered',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.w800,
+                                            color: SynkColors.textPrimary,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 9),
+                                        const Text(
+                                          'An account with this email already exists. '
+                                          'Please log in or use a different email address.',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            height: 1.45,
+                                            color: Color(0xFF6B7280),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 22),
+                                        SizedBox(
+                                          width: double.infinity,
+                                          height: 50,
+                                          child: ElevatedButton(
+                                            onPressed: () =>
+                                                Navigator.of(dialogContext).pop(),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor:
+                                                  const Color(0xFFFF6F43),
+                                              foregroundColor: Colors.white,
+                                              elevation: 0,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(15),
+                                              ),
+                                            ),
+                                            child: const Text(
+                                              'Got it',
+                                              style: TextStyle(
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
                             if (res?.user != null && context.mounted) {
                               final user = res?.user;
                               final isConfirmed =
@@ -245,6 +348,44 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
     );
   }
 
+  Widget _buildPasswordRequirements(SignupController signupController) {
+    final password = signupController.passwordController.text;
+    return Padding(
+      padding: const EdgeInsets.only(left: 12, right: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _PasswordRequirement(
+            text: 'At least 8 characters',
+            met: password.length >= 8,
+          ),
+          _PasswordRequirement(
+            text: 'At least one uppercase letter',
+            met: RegExp(r'[A-Z]').hasMatch(password),
+          ),
+          _PasswordRequirement(
+            text: 'At least one lowercase letter',
+            met: RegExp(r'[a-z]').hasMatch(password),
+          ),
+          _PasswordRequirement(
+            text: 'At least one number',
+            met: RegExp(r'[0-9]').hasMatch(password),
+          ),
+          _PasswordRequirement(
+            text: 'At least one special character',
+            met: RegExp(r'[@$!%*?&_\-#^~+=<>.,:;/\\]|[^a-zA-Z0-9]')
+                .hasMatch(password),
+          ),
+          _PasswordRequirement(
+            text: 'Confirmation password matches',
+            met: password.isNotEmpty &&
+                password == signupController.confirmPasswordController.text,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildField({
     required TextEditingController controller,
     required String label,
@@ -301,10 +442,20 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                 horizontal: 16,
                 vertical: 16,
               ),
-              labelText: label,
-              labelStyle: const TextStyle(
-                fontSize: 14,
-                color: Color(0xFF6B7280),
+              label: Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(text: label),
+                    const TextSpan(
+                      text: ' *',
+                      style: TextStyle(color: Color(0xFFE53935)),
+                    ),
+                  ],
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF6B7280),
+                  ),
+                ),
               ),
               hintText: hint,
               hintStyle: const TextStyle(
@@ -330,6 +481,39 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
           ),
         ],
       ],
+    );
+  }
+}
+
+class _PasswordRequirement extends StatelessWidget {
+  const _PasswordRequirement({required this.text, required this.met});
+
+  final String text;
+  final bool met;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = met ? SynkColors.teal : const Color(0xFF9CA3AF);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Icon(
+            met ? Icons.check_circle : Icons.circle_outlined,
+            size: 15,
+            color: color,
+          ),
+          const SizedBox(width: 7),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 12,
+              color: color,
+              fontWeight: met ? FontWeight.w600 : FontWeight.w400,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -72,7 +72,7 @@ class _StepDetailsPublishState extends State<StepDetailsPublish> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
       children: <Widget>[
-        const _GroupLabel(text: 'DESCRIPTION'),
+        const _GroupLabel(text: 'DESCRIPTION', isRequired: true),
         const SizedBox(height: 10),
         _Card(
           child: Row(
@@ -539,10 +539,11 @@ class _DashedBorderPainter extends CustomPainter {
 
 // Small caps section header, matching Steps 1 and 2.
 class _GroupLabel extends StatelessWidget {
-  const _GroupLabel({required this.text, this.trailing});
+  const _GroupLabel({required this.text, this.trailing, this.isRequired = false});
 
   final String text;
   final Widget? trailing;
+  final bool isRequired;
 
   @override
   Widget build(BuildContext context) {
@@ -550,13 +551,22 @@ class _GroupLabel extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
         children: <Widget>[
-          Text(
-            text,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.5,
-              color: SynkColors.textSecondary,
+          Text.rich(
+            TextSpan(
+              children: <InlineSpan>[
+                TextSpan(text: text),
+                if (isRequired)
+                  const TextSpan(
+                    text: ' *',
+                    style: TextStyle(color: Color(0xFFE53935)),
+                  ),
+              ],
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.5,
+                color: SynkColors.textSecondary,
+              ),
             ),
           ),
           if (trailing != null) ...<Widget>[

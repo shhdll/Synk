@@ -290,6 +290,7 @@ class _LoginViewState extends State<LoginView> {
                         return null;
                       },
                       decoration: InputDecoration(
+                        label: _requiredLabel('Username'),
                         hintText: 'Username',
                         hintStyle: const TextStyle(
                           color: SynkColors.textSecondary,
@@ -334,6 +335,7 @@ class _LoginViewState extends State<LoginView> {
                         return null;
                       },
                       decoration: InputDecoration(
+                        label: _requiredLabel('Email'),
                         hintText: 'Email address',
                         hintStyle: const TextStyle(
                           color: SynkColors.textSecondary,
@@ -377,6 +379,7 @@ class _LoginViewState extends State<LoginView> {
                       return null;
                     },
                     decoration: InputDecoration(
+                      label: _requiredLabel('Password'),
                       hintText: 'Password',
                       hintStyle: const TextStyle(
                         color: SynkColors.textSecondary,
@@ -518,4 +521,17 @@ class _LoginViewState extends State<LoginView> {
       ),
     );
   }
+
+  Widget _requiredLabel(String text) => Text.rich(
+    TextSpan(
+      children: [
+        TextSpan(text: text),
+        const TextSpan(
+          text: ' *',
+          style: TextStyle(color: Color(0xFFE53935)),
+        ),
+      ],
+      style: const TextStyle(color: SynkColors.textSecondary),
+    ),
+  );
 }

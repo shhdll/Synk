@@ -49,7 +49,7 @@ class _HomeViewState extends State<HomeView> {
         child: AnimatedBuilder(
           animation: widget.activityStore,
           builder: (context, _) {
-            final upcoming = widget.activityStore.feedUpcoming;
+            final upcoming = widget.activityStore.homeUpcoming;
             return CustomScrollView(
               slivers: [
                 SliverPadding(
