@@ -17,60 +17,90 @@ class Activity {
     this.isPublic = true,
     this.photoUrl,
     this.createdAt,
+    this.activityCode,
+    this.participationId,
+    this.participationStatus,
   });
 
   final String id;
   final String title;
   final String description;
 
-  // Category is not collected by the Create Activity flow yet; kept so the
-  // Home card can show it once the team decides how it is chosen.
   final String categoryEmoji;
   final String categoryLabel;
 
-  // Date and time combined (stored as `starts_at` in Supabase, UTC).
   final DateTime dateTime;
 
-  // Venue name shown on cards, plus the optional address line.
   final String location;
   final String? locationAddress;
 
-  // Filled once a place/map provider is integrated; null until then.
   final double? latitude;
   final double? longitude;
 
-  // The user who created the activity (`host_id`).
   final String? hostId;
 
-  // Capacity including the host.
   final int maxParticipants;
 
   final bool isPublic;
 
-  // Public URL of the single optional activity photo.
   final String? photoUrl;
 
   final DateTime? createdAt;
 
+  // Unique six-digit code shown only to the activity host.
+  final String? activityCode;
+
+  // Identifies the signed-in user's participation record.
+  final String? participationId;
+
+  // Possible values: joined, pending, or waitlisted.
+  final String? participationStatus;
+
   bool get isPast => dateTime.isBefore(DateTime.now());
 
-  bool get hasPhoto => photoUrl != null && photoUrl!.isNotEmpty;
+  bool get hasPhoto =>
+      photoUrl != null && photoUrl!.isNotEmpty;
 
-  bool get hasCoordinates => latitude != null && longitude != null;
+  bool get hasCoordinates =>
+      latitude != null && longitude != null;
 
-  bool isHostedBy(String? userId) =>
-      userId != null && hostId != null && hostId == userId;
+  bool get hasActivityCode =>
+      activityCode != null && activityCode!.isNotEmpty;
 
-  // Participants who have joined. Until the Join story adds a participants
-  // table, only the host counts.
+  bool get isPending =>
+      participationStatus == 'pending';
+
+  bool get isWaitlisted =>
+      participationStatus == 'waitlisted';
+
+  bool get isJoined =>
+      participationStatus == 'joined';
+
+  bool isHostedBy(String? userId) {
+    return userId != null &&
+        hostId != null &&
+        hostId == userId;
+  }
+
+  // The host currently counts as the first participant.
   int get joinedCount => 1;
 
-  int get spotsOpen => (maxParticipants - joinedCount).clamp(0, maxParticipants);
+  int get spotsOpen {
+    return (maxParticipants - joinedCount).clamp(
+      0,
+      maxParticipants,
+    );
+  }
 
-  // Documented status values: Available, One More Needed, Full.
   String get status {
-    if (spotsOpen == 0) return 'Full';
-    if (spotsOpen == 1) return 'One More Needed';
+    if (spotsOpen == 0) {
+      return 'Full';
+    }
+
+    if (spotsOpen == 1) {
+      return 'One More Needed';
+    }
+
     return 'Available';
   }
 
@@ -78,31 +108,43 @@ class Activity {
   // Supabase mapping
   // ---------------------------------------------------------------------------
 
-  // Builds an Activity from an `activities` row.
   factory Activity.fromMap(Map<String, dynamic> map) {
     return Activity(
       id: map['id'] as String,
       hostId: map['host_id'] as String?,
       title: map['title'] as String? ?? '',
       description: map['description'] as String? ?? '',
-      dateTime: DateTime.parse(map['starts_at'] as String).toLocal(),
+      dateTime: DateTime.parse(
+        map['starts_at'] as String,
+      ).toLocal(),
       location: map['location_name'] as String? ?? '',
-      locationAddress: map['location_address'] as String?,
+      locationAddress:
+          map['location_address'] as String?,
       latitude: (map['latitude'] as num?)?.toDouble(),
-      longitude: (map['longitude'] as num?)?.toDouble(),
-      maxParticipants: map['max_participants'] as int? ?? 2,
+      longitude:
+          (map['longitude'] as num?)?.toDouble(),
+      maxParticipants:
+          map['max_participants'] as int? ?? 2,
       isPublic: map['is_public'] as bool? ?? true,
       photoUrl: map['photo_url'] as String?,
-      categoryEmoji: map['category_emoji'] as String? ?? '',
-      categoryLabel: map['category_label'] as String? ?? '',
+      categoryEmoji:
+          map['category_emoji'] as String? ?? '',
+      categoryLabel:
+          map['category_label'] as String? ?? '',
       createdAt: map['created_at'] == null
           ? null
-          : DateTime.parse(map['created_at'] as String).toLocal(),
+          : DateTime.parse(
+              map['created_at'] as String,
+            ).toLocal(),
+      activityCode: map['activity_code'] as String?,
+      participationId:
+          map['participation_id'] as String?,
+      participationStatus:
+          map['participation_status'] as String?,
     );
   }
 
-  // Columns sent on insert. `id` and `created_at` are generated by the
-  // database; `photo_url` is set afterwards by the photo upload step.
+  // Generated database values are not included in the insert payload.
   Map<String, dynamic> toInsertMap() {
     return {
       'host_id': hostId,
@@ -115,12 +157,16 @@ class Activity {
       'longitude': longitude,
       'max_participants': maxParticipants,
       'is_public': isPublic,
-      'category_emoji': categoryEmoji.isEmpty ? null : categoryEmoji,
-      'category_label': categoryLabel.isEmpty ? null : categoryLabel,
+      'category_emoji':
+          categoryEmoji.isEmpty ? null : categoryEmoji,
+      'category_label':
+          categoryLabel.isEmpty ? null : categoryLabel,
     };
   }
 
-  Activity copyWith({String? photoUrl}) {
+  Activity copyWith({
+    String? photoUrl,
+  }) {
     return Activity(
       id: id,
       hostId: hostId,
@@ -137,20 +183,19 @@ class Activity {
       categoryEmoji: categoryEmoji,
       categoryLabel: categoryLabel,
       createdAt: createdAt,
+      activityCode: activityCode,
+      participationId: participationId,
+      participationStatus: participationStatus,
     );
   }
 }
 
-// In-memory cache of activities for the Home screens. Supabase is the
-// source of truth; this store only holds rows returned by it.
-//
-// `mine` – activities hosted by the signed-in user (Home + Activities tabs).
-// `feed` – public activities from every user, for the Home feed.
-//
-// Set [currentUserId] once (from the signed-in Supabase user) so the store
-// can tell the two apart.
+// Stores hosted, participating, and public activities.
 class ActivityStore extends ChangeNotifier {
   final List<Activity> _mine = [];
+
+  final List<Activity> _participating = [];
+
   final List<Activity> _feed = [];
 
   String? _currentUserId;
@@ -158,105 +203,204 @@ class ActivityStore extends ChangeNotifier {
   String? get currentUserId => _currentUserId;
 
   set currentUserId(String? value) {
-    if (_currentUserId == value) return;
+    if (_currentUserId == value) {
+      return;
+    }
+
     _currentUserId = value;
     notifyListeners();
   }
 
   List<Activity> get mine => List.unmodifiable(_mine);
+
+  List<Activity> get participating =>
+      List.unmodifiable(_participating);
+
+  // Returns only activities with an accepted participation.
+  List<Activity> get joined => List.unmodifiable(
+        _participating.where(
+          (activity) => activity.isJoined,
+        ),
+      );
+
   List<Activity> get feed => List.unmodifiable(_feed);
 
-  // Kept for the existing Home/Activities screens, which show the user's
-  // own activities today.
-  List<Activity> get all => mine;
+  // Includes hosted, joined, pending, and waitlisted activities.
+  List<Activity> get all =>
+      List.unmodifiable(_personalActivities);
 
   List<Activity> get upcoming =>
-      _mine.where((a) => !a.isPast).toList()
-        ..sort((a, b) => a.dateTime.compareTo(b.dateTime));
+      _personalActivities
+          .where((activity) => !activity.isPast)
+          .toList()
+        ..sort(
+          (first, second) =>
+              first.dateTime.compareTo(second.dateTime),
+        );
 
   List<Activity> get past =>
-      _mine.where((a) => a.isPast).toList()
-        ..sort((a, b) => b.dateTime.compareTo(a.dateTime));
+      _personalActivities
+          .where((activity) => activity.isPast)
+          .toList()
+        ..sort(
+          (first, second) =>
+              second.dateTime.compareTo(first.dateTime),
+        );
 
-  // Upcoming public activities from everyone, for the Home feed.
   List<Activity> get feedUpcoming =>
-      _feed.where((a) => !a.isPast).toList()
-        ..sort((a, b) => a.dateTime.compareTo(b.dateTime));
+      _feed
+          .where((activity) => !activity.isPast)
+          .toList()
+        ..sort(
+          (first, second) =>
+              first.dateTime.compareTo(second.dateTime),
+        );
 
-  // The Home page includes the public feed plus the signed-in user's private
-  // activities, which remain visible only to their host.
+  // Home shows the public feed, hosted private activities, and private
+  // activities that the user has already been accepted into.
   List<Activity> get homeUpcoming {
     final activities = <String, Activity>{
-      for (final activity in feedUpcoming) activity.id: activity,
-      for (final activity in _mine.where((a) => !a.isPublic && !a.isPast))
+      for (final activity in feedUpcoming)
+        activity.id: activity,
+      for (final activity in _mine.where(
+        (activity) =>
+            !activity.isPublic && !activity.isPast,
+      ))
+        activity.id: activity,
+      for (final activity in _participating.where(
+        (activity) =>
+            !activity.isPublic &&
+            !activity.isPast &&
+            activity.isJoined,
+      ))
         activity.id: activity,
     };
+
     return activities.values.toList()
-      ..sort((a, b) => a.dateTime.compareTo(b.dateTime));
+      ..sort(
+        (first, second) =>
+            first.dateTime.compareTo(second.dateTime),
+      );
   }
 
-  // Replaces the signed-in user's activities with rows fetched from Supabase.
+  List<Activity> get _personalActivities {
+    final activities = <String, Activity>{
+      for (final activity in _participating)
+        activity.id: activity,
+      for (final activity in _mine)
+        activity.id: activity,
+    };
+
+    return activities.values.toList();
+  }
+
   void setMine(List<Activity> activities) {
     _mine
       ..clear()
       ..addAll(activities);
+
     notifyListeners();
   }
 
-  // Replaces the public feed with rows fetched from Supabase.
+  // Stores joined, pending, and waitlisted activities.
+  void setParticipating(List<Activity> activities) {
+    _participating
+      ..clear()
+      ..addAll(activities);
+
+    notifyListeners();
+  }
+
+  // Kept temporarily for callers that still use the previous method name.
+  void setJoined(List<Activity> activities) {
+    setParticipating(activities);
+  }
+
   void setFeed(List<Activity> activities) {
     _feed
       ..clear()
       ..addAll(activities);
+
     notifyListeners();
   }
 
-  // Adds or updates one activity (keyed by id) in the lists it belongs to.
-  //
-  // `mine` only ever receives activities hosted by the signed-in user;
-  // `feed` only ever receives public ones. An activity can legitimately be
-  // in both (my own public activity).
   void upsert(Activity activity) {
     if (activity.isHostedBy(_currentUserId)) {
       _replaceOrAdd(_mine, activity);
     } else {
-      _mine.removeWhere((a) => a.id == activity.id);
+      _mine.removeWhere(
+        (existingActivity) =>
+            existingActivity.id == activity.id,
+      );
     }
 
     if (activity.isPublic) {
       _replaceOrAdd(_feed, activity);
     } else {
-      _feed.removeWhere((a) => a.id == activity.id);
+      _feed.removeWhere(
+        (existingActivity) =>
+            existingActivity.id == activity.id,
+      );
     }
 
     notifyListeners();
   }
 
-  // Alias kept for existing callers.
-  void add(Activity activity) => upsert(activity);
+  void add(Activity activity) {
+    upsert(activity);
+  }
 
   void removeById(String id) {
-    _mine.removeWhere((a) => a.id == id);
-    _feed.removeWhere((a) => a.id == id);
+    _mine.removeWhere(
+      (activity) => activity.id == id,
+    );
+
+    _participating.removeWhere(
+      (activity) => activity.id == id,
+    );
+
+    _feed.removeWhere(
+      (activity) => activity.id == id,
+    );
+
     notifyListeners();
   }
 
   Activity? byId(String id) {
-    for (final a in _mine) {
-      if (a.id == id) return a;
+    for (final activity in _mine) {
+      if (activity.id == id) {
+        return activity;
+      }
     }
-    for (final a in _feed) {
-      if (a.id == id) return a;
+
+    for (final activity in _participating) {
+      if (activity.id == id) {
+        return activity;
+      }
     }
+
+    for (final activity in _feed) {
+      if (activity.id == id) {
+        return activity;
+      }
+    }
+
     return null;
   }
 
-  void _replaceOrAdd(List<Activity> list, Activity activity) {
-    final index = list.indexWhere((a) => a.id == activity.id);
+  void _replaceOrAdd(
+    List<Activity> activities,
+    Activity activity,
+  ) {
+    final index = activities.indexWhere(
+      (existingActivity) =>
+          existingActivity.id == activity.id,
+    );
+
     if (index == -1) {
-      list.add(activity);
+      activities.add(activity);
     } else {
-      list[index] = activity;
+      activities[index] = activity;
     }
   }
 }

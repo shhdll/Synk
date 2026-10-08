@@ -4,8 +4,7 @@ import '../../../models/activity_model.dart';
 import 'activity_card.dart';
 import 'empty_state.dart';
 
-// A list of activity cards for one tab (upcoming/past) of the Activities
-// screen, falling back to an empty state when there's nothing to show.
+// Displays activity cards and shows an empty state when no activities exist.
 class ActivityList extends StatelessWidget {
   const ActivityList({
     super.key,
@@ -13,12 +12,14 @@ class ActivityList extends StatelessWidget {
     required this.emptyIcon,
     required this.emptyTitle,
     required this.emptyMessage,
+    required this.currentUserId,
   });
 
   final List<Activity> activities;
   final IconData emptyIcon;
   final String emptyTitle;
   final String emptyMessage;
+  final String? currentUserId;
 
   @override
   Widget build(BuildContext context) {
@@ -34,8 +35,19 @@ class ActivityList extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
       itemCount: activities.length,
       separatorBuilder: (_, _) => const SizedBox(height: 14),
-      itemBuilder: (context, index) =>
-          ActivityCard(activity: activities[index]),
+      itemBuilder: (context, index) {
+        final activity = activities[index];
+
+        // Only the host can view the code of an upcoming activity.
+        final canViewCode =
+            !activity.isPast &&
+            activity.isHostedBy(currentUserId);
+
+        return ActivityCard(
+          activity: activity,
+          showActivityCode: canViewCode,
+        );
+      },
     );
   }
 }

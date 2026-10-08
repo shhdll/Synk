@@ -20,9 +20,6 @@ class MainShell extends StatefulWidget {
   });
 
   final HomeTab initialTab;
-
-  // True when arriving straight from registration, so the Home tab's
-  // greeting reads as a first hello rather than a returning-user welcome.
   final bool isNewUser;
 
   @override
@@ -31,50 +28,72 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   final ActivitiesModel _activitiesModel = ActivitiesModel();
+
   late final ActivityStore _activityStore;
   late HomeTab _tab;
 
   @override
   void initState() {
     super.initState();
+
     _activityStore = ActivityStore();
-    // The store starts empty; ownership checks (used by upsert() when a new
-    // activity is created) need to know who "mine" means before anything
-    // else touches the store.
+
+    // Defines which hosted activities belong to the signed-in user.
     _activityStore.currentUserId =
         Supabase.instance.client.auth.currentUser?.id;
+
     _tab = widget.initialTab;
-    _loadMyActivities();
-    _loadPublicFeed();
+
+    // Loads hosted, participating, and public activities.
+    _loadActivities();
   }
 
-  // Populates the store with the signed-in user's existing activities from
-  // Supabase, so Activities/Home show past data on a fresh launch rather
-  // than only activities created in the current session (upsert() alone
-  // never backfills prior rows). Best-effort: a failed fetch (offline, RLS,
-  // etc.) leaves the store as-is rather than surfacing an error here — the
-  // tabs just show whatever they already have, same as any other transient
-  // network hiccup elsewhere in the app.
+  Future<void> _loadActivities() async {
+    await Future.wait([
+      _loadMyActivities(),
+      _loadParticipatingActivities(),
+      _loadPublicFeed(),
+    ]);
+  }
+
+  // Loads activities created by the signed-in user.
   Future<void> _loadMyActivities() async {
     try {
-      final mine = await _activitiesModel.fetchMine();
+      final activities = await _activitiesModel.fetchMine();
+
       if (!mounted) return;
-      _activityStore.setMine(mine);
+
+      _activityStore.setMine(activities);
     } catch (_) {
-      // Swallowed intentionally — see method comment.
+      // Keep the current list when loading fails.
     }
   }
 
-  // Populates the Home feed with upcoming public activities from every user.
-  // Same best-effort handling as _loadMyActivities(): a failed fetch leaves
-  // the feed as-is.
+  // Loads joined, pending, and waitlisted activities.
+  Future<void> _loadParticipatingActivities() async {
+    try {
+      final activities =
+          await _activitiesModel.fetchParticipating();
+
+      if (!mounted) return;
+
+      _activityStore.setParticipating(activities);
+    } catch (_) {
+      // Keep the current list when loading fails.
+    }
+  }
+
+  // Loads upcoming public activities for the Home feed.
   Future<void> _loadPublicFeed() async {
     try {
-      final feed = await _activitiesModel.fetchPublicFeed();
+      final activities =
+          await _activitiesModel.fetchPublicFeed();
+
       if (!mounted) return;
-      _activityStore.setFeed(feed);
+
+      _activityStore.setFeed(activities);
     } catch (_) {
-      // Swallowed intentionally — see method comment.
+      // Keep the current list when loading fails.
     }
   }
 
@@ -84,25 +103,34 @@ class _MainShellState extends State<MainShell> {
     super.dispose();
   }
 
-  void _openAddActivity() {
-    Navigator.of(context).push(
+  Future<void> _openAddActivity() async {
+    await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => CreateActivityView(store: _activityStore),
+        builder: (context) {
+          return CreateActivityView(
+            store: _activityStore,
+          );
+        },
         fullscreenDialog: true,
       ),
     );
+
+    // Refresh activities after returning from Create Activity.
+    await _loadActivities();
   }
 
   @override
   Widget build(BuildContext context) {
-    // Stack order (bottom-bar right-to-left, skipping the + slot):
-    // Profile, Map, Activities, Home.
     final pages = [
       const ProfileView(),
       const MapView(),
       ActivitiesView(activityStore: _activityStore),
-      HomeView(activityStore: _activityStore, isNewUser: widget.isNewUser),
+      HomeView(
+        activityStore: _activityStore,
+        isNewUser: widget.isNewUser,
+      ),
     ];
+
     final stackIndex = switch (_tab) {
       HomeTab.profile => 0,
       HomeTab.map => 1,
@@ -113,10 +141,15 @@ class _MainShellState extends State<MainShell> {
     return Scaffold(
       backgroundColor: SynkColors.background,
       extendBody: true,
-      body: IndexedStack(index: stackIndex, children: pages),
+      body: IndexedStack(
+        index: stackIndex,
+        children: pages,
+      ),
       bottomNavigationBar: BottomBar(
         selected: _tab,
-        onSelect: (tab) => setState(() => _tab = tab),
+        onSelect: (tab) {
+          setState(() => _tab = tab);
+        },
         onAddTap: _openAddActivity,
       ),
     );
