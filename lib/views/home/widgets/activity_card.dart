@@ -9,10 +9,18 @@ class ActivityCard extends StatelessWidget {
     super.key,
     required this.activity,
     this.showActivityCode = false,
+    this.onDelete,
+    this.isDeleting = false,
   });
 
   final Activity activity;
   final bool showActivityCode;
+
+  // Provided only when the current user is the activity host.
+  final VoidCallback? onDelete;
+
+  // Disables the button and shows loading while deletion is running.
+  final bool isDeleting;
 
   static const double _coverHeight = 128;
   static const Alignment _photoAlignment = Alignment(0, -0.3);
@@ -242,6 +250,36 @@ class ActivityCard extends StatelessWidget {
               fit: StackFit.expand,
               children: [
                 _buildCover(),
+                // Only the host receives an onDelete callback,
+// so other users never see this button.
+if (onDelete != null)
+  Positioned(
+    top: 10,
+    left: 10,
+    child: Material(
+      color: Colors.white.withValues(alpha: 0.94),
+      shape: const CircleBorder(),
+      elevation: 2,
+      child: IconButton(
+        tooltip: 'Delete activity',
+        onPressed: isDeleting ? null : onDelete,
+        icon: isDeleting
+            ? const SizedBox(
+                width: 19,
+                height: 19,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Color(0xFFE85D5D),
+                ),
+              )
+            : const Icon(
+                Icons.delete_outline_rounded,
+                color: Color(0xFFE85D5D),
+                size: 21,
+              ),
+      ),
+    ),
+  ),
 
                 // Private badge.
                 if (!activity.isPublic)

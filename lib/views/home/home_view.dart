@@ -9,6 +9,7 @@ import 'widgets/activity_card.dart';
 import 'widgets/app_header.dart';
 import 'widgets/empty_state.dart';
 import 'widgets/section_label.dart';
+import '../../utils/custom_widgets/synk_feedback.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({
@@ -48,21 +49,46 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Future<void> _openActivityCodeSheet() async {
-    await showActivityCodeJoinSheet(context);
+  final result =
+      await showActivityCodeJoinSheet(context);
+
+  // The user closed the sheet without completing a join.
+  if (!mounted || result == null) return;
+
+  try {
+    // Refresh joined, pending, and waitlisted activities
+    // before displaying the confirmation.
+    final participating =
+        await _activitiesModel.fetchParticipating();
 
     if (!mounted) return;
 
-    try {
-      // Refresh joined, pending, and waitlisted activities.
-      final participating = await _activitiesModel.fetchParticipating();
-
-      if (!mounted) return;
-
-      widget.activityStore.setParticipating(participating);
-    } catch (_) {
-      // Keep the current activities if refreshing fails.
-    }
+    widget.activityStore.setParticipating(
+      participating,
+    );
+  } catch (_) {
+    // The join succeeded in Supabase, so the confirmation
+    // still appears if refreshing temporarily fails.
   }
+
+  if (!mounted) return;
+
+  final title = switch (result.result) {
+    'joined' => 'Joined!',
+    'already_joined' => 'Already Joined',
+    'pending' => 'Request Sent!',
+    'already_pending' => 'Request Already Sent',
+    'waitlisted' => 'Added to Waitlist!',
+    'already_waitlisted' => 'Already Waitlisted',
+    _ => 'Done!',
+  };
+
+  await SynkFeedback.showSuccessDialog(
+    context,
+    title: title,
+    message: result.message,
+  );
+}
 
   @override
   Widget build(BuildContext context) {

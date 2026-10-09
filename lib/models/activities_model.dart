@@ -4,13 +4,11 @@ import 'activity_model.dart';
 
 // Reads and writes activity data stored in Supabase.
 class ActivitiesModel {
-  final SupabaseClient _supabase =
-      Supabase.instance.client;
+  final SupabaseClient _supabase = Supabase.instance.client;
 
   static const String _table = 'activities';
 
-  String? get currentUserId =>
-      _supabase.auth.currentUser?.id;
+  String? get currentUserId => _supabase.auth.currentUser?.id;
 
   // ---------------------------------------------------------------------------
   // Reads
@@ -39,22 +37,14 @@ class ActivitiesModel {
       return [];
     }
 
-    final response = await _supabase.rpc(
-      'get_my_activity_participations',
-    );
+    final response = await _supabase.rpc('get_my_activity_participations');
 
     if (response is! List) {
       return [];
     }
 
     return response
-        .map(
-          (row) => Activity.fromMap(
-            Map<String, dynamic>.from(
-              row as Map,
-            ),
-          ),
-        )
+        .map((row) => Activity.fromMap(Map<String, dynamic>.from(row as Map)))
         .toList();
   }
 
@@ -64,11 +54,8 @@ class ActivitiesModel {
   }
 
   // Upcoming public activities from every user.
-  Future<List<Activity>> fetchPublicFeed({
-    int limit = 50,
-  }) async {
-    final nowUtc =
-        DateTime.now().toUtc().toIso8601String();
+  Future<List<Activity>> fetchPublicFeed({int limit = 50}) async {
+    final nowUtc = DateTime.now().toUtc().toIso8601String();
 
     final rows = await _supabase
         .from(_table)
@@ -105,33 +92,21 @@ class ActivitiesModel {
     final uid = currentUserId;
 
     if (uid == null) {
-      throw StateError(
-        'Cannot create an activity while signed out.',
-      );
+      throw StateError('Cannot create an activity while signed out.');
     }
 
-    final payload = draft.toInsertMap()
-      ..['host_id'] = uid;
+    final payload = draft.toInsertMap()..['host_id'] = uid;
 
-    final row = await _supabase
-        .from(_table)
-        .insert(payload)
-        .select()
-        .single();
+    final row = await _supabase.from(_table).insert(payload).select().single();
 
     return Activity.fromMap(row);
   }
 
   // Updates or removes the activity photo URL.
-  Future<Activity> updatePhotoUrl(
-    String activityId,
-    String? photoUrl,
-  ) async {
+  Future<Activity> updatePhotoUrl(String activityId, String? photoUrl) async {
     final row = await _supabase
         .from(_table)
-        .update({
-          'photo_url': photoUrl,
-        })
+        .update({'photo_url': photoUrl})
         .eq('id', activityId)
         .select()
         .single();
@@ -139,18 +114,29 @@ class ActivitiesModel {
     return Activity.fromMap(row);
   }
 
-  // Deletes an activity. Supabase only permits its host to do this.
+  // Deletes an activity owned by the signed-in user.
+  // Related participation records are removed by ON DELETE CASCADE.
   Future<void> delete(String activityId) async {
-    await _supabase
+    final uid = currentUserId;
+
+    if (uid == null) {
+      throw StateError('Cannot delete an activity while signed out.');
+    }
+
+    final deletedRows = await _supabase
         .from(_table)
         .delete()
-        .eq('id', activityId);
+        .eq('id', activityId)
+        .eq('host_id', uid)
+        .select('id');
+
+    // RLS or the host filter prevents deleting another user's activity.
+    if (deletedRows.isEmpty) {
+      throw StateError('The activity was not found or cannot be deleted.');
+    }
   }
 
   List<Activity> _mapRows(List<dynamic> rows) {
-    return rows
-        .cast<Map<String, dynamic>>()
-        .map(Activity.fromMap)
-        .toList();
+    return rows.cast<Map<String, dynamic>>().map(Activity.fromMap).toList();
   }
 }

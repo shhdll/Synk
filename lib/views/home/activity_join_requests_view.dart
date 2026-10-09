@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../controllers/activity_join_requests_controller.dart';
 import '../../core/constants/synk_colors.dart';
 import '../../models/activity_participation_model.dart';
+import '../../utils/custom_widgets/synk_feedback.dart';
 
 class ActivityJoinRequestsView extends StatefulWidget {
   const ActivityJoinRequestsView({super.key});
@@ -13,8 +14,7 @@ class ActivityJoinRequestsView extends StatefulWidget {
   }
 }
 
-class _ActivityJoinRequestsViewState
-    extends State<ActivityJoinRequestsView> {
+class _ActivityJoinRequestsViewState extends State<ActivityJoinRequestsView> {
   late final ActivityJoinRequestsController _controller;
 
   @override
@@ -41,60 +41,44 @@ class _ActivityJoinRequestsViewState
 
   String _formatRequestedAt(DateTime dateTime) {
     final localDate = dateTime.toLocal();
-    final hour =
-        localDate.hour % 12 == 0 ? 12 : localDate.hour % 12;
-    final minute =
-        localDate.minute.toString().padLeft(2, '0');
+
+    final hour = localDate.hour % 12 == 0 ? 12 : localDate.hour % 12;
+
+    final minute = localDate.minute.toString().padLeft(2, '0');
+
     final period = localDate.hour >= 12 ? 'PM' : 'AM';
 
     return '${localDate.day}/${localDate.month}/${localDate.year}'
         ' · $hour:$minute $period';
   }
 
-  // Reviews the request and displays immediate feedback to the host.
+  // Reviews the request and shows feedback using the shared Synk style.
   Future<void> _reviewRequest({
     required PendingActivityRequest request,
     required bool accept,
   }) async {
-    await _controller.reviewRequest(
-      request: request,
-      accept: accept,
-    );
+    await _controller.reviewRequest(request: request, accept: accept);
 
     if (!mounted) return;
 
     final successMessage = _controller.successMessage;
     final errorMessage = _controller.errorMessage;
-    final isSuccess = successMessage != null;
 
-    final message = isSuccess
-        ? successMessage
-        : errorMessage ?? 'Unable to review the request.';
-
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(
-                isSuccess
-                    ? Icons.check_circle_rounded
-                    : Icons.error_rounded,
-                color: Colors.white,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(message),
-              ),
-            ],
-          ),
-          backgroundColor: isSuccess
-              ? const Color(0xFF2E9B69)
-              : Colors.redAccent,
-          behavior: SnackBarBehavior.floating,
-        ),
+    if (successMessage != null) {
+      await SynkFeedback.showSuccessDialog(
+        context,
+        title: accept ? 'Request Approved!' : 'Request Rejected',
+        message: successMessage,
       );
+
+      _controller.clearMessage();
+      return;
+    }
+
+    SynkFeedback.showError(
+      context,
+      errorMessage ?? 'Unable to review the request. Please try again.',
+    );
   }
 
   @override
@@ -123,25 +107,18 @@ class _ActivityJoinRequestsViewState
           ),
         ),
       ),
-      body: SafeArea(
-        top: false,
-        child: _buildBody(),
-      ),
+      body: SafeArea(top: false, child: _buildBody()),
     );
   }
 
   Widget _buildBody() {
-    if (_controller.isLoading &&
-        _controller.requests.isEmpty) {
+    if (_controller.isLoading && _controller.requests.isEmpty) {
       return const Center(
-        child: CircularProgressIndicator(
-          color: SynkColors.orangeDark,
-        ),
+        child: CircularProgressIndicator(color: SynkColors.orangeDark),
       );
     }
 
-    if (_controller.errorMessage != null &&
-        _controller.requests.isEmpty) {
+    if (_controller.errorMessage != null && _controller.requests.isEmpty) {
       return _buildErrorState();
     }
 
@@ -173,14 +150,6 @@ class _ActivityJoinRequestsViewState
               color: SynkColors.textSecondary,
             ),
           ),
-          if (_controller.errorMessage != null) ...[
-            const SizedBox(height: 16),
-            _buildMessage(
-              message: _controller.errorMessage!,
-              color: Colors.redAccent,
-              icon: Icons.error_rounded,
-            ),
-          ],
           const SizedBox(height: 20),
           ..._controller.requests.map((request) {
             return Padding(
@@ -193,11 +162,8 @@ class _ActivityJoinRequestsViewState
     );
   }
 
-  Widget _buildRequestCard(
-    PendingActivityRequest request,
-  ) {
-    final isReviewing =
-        _controller.isReviewing(request.participationId);
+  Widget _buildRequestCard(PendingActivityRequest request) {
+    final isReviewing = _controller.isReviewing(request.participationId);
 
     final username = request.requesterUsername;
     final trimmedName = request.requesterName.trim();
@@ -212,9 +178,7 @@ class _ActivityJoinRequestsViewState
         color: Colors.white.withValues(alpha: 0.82),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: SynkColors.textSecondary.withValues(
-            alpha: 0.10,
-          ),
+          color: SynkColors.textSecondary.withValues(alpha: 0.10),
         ),
         boxShadow: [
           BoxShadow(
@@ -232,13 +196,11 @@ class _ActivityJoinRequestsViewState
               Container(
                 width: 46,
                 height: 46,
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: SynkColors.orangeDark.withValues(
-                    alpha: 0.10,
-                  ),
+                  color: SynkColors.orangeDark.withValues(alpha: 0.10),
                   shape: BoxShape.circle,
                 ),
-                alignment: Alignment.center,
                 child: Text(
                   firstLetter,
                   style: const TextStyle(
@@ -251,8 +213,7 @@ class _ActivityJoinRequestsViewState
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       request.requesterName,
@@ -264,8 +225,7 @@ class _ActivityJoinRequestsViewState
                         color: SynkColors.textPrimary,
                       ),
                     ),
-                    if (username != null &&
-                        username.isNotEmpty)
+                    if (username != null && username.isNotEmpty)
                       Text(
                         '@$username',
                         style: const TextStyle(
@@ -332,30 +292,21 @@ class _ActivityJoinRequestsViewState
                   onPressed: isReviewing
                       ? null
                       : () {
-                          _reviewRequest(
-                            request: request,
-                            accept: false,
-                          );
+                          _reviewRequest(request: request, accept: false);
                         },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.redAccent,
                     side: BorderSide(
-                      color: Colors.redAccent.withValues(
-                        alpha: 0.45,
-                      ),
+                      color: Colors.redAccent.withValues(alpha: 0.45),
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(13),
+                      borderRadius: BorderRadius.circular(13),
                     ),
-                    minimumSize:
-                        const Size.fromHeight(46),
+                    minimumSize: const Size.fromHeight(46),
                   ),
                   child: const Text(
                     'Reject',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),
               ),
@@ -365,21 +316,15 @@ class _ActivityJoinRequestsViewState
                   onPressed: isReviewing
                       ? null
                       : () {
-                          _reviewRequest(
-                            request: request,
-                            accept: true,
-                          );
+                          _reviewRequest(request: request, accept: true);
                         },
                   style: FilledButton.styleFrom(
-                    backgroundColor:
-                        SynkColors.orangeDark,
+                    backgroundColor: SynkColors.orangeDark,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(13),
+                      borderRadius: BorderRadius.circular(13),
                     ),
-                    minimumSize:
-                        const Size.fromHeight(46),
+                    minimumSize: const Size.fromHeight(46),
                   ),
                   child: isReviewing
                       ? const SizedBox(
@@ -392,48 +337,11 @@ class _ActivityJoinRequestsViewState
                         )
                       : const Text(
                           'Accept',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: TextStyle(fontWeight: FontWeight.w700),
                         ),
                 ),
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMessage({
-    required String message,
-    required Color color,
-    required IconData icon,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(13),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.09),
-        borderRadius: BorderRadius.circular(13),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            size: 20,
-            color: color,
-          ),
-          const SizedBox(width: 9),
-          Expanded(
-            child: Text(
-              message,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: color,
-              ),
-            ),
           ),
         ],
       ),
@@ -456,9 +364,7 @@ class _ActivityJoinRequestsViewState
             Text(
               _controller.errorMessage!,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: SynkColors.textSecondary,
-              ),
+              style: const TextStyle(color: SynkColors.textSecondary),
             ),
             const SizedBox(height: 18),
             FilledButton(

@@ -1,14 +1,45 @@
 import 'package:flutter/material.dart';
 
+import '../../controllers/activity_delete_controller.dart';
 import '../../core/constants/synk_colors.dart';
 import '../../models/activity_model.dart';
+import '../../utils/custom_widgets/synk_dialog.dart';
+import '../../utils/custom_widgets/synk_feedback.dart';
 import 'activity_join_requests_view.dart';
 import 'widgets/activity_list.dart';
 
-class ActivitiesView extends StatelessWidget {
+class ActivitiesView extends StatefulWidget {
   const ActivitiesView({super.key, required this.activityStore});
 
   final ActivityStore activityStore;
+
+  @override
+  State<ActivitiesView> createState() => _ActivitiesViewState();
+}
+
+class _ActivitiesViewState extends State<ActivitiesView> {
+  late final ActivityDeleteController _deleteController;
+  late final Listenable _activityChanges;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _deleteController = ActivityDeleteController();
+
+    // Rebuilds the activity lists when either the store changes
+    // or a delete operation starts or finishes.
+    _activityChanges = Listenable.merge([
+      widget.activityStore,
+      _deleteController,
+    ]);
+  }
+
+  @override
+  void dispose() {
+    _deleteController.dispose();
+    super.dispose();
+  }
 
   void _openJoinRequests(BuildContext context) {
     Navigator.of(context).push(
@@ -17,6 +48,43 @@ class ActivitiesView extends StatelessWidget {
           return const ActivityJoinRequestsView();
         },
       ),
+    );
+  }
+
+  Future<void> _confirmDelete(Activity activity) async {
+    final action = await SynkDialog.destructive(
+      icon: Icons.delete_outline_rounded,
+      title: 'Delete activity?',
+      message: 'This action cannot be undone. The activity will be removed for everyone.',
+      primaryLabel: 'Keep Activity',
+      secondaryLabel: 'Delete Activity',
+    ).show(context, barrierDismissible: false);
+
+    // The destructive action is the secondary button.
+    if (action != SynkDialogAction.secondary || !mounted) {
+      return;
+    }
+
+    final wasDeleted = await _deleteController.deleteActivity(activity.id);
+
+    if (!mounted) return;
+
+    if (!wasDeleted) {
+      SynkFeedback.showError(
+        context,
+        _deleteController.errorMessage ??
+            'Unable to delete the activity. Please try again.',
+      );
+      return;
+    }
+
+    // Remove the deleted activity immediately from Home and Activities.
+    widget.activityStore.removeById(activity.id);
+
+    await SynkFeedback.showSuccessDialog(
+      context,
+      title: 'Activity Deleted',
+      message: 'The activity has been deleted successfully.',
     );
   }
 
@@ -146,22 +214,25 @@ class ActivitiesView extends StatelessWidget {
                   ),
                 ),
               ),
+
               Expanded(
                 child: AnimatedBuilder(
-                  animation: activityStore,
+                  animation: _activityChanges,
                   builder: (context, _) {
                     return TabBarView(
                       children: [
                         ActivityList(
-                          activities: activityStore.upcoming,
-                          currentUserId: activityStore.currentUserId,
+                          activities: widget.activityStore.upcoming,
+                          currentUserId: widget.activityStore.currentUserId,
                           emptyIcon: Icons.event_available_rounded,
                           emptyTitle: 'No upcoming activities',
                           emptyMessage: 'Tap the + button to plan one.',
+                          onDeleteActivity: _confirmDelete,
+                          isDeletingActivity: _deleteController.isDeleting,
                         ),
                         ActivityList(
-                          activities: activityStore.past,
-                          currentUserId: activityStore.currentUserId,
+                          activities: widget.activityStore.past,
+                          currentUserId: widget.activityStore.currentUserId,
                           emptyIcon: Icons.history_rounded,
                           emptyTitle: 'No past activities',
                           emptyMessage:

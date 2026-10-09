@@ -26,23 +26,39 @@ class SynkFeedback {
     return action == SynkDialogAction.secondary;
   }
 
-  // The one confirmation popup shown after any successful save.
-  // Completes when the user taps "Done".
+  // Keeps the existing save confirmation unchanged.
   static Future<void> showSaved(
     BuildContext context, {
     String message = savedMessage,
+  }) {
+    return showSuccessDialog(context, title: 'Saved!', message: message);
+  }
+
+  // Shared success popup for completed actions.
+  static Future<void> showSuccessDialog(
+    BuildContext context, {
+    required String title,
+    required String message,
+    String buttonLabel = 'Done',
   }) async {
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
       barrierColor: const Color(0x6B1E1C24),
-      builder: (_) => BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-        child: _SavedDialog(message: message),
-      ),
+      builder: (_) {
+        return BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+          child: _SuccessDialog(
+            title: title,
+            message: message,
+            buttonLabel: buttonLabel,
+          ),
+        );
+      },
     );
   }
 
+  // Shows errors using the shared floating Snackbar.
   static void showError(BuildContext context, String message) {
     _show(context, message, success: false);
   }
@@ -85,11 +101,17 @@ class SynkFeedback {
   }
 }
 
-// Single-button "Saved!" card, styled like SynkDialog.success.
-class _SavedDialog extends StatelessWidget {
-  const _SavedDialog({required this.message});
+// Shared one-button success popup.
+class _SuccessDialog extends StatelessWidget {
+  const _SuccessDialog({
+    required this.title,
+    required this.message,
+    required this.buttonLabel,
+  });
 
+  final String title;
   final String message;
+  final String buttonLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -138,10 +160,10 @@ class _SavedDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Saved!',
+            Text(
+              title,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 23,
                 fontWeight: FontWeight.w900,
                 letterSpacing: -0.6,
@@ -164,7 +186,9 @@ class _SavedDialog extends StatelessWidget {
             ),
             const SizedBox(height: 22),
             GestureDetector(
-              onTap: () => Navigator.of(context).pop(),
+              onTap: () {
+                Navigator.of(context).pop();
+              },
               child: Container(
                 height: 56,
                 alignment: Alignment.center,
@@ -183,9 +207,9 @@ class _SavedDialog extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Text(
-                  'Done',
-                  style: TextStyle(
+                child: Text(
+                  buttonLabel,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 17,
                     fontWeight: FontWeight.bold,

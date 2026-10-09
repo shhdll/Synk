@@ -58,38 +58,27 @@ class Activity {
 
   bool get isPast => dateTime.isBefore(DateTime.now());
 
-  bool get hasPhoto =>
-      photoUrl != null && photoUrl!.isNotEmpty;
+  bool get hasPhoto => photoUrl != null && photoUrl!.isNotEmpty;
 
-  bool get hasCoordinates =>
-      latitude != null && longitude != null;
+  bool get hasCoordinates => latitude != null && longitude != null;
 
-  bool get hasActivityCode =>
-      activityCode != null && activityCode!.isNotEmpty;
+  bool get hasActivityCode => activityCode != null && activityCode!.isNotEmpty;
 
-  bool get isPending =>
-      participationStatus == 'pending';
+  bool get isPending => participationStatus == 'pending';
 
-  bool get isWaitlisted =>
-      participationStatus == 'waitlisted';
+  bool get isWaitlisted => participationStatus == 'waitlisted';
 
-  bool get isJoined =>
-      participationStatus == 'joined';
+  bool get isJoined => participationStatus == 'joined';
 
   bool isHostedBy(String? userId) {
-    return userId != null &&
-        hostId != null &&
-        hostId == userId;
+    return userId != null && hostId != null && hostId == userId;
   }
 
   // The host currently counts as the first participant.
   int get joinedCount => 1;
 
   int get spotsOpen {
-    return (maxParticipants - joinedCount).clamp(
-      0,
-      maxParticipants,
-    );
+    return (maxParticipants - joinedCount).clamp(0, maxParticipants);
   }
 
   String get status {
@@ -114,33 +103,22 @@ class Activity {
       hostId: map['host_id'] as String?,
       title: map['title'] as String? ?? '',
       description: map['description'] as String? ?? '',
-      dateTime: DateTime.parse(
-        map['starts_at'] as String,
-      ).toLocal(),
+      dateTime: DateTime.parse(map['starts_at'] as String).toLocal(),
       location: map['location_name'] as String? ?? '',
-      locationAddress:
-          map['location_address'] as String?,
+      locationAddress: map['location_address'] as String?,
       latitude: (map['latitude'] as num?)?.toDouble(),
-      longitude:
-          (map['longitude'] as num?)?.toDouble(),
-      maxParticipants:
-          map['max_participants'] as int? ?? 2,
+      longitude: (map['longitude'] as num?)?.toDouble(),
+      maxParticipants: map['max_participants'] as int? ?? 2,
       isPublic: map['is_public'] as bool? ?? true,
       photoUrl: map['photo_url'] as String?,
-      categoryEmoji:
-          map['category_emoji'] as String? ?? '',
-      categoryLabel:
-          map['category_label'] as String? ?? '',
+      categoryEmoji: map['category_emoji'] as String? ?? '',
+      categoryLabel: map['category_label'] as String? ?? '',
       createdAt: map['created_at'] == null
           ? null
-          : DateTime.parse(
-              map['created_at'] as String,
-            ).toLocal(),
+          : DateTime.parse(map['created_at'] as String).toLocal(),
       activityCode: map['activity_code'] as String?,
-      participationId:
-          map['participation_id'] as String?,
-      participationStatus:
-          map['participation_status'] as String?,
+      participationId: map['participation_id'] as String?,
+      participationStatus: map['participation_status'] as String?,
     );
   }
 
@@ -157,15 +135,15 @@ class Activity {
       'longitude': longitude,
       'max_participants': maxParticipants,
       'is_public': isPublic,
-      'category_emoji':
-          categoryEmoji.isEmpty ? null : categoryEmoji,
-      'category_label':
-          categoryLabel.isEmpty ? null : categoryLabel,
+      'category_emoji': categoryEmoji.isEmpty ? null : categoryEmoji,
+      'category_label': categoryLabel.isEmpty ? null : categoryLabel,
     };
   }
 
   Activity copyWith({
     String? photoUrl,
+    String? participationId,
+    String? participationStatus,
   }) {
     return Activity(
       id: id,
@@ -184,8 +162,8 @@ class Activity {
       categoryLabel: categoryLabel,
       createdAt: createdAt,
       activityCode: activityCode,
-      participationId: participationId,
-      participationStatus: participationStatus,
+      participationId: participationId ?? this.participationId,
+      participationStatus: participationStatus ?? this.participationStatus,
     );
   }
 }
@@ -213,82 +191,57 @@ class ActivityStore extends ChangeNotifier {
 
   List<Activity> get mine => List.unmodifiable(_mine);
 
-  List<Activity> get participating =>
-      List.unmodifiable(_participating);
+  List<Activity> get participating => List.unmodifiable(_participating);
 
   // Returns only activities with an accepted participation.
-  List<Activity> get joined => List.unmodifiable(
-        _participating.where(
-          (activity) => activity.isJoined,
-        ),
-      );
+  List<Activity> get joined =>
+      List.unmodifiable(_participating.where((activity) => activity.isJoined));
 
   List<Activity> get feed => List.unmodifiable(_feed);
 
   // Includes hosted, joined, pending, and waitlisted activities.
-  List<Activity> get all =>
-      List.unmodifiable(_personalActivities);
+  List<Activity> get all => List.unmodifiable(_personalActivities);
 
   List<Activity> get upcoming =>
-      _personalActivities
-          .where((activity) => !activity.isPast)
-          .toList()
-        ..sort(
-          (first, second) =>
-              first.dateTime.compareTo(second.dateTime),
-        );
+      _personalActivities.where((activity) => !activity.isPast).toList()
+        ..sort((first, second) => first.dateTime.compareTo(second.dateTime));
 
   List<Activity> get past =>
-      _personalActivities
-          .where((activity) => activity.isPast)
-          .toList()
-        ..sort(
-          (first, second) =>
-              second.dateTime.compareTo(first.dateTime),
-        );
+      _personalActivities.where((activity) => activity.isPast).toList()
+        ..sort((first, second) => second.dateTime.compareTo(first.dateTime));
 
   List<Activity> get feedUpcoming =>
-      _feed
-          .where((activity) => !activity.isPast)
-          .toList()
-        ..sort(
-          (first, second) =>
-              first.dateTime.compareTo(second.dateTime),
-        );
+      _feed.where((activity) => !activity.isPast).toList()
+        ..sort((first, second) => first.dateTime.compareTo(second.dateTime));
 
   // Home shows the public feed, hosted private activities, and private
   // activities that the user has already been accepted into.
+  // Home displays upcoming public activities only.
+  // Participation data is merged so joined and waitlisted cards
+  // can display the correct status.
   List<Activity> get homeUpcoming {
-    final activities = <String, Activity>{
-      for (final activity in feedUpcoming)
-        activity.id: activity,
-      for (final activity in _mine.where(
-        (activity) =>
-            !activity.isPublic && !activity.isPast,
-      ))
-        activity.id: activity,
-      for (final activity in _participating.where(
-        (activity) =>
-            !activity.isPublic &&
-            !activity.isPast &&
-            activity.isJoined,
-      ))
-        activity.id: activity,
+    final participationByActivityId = {
+      for (final activity in _participating) activity.id: activity,
     };
 
-    return activities.values.toList()
-      ..sort(
-        (first, second) =>
-            first.dateTime.compareTo(second.dateTime),
+    return feedUpcoming.map((activity) {
+      final participation = participationByActivityId[activity.id];
+
+      if (participation == null) {
+        return activity;
+      }
+
+      return activity.copyWith(
+        participationId: participation.participationId,
+        participationStatus: participation.participationStatus,
       );
+    }).toList();
   }
 
   List<Activity> get _personalActivities {
     final activities = <String, Activity>{
-      for (final activity in _participating)
-        activity.id: activity,
-      for (final activity in _mine)
-        activity.id: activity,
+      for (final activity in _participating) activity.id: activity,
+      for (final activity in _mine) activity.id: activity,
     };
 
     return activities.values.toList();
@@ -329,8 +282,7 @@ class ActivityStore extends ChangeNotifier {
       _replaceOrAdd(_mine, activity);
     } else {
       _mine.removeWhere(
-        (existingActivity) =>
-            existingActivity.id == activity.id,
+        (existingActivity) => existingActivity.id == activity.id,
       );
     }
 
@@ -338,8 +290,7 @@ class ActivityStore extends ChangeNotifier {
       _replaceOrAdd(_feed, activity);
     } else {
       _feed.removeWhere(
-        (existingActivity) =>
-            existingActivity.id == activity.id,
+        (existingActivity) => existingActivity.id == activity.id,
       );
     }
 
@@ -351,17 +302,11 @@ class ActivityStore extends ChangeNotifier {
   }
 
   void removeById(String id) {
-    _mine.removeWhere(
-      (activity) => activity.id == id,
-    );
+    _mine.removeWhere((activity) => activity.id == id);
 
-    _participating.removeWhere(
-      (activity) => activity.id == id,
-    );
+    _participating.removeWhere((activity) => activity.id == id);
 
-    _feed.removeWhere(
-      (activity) => activity.id == id,
-    );
+    _feed.removeWhere((activity) => activity.id == id);
 
     notifyListeners();
   }
@@ -388,13 +333,9 @@ class ActivityStore extends ChangeNotifier {
     return null;
   }
 
-  void _replaceOrAdd(
-    List<Activity> activities,
-    Activity activity,
-  ) {
+  void _replaceOrAdd(List<Activity> activities, Activity activity) {
     final index = activities.indexWhere(
-      (existingActivity) =>
-          existingActivity.id == activity.id,
+      (existingActivity) => existingActivity.id == activity.id,
     );
 
     if (index == -1) {

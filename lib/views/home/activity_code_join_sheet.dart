@@ -3,11 +3,14 @@ import 'package:flutter/services.dart';
 
 import '../../controllers/activity_join_controller.dart';
 import '../../core/constants/synk_colors.dart';
+import '../../models/activity_participation_model.dart';
 
-Future<void> showActivityCodeJoinSheet(
+// Opens the code sheet and returns the successful join result.
+// A null result means the user closed the sheet without joining.
+Future<ActivityJoinResult?> showActivityCodeJoinSheet(
   BuildContext context,
 ) {
-  return showModalBottomSheet<void>(
+  return showModalBottomSheet<ActivityJoinResult>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
@@ -44,6 +47,26 @@ class _ActivityCodeJoinSheetState
     }
   }
 
+  // Submits the code and closes the sheet only when the result
+  // represents a successful or existing participation state.
+  Future<void> _submitCode() async {
+    if (_controller.isLoading) return;
+
+    await _controller.joinByCode();
+
+    if (!mounted) return;
+
+    final result = _controller.result;
+
+    // Invalid codes and other errors remain visible inside the sheet.
+    if (result == null) return;
+
+    FocusScope.of(context).unfocus();
+
+    // Return the result to Home after closing the sheet.
+    Navigator.of(context).pop(result);
+  }
+
   @override
   void dispose() {
     _controller.removeListener(_refresh);
@@ -53,8 +76,6 @@ class _ActivityCodeJoinSheetState
 
   @override
   Widget build(BuildContext context) {
-    final result = _controller.result;
-
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.viewInsetsOf(context).bottom,
@@ -79,12 +100,16 @@ class _ActivityCodeJoinSheetState
               Container(
                 width: 44,
                 height: 5,
-                margin: const EdgeInsets.only(bottom: 22),
+                margin: const EdgeInsets.only(
+                  bottom: 22,
+                ),
                 decoration: BoxDecoration(
-                  color: SynkColors.textSecondary.withValues(
+                  color:
+                      SynkColors.textSecondary.withValues(
                     alpha: 0.20,
                   ),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius:
+                      BorderRadius.circular(20),
                 ),
               ),
               Row(
@@ -116,7 +141,8 @@ class _ActivityCodeJoinSheetState
                           'Join with a code',
                           style: TextStyle(
                             fontSize: 21,
-                            fontWeight: FontWeight.w800,
+                            fontWeight:
+                                FontWeight.w800,
                             color:
                                 SynkColors.textPrimary,
                           ),
@@ -126,17 +152,22 @@ class _ActivityCodeJoinSheetState
                           'Enter the 6-digit activity code.',
                           style: TextStyle(
                             fontSize: 14,
-                            color:
-                                SynkColors.textSecondary,
+                            color: SynkColors
+                                .textSecondary,
                           ),
                         ),
                       ],
                     ),
                   ),
                   IconButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
+                    onPressed:
+                        _controller.isLoading
+                            ? null
+                            : () {
+                                Navigator.pop(
+                                  context,
+                                );
+                              },
                     icon: const Icon(
                       Icons.close_rounded,
                       color: SynkColors.textPrimary,
@@ -146,17 +177,25 @@ class _ActivityCodeJoinSheetState
               ),
               const SizedBox(height: 24),
               TextField(
-                controller: _controller.codeController,
+                controller:
+                    _controller.codeController,
                 autofocus: true,
                 keyboardType: TextInputType.number,
+                textInputAction: TextInputAction.done,
                 textAlign: TextAlign.center,
                 maxLength: 6,
                 inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(6),
+                  FilteringTextInputFormatter
+                      .digitsOnly,
+                  LengthLimitingTextInputFormatter(
+                    6,
+                  ),
                 ],
                 onChanged: (_) {
                   _controller.clearFeedback();
+                },
+                onSubmitted: (_) {
+                  _submitCode();
                 },
                 style: const TextStyle(
                   fontSize: 26,
@@ -168,16 +207,17 @@ class _ActivityCodeJoinSheetState
                 decoration: InputDecoration(
                   hintText: '000000',
                   hintStyle: TextStyle(
-                    color:
-                        SynkColors.textSecondary.withValues(
-                      alpha: 0.45,
-                    ),
+                    color: SynkColors.textSecondary
+                        .withValues(alpha: 0.45),
                   ),
                   counterText: '',
-                  errorText: _controller.errorMessage,
+                  errorText:
+                      _controller.errorMessage,
                   filled: true,
                   fillColor:
-                      Colors.white.withValues(alpha: 0.78),
+                      Colors.white.withValues(
+                    alpha: 0.78,
+                  ),
                   contentPadding:
                       const EdgeInsets.symmetric(
                     horizontal: 20,
@@ -188,26 +228,32 @@ class _ActivityCodeJoinSheetState
                         BorderRadius.circular(18),
                     borderSide: BorderSide.none,
                   ),
-                  enabledBorder: OutlineInputBorder(
+                  enabledBorder:
+                      OutlineInputBorder(
                     borderRadius:
                         BorderRadius.circular(18),
                     borderSide: BorderSide(
-                      color: SynkColors.textSecondary
+                      color: SynkColors
+                          .textSecondary
                           .withValues(alpha: 0.14),
                     ),
                   ),
                   focusedBorder:
                       const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(
+                    borderRadius:
+                        BorderRadius.all(
                       Radius.circular(18),
                     ),
                     borderSide: BorderSide(
-                      color: SynkColors.orangeDark,
+                      color:
+                          SynkColors.orangeDark,
                       width: 2,
                     ),
                   ),
-                  errorBorder: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(
+                  errorBorder:
+                      const OutlineInputBorder(
+                    borderRadius:
+                        BorderRadius.all(
                       Radius.circular(18),
                     ),
                     borderSide: BorderSide(
@@ -216,7 +262,8 @@ class _ActivityCodeJoinSheetState
                   ),
                   focusedErrorBorder:
                       const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(
+                    borderRadius:
+                        BorderRadius.all(
                       Radius.circular(18),
                     ),
                     borderSide: BorderSide(
@@ -226,28 +273,21 @@ class _ActivityCodeJoinSheetState
                   ),
                 ),
               ),
-              if (result != null) ...[
-                const SizedBox(height: 14),
-                _ResultMessage(
-                  message: result.message,
-                  result: result.result,
-                ),
-              ],
               const SizedBox(height: 22),
               SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: FilledButton(
-                  onPressed: _controller.isLoading
-                      ? null
-                      : _controller.joinByCode,
+                  onPressed:
+                      _controller.isLoading
+                          ? null
+                          : _submitCode,
                   style: FilledButton.styleFrom(
                     backgroundColor:
                         SynkColors.orangeDark,
                     disabledBackgroundColor:
-                        SynkColors.orangeDark.withValues(
-                      alpha: 0.45,
-                    ),
+                        SynkColors.orangeDark
+                            .withValues(alpha: 0.45),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius:
@@ -268,7 +308,8 @@ class _ActivityCodeJoinSheetState
                           'Join Activity',
                           style: TextStyle(
                             fontSize: 16,
-                            fontWeight: FontWeight.w700,
+                            fontWeight:
+                                FontWeight.w700,
                           ),
                         ),
                 ),
@@ -276,64 +317,6 @@ class _ActivityCodeJoinSheetState
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _ResultMessage extends StatelessWidget {
-  const _ResultMessage({
-    required this.message,
-    required this.result,
-  });
-
-  final String message;
-  final String result;
-
-  @override
-  Widget build(BuildContext context) {
-    final isPending =
-        result == 'pending' ||
-        result == 'already_pending';
-
-    final isWaitlisted =
-        result == 'waitlisted' ||
-        result == 'already_waitlisted';
-
-    final color = isPending || isWaitlisted
-        ? const Color(0xFFE89B26)
-        : const Color(0xFF2E9B69);
-
-    final icon = isPending
-        ? Icons.schedule_rounded
-        : isWaitlisted
-            ? Icons.groups_rounded
-            : Icons.check_circle_rounded;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            color: color,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              message,
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

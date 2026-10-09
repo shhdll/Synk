@@ -17,9 +17,26 @@ class ActivityJoinResult {
   final String? status;
 
   factory ActivityJoinResult.fromJson(Map<String, dynamic> json) {
+    final rawResult = json['result'] as String? ?? 'unknown';
+    final message = json['message'] as String? ?? 'Something went wrong.';
+
+    String normalizedResult = rawResult;
+
+    // The database returns the participation status for repeated attempts.
+    // Convert it to an "already" result so the UI shows the correct message.
+    if (rawResult == 'pending' &&
+        message.contains('waiting for host approval')) {
+      normalizedResult = 'already_pending';
+    } else if (rawResult == 'joined' && message.contains('already joined')) {
+      normalizedResult = 'already_joined';
+    } else if (rawResult == 'waitlisted' &&
+        message.contains('already on the waitlist')) {
+      normalizedResult = 'already_waitlisted';
+    }
+
     return ActivityJoinResult(
-      result: json['result'] as String? ?? 'unknown',
-      message: json['message'] as String? ?? 'Something went wrong.',
+      result: normalizedResult,
+      message: message,
       activityId: json['activity_id'] as String?,
       activityTitle: json['activity_title'] as String?,
       status: json['status'] as String?,

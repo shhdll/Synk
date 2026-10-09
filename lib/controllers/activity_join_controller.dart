@@ -15,7 +15,9 @@ class ActivityJoinController extends ChangeNotifier {
   ActivityJoinResult? _result;
 
   bool get isLoading => _isLoading;
+
   String? get errorMessage => _errorMessage;
+
   ActivityJoinResult? get result => _result;
 
   // Validates the code before sending it to Supabase.
@@ -36,20 +38,22 @@ class ActivityJoinController extends ChangeNotifier {
     try {
       final response = await _participationModel.joinActivityByCode(code);
 
-      // These results represent valid join states.
-      const validResults = {
+      // These results allow the sheet to close and show
+      // a confirmation popup on the Home page.
+      const successfulResults = {
         'joined',
         'waitlisted',
         'pending',
         'already_joined',
         'already_waitlisted',
         'already_pending',
-        'host',
       };
 
-      if (validResults.contains(response.result)) {
+      if (successfulResults.contains(response.result)) {
         _result = response;
       } else {
+        // Invalid code, host-owned activity, or started activity
+        // remains inside the sheet as an inline error.
         _errorMessage = response.message;
       }
 
@@ -62,9 +66,11 @@ class ActivityJoinController extends ChangeNotifier {
     }
   }
 
-  // Clears the previous message when the user changes the code.
+  // Clears the previous feedback when the code changes.
   void clearFeedback() {
-    if (_errorMessage == null && _result == null) return;
+    if (_errorMessage == null && _result == null) {
+      return;
+    }
 
     _errorMessage = null;
     _result = null;
