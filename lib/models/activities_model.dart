@@ -2,13 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'activity_model.dart';
 
-// Reads and writes the `activities` table.
-//
-// Row Level Security does the access control on the server:
-//   select – public activities, plus your own
-//   insert/update/delete – only rows where host_id = auth.uid()
-// The queries here are written to match those policies, so a signed-out
-// user simply gets nothing back rather than an error.
+// Reads and writes activity data stored in Supabase.
 class ActivitiesModel {
   final SupabaseClient _supabase = Supabase.instance.client;
 
@@ -20,10 +14,13 @@ class ActivitiesModel {
   // Reads
   // ---------------------------------------------------------------------------
 
-  // Activities hosted by the signed-in user, soonest first.
+  // Activities hosted by the signed-in user.
   Future<List<Activity>> fetchMine() async {
     final uid = currentUserId;
-    if (uid == null) return [];
+
+    if (uid == null) {
+      return [];
+    }
 
     final rows = await _supabase
         .from(_table)
@@ -34,11 +31,32 @@ class ActivitiesModel {
     return _mapRows(rows);
   }
 
-  // Upcoming public activities from every user, soonest first. Used by the
-  // Home feed. Past rows are excluded server-side so they can't use up the
-  // limit and push upcoming activities out of the results.
+  // Returns joined, pending, and waitlisted activities for the current user.
+  Future<List<Activity>> fetchParticipating() async {
+    if (currentUserId == null) {
+      return [];
+    }
+
+    final response = await _supabase.rpc('get_my_activity_participations');
+
+    if (response is! List) {
+      return [];
+    }
+
+    return response
+        .map((row) => Activity.fromMap(Map<String, dynamic>.from(row as Map)))
+        .toList();
+  }
+
+  // Kept temporarily for callers that still use the previous method name.
+  Future<List<Activity>> fetchJoined() {
+    return fetchParticipating();
+  }
+
+  // Upcoming public activities from every user.
   Future<List<Activity>> fetchPublicFeed({int limit = 50}) async {
     final nowUtc = DateTime.now().toUtc().toIso8601String();
+
     final rows = await _supabase
         .from(_table)
         .select()
@@ -50,8 +68,7 @@ class ActivitiesModel {
     return _mapRows(rows);
   }
 
-  // A single activity, or null when it doesn't exist or isn't visible to
-  // the signed-in user (RLS hides other people's private activities).
+  // Returns one activity visible to the signed-in user.
   Future<Activity?> fetchById(String id) async {
     final row = await _supabase
         .from(_table)
@@ -59,37 +76,33 @@ class ActivitiesModel {
         .eq('id', id)
         .maybeSingle();
 
-    return row == null ? null : Activity.fromMap(row);
+    if (row == null) {
+      return null;
+    }
+
+    return Activity.fromMap(row);
   }
 
   // ---------------------------------------------------------------------------
   // Writes
   // ---------------------------------------------------------------------------
 
-  // Inserts the activity and returns it as stored, including the database
-  // generated id and created_at.
-  //
-  // host_id is always taken from the signed-in user, never from the caller,
-  // so it can't disagree with the insert policy.
+  // Creates an activity owned by the signed-in user.
   Future<Activity> create(Activity draft) async {
     final uid = currentUserId;
+
     if (uid == null) {
       throw StateError('Cannot create an activity while signed out.');
     }
 
     final payload = draft.toInsertMap()..['host_id'] = uid;
 
-    final row = await _supabase
-        .from(_table)
-        .insert(payload)
-        .select()
-        .single();
+    final row = await _supabase.from(_table).insert(payload).select().single();
 
     return Activity.fromMap(row);
   }
 
-  // Stores the photo's public URL after a successful upload (photo workflow
-  // step 3: insert, upload, then attach). Pass null to clear it.
+  // Updates or removes the activity photo URL.
   Future<Activity> updatePhotoUrl(String activityId, String? photoUrl) async {
     final row = await _supabase
         .from(_table)
@@ -101,15 +114,29 @@ class ActivitiesModel {
     return Activity.fromMap(row);
   }
 
-  // Deletes an activity. RLS allows this only for its host.
+  // Deletes an activity owned by the signed-in user.
+  // Related participation records are removed by ON DELETE CASCADE.
   Future<void> delete(String activityId) async {
-    await _supabase.from(_table).delete().eq('id', activityId);
+    final uid = currentUserId;
+
+    if (uid == null) {
+      throw StateError('Cannot delete an activity while signed out.');
+    }
+
+    final deletedRows = await _supabase
+        .from(_table)
+        .delete()
+        .eq('id', activityId)
+        .eq('host_id', uid)
+        .select('id');
+
+    // RLS or the host filter prevents deleting another user's activity.
+    if (deletedRows.isEmpty) {
+      throw StateError('The activity was not found or cannot be deleted.');
+    }
   }
 
   List<Activity> _mapRows(List<dynamic> rows) {
-    return rows
-        .cast<Map<String, dynamic>>()
-        .map(Activity.fromMap)
-        .toList();
+    return rows.cast<Map<String, dynamic>>().map(Activity.fromMap).toList();
   }
 }
