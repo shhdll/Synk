@@ -5,36 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
     <meta name="referrer" content="no-referrer" />
-    <title>Email Updated · Synk</title>
+    <title>Confirm Email · Synk</title>
     <link rel="icon" type="image/png" href="logo.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;800;900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;800&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <main class="page">
-      <div class="logo-mark"><img src="logo.png" alt="Synk logo" /></div>
-      <div class="wordmark">Synk</div>
-      <section class="card">
-        <div class="badge success" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>
-        </div>
-        <h1 id="title">Email address update confirmed.</h1>
-        <p id="message">Returning to Synk...</p>
-        <a id="open-app" class="button" href="io.supabase.synk://login-callback">Open Synk App</a>
-        <p id="hint" class="hint" hidden>
-          Nothing happened? Open this email on the phone where Synk is installed.
-        </p>
-      </section>
+    <div class="orbs" aria-hidden="true">
+      <div class="orb teal"></div>
+      <div class="orb sand"></div>
+      <div class="orb peach"></div>
+    </div>
+
+    <header class="brand"><img src="logo.png" alt="" />Synk</header>
+
+    <main class="content">
+      <div id="badge" class="badge" hidden aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+      </div>
+      <h1 id="title">Confirm your new email</h1>
+      <p id="message" class="subtitle">Opening Synk…</p>
+      <a id="open-app" class="button" href="io.supabase.synk://login-callback"><img class="button-logo" src="logo.png" alt="" /><span>Continue to Synk</span></a>
     </main>
-    <script src="blobs.js"></script>
+
+    <script src="config.js"></script>
     <script src="app.js"></script>
     <script>
-      synkRedirect({ host: "login-callback", requireToken: false, includeType: true, defaultType: "email_change", allowedTypes: ["email_change"] });
+      synkRedirect({ verifyOnPage: true, host: "login-callback", requireToken: false, includeType: true, defaultType: "email_change", allowedTypes: ["email_change"] });
     </script>
   </body>
 </html>

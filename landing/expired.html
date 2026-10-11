@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Link Expired · Synk</title>
+    <link rel="icon" type="image/png" href="logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="orbs" aria-hidden="true">
+      <div class="orb teal"></div>
+      <div class="orb sand"></div>
+      <div class="orb peach"></div>
+    </div>
+
+    <header class="brand"><img src="logo.png" alt="" />Synk</header>
+
+    <main class="content">
+      <div id="badge" class="badge" hidden aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+      </div>
+      <h1 id="title">This link has expired</h1>
+      <p id="message" class="subtitle">Request a new one from the Synk app.</p>
+      <a id="open-app" class="button" href="io.supabase.synk://login-callback"><img class="button-logo" src="logo.png" alt="" /><span>Continue to Synk</span></a>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+      synkExpired();
+    </script>
+  </body>
+</html>
