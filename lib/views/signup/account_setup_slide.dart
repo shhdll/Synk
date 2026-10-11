@@ -75,7 +75,7 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                   icon: Icons.alternate_email_rounded,
                   keyboardType: TextInputType.text,
                   errorText: signupController.usernameError,
-                  onChanged: (_) => signupController.clearUsernameError(),
+                  onChanged: (_) => signupController.onUsernameChanged(),
                 ),
                 const SizedBox(height: 14),
 
@@ -88,7 +88,7 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                   icon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                   errorText: signupController.emailError,
-                  onChanged: (_) => signupController.clearEmailError(),
+                  onChanged: (_) => signupController.onEmailChanged(),
                 ),
                 const SizedBox(height: 14),
 
@@ -182,113 +182,13 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                                   onboardingController.onboardingData,
                               context: context,
                             );
-                            if (context.mounted &&
-                                signupController.emailError ==
-                                    'An account with this email already exists') {
-                              await showDialog<void>(
-                                context: context,
-                                barrierColor: Colors.black54,
-                                builder: (dialogContext) => Dialog(
-                                  backgroundColor: Colors.transparent,
-                                  insetPadding: const EdgeInsets.symmetric(
-                                    horizontal: 28,
-                                  ),
-                                  child: Container(
-                                    padding: const EdgeInsets.fromLTRB(
-                                      24,
-                                      26,
-                                      24,
-                                      20,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(26),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withValues(
-                                            alpha: 0.16,
-                                          ),
-                                          blurRadius: 28,
-                                          offset: const Offset(0, 12),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Container(
-                                          height: 58,
-                                          width: 58,
-                                          decoration: BoxDecoration(
-                                            color: SynkColors.orange.withValues(
-                                              alpha: 0.14,
-                                            ),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: const Icon(
-                                            Icons.mark_email_read_outlined,
-                                            size: 28,
-                                            color: SynkColors.orangeDark,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 18),
-                                        const Text(
-                                          'Email already registered',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.w800,
-                                            color: SynkColors.textPrimary,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 9),
-                                        const Text(
-                                          'An account with this email already exists. '
-                                          'Please log in or use a different email address.',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            height: 1.45,
-                                            color: Color(0xFF6B7280),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 22),
-                                        SizedBox(
-                                          width: double.infinity,
-                                          height: 50,
-                                          child: ElevatedButton(
-                                            onPressed: () =>
-                                                Navigator.of(dialogContext).pop(),
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor:
-                                                  const Color(0xFFFF6F43),
-                                              foregroundColor: Colors.white,
-                                              elevation: 0,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(15),
-                                              ),
-                                            ),
-                                            child: const Text(
-                                              'Got it',
-                                              style: TextStyle(
-                                                fontSize: 15,
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
+                            if (res == null || !context.mounted) {
                               return;
                             }
-                            if (res?.user != null && context.mounted) {
-                              final user = res?.user;
+                            if (res.user != null) {
+                              final user = res.user;
                               final isConfirmed =
-                                  res?.session != null &&
+                                  res.session != null &&
                                   user != null &&
                                   user.emailConfirmedAt != null &&
                                   user.emailConfirmedAt!.isNotEmpty;
@@ -378,7 +278,8 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
           ),
           _PasswordRequirement(
             text: 'Confirmation password matches',
-            met: password.isNotEmpty &&
+            met:
+                password.isNotEmpty &&
                 password == signupController.confirmPasswordController.text,
           ),
         ],
