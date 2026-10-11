@@ -30,6 +30,10 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
   int _cooldownSeconds = 0;
   bool _isResending = false;
 
+  // Set once a confirmed session arrives, so the stream listener and the
+  // post-frame check cannot both navigate.
+  bool _isCompleting = false;
+
   late final AnimationController _blobAnimationController;
   late final AnimationController _pulseAnimationController;
   late final Animation<double> _pulseScale;
@@ -58,13 +62,22 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
     );
 
     // Deep-link / auth state listener:
-    // When the user taps the link in their email, Supabase processes the callback
-    // and emits signedIn with a valid session where emailConfirmedAt is populated.
+    // The synk.cc landing page opens io.supabase.synk://login-callback,
+    // AuthDeepLinkHandler verifies the token and Supabase emits signedIn
+    // with a session whose emailConfirmedAt is populated.
     try {
       _authSubscription = Supabase.instance.client.auth.onAuthStateChange
           .listen((data) {
-            if (data.session != null && _isUserConfirmed(data.session?.user)) {
-              _handleConfirmedSession(data.session!);
+            const completingEvents = {
+              AuthChangeEvent.signedIn,
+              AuthChangeEvent.tokenRefreshed,
+              AuthChangeEvent.userUpdated,
+              AuthChangeEvent.initialSession,
+            };
+            if (!completingEvents.contains(data.event)) return;
+            final session = data.session;
+            if (session != null && _isUserConfirmed(session.user)) {
+              _handleConfirmedSession(session);
             }
           });
 
@@ -98,7 +111,14 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
   }
 
   Future<void> _handleConfirmedSession(Session session) async {
-    if (!_isUserConfirmed(session.user)) return;
+    if (_isCompleting || !_isUserConfirmed(session.user)) return;
+
+    _cooldownTimer?.cancel();
+    setState(() {
+      _isCompleting = true;
+      _isResending = false;
+      _cooldownSeconds = 0;
+    });
 
     // Safety net: ensure profile row exists in public.users before entering MainShell
     await _ensureProfileExists(session.user);
@@ -413,7 +433,10 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
 
                     // Primary Action: Resend Verification Email (with cooldown)
                     GestureDetector(
-                      onTap: (_cooldownSeconds > 0 || _isResending)
+                      onTap:
+                          (_cooldownSeconds > 0 ||
+                              _isResending ||
+                              _isCompleting)
                           ? null
                           : _handleResendEmail,
                       child: Container(
@@ -452,7 +475,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
                           ],
                         ),
                         child: Center(
-                          child: _isResending
+                          child: _isResending || _isCompleting
                               ? const SizedBox(
                                   height: 20,
                                   width: 20,

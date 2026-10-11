@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'models/auth_deep_link_handler.dart';
 import 'models/auth_model.dart';
 import 'views/home/main_shell.dart';
 import 'views/new_password_view.dart';
@@ -34,9 +35,12 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   // Lets the auth listener navigate without a screen's BuildContext.
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  final GlobalKey<ScaffoldMessengerState> _messengerKey =
+      GlobalKey<ScaffoldMessengerState>();
 
   final AuthModel _authModel = AuthModel();
   StreamSubscription<AuthState>? _authSubscription;
+  late final AuthDeepLinkHandler _deepLinkHandler;
 
   // True while the New Password screen is open, so a link tapped twice
   // does not open it twice.
@@ -63,11 +67,53 @@ class _MyAppState extends State<MyApp> {
         }
       },
     );
+
+    // ---- synk.cc email links ---------------------------------------------
+    // The landing pages forward io.supabase.synk://...?token=<hash>&type=...
+    // A successful verify emits signedIn (picked up by the home
+    // StreamBuilder and EmailVerificationScreen) or passwordRecovery
+    // (picked up by the listener above).
+    _deepLinkHandler = AuthDeepLinkHandler(onResult: _onAuthLinkResult)
+      ..start();
+  }
+
+  void _onAuthLinkResult(OtpType type, AuthLinkOutcome outcome) {
+    if (type == OtpType.recovery) {
+      if (outcome == AuthLinkOutcome.failed) {
+        _openNewPasswordScreen(linkExpired: true);
+      }
+      return;
+    }
+
+    final message = switch ((type, outcome)) {
+      (_, AuthLinkOutcome.failed) =>
+        'This link has expired or was already used. Please request a new one.',
+      (OtpType.emailChange, AuthLinkOutcome.emailChangePartial) =>
+        'Confirmed. Now open the link sent to your other email address.',
+      (OtpType.emailChange, AuthLinkOutcome.verified) =>
+        'Your email address was updated.',
+      _ => null,
+    };
+    if (message == null) return;
+
+    void show() {
+      final messenger = _messengerKey.currentState;
+      if (messenger == null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => show());
+        return;
+      }
+      messenger.showSnackBar(
+        SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+      );
+    }
+
+    show();
   }
 
   @override
   void dispose() {
     _authSubscription?.cancel();
+    _deepLinkHandler.dispose();
     super.dispose();
   }
 
@@ -114,6 +160,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: _navigatorKey,
+      scaffoldMessengerKey: _messengerKey,
       debugShowCheckedModeBanner: false,
       title: 'Synk',
       theme: ThemeData(

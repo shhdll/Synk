@@ -110,4 +110,42 @@ void main() {
       expect(AuthConstants.validatePassword('Str0ng_Pass'), isNull);
     });
   });
+
+  group('SignupController Email Validation Tests', () {
+    late SignupController controller;
+
+    setUp(() {
+      controller = SignupController();
+    });
+
+    tearDown(() {
+      controller.dispose();
+    });
+
+    test('Empty email fails validation', () {
+      controller.emailController.text = '';
+      controller.validateEmail();
+      expect(controller.emailError, 'Email address is required');
+    });
+
+    test('Invalid email format fails validation', () {
+      controller.emailController.text = 'invalid-email';
+      controller.validateEmail();
+      expect(controller.emailError, 'Please enter a valid email address');
+    });
+
+    test('Valid email passes validation', () {
+      controller.emailController.text = 'user@example.com';
+      controller.validateEmail();
+      expect(controller.emailError, isNull);
+    });
+
+    test('Preserves existing email error if email is not changed to invalid', () {
+      controller.emailController.text = 'existing@example.com';
+      controller.emailError = 'An account with this email already exists';
+      controller.validateEmail();
+      expect(controller.emailError, 'An account with this email already exists');
+    });
+  });
 }
+

@@ -30,9 +30,9 @@ class AddButton extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: SynkColors.orange.withValues(alpha: 0.45),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
+                color: SynkColors.orangeDark.withValues(alpha: 0.25),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
             ],
           ),

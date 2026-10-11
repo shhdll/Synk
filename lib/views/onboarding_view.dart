@@ -343,16 +343,7 @@ class _OnboardingViewState extends State<OnboardingView>
 
     switch (step) {
       case 0:
-        return BlobLayout(
-          pinkTop: -70 + (wave * 35),
-          pinkLeft: -55 + (reverseWave * 30),
-          orangeBottom: -90 - (wave * 30),
-          orangeRight: -60 - (reverseWave * 25),
-          smallTop: height * 0.45 + (wave * 25),
-          smallRight: 35 - (reverseWave * 30),
-          tealBottom: height * 0.20 - (wave * 25),
-          tealLeft: 70 + (reverseWave * 35),
-        );
+        return BlobLayout.intro(screenSize, wave, reverseWave);
 
       case 1:
         return BlobLayout(
