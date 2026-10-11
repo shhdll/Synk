@@ -34,34 +34,43 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+            <!-- Deep links are handled by app_links (AuthDeepLinkHandler).
+                 Since Flutter 3.27 the engine also turns every incoming link
+                 into a Navigator route by default; MaterialApp has no route
+                 for /?refresh_token=..., so that has to be switched off. -->
+            <meta-data
+              android:name="flutter_deeplinking_enabled"
+              android:value="false"
+              />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-                    <!-- Password recovery deep link.
-             Supabase redirects the reset email link to
-             io.supabase.synk://reset-password, which opens Synk.
-             Must match AuthConstants.resetPasswordRedirectUrl and the
-             Redirect URLs list in the Supabase dashboard. -->
-        <intent-filter>
-            <action android:name="android.intent.action.VIEW"/>
-            <category android:name="android.intent.category.DEFAULT"/>
-            <category android:name="android.intent.category.BROWSABLE"/>
-            <data
-                android:scheme="io.supabase.synk"
-                android:host="reset-password"/>
-        </intent-filter>
-        <!-- Email confirmation / signup deep link.
-             Supabase redirects the confirm email link to
-             io.supabase.synk://login-callback, which opens Synk. -->
-        <intent-filter>
-            <action android:name="android.intent.action.VIEW"/>
-            <category android:name="android.intent.category.DEFAULT"/>
-            <category android:name="android.intent.category.BROWSABLE"/>
-            <data
-                android:scheme="io.supabase.synk"
-                android:host="login-callback"/>
-        </intent-filter>
+            <!-- Password recovery deep link.
+                 The synk.cc reset page opens
+                 io.supabase.synk://reset-password?token=..., which opens Synk.
+                 Must match AuthConstants.resetPasswordRedirectUrl and the
+                 Redirect URLs list in the Supabase dashboard. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data
+                    android:scheme="io.supabase.synk"
+                    android:host="reset-password"/>
+            </intent-filter>
+            <!-- Email confirmation / signup deep link.
+                 The synk.cc pages open
+                 io.supabase.synk://login-callback?refresh_token=...&type=...
+                 (or ?token=...&type=...), which opens Synk. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data
+                    android:scheme="io.supabase.synk"
+                    android:host="login-callback"/>
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

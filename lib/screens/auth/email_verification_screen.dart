@@ -9,14 +9,15 @@ import '../../core/constants/synk_colors.dart';
 import '../../views/home/main_shell.dart';
 import '../../views/login_view.dart';
 
-/// Screen displayed when user registration requires email confirmation.
-///
-/// Listens to [Supabase.instance.client.auth.onAuthStateChange] to automatically
-/// transition the user to [MainShell] as soon as the email confirmation link is tapped.
 class EmailVerificationScreen extends StatefulWidget {
   final String email;
+  final String? password;
 
-  const EmailVerificationScreen({super.key, required this.email});
+  const EmailVerificationScreen({
+    super.key,
+    required this.email,
+    this.password,
+  });
 
   @override
   State<EmailVerificationScreen> createState() =>
@@ -24,9 +25,14 @@ class EmailVerificationScreen extends StatefulWidget {
 }
 
 class _EmailVerificationScreenState extends State<EmailVerificationScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
+  // Supabase allows about 30 sign-in attempts per 5 minutes per IP.
+  static const Duration _pollInterval = Duration(seconds: 15);
+
   StreamSubscription<AuthState>? _authSubscription;
   Timer? _cooldownTimer;
+  Timer? _pollTimer;
+  bool _isChecking = false;
   int _cooldownSeconds = 0;
   bool _isResending = false;
 
@@ -61,6 +67,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
       ),
     );
 
+    WidgetsBinding.instance.addObserver(this);
+    _startPolling();
+
     // Deep-link / auth state listener:
     // The synk.cc landing page opens io.supabase.synk://login-callback,
     // AuthDeepLinkHandler verifies the token and Supabase emits signedIn
@@ -68,6 +77,11 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
     try {
       _authSubscription = Supabase.instance.client.auth.onAuthStateChange
           .listen((data) {
+            debugPrint(
+              'EmailVerificationScreen: auth event ${data.event.name}, '
+              'session=${data.session != null}, '
+              'confirmed=${_isUserConfirmed(data.session?.user)}',
+            );
             const completingEvents = {
               AuthChangeEvent.signedIn,
               AuthChangeEvent.tokenRefreshed,
@@ -96,7 +110,76 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Coming back from the email app or the browser.
+    if (state == AppLifecycleState.resumed) {
+      _checkConfirmation();
+      _startPolling();
+    } else if (state == AppLifecycleState.paused) {
+      _pollTimer?.cancel();
+    }
+  }
+
+  void _startPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(_pollInterval, (_) => _checkConfirmation());
+  }
+
+  /// Asks Supabase whether the email has been confirmed yet. With
+  /// [userInitiated] the user is told when it has not.
+  Future<void> _checkConfirmation({bool userInitiated = false}) async {
+    if (_isChecking || _isCompleting) return;
+    setState(() => _isChecking = true);
+
+    const notConfirmed = 'Not confirmed yet. Tap the link in the email first.';
+    String message = notConfirmed;
+    try {
+      final auth = Supabase.instance.client.auth;
+      Session? session;
+      if (auth.currentSession != null) {
+        session = (await auth.refreshSession()).session;
+      } else if (widget.password != null && widget.password!.isNotEmpty) {
+        session = (await auth.signInWithPassword(
+          email: widget.email.trim(),
+          password: widget.password!,
+        )).session;
+      } else {
+        message = 'Already confirmed? Go back and sign in.';
+      }
+
+      debugPrint(
+        'EmailVerificationScreen: check, session=${session != null}, '
+        'confirmed=${_isUserConfirmed(session?.user)}',
+      );
+      if (session != null && _isUserConfirmed(session.user)) {
+        if (mounted) setState(() => _isChecking = false);
+        await _handleConfirmedSession(session);
+        return;
+      }
+    } on AuthException catch (e) {
+      debugPrint('EmailVerificationScreen: check failed: ${e.code} $e');
+      if (e.code != 'email_not_confirmed') message = e.message;
+    } catch (e) {
+      debugPrint('EmailVerificationScreen: check failed: $e');
+      message = 'Could not check right now. Please try again.';
+    }
+
+    if (!mounted) return;
+    setState(() => _isChecking = false);
+    if (!userInitiated) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+    );
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _pollTimer?.cancel();
     _authSubscription?.cancel();
     _cooldownTimer?.cancel();
     _blobAnimationController.dispose();
@@ -114,6 +197,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
     if (_isCompleting || !_isUserConfirmed(session.user)) return;
 
     _cooldownTimer?.cancel();
+    _pollTimer?.cancel();
     setState(() {
       _isCompleting = true;
       _isResending = false;
@@ -124,6 +208,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
     await _ensureProfileExists(session.user);
 
     if (!mounted) return;
+    debugPrint('EmailVerificationScreen: email confirmed, opening MainShell');
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const MainShell(isNewUser: true)),
       (route) => false,
@@ -513,7 +598,44 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
                       ),
                     ),
 
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 10),
+
+                    // Checks with Supabase when the link did not open the app.
+                    TextButton(
+                      onPressed: _isChecking || _isCompleting
+                          ? null
+                          : () => _checkConfirmation(userInitiated: true),
+                      style: TextButton.styleFrom(
+                        foregroundColor: SynkColors.orangeDark,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _isChecking
+                              ? const SizedBox(
+                                  height: 16,
+                                  width: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: SynkColors.orangeDark,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.check_circle_outline_rounded,
+                                  size: 18,
+                                ),
+                          const SizedBox(width: 6),
+                          const Text(
+                            "I've confirmed my email",
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
 
                     // Fallback Action: Back to Sign In
                     TextButton(

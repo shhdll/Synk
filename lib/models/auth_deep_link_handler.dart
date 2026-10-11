@@ -6,28 +6,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/constants/auth_constants.dart';
 
-// What happened when a token-hash email link was opened.
-enum AuthLinkOutcome {
-  // Session created; onAuthStateChange has already emitted signedIn or
-  // passwordRecovery.
-  verified,
+enum AuthLinkOutcome { verified, emailChangePartial, failed }
 
-  // Secure email change: one of the two addresses is confirmed, the other
-  // still has to be confirmed before the change takes effect.
-  emailChangePartial,
-
-  // The link was expired, already used, or otherwise rejected.
-  failed,
-}
-
-// Handles io.supabase.synk:// links sent by the synk.cc landing pages:
-// - ?refresh_token=...&type=...: the page already confirmed the link
-//   (sign-up, magic link); the app signs in with that session.
-// - ?token=<hash>&type=...: the app confirms the link itself with verifyOTP
-//   (password reset, or when the page could not reach Supabase).
-//
-// supabase_flutter only processes links that carry `code` or `access_token`,
-// so neither kind is picked up by it.
 class AuthDeepLinkHandler {
   AuthDeepLinkHandler({required this.onResult, AppLinks? appLinks})
     : _appLinks = appLinks ?? AppLinks();
@@ -36,18 +16,20 @@ class AuthDeepLinkHandler {
   final AppLinks _appLinks;
 
   StreamSubscription<Uri>? _subscription;
-
-  // The initial link is also replayed on the stream on some platforms;
-  // remember handled tokens so each one is verified only once.
   final Set<String> _handledTokens = {};
 
   Future<void> start() async {
-    _subscription = _appLinks.uriLinkStream.listen(_handle);
+    _log('listening for ${AuthConstants.appScheme}:// links');
+    _subscription = _appLinks.uriLinkStream.listen((uri) {
+      _log('stream link: ${describe(uri)}');
+      _handle(uri);
+    }, onError: (Object e) => _log('link stream error: $e'));
     try {
       final initial = await _appLinks.getInitialLink();
+      _log('initial link: ${initial == null ? 'none' : describe(initial)}');
       if (initial != null) await _handle(initial);
     } catch (e) {
-      debugPrint('AuthDeepLinkHandler: initial link error: $e');
+      _log('initial link error: $e');
     }
   }
 
@@ -55,8 +37,6 @@ class AuthDeepLinkHandler {
     await _subscription?.cancel();
   }
 
-  // Maps the landing page `type` param to an OtpType. Reset-password links
-  // carry no type, so the host decides.
   static OtpType? otpTypeFor(Uri uri) {
     if (uri.host == AuthConstants.resetPasswordHost) return OtpType.recovery;
 
@@ -71,8 +51,33 @@ class AuthDeepLinkHandler {
     };
   }
 
+  // The token hash in a link; `token_hash` is accepted as well as `token`.
+  static String? tokenHashFor(Uri uri) {
+    for (final key in const ['token', 'token_hash']) {
+      final value = uri.queryParameters[key];
+      if (value != null && value.isNotEmpty) return value;
+    }
+    return null;
+  }
+
+  // The link without its secrets, safe to log.
+  static String describe(Uri uri) {
+    final params = uri.queryParameters.map(
+      (key, value) => MapEntry(
+        key,
+        key == 'type' || value.length <= 6
+            ? value
+            : '${value.substring(0, 6)}…',
+      ),
+    );
+    return '${uri.scheme}://${uri.host}${uri.path} $params';
+  }
+
   Future<void> _handle(Uri uri) async {
-    if (uri.scheme != AuthConstants.appScheme) return;
+    if (uri.scheme != AuthConstants.appScheme) {
+      _log('ignored: scheme is not ${AuthConstants.appScheme}');
+      return;
+    }
 
     // The synk.cc page already confirmed the link and passes on the
     // session it received, so the app signs straight in.
@@ -82,17 +87,33 @@ class AuthDeepLinkHandler {
       return;
     }
 
-    final tokenHash = uri.queryParameters['token'];
-    if (tokenHash == null || tokenHash.isEmpty) return;
-    if (!_handledTokens.add(tokenHash)) return;
+    final tokenHash = tokenHashFor(uri);
+    if (tokenHash == null) {
+      // A bare login-callback link (e.g. the page confirmed the email but got
+      // no session back) has nothing to sign in with.
+      _log('ignored: no refresh_token or token in link');
+      return;
+    }
+    if (!_handledTokens.add(tokenHash)) {
+      _log('ignored: token already handled');
+      return;
+    }
 
     final type = otpTypeFor(uri);
-    if (type == null) return;
+    if (type == null) {
+      _log('ignored: unknown type "${uri.queryParameters['type']}"');
+      return;
+    }
 
     try {
+      _log('verifyOTP(type: ${type.name})');
       final response = await Supabase.instance.client.auth.verifyOTP(
         tokenHash: tokenHash,
         type: type,
+      );
+      _log(
+        'verifyOTP ok: session=${response.session != null}, '
+        'confirmed=${response.user?.emailConfirmedAt != null}',
       );
       onResult(
         type,
@@ -101,23 +122,35 @@ class AuthDeepLinkHandler {
             : AuthLinkOutcome.verified,
       );
     } catch (e) {
-      debugPrint('AuthDeepLinkHandler: verify failed: $e');
+      _log('verifyOTP failed: $e');
       onResult(type, AuthLinkOutcome.failed);
     }
   }
 
   Future<void> _signInWithRefreshToken(Uri uri, String refreshToken) async {
-    if (!_handledTokens.add(refreshToken)) return;
+    if (!_handledTokens.add(refreshToken)) {
+      _log('ignored: refresh token already handled');
+      return;
+    }
     final type = otpTypeFor(uri) ?? OtpType.signup;
 
     try {
+      _log('setSession(type: ${type.name})');
       // Emits tokenRefreshed, which EmailVerificationScreen and the home
       // StreamBuilder both act on.
-      await Supabase.instance.client.auth.setSession(refreshToken);
+      final response = await Supabase.instance.client.auth.setSession(
+        refreshToken,
+      );
+      _log(
+        'setSession ok: confirmed=${response.user?.emailConfirmedAt != null}',
+      );
       onResult(type, AuthLinkOutcome.verified);
     } catch (e) {
-      debugPrint('AuthDeepLinkHandler: setSession failed: $e');
+      _log('setSession failed: $e');
       onResult(type, AuthLinkOutcome.failed);
     }
   }
+
+  static void _log(String message) =>
+      debugPrint('AuthDeepLinkHandler: $message');
 }

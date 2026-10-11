@@ -32,4 +32,25 @@ void main() {
       isNull,
     );
   });
+
+  test('reads the token hash from token or token_hash', () {
+    String? hashOf(String link) =>
+        AuthDeepLinkHandler.tokenHashFor(Uri.parse(link));
+
+    expect(hashOf('io.supabase.synk://login-callback?token=abc'), 'abc');
+    expect(hashOf('io.supabase.synk://login-callback?token_hash=abc'), 'abc');
+    expect(hashOf('io.supabase.synk://login-callback?token='), isNull);
+    expect(hashOf('io.supabase.synk://login-callback'), isNull);
+  });
+
+  test('describes links without leaking tokens', () {
+    final text = AuthDeepLinkHandler.describe(
+      Uri.parse(
+        'io.supabase.synk://login-callback?refresh_token=secret12345&type=signup',
+      ),
+    );
+    expect(text, contains('type: signup'));
+    expect(text, contains('secret…'));
+    expect(text, isNot(contains('secret12345')));
+  });
 }

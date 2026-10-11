@@ -208,11 +208,16 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                                     .emailController
                                     .text
                                     .trim();
+                                final password = signupController
+                                    .passwordController
+                                    .text
+                                    .trim();
                                 Navigator.of(context).pushAndRemoveUntil(
                                   MaterialPageRoute(
                                     builder: (context) =>
                                         EmailVerificationScreen(
                                           email: cleanEmail,
+                                          password: password,
                                         ),
                                   ),
                                   (route) => false,
