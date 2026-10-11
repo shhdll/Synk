@@ -20,11 +20,14 @@ enum AuthLinkOutcome {
   failed,
 }
 
-// Handles io.supabase.synk://...?token=<hash>&type=<type> links sent by the
-// synk.cc landing pages.
+// Handles io.supabase.synk:// links sent by the synk.cc landing pages:
+// - ?refresh_token=...&type=...: the page already confirmed the link
+//   (sign-up, magic link); the app signs in with that session.
+// - ?token=<hash>&type=...: the app confirms the link itself with verifyOTP
+//   (password reset, or when the page could not reach Supabase).
 //
 // supabase_flutter only processes links that carry `code` or `access_token`,
-// so token-hash links have to be verified here with verifyOTP.
+// so neither kind is picked up by it.
 class AuthDeepLinkHandler {
   AuthDeepLinkHandler({required this.onResult, AppLinks? appLinks})
     : _appLinks = appLinks ?? AppLinks();
@@ -71,6 +74,14 @@ class AuthDeepLinkHandler {
   Future<void> _handle(Uri uri) async {
     if (uri.scheme != AuthConstants.appScheme) return;
 
+    // The synk.cc page already confirmed the link and passes on the
+    // session it received, so the app signs straight in.
+    final refreshToken = uri.queryParameters['refresh_token'];
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      await _signInWithRefreshToken(uri, refreshToken);
+      return;
+    }
+
     final tokenHash = uri.queryParameters['token'];
     if (tokenHash == null || tokenHash.isEmpty) return;
     if (!_handledTokens.add(tokenHash)) return;
@@ -91,6 +102,21 @@ class AuthDeepLinkHandler {
       );
     } catch (e) {
       debugPrint('AuthDeepLinkHandler: verify failed: $e');
+      onResult(type, AuthLinkOutcome.failed);
+    }
+  }
+
+  Future<void> _signInWithRefreshToken(Uri uri, String refreshToken) async {
+    if (!_handledTokens.add(refreshToken)) return;
+    final type = otpTypeFor(uri) ?? OtpType.signup;
+
+    try {
+      // Emits tokenRefreshed, which EmailVerificationScreen and the home
+      // StreamBuilder both act on.
+      await Supabase.instance.client.auth.setSession(refreshToken);
+      onResult(type, AuthLinkOutcome.verified);
+    } catch (e) {
+      debugPrint('AuthDeepLinkHandler: setSession failed: $e');
       onResult(type, AuthLinkOutcome.failed);
     }
   }
