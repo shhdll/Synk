@@ -49,6 +49,13 @@ class AuthConstants {
   /// Email validation pattern.
   static final RegExp emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
 
+  /// Custom URL scheme that opens the app. Must match AndroidManifest.xml.
+  static const String appScheme = 'io.supabase.synk';
+
+  /// Deep link hosts used by the synk.cc landing pages.
+  static const String resetPasswordHost = 'reset-password';
+  static const String loginCallbackHost = 'login-callback';
+
   /// Redirect URL used for password recovery.
   static const String resetPasswordRedirectUrl =
       'io.supabase.synk://reset-password';

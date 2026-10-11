@@ -1,0 +1,239 @@
+:root {
+  --forest: #2b4c3f;
+  --forest-soft: #4a6b5d;
+  --cream: #faf9f6;
+  --sand: #f6f1e6;
+  --clay: #ff9f5c;
+  --clay-dark: #e2683a;
+  --muted: #6b7280;
+  --line: rgba(43, 76, 63, 0.12);
+  /* SynkColors from the app */
+  --app-bg: #f6f1e6;
+  --app-pink: #ff9ec0;
+  --app-orange: #ff9f5c;
+  --app-teal: #4fa89b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  overflow-x: hidden;
+  background: var(--app-bg);
+  color: var(--forest);
+  font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Same four blobs as the onboarding background (onboarding_view.dart,
+   step 0): 20% opacity circles under a 55px blur, moved by blobs.js. */
+.blobs {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  filter: blur(55px);
+  pointer-events: none;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform;
+}
+
+.blob.pink {
+  width: 280px;
+  height: 280px;
+  background: rgba(255, 158, 192, 0.2);
+}
+
+.blob.orange {
+  width: 320px;
+  height: 320px;
+  background: rgba(255, 159, 92, 0.2);
+}
+
+.blob.small {
+  width: 120px;
+  height: 120px;
+  background: rgba(255, 159, 92, 0.2);
+}
+
+.blob.teal {
+  width: 150px;
+  height: 150px;
+  background: rgba(79, 168, 155, 0.2);
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.logo-mark {
+  width: 84px;
+  height: 84px;
+  margin-bottom: 12px;
+  padding: 12px;
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+}
+
+.logo-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.wordmark {
+  margin: 0 0 24px;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -0.6px;
+  color: #1e1c24;
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  padding: 36px 28px 28px;
+  background: rgba(250, 249, 246, 0.86);
+  border: 1px solid var(--line);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border-radius: 28px;
+  box-shadow: 0 18px 50px rgba(43, 76, 63, 0.12);
+  text-align: center;
+}
+
+.badge {
+  width: 88px;
+  height: 88px;
+  margin: 0 auto 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(255, 159, 92, 0.35);
+  animation: pop 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+.badge svg {
+  width: 42px;
+  height: 42px;
+  stroke: var(--clay-dark);
+  fill: none;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.badge.success svg {
+  stroke: var(--forest);
+}
+
+h1 {
+  margin: 0 0 10px;
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: -0.6px;
+}
+
+p {
+  margin: 0 0 24px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.button {
+  display: block;
+  width: 100%;
+  padding: 16px 20px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--clay), var(--clay-dark));
+  box-shadow: 0 8px 20px rgba(226, 104, 58, 0.35);
+  color: #fff;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.button:focus-visible {
+  outline: 3px solid var(--forest);
+  outline-offset: 3px;
+}
+
+.hint {
+  margin: 18px 0 0;
+  font-size: 13px;
+}
+
+.hint[hidden] {
+  display: none;
+}
+
+.error h1 {
+  color: var(--clay-dark);
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Bare synk.cc with no email token: just the brand. */
+.home .card {
+  display: none;
+}
+
+.tagline {
+  margin: -12px 0 0;
+  font-size: 30px;
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -1px;
+  text-align: center;
+  color: #1e1c24;
+}
+
+.tagline[hidden] {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badge {
+    animation: none;
+  }
+}

@@ -10,6 +10,11 @@ class Activity {
     this.categoryEmoji = '',
     this.categoryLabel = '',
     this.hostId,
+    this.hostName,
+    this.hostUsername,
+    this.hostAvatarUrl,
+    this.hostGender,
+    this.participantsCount,
     this.locationAddress,
     this.latitude,
     this.longitude,
@@ -38,6 +43,11 @@ class Activity {
   final double? longitude;
 
   final String? hostId;
+  final String? hostName;
+  final String? hostUsername;
+  final String? hostAvatarUrl;
+  final String? hostGender;
+  final int? participantsCount;
 
   final int maxParticipants;
 
@@ -75,7 +85,7 @@ class Activity {
   }
 
   // The host currently counts as the first participant.
-  int get joinedCount => 1;
+  int get joinedCount => participantsCount ?? 1;
 
   int get spotsOpen {
     return (maxParticipants - joinedCount).clamp(0, maxParticipants);
@@ -101,6 +111,15 @@ class Activity {
     return Activity(
       id: map['id'] as String,
       hostId: map['host_id'] as String?,
+      hostName: map['host_name'] as String? ??
+          (map['host'] is Map ? (map['host']['full_name'] as String?) : null),
+      hostUsername: map['host_username'] as String? ??
+          (map['host'] is Map ? (map['host']['username'] as String?) : null),
+      hostAvatarUrl: map['host_avatar_url'] as String? ??
+          (map['host'] is Map ? (map['host']['avatar_url'] as String?) : null),
+      hostGender: map['host_gender'] as String? ??
+          (map['host'] is Map ? (map['host']['gender'] as String?) : null),
+      participantsCount: map['participants_count'] as int?,
       title: map['title'] as String? ?? '',
       description: map['description'] as String? ?? '',
       dateTime: DateTime.parse(map['starts_at'] as String).toLocal(),
@@ -144,10 +163,20 @@ class Activity {
     String? photoUrl,
     String? participationId,
     String? participationStatus,
+    String? hostName,
+    String? hostUsername,
+    String? hostAvatarUrl,
+    String? hostGender,
+    int? participantsCount,
   }) {
     return Activity(
       id: id,
       hostId: hostId,
+      hostName: hostName ?? this.hostName,
+      hostUsername: hostUsername ?? this.hostUsername,
+      hostAvatarUrl: hostAvatarUrl ?? this.hostAvatarUrl,
+      hostGender: hostGender ?? this.hostGender,
+      participantsCount: participantsCount ?? this.participantsCount,
       title: title,
       description: description,
       dateTime: dateTime,

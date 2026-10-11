@@ -23,6 +23,22 @@ class BlobLayout {
     required this.tealLeft,
   });
 
+  // The first onboarding slide's layout, also used as the home background.
+  // wave = sin(t * pi), reverseWave = cos(t * pi) for an animation t in 0..1.
+  factory BlobLayout.intro(Size screenSize, double wave, double reverseWave) {
+    final height = screenSize.height;
+    return BlobLayout(
+      pinkTop: -70 + (wave * 35),
+      pinkLeft: -55 + (reverseWave * 30),
+      orangeBottom: -90 - (wave * 30),
+      orangeRight: -60 - (reverseWave * 25),
+      smallTop: height * 0.45 + (wave * 25),
+      smallRight: 35 - (reverseWave * 30),
+      tealBottom: height * 0.20 - (wave * 25),
+      tealLeft: 70 + (reverseWave * 35),
+    );
+  }
+
   static BlobLayout lerp(BlobLayout a, BlobLayout b, double t) {
     return BlobLayout(
       pinkTop: lerpDouble(a.pinkTop, b.pinkTop, t)!,
