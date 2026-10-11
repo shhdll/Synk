@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -21,6 +23,9 @@ class SignupController extends ChangeNotifier {
   final FocusNode passwordFocusNode = FocusNode();
   final FocusNode confirmPasswordFocusNode = FocusNode();
 
+  Timer? _emailDebounceTimer;
+  Timer? _usernameDebounceTimer;
+
   bool obscurePassword = true;
   bool isLoading = false;
 
@@ -34,10 +39,16 @@ class SignupController extends ChangeNotifier {
       if (!birthdayFocusNode.hasFocus) validateBirthday();
     });
     usernameFocusNode.addListener(() {
-      if (!usernameFocusNode.hasFocus) checkUsernameAvailability();
+      if (!usernameFocusNode.hasFocus) {
+        _usernameDebounceTimer?.cancel();
+        checkUsernameAvailability();
+      }
     });
     emailFocusNode.addListener(() {
-      if (!emailFocusNode.hasFocus) validateEmail();
+      if (!emailFocusNode.hasFocus) {
+        _emailDebounceTimer?.cancel();
+        checkEmailAvailability();
+      }
     });
     passwordFocusNode.addListener(() {
       if (!passwordFocusNode.hasFocus) validatePassword();
@@ -118,6 +129,34 @@ class SignupController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void onUsernameChanged() {
+    _usernameDebounceTimer?.cancel();
+    if (usernameError != null) {
+      usernameError = null;
+      notifyListeners();
+    }
+    final username = usernameController.text.trim();
+    if (username.length >= 3) {
+      _usernameDebounceTimer = Timer(const Duration(milliseconds: 400), () {
+        checkUsernameAvailability();
+      });
+    }
+  }
+
+  void onEmailChanged() {
+    _emailDebounceTimer?.cancel();
+    if (emailError != null) {
+      emailError = null;
+      notifyListeners();
+    }
+    final email = emailController.text.trim();
+    if (email.isNotEmpty && AuthConstants.emailRegex.hasMatch(email)) {
+      _emailDebounceTimer = Timer(const Duration(milliseconds: 400), () {
+        checkEmailAvailability();
+      });
+    }
+  }
+
   void clearPasswordError() {
     if (passwordError == null) return;
     passwordError = null;
@@ -162,16 +201,20 @@ class SignupController extends ChangeNotifier {
 
   void validateEmail() {
     final email = emailController.text.trim();
-    emailError = email.isEmpty
-        ? 'Email address is required'
-        : !AuthConstants.emailRegex.hasMatch(email)
-        ? 'Please enter a valid email address'
-        : null;
+    if (email.isEmpty) {
+      emailError = 'Email address is required';
+    } else if (!AuthConstants.emailRegex.hasMatch(email)) {
+      emailError = 'Please enter a valid email address';
+    } else if (emailError != 'An account with this email already exists') {
+      emailError = null;
+    }
     notifyListeners();
   }
 
   void validatePassword() {
-    passwordError = AuthConstants.validatePassword(passwordController.text.trim());
+    passwordError = AuthConstants.validatePassword(
+      passwordController.text.trim(),
+    );
     notifyListeners();
   }
 
@@ -359,6 +402,41 @@ class SignupController extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Checks if the email is taken immediately when user leaves the field
+  Future<void> checkEmailAvailability() async {
+    final email = emailController.text.trim().toLowerCase();
+
+    if (email.isEmpty) {
+      emailError = 'Email address is required';
+      notifyListeners();
+      return;
+    }
+
+    if (!AuthConstants.emailRegex.hasMatch(email)) {
+      emailError = 'Please enter a valid email address';
+      notifyListeners();
+      return;
+    }
+
+    try {
+      final existingUser = await Supabase.instance.client
+          .from('users')
+          .select('id')
+          .ilike('email', email)
+          .maybeSingle();
+
+      if (existingUser != null) {
+        emailError = 'An account with this email already exists';
+      } else if (emailError == 'An account with this email already exists') {
+        emailError = null;
+      }
+    } catch (_) {
+      // Ignore network dropouts here; full validation will catch it on register
+    }
+
+    notifyListeners();
+  }
+
   Future<AuthResponse?> registerUser({
     required Map<String, dynamic> onboardingPreferences,
     required BuildContext context,
@@ -372,16 +450,36 @@ class SignupController extends ChangeNotifier {
 
     try {
       final cleanUsername = usernameController.text.trim().toLowerCase();
+      final cleanEmail = emailController.text.trim().toLowerCase();
 
-      // Check whether this username is already taken
-      final existingUser = await Supabase.instance.client
-          .from('users')
-          .select('id')
-          .ilike('username', cleanUsername)
-          .maybeSingle();
+      // Check whether username or email is already taken in public.users
+      final checkResults = await Future.wait([
+        Supabase.instance.client
+            .from('users')
+            .select('id')
+            .ilike('username', cleanUsername)
+            .maybeSingle(),
+        Supabase.instance.client
+            .from('users')
+            .select('id')
+            .ilike('email', cleanEmail)
+            .maybeSingle(),
+      ]);
 
+      final existingUser = checkResults[0];
+      final existingEmail = checkResults[1];
+
+      bool hasConflict = false;
       if (existingUser != null) {
         usernameError = 'This username is already taken';
+        hasConflict = true;
+      }
+      if (existingEmail != null) {
+        emailError = 'An account with this email already exists';
+        hasConflict = true;
+      }
+
+      if (hasConflict) {
         isLoading = false;
         notifyListeners();
         return null;
@@ -402,17 +500,47 @@ class SignupController extends ChangeNotifier {
         },
       );
 
-      // With email enumeration protection enabled, Supabase can return a user
-      // with no identities instead of throwing an "already registered" error.
-      if (response.user?.identities?.isEmpty == true) {
+      final user = response.user;
+
+      // Detect if user already exists based on Supabase response
+      bool isExistingUser = false;
+      if (user != null) {
+        // 1. With email enumeration protection, identities is empty or null
+        if (user.identities == null || user.identities!.isEmpty) {
+          isExistingUser = true;
+        }
+
+        // 2. If the user was already confirmed, it is an existing account
+        if (user.emailConfirmedAt != null &&
+            user.emailConfirmedAt!.isNotEmpty) {
+          isExistingUser = true;
+        }
+
+        // 3. If createdAt is older than 15 seconds, account already existed in Supabase
+        if (user.createdAt.isNotEmpty) {
+          final createdAt = DateTime.tryParse(user.createdAt);
+          if (createdAt != null) {
+            final ageDifference = DateTime.now()
+                .toUtc()
+                .difference(createdAt.toUtc())
+                .abs();
+            if (ageDifference.inSeconds > 15) {
+              isExistingUser = true;
+            }
+          }
+        }
+      }
+
+      if (isExistingUser) {
         emailError = 'An account with this email already exists';
+        isLoading = false;
+        notifyListeners();
         return null;
       }
 
       // Only attempt authenticated client-side upsert if user is already confirmed
       // (otherwise, unauthenticated RLS will reject it; the Postgres trigger or
       // EmailVerificationScreen handles profile creation).
-      final user = response.user;
       final isConfirmed =
           user != null &&
           user.emailConfirmedAt != null &&
@@ -450,7 +578,9 @@ class SignupController extends ChangeNotifier {
       final msg = e.message.toLowerCase();
 
       if (msg.contains('already registered') ||
-          msg.contains('user already exists')) {
+          msg.contains('user already exists') ||
+          msg.contains('already exists') ||
+          msg.contains('already in use')) {
         emailError = 'An account with this email already exists';
       } else if (msg.contains('email')) {
         emailError = e.message;
@@ -478,6 +608,9 @@ class SignupController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _emailDebounceTimer?.cancel();
+    _usernameDebounceTimer?.cancel();
+
     nameController.removeListener(_onFieldChanged);
     birthdayController.removeListener(_onFieldChanged);
 
