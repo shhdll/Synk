@@ -132,6 +132,9 @@ class _HomeViewState extends State<HomeView> {
       context: context,
       activity: activity,
       activityStore: widget.activityStore,
+      // Refresh the feed so the card shows the new participant count.
+      onParticipationChanged: () =>
+          _discoveryController.loadFeed(isSilent: true),
     );
   }
 

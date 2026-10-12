@@ -95,6 +95,18 @@ class ActivityParticipationModel {
     );
   }
 
+  // Joins a public activity directly, without its code.
+  Future<ActivityJoinResult> joinPublicActivity(String activityId) async {
+    final response = await _client.rpc(
+      'join_public_activity',
+      params: {'requested_activity_id': activityId},
+    );
+
+    return ActivityJoinResult.fromJson(
+      Map<String, dynamic>.from(response as Map),
+    );
+  }
+
   // Returns pending requests for private activities hosted by this user.
   Future<List<PendingActivityRequest>> getPendingRequests() async {
     final response = await _client.rpc('get_pending_activity_requests');

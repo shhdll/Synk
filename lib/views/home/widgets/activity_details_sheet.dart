@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/synk_colors.dart';
 import '../../../models/activities_model.dart';
 import '../../../models/activity_model.dart';
+import '../../../models/activity_participation_model.dart';
 import '../../../models/avatar_uploader.dart';
 import '../../../models/user_profile_model.dart';
+import '../../../utils/custom_widgets/synk_feedback.dart';
 import '../../../utils/maps_launcher.dart';
 import '../../widgets/crown_icon.dart';
 import 'activity_thumbnail.dart';
@@ -13,13 +15,17 @@ Future<void> showActivityDetailsSheet({
   required BuildContext context,
   required Activity activity,
   required ActivityStore activityStore,
+  VoidCallback? onParticipationChanged,
 }) {
   return showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (ctx) =>
-        ActivityDetailsSheet(activity: activity, activityStore: activityStore),
+    builder: (ctx) => ActivityDetailsSheet(
+      activity: activity,
+      activityStore: activityStore,
+      onParticipationChanged: onParticipationChanged,
+    ),
   );
 }
 
@@ -28,10 +34,14 @@ class ActivityDetailsSheet extends StatefulWidget {
     super.key,
     required this.activity,
     required this.activityStore,
+    this.onParticipationChanged,
   });
 
   final Activity activity;
   final ActivityStore activityStore;
+
+  // Called after the viewer joins, so the opening page can refresh.
+  final VoidCallback? onParticipationChanged;
 
   @override
   State<ActivityDetailsSheet> createState() => _ActivityDetailsSheetState();
@@ -39,8 +49,19 @@ class ActivityDetailsSheet extends StatefulWidget {
 
 class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
   final ActivitiesModel _activitiesModel = ActivitiesModel();
+  final ActivityParticipationModel _participationModel =
+      ActivityParticipationModel();
+
+  // Green used for the "Joined" state across the app.
+  static const Color _joinedColor = Color(0xFF3D8B5A);
 
   late Activity _currentActivity;
+
+  // The viewer's status for this activity: joined, pending, waitlisted,
+  // or null when they have not joined.
+  String? _participationStatus;
+  bool _isJoining = false;
+  String? _joinError;
   bool _isLoadingParticipants = true;
   List<Map<String, dynamic>> _participants = [];
 
@@ -51,6 +72,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
   void initState() {
     super.initState();
     _currentActivity = widget.activity;
+    _participationStatus = _storedParticipationStatus();
     _loadParticipants();
     _loadOwnProfile();
   }
@@ -64,6 +86,22 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     }
   }
 
+  String? get _viewerId => _activitiesModel.currentUserId;
+
+  bool get _isViewerHost =>
+      _viewerId != null && _currentActivity.hostId == _viewerId;
+
+  // Discovery feed activities carry no participation data, so look up the
+  // viewer's joined, pending, or waitlisted record in the store.
+  String? _storedParticipationStatus() {
+    for (final activity in widget.activityStore.participating) {
+      if (activity.id == _currentActivity.id) {
+        return activity.participationStatus;
+      }
+    }
+    return _currentActivity.participationStatus;
+  }
+
   Future<void> _loadParticipants() async {
     try {
       final list = await _activitiesModel.fetchParticipantsList(
@@ -75,6 +113,11 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
               .where((p) => p['user_id'] != _currentActivity.hostId)
               .toList();
           _isLoadingParticipants = false;
+
+          // The viewer appears in the list once joined.
+          if (_participants.any((p) => p['user_id'] == _viewerId)) {
+            _participationStatus = 'joined';
+          }
         });
       }
     } catch (_) {
@@ -95,6 +138,78 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     0,
     _currentActivity.maxParticipants,
   );
+
+  // Public activities that have not started can be joined from here.
+  bool get _showJoinBar =>
+      _currentActivity.isPublic && !_isViewerHost && !_currentActivity.isPast;
+
+  Future<void> _joinActivity() async {
+    setState(() {
+      _isJoining = true;
+      _joinError = null;
+    });
+
+    try {
+      final result = await _participationModel.joinPublicActivity(
+        _currentActivity.id,
+      );
+
+      if (!mounted) return;
+
+      final status = switch (result.result) {
+        'joined' || 'already_joined' => 'joined',
+        'waitlisted' || 'already_waitlisted' => 'waitlisted',
+        'pending' || 'already_pending' => 'pending',
+        _ => null,
+      };
+
+      if (status == null) {
+        // Started activity, host-owned activity, or missing activity.
+        setState(() => _joinError = result.message);
+        return;
+      }
+
+      setState(() => _participationStatus = status);
+
+      // Show the viewer in the participants list and update the count.
+      await _loadParticipants();
+
+      try {
+        final participating = await _activitiesModel.fetchParticipating();
+        widget.activityStore.setParticipating(participating);
+      } catch (_) {
+        // The join succeeded, so a failed refresh is not shown as an error.
+      }
+
+      widget.onParticipationChanged?.call();
+
+      if (!mounted) return;
+
+      final title = switch (result.result) {
+        'joined' => 'Joined!',
+        'already_joined' => 'Already Joined',
+        'waitlisted' => 'Added to Waitlist!',
+        'already_waitlisted' => 'Already Waitlisted',
+        'pending' => 'Request Sent!',
+        'already_pending' => 'Request Already Sent',
+        _ => 'Done!',
+      };
+
+      await SynkFeedback.showSuccessDialog(
+        context,
+        title: title,
+        message: result.message,
+      );
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => _joinError = 'Unable to join the activity. Please try again.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isJoining = false);
+    }
+  }
 
   String get _formattedDateTime {
     final date = _currentActivity.dateTime;
@@ -151,7 +266,11 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                         20,
                         16,
                         20,
-                        24 + MediaQuery.paddingOf(context).bottom,
+                        // The join bar handles the bottom safe area itself.
+                        24 +
+                            (_showJoinBar
+                                ? 0
+                                : MediaQuery.paddingOf(context).bottom),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -173,9 +292,138 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                 ),
               ),
             ),
+            if (_showJoinBar) _buildJoinBar(),
           ],
         ),
       ),
+    );
+  }
+
+  // Join button, or the viewer's status once they have joined.
+  Widget _buildJoinBar() {
+    final Widget content;
+
+    if (_participationStatus != null) {
+      final (
+        IconData icon,
+        String label,
+        Color color,
+      ) = switch (_participationStatus) {
+        'waitlisted' => (
+          Icons.hourglass_top_rounded,
+          "You're on the waitlist",
+          const Color(0xFF8A6D3B),
+        ),
+        'pending' => (
+          Icons.schedule_rounded,
+          'Waiting for host approval',
+          const Color(0xFFD9822B),
+        ),
+        _ => (
+          Icons.check_circle_rounded,
+          "You've joined this activity",
+          _joinedColor,
+        ),
+      };
+
+      content = Container(
+        height: 52,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: 0.24)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 20, color: color),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      final isFull = _spotsLeft == 0;
+
+      content = Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: FilledButton.icon(
+              onPressed: _isJoining ? null : _joinActivity,
+              style: FilledButton.styleFrom(
+                backgroundColor: SynkColors.orangeDark,
+                disabledBackgroundColor: SynkColors.orangeDark.withValues(
+                  alpha: 0.6,
+                ),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              icon: _isJoining
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Icon(
+                      isFull
+                          ? Icons.hourglass_top_rounded
+                          : Icons.person_add_alt_1_rounded,
+                      size: 20,
+                    ),
+              label: Text(isFull ? 'Join waitlist' : 'Join activity'),
+            ),
+          ),
+          if (_joinError != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              _joinError!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFFE85D5D),
+              ),
+            ),
+          ],
+        ],
+      );
+    }
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        20,
+        12,
+        20,
+        12 + MediaQuery.paddingOf(context).bottom,
+      ),
+      decoration: BoxDecoration(
+        color: SynkColors.background,
+        border: Border(
+          top: BorderSide(
+            color: SynkColors.textSecondary.withValues(alpha: 0.10),
+          ),
+        ),
+      ),
+      child: content,
     );
   }
 
@@ -734,6 +982,22 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
             ],
           ),
         ),
+        if (!isHost && userId != null && userId == _viewerId)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: _joinedColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Text(
+              'You',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: _joinedColor,
+              ),
+            ),
+          ),
         if (isHost)
           Container(
             padding: const EdgeInsets.fromLTRB(6, 3, 8, 3),
