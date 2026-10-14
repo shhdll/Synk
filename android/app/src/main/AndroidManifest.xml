@@ -3,6 +3,9 @@
          Flutter's debug and profile manifests add this automatically, but a
          release build needs it declared here. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
         android:label="synk"

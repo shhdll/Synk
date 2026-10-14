@@ -123,7 +123,8 @@ class _MainShellState extends State<MainShell> {
   Widget build(BuildContext context) {
     final pages = [
       const ProfileView(),
-      const MapView(),
+       MapView( activityStore: _activityStore,
+  isActive: _tab == HomeTab.map,),
       ActivitiesView(activityStore: _activityStore),
       HomeView(
         activityStore: _activityStore,
