@@ -161,11 +161,26 @@ class _MapViewState extends State<MapView> {
   Future<void> _selectActivity(Activity activity) async {
     setState(() => _selectedId = activity.id);
     _scheduleMarkerRefresh();
-    await _googleMap?.animateCamera(
+
+    final controller = _googleMap;
+    if (controller == null) return;
+
+    // Center on the activity first, then shift the map so the enlarged pin
+    // sits comfortably above the activity preview and bottom navigation.
+    await controller.animateCamera(
       CameraUpdate.newLatLngZoom(
         LatLng(activity.latitude!, activity.longitude!),
         14.5,
       ),
+    );
+    if (!mounted || _selectedId != activity.id) return;
+
+    // Google Maps scrollBy uses map-view pixel offsets. A positive vertical
+    // offset moves the map contents up, leaving the selected pin higher.
+    final height = MediaQuery.sizeOf(context).height;
+    final upwardOffset = (height * 0.17).clamp(100.0, 190.0);
+    await controller.animateCamera(
+      CameraUpdate.scrollBy(0, upwardOffset),
     );
   }
 
@@ -199,6 +214,8 @@ class _MapViewState extends State<MapView> {
   @override
   Widget build(BuildContext context) {
     final topInset = MediaQuery.paddingOf(context).top;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    // Reserve room for the floating MainShell navigation bar and Create button.
     return Scaffold(
       backgroundColor: SynkColors.background,
       extendBody: true,
@@ -237,7 +254,10 @@ class _MapViewState extends State<MapView> {
                 mapToolbarEnabled: false,
                 zoomControlsEnabled: false,
                 compassEnabled: true,
-                padding: EdgeInsets.only(top: topInset + 145, bottom: 115),
+                padding: EdgeInsets.only(
+                  top: topInset + 145,
+                  bottom: selected == null ? bottomInset + 115 : bottomInset + 225,
+                ),
               ),
               Positioned(
                 top: topInset + 12,
@@ -295,7 +315,9 @@ class _MapViewState extends State<MapView> {
               ),
               Positioned(
                 right: 16,
-                bottom: selected == null ? 110 : 220,
+                bottom: selected == null
+                    ? bottomInset + 110
+                    : bottomInset + 235,
                 child: Material(
                   color: Colors.white,
                   elevation: 4,
@@ -324,7 +346,7 @@ class _MapViewState extends State<MapView> {
                 Positioned(
                   left: 16,
                   right: 16,
-                  bottom: 96,
+                  bottom: 145,
                   child: _activityPreview(selected),
                 ),
             ],
