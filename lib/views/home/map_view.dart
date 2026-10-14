@@ -6,12 +6,12 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../controllers/home_discovery_controller.dart';
 import '../../controllers/map_controller.dart' as map_state;
 import '../../core/constants/synk_colors.dart';
+import '../../core/constants/interest_emojis.dart';
 import '../../models/activities_model.dart';
 import '../../models/activity_model.dart';
 import 'widgets/activity_details_sheet.dart';
 import 'widgets/activity_map_marker.dart';
 import 'widgets/activity_thumbnail.dart';
-import 'widgets/app_header.dart';
 import 'widgets/filter_bottom_sheet.dart';
 
 class MapView extends StatefulWidget {
@@ -77,9 +77,26 @@ class _MapViewState extends State<MapView> {
     }
   }
 
+  // Match Home's category chips and filtering logic.
+  static final List<String> _presetCategories = kInterestEmojis.keys.toList();
+
   List<Activity> get _activities => _discovery.filteredActivities
       .where((a) => a.isPublic && a.hasCoordinates && a.spotsOpen > 0)
       .toList();
+
+  List<String> get _categories =>
+      _discovery.categoriesInFeed(_presetCategories);
+
+  void _setQuickCategory(String? category) {
+    final current = _discovery.selectedCategory;
+    if (category == null) {
+      if (current != null) _discovery.setCategoryFilter(null);
+    } else if (category != current) {
+      _discovery.setCategoryFilter(category);
+    }
+    setState(() => _selectedId = null);
+    _scheduleMarkerRefresh();
+  }
 
   Activity? _selectedActivity(List<Activity> activities) {
     for (final activity in activities) {
@@ -181,120 +198,174 @@ class _MapViewState extends State<MapView> {
 
   @override
   Widget build(BuildContext context) {
+    final topInset = MediaQuery.paddingOf(context).top;
     return Scaffold(
       backgroundColor: SynkColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 8, 20, 0),
-              child: AppHeader(),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
-              child: Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Explore activities',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: SynkColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  Material(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(15),
-                    child: IconButton(
-                      tooltip: 'Filter activities',
-                      icon: const Icon(Icons.tune_rounded, color: SynkColors.textPrimary),
-                      onPressed: () => showHomeFilterBottomSheet(
-                        context: context,
-                        controller: _discovery,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: AnimatedBuilder(
-                animation: _changes,
-                builder: (context, _) {
-                  final activities = _activities;
-                  final selected = _selectedActivity(activities);
-                  return Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      GoogleMap(
-                        key: const ValueKey('synk-google-map'),
-                        initialCameraPosition: CameraPosition(
-                          target: _location.initialCenter,
-                          zoom: 12.5,
-                        ),
-                        onMapCreated: (controller) {
-                          _googleMap = controller;
-                          final current = _location.userLocation;
-                          if (current != null) {
-                            unawaited(controller.animateCamera(
-                              CameraUpdate.newLatLngZoom(current, 14),
-                            ));
-                          }
-                          _scheduleMarkerRefresh();
-                        },
-                        onTap: (_) {
-                          setState(() => _selectedId = null);
-                          _scheduleMarkerRefresh();
-                        },
-                        markers: _markers(activities),
-                        myLocationEnabled: _location.userLocation != null,
-                        myLocationButtonEnabled: false,
-                        mapToolbarEnabled: false,
-                        zoomControlsEnabled: false,
-                        compassEnabled: true,
-                      ),
-                      Positioned(
-                        right: 16,
-                        bottom: selected == null ? 110 : 220,
-                        child: Material(
-                          color: Colors.white,
-                          elevation: 4,
-                          shape: const CircleBorder(),
-                          child: IconButton(
-                            tooltip: 'My location',
-                            onPressed: _location.isLocating ? null : _centerOnUser,
-                            icon: _location.isLocating
-                                ? const SizedBox.square(
-                                    dimension: 20,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  )
-                                : const Icon(Icons.my_location_rounded,
-                                    color: SynkColors.textPrimary),
-                          ),
-                        ),
-                      ),
-                      if (_location.locationMessage != null)
-                        Positioned(
-                          top: 12,
-                          left: 16,
-                          right: 16,
-                          child: _messagePill(_location.locationMessage!),
-                        ),
-                      if (selected != null)
-                        Positioned(
-                          left: 16,
-                          right: 16,
-                          bottom: 96,
-                          child: _activityPreview(selected),
-                        ),
-                    ],
-                  );
+      extendBody: true,
+      extendBodyBehindAppBar: true,
+      body: AnimatedBuilder(
+        animation: _changes,
+        builder: (context, _) {
+          final activities = _activities;
+          final selected = _selectedActivity(activities);
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              GoogleMap(
+                key: const ValueKey('synk-google-map'),
+                initialCameraPosition: CameraPosition(
+                  target: _location.initialCenter,
+                  zoom: 12.5,
+                ),
+                onMapCreated: (controller) {
+                  _googleMap = controller;
+                  final current = _location.userLocation;
+                  if (current != null) {
+                    unawaited(controller.animateCamera(
+                      CameraUpdate.newLatLngZoom(current, 14),
+                    ));
+                  }
+                  _scheduleMarkerRefresh();
                 },
+                onTap: (_) {
+                  setState(() => _selectedId = null);
+                  _scheduleMarkerRefresh();
+                },
+                markers: _markers(activities),
+                myLocationEnabled: _location.userLocation != null,
+                myLocationButtonEnabled: false,
+                mapToolbarEnabled: false,
+                zoomControlsEnabled: false,
+                compassEnabled: true,
+                padding: EdgeInsets.only(top: topInset + 145, bottom: 115),
+              ),
+              Positioned(
+                top: topInset + 12,
+                left: 16,
+                right: 16,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Material(
+                      color: Colors.white,
+                      elevation: 5,
+                      shadowColor: Colors.black26,
+                      borderRadius: BorderRadius.circular(30),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(18, 4, 6, 4),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.map_outlined,
+                                color: SynkColors.orangeDark),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Text('Explore activities',
+                                style: TextStyle(fontSize: 17,
+                                  fontWeight: FontWeight.w800,
+                                  color: SynkColors.textPrimary)),
+                            ),
+                            IconButton(
+                              tooltip: 'More filters',
+                              icon: const Icon(Icons.tune_rounded,
+                                  color: SynkColors.textPrimary),
+                              onPressed: () => showHomeFilterBottomSheet(
+                                context: context,
+                                controller: _discovery,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 34,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
+                        children: [
+                          _categoryChip('All', null),
+                          for (final category in _categories)
+                            _categoryChip(category, category),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Positioned(
+                right: 16,
+                bottom: selected == null ? 110 : 220,
+                child: Material(
+                  color: Colors.white,
+                  elevation: 4,
+                  shape: const CircleBorder(),
+                  child: IconButton(
+                    tooltip: 'My location',
+                    onPressed: _location.isLocating ? null : _centerOnUser,
+                    icon: _location.isLocating
+                        ? const SizedBox.square(
+                            dimension: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.my_location_rounded,
+                            color: SynkColors.textPrimary),
+                  ),
+                ),
+              ),
+              if (_location.locationMessage != null)
+                Positioned(
+                  top: topInset + 132,
+                  left: 16,
+                  right: 16,
+                  child: _messagePill(_location.locationMessage!),
+                ),
+              if (selected != null)
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  bottom: 96,
+                  child: _activityPreview(selected),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _categoryChip(String label, String? category) {
+    final selected = _discovery.selectedCategory == category;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Material(
+        color: selected
+            ? SynkColors.textPrimary
+            : Colors.white.withValues(alpha: 0.7),
+        shape: StadiumBorder(
+          side: BorderSide(
+            color: selected
+                ? SynkColors.textPrimary
+                : SynkColors.textSecondary.withValues(alpha: 0.22),
+          ),
+        ),
+        child: InkWell(
+          onTap: () => _setQuickCategory(category),
+          customBorder: const StadiumBorder(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: Center(
+              widthFactor: 1,
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                  color: selected ? Colors.white : SynkColors.textPrimary,
+                ),
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
