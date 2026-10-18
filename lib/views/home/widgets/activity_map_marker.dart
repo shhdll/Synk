@@ -3,7 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-import '../../../../core/constants/synk_colors.dart';
+import '../../../core/constants/synk_colors.dart';
 
 /// Draws a native Google Maps marker with Synk's orange gradient and a white icon.
 class ActivityMapMarker {
@@ -13,6 +13,14 @@ class ActivityMapMarker {
     const scale = 3.0;
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder)..scale(scale);
+
+    // Keep the original teardrop pin, but draw unselected pins at 68%.
+    // Scale around the tip so both sizes point to the same coordinates.
+    if (!selected) {
+      canvas.translate(36, 87);
+      canvas.scale(0.68);
+      canvas.translate(-36, -87);
+    }
 
     if (selected) {
       canvas.drawCircle(
