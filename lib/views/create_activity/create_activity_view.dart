@@ -9,7 +9,11 @@ import '../../core/constants/synk_colors.dart';
 import '../../models/activity_model.dart';
 import '../../utils/custom_widgets/synk_dialog.dart';
 
-
+// What the wizard hands back to whoever pushed it.
+//
+// [activity] is the row that was created. [openDetails] is true only when the
+// user chose "View activity" in the success popup, so the caller can decide
+// whether to open Activity Details (File 13) or simply return to Home. The
 // wizard pops null when the user leaves without publishing.
 class CreateActivityOutcome {
   const CreateActivityOutcome({
@@ -22,11 +26,18 @@ class CreateActivityOutcome {
 }
 
 // The Create Activity wizard shell.
-
+//
+// Owns the three-step PageView, the progress header, the footer action button
+// and the two confirmation popups. It holds no draft state of its own: every
+// value lives in [CreateActivityController], and every rule (what a step needs,
+// whether a submit may run) is asked of that controller rather than re-checked
+// here.
 class CreateActivityView extends StatefulWidget {
   const CreateActivityView({super.key, this.store});
 
- 
+  // Optional in-memory cache. When supplied, a created activity is added to it
+  // straight away so Home does not have to refetch. Creation does not depend
+  // on it — Supabase is still the source of truth.
   final ActivityStore? store;
 
   @override
@@ -59,6 +70,8 @@ class _CreateActivityViewState extends State<CreateActivityView> {
     super.dispose();
   }
 
+  // Keeps the PageView in sync with the controller's step and repaints the
+  // chrome (progress bar, footer label, button state).
   void _onControllerChanged() {
     if (!mounted) return;
     final int step = _controller.currentStep;
@@ -78,7 +91,9 @@ class _CreateActivityViewState extends State<CreateActivityView> {
   // ---------------------------------------------------------------------------
 
   // Single entry point for the back arrow, the close button and the system
-
+  // back gesture. While a submit is in flight nothing may step back, open the
+  // discard dialog, or pop the wizard: the insert has already been sent and
+  // tearing the screen down here would strand the result.
   Future<void> _handleBack() async {
     if (_controller.isSubmitting) return;
 
@@ -161,7 +176,7 @@ class _CreateActivityViewState extends State<CreateActivityView> {
     widget.store?.upsert(activity);
 
     // Anything that went wrong after the row was created is reported inside the
-    // success popup 
+    // success popup rather than swallowed — the activity exists either way.
     final List<String> warnings = <String>[
       if (result.photoWarning != null) result.photoWarning!,
       if (result.orphanWarning != null) result.orphanWarning!,
@@ -179,7 +194,9 @@ class _CreateActivityViewState extends State<CreateActivityView> {
     ).show(context, barrierDismissible: false);
 
     if (!mounted) return;
-  
+    // The popup is not dismissible, so [choice] is one of the two actions.
+    // "View activity" is the primary button; "Done" is the secondary one.
+    // Anything else (a null from a future change) is treated as "Done".
     Navigator.of(context).pop(
       CreateActivityOutcome(
         activity: activity,
@@ -213,7 +230,9 @@ class _CreateActivityViewState extends State<CreateActivityView> {
     final bool busy = _controller.isSubmitting;
 
     return PopScope(
-     
+      // Never let the framework pop on its own: _handleBack() decides whether
+      // back means "previous step", "ask before discarding", or "ignore,
+      // a submit is running".
       canPop: false,
       onPopInvokedWithResult: (bool didPop, Object? result) {
         if (didPop) return;

@@ -46,11 +46,6 @@ class _MapViewState extends State<MapView> {
   bool _preparingMarkers = false;
   bool _needsMarkerRefresh = false;
 
-  // Tracks leave and host-transfer changes so markers reload once each.
-  late int _seenParticipationVersion;
-  bool _isSyncingParticipation = false;
-  bool _participationSyncQueued = false;
-
   late final Listenable _changes = Listenable.merge([
     _location,
     _discovery,
@@ -61,39 +56,7 @@ class _MapViewState extends State<MapView> {
   void initState() {
     super.initState();
     _discovery.addListener(_scheduleMarkerRefresh);
-    _seenParticipationVersion = widget.activityStore.participationVersion;
-    widget.activityStore.addListener(_onActivityStoreChanged);
     if (widget.isActive) _start();
-  }
-
-  void _onActivityStoreChanged() {
-    final version = widget.activityStore.participationVersion;
-    if (version == _seenParticipationVersion) return;
-
-    _seenParticipationVersion = version;
-    _syncAfterParticipationChange();
-  }
-
-  // Reloads markers and spots after leaving; at most one request at a time.
-  // Before the map is first opened there is nothing to refresh.
-  Future<void> _syncAfterParticipationChange() async {
-    if (!_started) return;
-
-    if (_isSyncingParticipation) {
-      _participationSyncQueued = true;
-      return;
-    }
-
-    _isSyncingParticipation = true;
-    try {
-      do {
-        _participationSyncQueued = false;
-        if (!mounted) return;
-        await _refreshActivities();
-      } while (_participationSyncQueued);
-    } finally {
-      _isSyncingParticipation = false;
-    }
   }
 
   @override
@@ -248,7 +211,6 @@ class _MapViewState extends State<MapView> {
 
   @override
   void dispose() {
-    widget.activityStore.removeListener(_onActivityStoreChanged);
     _discovery.removeListener(_scheduleMarkerRefresh);
     _googleMap?.dispose();
     _pageController?.dispose();

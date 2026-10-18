@@ -5,12 +5,15 @@ import 'package:flutter/material.dart';
 import '../../core/constants/synk_colors.dart';
 import '../../models/place_search_model.dart';
 
-
-
+// Real place search, replacing the temporary manual-entry sheet.
+//
 // Opens with showModalBottomSheet<PlaceSuggestion?>. Returns a fully resolved
 // PlaceSuggestion (name, address, coordinates) when the user picks a result,
 // or null if they dismiss the sheet without choosing one.
-
+//
+// One autocomplete session token is generated when the sheet opens and reused
+// for every keystroke's search and for the eventual Details call, so Google
+// bills the whole search as one free session rather than metered requests.
 class LocationSearchSheet extends StatefulWidget {
   const LocationSearchSheet({super.key});
 
@@ -34,7 +37,9 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
   @override
   void initState() {
     super.initState();
-  
+    // Purely so the clear-X button in the search field can appear/disappear
+    // immediately as the user types, without waiting for the search debounce.
+    // Does not affect search timing or results.
     _query.addListener(_onQueryTextChanged);
   }
 
@@ -55,7 +60,9 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
     _debounceTimer = Timer(_debounce, () => _search(value));
   }
 
-  
+  // Clears the field and immediately re-runs the existing empty-query path
+  // in _search (same logic the debounce would have reached), rather than
+  // waiting out the debounce.
   void _clearQuery() {
     _debounceTimer?.cancel();
     _query.clear();
@@ -289,6 +296,13 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
 // Pieces
 // -----------------------------------------------------------------------------
 
+// A single Places result, styled as a Synk result card rather than a raw
+// ListTile: Material+InkWell gives the tap its own properly-colored ink
+// splash (this is also what removes the "ListTile background color or ink
+// splashes may be invisible" warning — the row is no longer a ListTile at
+// all, so there is nothing for that warning to apply to), with a tinted
+// circular icon and, when the suggestion carries one, a secondary address
+// line underneath the name.
 class _PlaceResultRow extends StatelessWidget {
   const _PlaceResultRow({required this.suggestion, required this.onTap});
 
@@ -365,7 +379,9 @@ class _PlaceResultRow extends StatelessWidget {
   }
 }
 
-
+// Centered empty/no-results copy, aligned with the result row's visual
+// language (same tinted icon treatment) instead of bare text. The message
+// text and the conditions that choose it are unchanged from before.
 class _EmptySearchState extends StatelessWidget {
   const _EmptySearchState({required this.text});
 
