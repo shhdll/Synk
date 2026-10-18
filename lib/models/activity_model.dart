@@ -229,6 +229,11 @@ class ActivityStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Changes only when the user leaves an activity or stops hosting one.
+  int _participationVersion = 0;
+
+  int get participationVersion => _participationVersion;
+
   int _pendingRequestCount = 0;
 
   int get pendingRequestCount => _pendingRequestCount;
@@ -368,6 +373,34 @@ class ActivityStore extends ChangeNotifier {
 
     _feed.removeWhere((activity) => activity.id == id);
 
+    notifyListeners();
+  }
+
+  // Removes the user's participation entry; the activity stays in other lists.
+  void removeParticipation(String id) {
+    final previousLength = _participating.length;
+
+    _participating.removeWhere((activity) => activity.id == id);
+
+    if (_participating.length == previousLength) {
+      return;
+    }
+
+    _participationVersion++;
+    notifyListeners();
+  }
+
+  // Removes an activity the user no longer hosts from the hosted list only.
+  void removeHosted(String id) {
+    final previousLength = _mine.length;
+
+    _mine.removeWhere((activity) => activity.id == id);
+
+    if (_mine.length == previousLength) {
+      return;
+    }
+
+    _participationVersion++;
     notifyListeners();
   }
 

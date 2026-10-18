@@ -57,6 +57,11 @@ class _HomeViewState extends State<HomeView> {
   String _firstName = 'there';
   bool _codeBubbleExpanded = true;
 
+  // Tracks leave and host-transfer changes so the feed reloads once each.
+  late int _seenParticipationVersion;
+  bool _isSyncingParticipation = false;
+  bool _participationSyncQueued = false;
+
   static const double _gutter = 16;
 
   @override
@@ -64,6 +69,42 @@ class _HomeViewState extends State<HomeView> {
     super.initState();
     _discoveryController.init();
     _loadFirstName();
+
+    _seenParticipationVersion = widget.activityStore.participationVersion;
+    widget.activityStore.addListener(_onActivityStoreChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.activityStore.removeListener(_onActivityStoreChanged);
+    super.dispose();
+  }
+
+  void _onActivityStoreChanged() {
+    final version = widget.activityStore.participationVersion;
+    if (version == _seenParticipationVersion) return;
+
+    _seenParticipationVersion = version;
+    _syncAfterParticipationChange();
+  }
+
+  // Reloads the feed Home and Map share; at most one request at a time.
+  Future<void> _syncAfterParticipationChange() async {
+    if (_isSyncingParticipation) {
+      _participationSyncQueued = true;
+      return;
+    }
+
+    _isSyncingParticipation = true;
+    try {
+      do {
+        _participationSyncQueued = false;
+        if (!mounted) return;
+        await _discoveryController.loadFeed(isSilent: true);
+      } while (_participationSyncQueued);
+    } finally {
+      _isSyncingParticipation = false;
+    }
   }
 
   Future<void> _loadFirstName() async {
