@@ -10,6 +10,7 @@ import '../../../utils/custom_widgets/synk_feedback.dart';
 import '../../../utils/maps_launcher.dart';
 import '../../widgets/crown_icon.dart';
 import 'activity_thumbnail.dart';
+import 'activity_status_chip.dart';
 
 Future<void> showActivityDetailsSheet({
   required BuildContext context,
@@ -476,7 +477,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
           ),
         ),
 
-        // Top controls: Close button & Spots badge
+        // Top controls: Close button
         Positioned(
           top: 20,
           left: 16,
@@ -507,7 +508,6 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                   ),
                 ),
               ),
-              _buildSpotsBadge(),
             ],
           ),
         ),
@@ -580,47 +580,6 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     );
   }
 
-  Widget _buildSpotsBadge() {
-    final spots = _spotsLeft;
-    final isFull = spots == 0;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: SynkColors.orangeDark.withValues(alpha: 0.12),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isFull ? Icons.lock_outline_rounded : Icons.group_rounded,
-            size: 13,
-            color: isFull ? SynkColors.textSecondary : SynkColors.orangeDark,
-          ),
-          const SizedBox(width: 5),
-          Text(
-            isFull
-                ? 'Full ($_joinedCount/${_currentActivity.maxParticipants})'
-                : '$spots ${_spotsLeft == 1 ? "spot" : "spots"} left',
-            style: TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w700,
-              color: isFull ? SynkColors.textSecondary : SynkColors.orangeDark,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildTitleAndBadges() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -634,6 +593,10 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
             color: SynkColors.textPrimary,
             height: 1.25,
           ),
+        ),
+        const SizedBox(height: 10),
+        ActivityStatusChip(
+          availability: ActivityAvailability.fromSpotsOpen(_spotsLeft),
         ),
       ],
     );
