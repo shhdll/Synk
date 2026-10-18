@@ -10,6 +10,7 @@ import '../../utils/custom_widgets/synk_feedback.dart';
 import 'change_password_view.dart';
 import 'widgets/change_email_bottom_sheet.dart';
 import 'widgets/photo_options_sheet.dart';
+import '../widgets/synk_date_picker.dart';
 
 class EditProfileView extends StatefulWidget {
   const EditProfileView({super.key});
@@ -159,14 +160,15 @@ class _EditProfileViewState extends State<EditProfileView> {
       } catch (_) {}
     }
 
-    final selectedDate = await showDatePicker(
+    final selectedDate = await showSynkDatePicker(
       context: context,
       initialDate: initialDate.isBefore(firstDate)
           ? firstDate
           : (initialDate.isAfter(lastDate) ? lastDate : initialDate),
       firstDate: firstDate,
       lastDate: lastDate,
-      helpText: 'Select birthday',
+      title: 'Select birthday',
+      confirmLabel: 'Set birthday',
     );
 
     if (selectedDate != null) {

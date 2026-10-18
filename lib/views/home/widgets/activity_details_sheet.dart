@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../controllers/activity_leave_controller.dart';
 import '../../../core/constants/synk_colors.dart';
@@ -10,25 +12,19 @@ import '../../../models/user_profile_model.dart';
 import '../../../utils/custom_widgets/synk_dialog.dart';
 import '../../../utils/custom_widgets/synk_feedback.dart';
 import '../../../utils/maps_launcher.dart';
+import '../../widgets/anonymous_avatar.dart';
 import '../../widgets/crown_icon.dart';
 import 'activity_thumbnail.dart';
 import 'activity_status_chip.dart';
 import 'host_transfer_sheet.dart';
-
-// Runs the opening page's delete flow and resolves to true only when the
-// activity was deleted. Failures are reported through [showError].
-typedef ActivityDeleteCallback =
-    Future<bool> Function(
-      Activity activity,
-      void Function(String message) showError,
-    );
+import 'user_profile_sheet.dart';
 
 Future<void> showActivityDetailsSheet({
   required BuildContext context,
   required Activity activity,
   required ActivityStore activityStore,
   VoidCallback? onParticipationChanged,
-  ActivityDeleteCallback? onDeleteActivity,
+  VoidCallback? onDelete,
 }) {
   return showModalBottomSheet(
     context: context,
@@ -38,7 +34,7 @@ Future<void> showActivityDetailsSheet({
       activity: activity,
       activityStore: activityStore,
       onParticipationChanged: onParticipationChanged,
-      onDeleteActivity: onDeleteActivity,
+      onDelete: onDelete,
     ),
   );
 }
@@ -49,7 +45,7 @@ class ActivityDetailsSheet extends StatefulWidget {
     required this.activity,
     required this.activityStore,
     this.onParticipationChanged,
-    this.onDeleteActivity,
+    this.onDelete,
   });
 
   final Activity activity;
@@ -58,8 +54,7 @@ class ActivityDetailsSheet extends StatefulWidget {
   // Called after the viewer joins, so the opening page can refresh.
   final VoidCallback? onParticipationChanged;
 
-  // The host's existing delete flow. Resolves to true only when deleted.
-  final ActivityDeleteCallback? onDeleteActivity;
+  final VoidCallback? onDelete;
 
   @override
   State<ActivityDetailsSheet> createState() => _ActivityDetailsSheetState();
@@ -103,6 +98,30 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     _participationStatus = _storedParticipationStatus();
     _loadParticipants();
     _loadOwnProfile();
+    _loadHostProfile();
+  }
+
+  // Our own activities come without the host profile.
+  Future<void> _loadHostProfile() async {
+    final hostId = _currentActivity.hostId;
+    if (_currentActivity.hostName != null || hostId == null) return;
+    try {
+      final host = await Supabase.instance.client
+          .from('users')
+          .select('full_name, username, avatar_url, gender')
+          .eq('id', hostId)
+          .maybeSingle();
+      if (!mounted || host == null) return;
+      setState(() {
+        _currentActivity = _currentActivity.copyWith(
+          hostName: host['full_name'] as String?,
+          hostUsername: host['username'] as String?,
+          hostAvatarUrl: host['avatar_url'] as String?,
+          hostGender: host['gender'] as String?,
+        );
+      });
+    } catch (_) {
+    }
   }
 
   @override
@@ -174,6 +193,11 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     0,
     _currentActivity.maxParticipants,
   );
+
+  bool get _hideMembers => _participationStatus == 'pending' && !_isViewerHost;
+
+  int get _anonymousCount =>
+      (_joinedCount - 1).clamp(0, _currentActivity.maxParticipants);
 
   // Public activities that have not started can be joined from here.
   // Participants of private activities can withdraw from here.
@@ -325,6 +349,10 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                           ],
                           const SizedBox(height: 22),
                           _buildParticipantsSection(),
+                          if (_isViewerHost && !_currentActivity.isPast) ...[
+                            const SizedBox(height: 22),
+                            _buildHostTools(),
+                          ],
                           const SizedBox(height: 10),
                         ],
                       ),
@@ -338,6 +366,93 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildHostTools() {
+    final code = _currentActivity.activityCode;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (code != null && code.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.fromLTRB(14, 6, 6, 6),
+            decoration: BoxDecoration(
+              color: SynkColors.orangeDark.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: SynkColors.orangeDark.withValues(alpha: 0.18),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.password_rounded,
+                  size: 19,
+                  color: SynkColors.orangeDark,
+                ),
+                const SizedBox(width: 9),
+                const Text(
+                  'Activity code',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: SynkColors.textPrimary,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  code,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 2,
+                    color: SynkColors.orangeDark,
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Copy code',
+                  onPressed: () async {
+                    await Clipboard.setData(ClipboardData(text: code));
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context)
+                      ..hideCurrentSnackBar()
+                      ..showSnackBar(
+                        const SnackBar(content: Text('Activity code copied')),
+                      );
+                  },
+                  icon: const Icon(
+                    Icons.copy_rounded,
+                    size: 18,
+                    color: SynkColors.orangeDark,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        if (widget.onDelete != null) ...[
+          const SizedBox(height: 10),
+          TextButton.icon(
+            onPressed: () {
+              Navigator.of(context).pop();
+              widget.onDelete!();
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFFE85D5D),
+              minimumSize: const Size.fromHeight(46),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            icon: const Icon(Icons.delete_outline_rounded, size: 20),
+            label: const Text(
+              'Delete activity',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -547,55 +662,23 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     );
   }
 
-  // Host actions: hand the activity to a joined participant, or delete it.
+  // Host action: hand the activity to a joined participant and leave.
+  // Deleting is offered in the host tools above.
   Widget _buildHostBar() {
-    final onDelete = widget.onDeleteActivity;
-
     return _buildBarContainer(
       Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: _buildBarAction(
-                  icon: Icons.logout_rounded,
-                  label: 'Leave Activity',
-                  color: SynkColors.orangeDark,
-                  onPressed: _isLeaving
-                      ? null
-                      : () => _runAction(_transferHostAndLeave),
-                ),
-              ),
-              if (onDelete != null) ...[
-                const SizedBox(width: 12),
-                Expanded(
-                  child: SizedBox(
-                    height: 48,
-                    child: OutlinedButton.icon(
-                      onPressed: _isLeaving
-                          ? null
-                          : () => _runAction(_deleteActivity),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: _destructiveColor,
-                        side: BorderSide(
-                          color: _destructiveColor.withValues(alpha: 0.35),
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        textStyle: const TextStyle(
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      icon: const Icon(Icons.delete_outline_rounded, size: 19),
-                      label: const Text('Delete Activity'),
-                    ),
-                  ),
-                ),
-              ],
-            ],
+          SizedBox(
+            width: double.infinity,
+            child: _buildBarAction(
+              icon: Icons.logout_rounded,
+              label: 'Leave Activity',
+              color: SynkColors.orangeDark,
+              onPressed: _isLeaving
+                  ? null
+                  : () => _runAction(_transferHostAndLeave),
+            ),
           ),
           if (_leaveError != null) _buildBarError(_leaveError!),
         ],
@@ -820,23 +903,6 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     );
 
     if (mounted) Navigator.of(context).pop();
-  }
-
-  // Uses the opening page's delete flow and closes only after a deletion.
-  Future<void> _deleteActivity() async {
-    final onDelete = widget.onDeleteActivity;
-    if (onDelete == null || _isLeaving) return;
-
-    setState(() => _leaveError = null);
-
-    // The error is shown inside the sheet, where a snackbar would be hidden.
-    final wasDeleted = await onDelete(_currentActivity, (message) {
-      if (mounted) setState(() => _leaveError = message);
-    });
-
-    if (wasDeleted && mounted) {
-      Navigator.of(context).pop();
-    }
   }
 
   String? _savedParticipationStatus() {
@@ -1302,8 +1368,25 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
               ),
             ),
           )
-        else
+        else ...[
           _buildParticipantsList(),
+          if (_hideMembers && _anonymousCount > 0)
+            const Padding(
+              padding: EdgeInsets.fromLTRB(4, 8, 4, 0),
+              child: SizedBox(
+                width: double.infinity,
+                child: Text(
+                  "You'll see who's going once the host accepts you.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: SynkColors.textSecondary,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ],
     );
   }
@@ -1333,26 +1416,58 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
             isHost: true,
           ),
 
-          // Joined members
-          for (final p in _participants) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Divider(
-                height: 1,
-                color: SynkColors.textSecondary.withValues(alpha: 0.08),
+          // Server doesn't send pending users the list, so use the count.
+          if (_hideMembers)
+            for (var i = 0; i < _anonymousCount; i++) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Divider(
+                  height: 1,
+                  color: SynkColors.textSecondary.withValues(alpha: 0.08),
+                ),
               ),
-            ),
-            _buildParticipantRow(
-              name: (p['full_name'] as String?) ?? 'Community Member',
-              username: p['username'] as String?,
-              userId: p['user_id'] as String?,
-              avatarUrl: p['avatar_url'] as String?,
-              gender: p['gender'] as String?,
-              isHost: false,
-            ),
-          ],
+              _buildAnonymousRow(),
+            ]
+          else
+            for (final p in _participants) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Divider(
+                  height: 1,
+                  color: SynkColors.textSecondary.withValues(alpha: 0.08),
+                ),
+              ),
+              _buildParticipantRow(
+                name: (p['full_name'] as String?) ?? 'Community Member',
+                username: p['username'] as String?,
+                userId: p['user_id'] as String?,
+                avatarUrl: p['avatar_url'] as String?,
+                gender: p['gender'] as String?,
+                isHost: false,
+              ),
+            ],
         ],
       ),
+    );
+  }
+
+  Widget _buildAnonymousRow() {
+    return const Row(
+      children: [
+        AnonymousAvatar(size: 38),
+        SizedBox(width: 12),
+        // w800 so grey reads the same weight as the black names.
+        Text(
+          'Anonymous',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            color: SynkColors.textSecondary,
+          ),
+        ),
+      ],
     );
   }
 
@@ -1364,81 +1479,96 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     required String? gender,
     required bool isHost,
   }) {
-    return Row(
-      children: [
-        _buildAvatar(
-          userId: userId,
-          avatarUrl: avatarUrl,
-          gender: gender,
-          size: 38,
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                name,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: SynkColors.textPrimary,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              if (username != null && username.isNotEmpty)
-                Text(
-                  '@$username',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: SynkColors.textSecondary,
-                  ),
-                ),
-            ],
+    final canOpen = userId != null && userId != _viewerId;
+
+    return InkWell(
+      onTap: canOpen
+          ? () => showUserProfileSheet(
+              context: context,
+              userId: userId,
+              name: name,
+              username: username,
+              avatarUrl: avatarUrl,
+              gender: gender,
+            )
+          : null,
+      borderRadius: BorderRadius.circular(12),
+      child: Row(
+        children: [
+          _buildAvatar(
+            userId: userId,
+            avatarUrl: avatarUrl,
+            gender: gender,
+            size: 38,
           ),
-        ),
-        if (!isHost && userId != null && userId == _viewerId)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: _joinedColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Text(
-              'You',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: _joinedColor,
-              ),
-            ),
-          ),
-        if (isHost)
-          Container(
-            padding: const EdgeInsets.fromLTRB(6, 3, 8, 3),
-            decoration: BoxDecoration(
-              color: SynkColors.orangeDark.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CrownIcon(size: 14, color: SynkColors.orangeDark),
-                SizedBox(width: 4),
                 Text(
-                  'Host',
-                  style: TextStyle(
-                    fontSize: 11,
+                  name,
+                  style: const TextStyle(
+                    fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: SynkColors.orangeDark,
+                    color: SynkColors.textPrimary,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
+                if (username != null && username.isNotEmpty)
+                  Text(
+                    '@$username',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: SynkColors.textSecondary,
+                    ),
+                  ),
               ],
             ),
           ),
-      ],
+          if (!isHost && userId != null && userId == _viewerId)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: _joinedColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'You',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: _joinedColor,
+                ),
+              ),
+            ),
+          if (isHost)
+            Container(
+              padding: const EdgeInsets.fromLTRB(6, 3, 8, 3),
+              decoration: BoxDecoration(
+                color: SynkColors.orangeDark.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CrownIcon(size: 14, color: SynkColors.orangeDark),
+                  SizedBox(width: 4),
+                  Text(
+                    'Host',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: SynkColors.orangeDark,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
     );
   }
 

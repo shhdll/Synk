@@ -178,6 +178,7 @@ class Activity {
     String? hostAvatarUrl,
     String? hostGender,
     int? participantsCount,
+    String? activityCode,
   }) {
     return Activity(
       id: id,
@@ -200,7 +201,7 @@ class Activity {
       categoryEmoji: categoryEmoji,
       categoryLabel: categoryLabel,
       createdAt: createdAt,
-      activityCode: activityCode,
+      activityCode: activityCode ?? this.activityCode,
       participationId: participationId ?? this.participationId,
       participationStatus: participationStatus ?? this.participationStatus,
     );
@@ -232,6 +233,16 @@ class ActivityStore extends ChangeNotifier {
   int _participationVersion = 0;
 
   int get participationVersion => _participationVersion;
+
+  int _pendingRequestCount = 0;
+
+  int get pendingRequestCount => _pendingRequestCount;
+
+  set pendingRequestCount(int value) {
+    if (_pendingRequestCount == value) return;
+    _pendingRequestCount = value;
+    notifyListeners();
+  }
 
   List<Activity> get mine => List.unmodifiable(_mine);
 

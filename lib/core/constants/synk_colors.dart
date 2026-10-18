@@ -11,4 +11,14 @@ class SynkColors {
   static const Color backgroundLight = Color(0xFFFFF5EF);
   static const Color beige = Color(0xFFE8D2B0);
   static const Color beigeDark = Color(0xFFC7A06B);
+
+  // Filter colors (tealText/labelGrey darkened for contrast).
+  static const Color ink = Color(0xFF2D2A32);
+  static const Color tealText = Color(0xFF2A6F65);
+  static const Color labelGrey = Color(0xFF5F6672);
+
+  static const Color selected = orangeDark;
+  static const Color onSelected = Colors.white;
+
+  static const Color badge = Color(0xFFE5383B);
 }

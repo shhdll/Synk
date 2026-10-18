@@ -1,19 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 
+import '../core/constants/activity_categories.dart';
 import '../models/activities_model.dart';
+import '../models/activity_filters.dart';
 import '../models/activity_model.dart';
 import '../models/user_profile_model.dart';
 
-enum TimeFilterOption {
-  all('All Time'),
-  today('Today'),
-  thisWeek('This Week'),
-  customDate('Custom Date');
-
-  const TimeFilterOption(this.label);
-  final String label;
-}
-
+// Feed + filters shared by Home and Map.
 class HomeDiscoveryController extends ChangeNotifier {
   HomeDiscoveryController({
     ActivitiesModel? activitiesModel,
@@ -26,21 +20,27 @@ class HomeDiscoveryController extends ChangeNotifier {
 
   final TextEditingController searchController = TextEditingController();
 
+  static final List<String> knownCategories = [
+    ...kActivityCategories.keys,
+    kOtherCategory,
+  ];
+
   List<Activity> _allActivities = [];
   List<Activity> _filteredActivities = [];
 
   bool _isLoading = true;
   String? _errorMessage;
+  bool _started = false;
 
   String _currentUserName = 'there';
   String? _currentUserGender;
   String? _currentUserId;
 
-  TimeFilterOption _selectedTimeFilter = TimeFilterOption.all;
-  DateTime? _customSelectedDate;
+  ActivityFilters _filters = ActivityFilters.defaults;
 
-  String? _selectedLocation;
-  String? _selectedCategory;
+  GeoPoint? _userLocation;
+  bool _isLocating = false;
+  bool _locationBlocked = false;
 
   // Getters
   bool get isLoading => _isLoading;
@@ -50,55 +50,43 @@ class HomeDiscoveryController extends ChangeNotifier {
   String get currentUserName => _currentUserName;
   String? get currentUserGender => _currentUserGender;
 
-  TimeFilterOption get selectedTimeFilter => _selectedTimeFilter;
-  DateTime? get customSelectedDate => _customSelectedDate;
-  String? get selectedLocation => _selectedLocation;
-  String? get selectedCategory => _selectedCategory;
+  ActivityFilters get filters => _filters;
   String get searchQuery => searchController.text.trim();
 
-  bool get hasActiveFilters =>
-      searchQuery.isNotEmpty ||
-      _selectedTimeFilter != TimeFilterOption.all ||
-      _selectedLocation != null ||
-      _selectedCategory != null;
+  GeoPoint? get userLocation => _userLocation;
+  bool get isLocating => _isLocating;
+  bool get locationBlocked => _locationBlocked;
 
-  // Filters set from the filter sheet (time and location). Category has
-  // its own always-visible chips, so it is not counted here.
-  int get activeFilterCount {
-    int count = 0;
-    if (_selectedTimeFilter != TimeFilterOption.all) count++;
-    if (_selectedLocation != null) count++;
-    return count;
-  }
+  bool get hasActiveFilters => searchQuery.isNotEmpty || !_filters.isDefault;
 
-  // Extract distinct locations from activities
-  List<String> get availableLocations {
-    final set = <String>{};
-    for (final act in _allActivities) {
-      final loc = act.location.trim();
-      if (loc.isNotEmpty) {
-        // Take the main city or neighborhood if comma-separated
-        final parts = loc.split(',');
-        set.add(parts.first.trim());
-      }
+  int get activeFilterCount => _filters.changedSectionCount;
+
+  List<String> get feedCategories {
+    final labels = categoriesInFeed(knownCategories);
+    for (final selected in _filters.categories) {
+      if (!labels.contains(selected)) labels.add(selected);
     }
-    return set.toList()..sort();
+    return labels;
   }
 
-  // Extract distinct categories from activities
-  List<Map<String, String>> get availableCategories {
-    final map = <String, String>{};
-    for (final act in _allActivities) {
-      if (act.categoryLabel.isNotEmpty) {
-        map[act.categoryLabel] = act.categoryEmoji.isNotEmpty
-            ? act.categoryEmoji
-            : '✨';
-      }
+  // Ignores the date filter so the strip still shows other days.
+  Map<DateTime, int> get activityCountsByDay {
+    final matching = _filters
+        .withDate(DateOption.any)
+        .apply(_allActivities, userLocation: _userLocation, search: searchQuery);
+    final counts = <DateTime, int>{};
+    for (final a in matching) {
+      final day = DateUtils.dateOnly(a.dateTime);
+      counts[day] = (counts[day] ?? 0) + 1;
     }
-    return map.entries.map((e) => {'label': e.key, 'emoji': e.value}).toList();
+    return counts;
   }
 
+  // Safe to call from both tabs, only loads once.
   Future<void> init() async {
+    if (_started) return;
+    _started = true;
+    refreshLocation();
     await loadFeed();
   }
 
@@ -136,6 +124,68 @@ class HomeDiscoveryController extends ChangeNotifier {
     }
   }
 
+  Future<void> refreshLocation({bool request = false}) async {
+    if (_isLocating) return;
+    _isLocating = true;
+    notifyListeners();
+
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        _locationBlocked = true;
+        if (request) await Geolocator.openLocationSettings();
+        return;
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (request && permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        _locationBlocked = true;
+        if (request && permission == LocationPermission.deniedForever) {
+          await Geolocator.openAppSettings();
+        }
+        return;
+      }
+
+      _locationBlocked = false;
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+          timeLimit: Duration(seconds: 15),
+        ),
+      );
+      _userLocation = (
+        latitude: position.latitude,
+        longitude: position.longitude,
+      );
+    } catch (error) {
+      debugPrint('SYNK: Could not get location for filters: $error');
+    } finally {
+      _isLocating = false;
+      _applyFilters();
+      notifyListeners();
+    }
+  }
+
+  @visibleForTesting
+  set userLocation(GeoPoint? value) {
+    _userLocation = value;
+    _applyFilters();
+    notifyListeners();
+  }
+
+  int countFor(ActivityFilters draft) => draft
+      .apply(_allActivities, userLocation: _userLocation, search: searchQuery)
+      .length;
+
+  void applyFilters(ActivityFilters filters) {
+    _filters = filters;
+    _applyFilters();
+    notifyListeners();
+  }
+
   void onSearchChanged(String query) {
     _applyFilters();
     notifyListeners();
@@ -147,110 +197,42 @@ class HomeDiscoveryController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setTimeFilter(TimeFilterOption option, {DateTime? customDate}) {
-    _selectedTimeFilter = option;
-    if (option == TimeFilterOption.customDate) {
-      _customSelectedDate = customDate;
-    } else {
-      _customSelectedDate = null;
+  void selectDay(DateTime day, {DateTime? now}) {
+    final today = DateUtils.dateOnly(now ?? DateTime.now());
+    final picked = DateUtils.dateOnly(day);
+
+    if (_filters.singleDay(today) == picked) {
+      applyFilters(_filters.withDate(DateOption.any));
+      return;
     }
-    _applyFilters();
-    notifyListeners();
+
+    final offset = picked.difference(today).inDays;
+    applyFilters(switch (offset) {
+      0 => _filters.withDate(DateOption.today),
+      1 => _filters.withDate(DateOption.tomorrow),
+      _ => _filters.withDate(DateOption.custom, customDate: picked),
+    });
   }
 
-  // Sets (not toggles) the location, so re-applying the filter sheet with
-  // an unchanged location keeps it.
-  void setLocationFilter(String? location) {
-    final clean = location?.trim();
-    _selectedLocation = clean == null || clean.isEmpty ? null : clean;
-    _applyFilters();
-    notifyListeners();
+  void toggleCategory(String category) {
+    applyFilters(_filters.toggleCategory(category));
   }
 
-  void setCategoryFilter(String? categoryLabel) {
-    if (_selectedCategory == categoryLabel) {
-      _selectedCategory = null;
-    } else {
-      _selectedCategory = categoryLabel;
-    }
-    _applyFilters();
-    notifyListeners();
+  void clearCategories() {
+    applyFilters(_filters.copyWith(categories: const {}));
   }
 
   void clearAllFilters() {
     searchController.clear();
-    _selectedTimeFilter = TimeFilterOption.all;
-    _customSelectedDate = null;
-    _selectedLocation = null;
-    _selectedCategory = null;
-    _applyFilters();
-    notifyListeners();
+    applyFilters(ActivityFilters.defaults);
   }
 
   void _applyFilters() {
-    final query = searchController.text.trim().toLowerCase();
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-
-    _filteredActivities = _allActivities.where((activity) {
-      // 1. Text Search: title, description, or location (name or address)
-      if (query.isNotEmpty) {
-        final searchable = [
-          activity.title,
-          activity.description,
-          activity.location,
-          activity.locationAddress ?? '',
-          activity.categoryLabel,
-        ];
-        if (!searchable.any((field) => field.toLowerCase().contains(query))) {
-          return false;
-        }
-      }
-
-      // 2. Time Filter
-      final actDate = activity.dateTime;
-      final actDay = DateTime(actDate.year, actDate.month, actDate.day);
-
-      switch (_selectedTimeFilter) {
-        case TimeFilterOption.all:
-          break;
-        case TimeFilterOption.today:
-          if (actDay != today) return false;
-          break;
-        case TimeFilterOption.thisWeek:
-          final nextWeek = today.add(const Duration(days: 7));
-          if (actDay.isBefore(today) || actDay.isAfter(nextWeek)) return false;
-          break;
-        case TimeFilterOption.customDate:
-          if (_customSelectedDate != null) {
-            final customDay = DateTime(
-              _customSelectedDate!.year,
-              _customSelectedDate!.month,
-              _customSelectedDate!.day,
-            );
-            if (actDay != customDay) return false;
-          }
-          break;
-      }
-
-      // 3. Location Filter
-      if (_selectedLocation != null && _selectedLocation!.isNotEmpty) {
-        final locFilter = _selectedLocation!.toLowerCase();
-        final actLoc = activity.location.toLowerCase();
-        final actAddr = (activity.locationAddress ?? '').toLowerCase();
-        if (!actLoc.contains(locFilter) && !actAddr.contains(locFilter)) {
-          return false;
-        }
-      }
-
-      // 4. Category Filter. Most activities have no category label, so
-      // also match the category name in the title or description.
-      if (_selectedCategory != null && _selectedCategory!.isNotEmpty) {
-        if (!matchesCategory(activity, _selectedCategory!)) return false;
-      }
-
-      return true;
-    }).toList();
+    _filteredActivities = _filters.apply(
+      _allActivities,
+      userLocation: _userLocation,
+      search: searchQuery,
+    );
   }
 
   // Category labels set on loaded activities, then any [known] category
@@ -272,12 +254,8 @@ class HomeDiscoveryController extends ChangeNotifier {
     return labels;
   }
 
-  static bool matchesCategory(Activity activity, String category) {
-    final wanted = category.trim().toLowerCase();
-    if (activity.categoryLabel.trim().toLowerCase() == wanted) return true;
-    final text = '${activity.title} ${activity.description}'.toLowerCase();
-    return RegExp('\\b${RegExp.escape(wanted)}').hasMatch(text);
-  }
+  static bool matchesCategory(Activity activity, String category) =>
+      ActivityFilters.matchesCategory(activity, category);
 
   @override
   void dispose() {

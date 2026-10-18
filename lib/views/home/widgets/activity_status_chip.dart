@@ -6,9 +6,17 @@ import '../../../models/activity_model.dart';
 // Small pill showing whether an activity can still be joined:
 // Available, One More Needed, or Full.
 class ActivityStatusChip extends StatelessWidget {
-  const ActivityStatusChip({super.key, required this.availability});
+  const ActivityStatusChip({super.key, required this.availability})
+    : countLabel = null;
+
+  const ActivityStatusChip.count({
+    super.key,
+    required this.availability,
+    required String label,
+  }) : countLabel = label;
 
   final ActivityAvailability availability;
+  final String? countLabel;
 
   static (IconData, Color) _styleFor(ActivityAvailability availability) {
     return switch (availability) {
@@ -29,7 +37,8 @@ class ActivityStatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (icon, color) = _styleFor(availability);
+    final (statusIcon, color) = _styleFor(availability);
+    final icon = countLabel == null ? statusIcon : Icons.people_outline_rounded;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -43,7 +52,7 @@ class ActivityStatusChip extends StatelessWidget {
           Icon(icon, size: 13, color: color),
           const SizedBox(width: 5),
           Text(
-            availability.label,
+            countLabel ?? availability.label,
             style: TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w700,

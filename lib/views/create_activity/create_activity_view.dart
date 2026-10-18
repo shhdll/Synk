@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'step_activity_location.dart';
-import 'step_schedule_people.dart';
-import 'step_details_publish.dart';
+
+import 'step_basics.dart';
+import 'step_details.dart';
+import 'step_review.dart';
 
 import '../../controllers/create_activity_controller.dart';
 import '../../core/constants/synk_colors.dart';
@@ -36,9 +37,9 @@ class _CreateActivityViewState extends State<CreateActivityView> {
   static const int _stepCount = 3;
 
   static const List<String> _stepTitles = <String>[
-    'Activity & Location',
-    'Date, Time & People',
-    'Details & Publish',
+    'What, where & when',
+    'Details',
+    'Review',
   ];
 
   final CreateActivityController _controller = CreateActivityController();
@@ -101,8 +102,7 @@ class _CreateActivityViewState extends State<CreateActivityView> {
     final SynkDialogAction? action = await SynkDialog.destructive(
       icon: Icons.delete_outline_rounded,
       title: 'Discard activity?',
-      message:
-          "Your changes haven't been saved. If you leave now, you'll lose them.",
+      message: "Your changes haven't been saved. If you leave now, you'll lose them.",
       primaryLabel: 'Keep editing',
       secondaryLabel: 'Discard and leave',
     ).show(context, barrierDismissible: false);
@@ -123,11 +123,9 @@ class _CreateActivityViewState extends State<CreateActivityView> {
     final int step = _controller.currentStep;
 
     if (step < _stepCount - 1) {
-      final String? blocker = _controller.stepBlocker(step);
-      if (blocker != null) {
-        _showMessage(blocker);
-        return;
-      }
+      FocusScope.of(context).unfocus();
+      _controller.touchStep(step);
+      if (_controller.stepBlocker(step) != null) return;
       _controller.goToStep(step + 1);
       return;
     }
@@ -136,9 +134,15 @@ class _CreateActivityViewState extends State<CreateActivityView> {
   }
 
   Future<void> _submit() async {
+    // e.g. the time passed while on the review page
+    if (_controller.stepBlocker(0) != null) {
+      _controller.touchStep(0);
+      _controller.goToStep(0);
+      return;
+    }
     final String? blocker = _controller.submitBlocker;
     if (blocker != null) {
-      _showMessage(blocker);
+      _controller.goToStep(1);
       return;
     }
 
@@ -165,7 +169,7 @@ class _CreateActivityViewState extends State<CreateActivityView> {
     final String message = warnings.isEmpty
         ? 'Your activity is live and ready for people to join.'
         : 'Your activity is live and ready for people to join.\n\n'
-            '${warnings.join('\n')}';
+              '${warnings.join('\n')}';
 
     final SynkDialogAction? choice = await SynkDialog.success(
       title: 'Activity created!',
@@ -193,9 +197,7 @@ class _CreateActivityViewState extends State<CreateActivityView> {
         backgroundColor: const Color(0xFFE53935),
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
   }
@@ -227,11 +229,10 @@ class _CreateActivityViewState extends State<CreateActivityView> {
                 child: PageView(
                   controller: _pageController,
                   physics: const NeverScrollableScrollPhysics(),
-                                  children: <Widget>[
-                    // Files 9 and 10 replace the two placeholders below.
-                    StepActivityLocation(controller: _controller),
-                  StepSchedulePeople(controller: _controller),
-                    StepDetailsPublish(controller: _controller),
+                  children: <Widget>[
+                    StepBasics(controller: _controller),
+                    StepDetails(controller: _controller),
+                    StepReview(controller: _controller),
                   ],
                 ),
               ),
@@ -257,16 +258,6 @@ class _CreateActivityViewState extends State<CreateActivityView> {
                     : Icons.arrow_back_ios_new_rounded,
                 onTap: busy ? null : _handleBack,
               ),
-              const Spacer(),
-              Text(
-                'Step ${step + 1} of $_stepCount',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.1,
-                  color: SynkColors.textSecondary,
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -285,8 +276,9 @@ class _CreateActivityViewState extends State<CreateActivityView> {
               final bool filled = index <= step;
               return Expanded(
                 child: Padding(
-                  padding:
-                      EdgeInsets.only(right: index == _stepCount - 1 ? 0 : 8),
+                  padding: EdgeInsets.only(
+                    right: index == _stepCount - 1 ? 0 : 8,
+                  ),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 280),
                     height: 6,
@@ -344,8 +336,9 @@ class _CreateActivityViewState extends State<CreateActivityView> {
                         width: 22,
                         child: CircularProgressIndicator(
                           strokeWidth: 2.4,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
                         ),
                       )
                     : Row(

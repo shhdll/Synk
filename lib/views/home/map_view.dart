@@ -6,22 +6,24 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../controllers/home_discovery_controller.dart';
 import '../../controllers/map_controller.dart' as map_state;
 import '../../core/constants/synk_colors.dart';
-import '../../core/constants/interest_emojis.dart';
 import '../../models/activities_model.dart';
 import '../../models/activity_model.dart';
 import 'widgets/activity_details_sheet.dart';
 import 'widgets/activity_map_marker.dart';
 import 'widgets/activity_thumbnail.dart';
 import 'widgets/filter_bottom_sheet.dart';
+import 'widgets/filter_button.dart';
 
 class MapView extends StatefulWidget {
   const MapView({
     super.key,
     required this.activityStore,
+    required this.discoveryController,
     required this.isActive,
   });
 
   final ActivityStore activityStore;
+  final HomeDiscoveryController discoveryController;
   final bool isActive;
 
   @override
@@ -30,14 +32,17 @@ class MapView extends StatefulWidget {
 
 class _MapViewState extends State<MapView> {
   final map_state.MapController _location = map_state.MapController();
-  final HomeDiscoveryController _discovery = HomeDiscoveryController();
+  late final HomeDiscoveryController _discovery = widget.discoveryController;
   final ActivitiesModel _activitiesModel = ActivitiesModel();
   final Map<String, BitmapDescriptor> _iconCache = {};
   final Map<String, BitmapDescriptor> _activityIcons = {};
 
   GoogleMapController? _googleMap;
   String? _selectedId;
-  bool _started = false;
+
+  // Activity ids in swipe order.
+  List<String> _swipeOrder = const [];
+  PageController? _pageController;
   bool _preparingMarkers = false;
   bool _needsMarkerRefresh = false;
 
@@ -98,10 +103,7 @@ class _MapViewState extends State<MapView> {
   }
 
   Future<void> _start() async {
-    if (!_started) {
-      _started = true;
-      _discovery.init();
-    }
+    _discovery.init();
     await _centerOnUser();
   }
 
@@ -114,25 +116,22 @@ class _MapViewState extends State<MapView> {
     }
   }
 
-  // Match Home's category chips and filtering logic.
-  static final List<String> _presetCategories = kInterestEmojis.keys.toList();
-
   List<Activity> get _activities => _discovery.filteredActivities
       .where((a) => a.isPublic && a.hasCoordinates && a.spotsOpen > 0)
       .toList();
 
-  List<String> get _categories =>
-      _discovery.categoriesInFeed(_presetCategories);
+  List<String> get _categories => _discovery.feedCategories;
 
+  // null = All
   void _setQuickCategory(String? category) {
-    final current = _discovery.selectedCategory;
     if (category == null) {
-      if (current != null) _discovery.setCategoryFilter(null);
-    } else if (category != current) {
-      _discovery.setCategoryFilter(category);
+      if (_discovery.filters.categories.isNotEmpty) {
+        _discovery.clearCategories();
+      }
+    } else {
+      _discovery.toggleCategory(category);
     }
-    setState(() => _selectedId = null);
-    _scheduleMarkerRefresh();
+    _clearSelection();
   }
 
   Activity? _selectedActivity(List<Activity> activities) {
@@ -146,7 +145,9 @@ class _MapViewState extends State<MapView> {
     if (!mounted) return;
     _needsMarkerRefresh = true;
     if (_preparingMarkers) return;
-    unawaited(_prepareMarkers());
+    _preparingMarkers = true;
+    // Can notify mid-build from another tab, so defer.
+    scheduleMicrotask(_prepareMarkers);
   }
 
   Future<void> _prepareMarkers() async {
@@ -190,34 +191,40 @@ class _MapViewState extends State<MapView> {
             BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
         anchor: const Offset(0.5, 0.95),
         zIndexInt: activity.id == _selectedId ? 1 : 0,
-        onTap: () => _selectActivity(activity),
+        onTap: () => _onPinTap(activity),
       );
     }).toSet();
+  }
+
+  void _onPinTap(Activity activity) {
+    _swipeOrder = [for (final a in _activities) a.id];
+
+    _pageController?.dispose();
+    _pageController = PageController(
+      initialPage: _swipeOrder.indexOf(activity.id),
+      viewportFraction: 0.9,
+    );
+    _selectActivity(activity);
+  }
+
+  void _clearSelection() {
+    setState(() {
+      _selectedId = null;
+      _swipeOrder = const [];
+    });
+    _scheduleMarkerRefresh();
   }
 
   Future<void> _selectActivity(Activity activity) async {
     setState(() => _selectedId = activity.id);
     _scheduleMarkerRefresh();
 
-    final controller = _googleMap;
-    if (controller == null) return;
-
-    // Center on the activity first, then shift the map so the enlarged pin
-    // sits comfortably above the activity preview and bottom navigation.
-    await controller.animateCamera(
+    // One camera move, a second one cancels it on Android.
+    await _googleMap?.animateCamera(
       CameraUpdate.newLatLngZoom(
         LatLng(activity.latitude!, activity.longitude!),
         14.5,
       ),
-    );
-    if (!mounted || _selectedId != activity.id) return;
-
-    // Google Maps scrollBy uses map-view pixel offsets. A positive vertical
-    // offset moves the map contents up, leaving the selected pin higher.
-    final height = MediaQuery.sizeOf(context).height;
-    final upwardOffset = (height * 0.17).clamp(100.0, 190.0);
-    await controller.animateCamera(
-      CameraUpdate.scrollBy(0, upwardOffset),
     );
   }
 
@@ -244,7 +251,7 @@ class _MapViewState extends State<MapView> {
     widget.activityStore.removeListener(_onActivityStoreChanged);
     _discovery.removeListener(_scheduleMarkerRefresh);
     _googleMap?.dispose();
-    _discovery.dispose();
+    _pageController?.dispose();
     _location.dispose();
     super.dispose();
   }
@@ -282,10 +289,7 @@ class _MapViewState extends State<MapView> {
                   }
                   _scheduleMarkerRefresh();
                 },
-                onTap: (_) {
-                  setState(() => _selectedId = null);
-                  _scheduleMarkerRefresh();
-                },
+                onTap: (_) => _clearSelection(),
                 markers: _markers(activities),
                 myLocationEnabled: _location.userLocation != null,
                 myLocationButtonEnabled: false,
@@ -294,7 +298,7 @@ class _MapViewState extends State<MapView> {
                 compassEnabled: true,
                 padding: EdgeInsets.only(
                   top: topInset + 145,
-                  bottom: selected == null ? bottomInset + 115 : bottomInset + 225,
+                  bottom: selected == null ? bottomInset + 8 : 265,
                 ),
               ),
               Positioned(
@@ -310,23 +314,16 @@ class _MapViewState extends State<MapView> {
                       shadowColor: Colors.black26,
                       borderRadius: BorderRadius.circular(30),
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(18, 4, 6, 4),
+                        padding: const EdgeInsets.fromLTRB(16, 4, 6, 4),
                         child: Row(
                           children: [
-                            const Icon(Icons.map_outlined,
+                            const Icon(Icons.search_rounded,
                                 color: SynkColors.orangeDark),
-                            const SizedBox(width: 12),
-                            const Expanded(
-                              child: Text('Explore activities',
-                                style: TextStyle(fontSize: 17,
-                                  fontWeight: FontWeight.w800,
-                                  color: SynkColors.textPrimary)),
-                            ),
-                            IconButton(
-                              tooltip: 'More filters',
-                              icon: const Icon(Icons.tune_rounded,
-                                  color: SynkColors.textPrimary),
-                              onPressed: () => showHomeFilterBottomSheet(
+                            const SizedBox(width: 10),
+                            Expanded(child: _searchField()),
+                            FilterButton(
+                              count: _discovery.activeFilterCount,
+                              onTap: () => showHomeFilterBottomSheet(
                                 context: context,
                                 controller: _discovery,
                               ),
@@ -353,24 +350,29 @@ class _MapViewState extends State<MapView> {
               ),
               Positioned(
                 right: 16,
-                bottom: selected == null
-                    ? bottomInset + 110
-                    : bottomInset + 235,
-                child: Material(
-                  color: Colors.white,
-                  elevation: 4,
-                  shape: const CircleBorder(),
-                  child: IconButton(
-                    tooltip: 'My location',
-                    onPressed: _location.isLocating ? null : _centerOnUser,
-                    icon: _location.isLocating
-                        ? const SizedBox.square(
-                            dimension: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.my_location_rounded,
-                            color: SynkColors.textPrimary),
-                  ),
+                bottom: selected == null ? bottomInset + 16 : 265,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _zoomControls(),
+                    const SizedBox(height: 10),
+                    Material(
+                      color: Colors.white,
+                      elevation: 3,
+                      shape: const CircleBorder(),
+                      child: IconButton(
+                        tooltip: 'My location',
+                        onPressed: _location.isLocating ? null : _centerOnUser,
+                        icon: _location.isLocating
+                            ? const SizedBox.square(
+                                dimension: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.my_location_rounded,
+                                color: SynkColors.textPrimary),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               if (_location.locationMessage != null)
@@ -382,10 +384,10 @@ class _MapViewState extends State<MapView> {
                 ),
               if (selected != null)
                 Positioned(
-                  left: 16,
-                  right: 16,
-                  bottom: 145,
-                  child: _activityPreview(selected),
+                  left: 0,
+                  right: 0,
+                  bottom: 141,
+                  child: _previewCarousel(activities),
                 ),
             ],
           );
@@ -395,7 +397,10 @@ class _MapViewState extends State<MapView> {
   }
 
   Widget _categoryChip(String label, String? category) {
-    final selected = _discovery.selectedCategory == category;
+    final categories = _discovery.filters.categories;
+    final selected = category == null
+        ? categories.isEmpty
+        : categories.contains(category);
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: Material(
@@ -431,6 +436,68 @@ class _MapViewState extends State<MapView> {
     );
   }
 
+  Widget _searchField() {
+    final search = _discovery.searchController;
+    return TextField(
+      controller: search,
+      onChanged: _discovery.onSearchChanged,
+      textInputAction: TextInputAction.search,
+      style: const TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
+        color: SynkColors.textPrimary,
+      ),
+      decoration: InputDecoration(
+        hintText: 'Search activities or places',
+        hintStyle: const TextStyle(
+          fontSize: 15,
+          color: SynkColors.textSecondary,
+        ),
+        border: InputBorder.none,
+        isDense: true,
+        suffixIcon: search.text.isEmpty
+            ? null
+            : IconButton(
+                tooltip: 'Clear search',
+                onPressed: _discovery.clearSearch,
+                icon: const Icon(
+                  Icons.close_rounded,
+                  size: 18,
+                  color: SynkColors.textSecondary,
+                ),
+              ),
+      ),
+    );
+  }
+
+  Widget _zoomControls() {
+    Widget button(IconData icon, String tooltip, CameraUpdate update) {
+      return IconButton(
+        tooltip: tooltip,
+        onPressed: () => _googleMap?.animateCamera(update),
+        icon: Icon(icon, color: SynkColors.textPrimary),
+      );
+    }
+
+    return Material(
+      color: Colors.white,
+      elevation: 3,
+      borderRadius: BorderRadius.circular(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          button(Icons.add_rounded, 'Zoom in', CameraUpdate.zoomIn()),
+          Container(
+            width: 24,
+            height: 1,
+            color: SynkColors.textSecondary.withValues(alpha: 0.2),
+          ),
+          button(Icons.remove_rounded, 'Zoom out', CameraUpdate.zoomOut()),
+        ],
+      ),
+    );
+  }
+
   Widget _messagePill(String message) => Material(
         elevation: 2,
         color: Colors.white,
@@ -444,6 +511,28 @@ class _MapViewState extends State<MapView> {
           ),
         ),
       );
+
+  Widget _previewCarousel(List<Activity> visible) {
+    final byId = {for (final a in visible) a.id: a};
+    final pages = [
+      for (final id in _swipeOrder)
+        if (byId[id] != null) byId[id]!,
+    ];
+
+    return SizedBox(
+      height: 112,
+      child: PageView.builder(
+        key: ObjectKey(_pageController),
+        controller: _pageController,
+        itemCount: pages.length,
+        onPageChanged: (index) => _selectActivity(pages[index]),
+        itemBuilder: (context, index) => Padding(
+          padding: const EdgeInsets.fromLTRB(5, 4, 5, 8),
+          child: _activityPreview(pages[index]),
+        ),
+      ),
+    );
+  }
 
   Widget _activityPreview(Activity activity) {
     return Material(

@@ -43,9 +43,37 @@ class ActivitiesModel {
       return [];
     }
 
-    return response
+    final activities = response
         .map((row) => Activity.fromMap(Map<String, dynamic>.from(row as Map)))
         .toList();
+
+    return _withActivityCodes(activities);
+  }
+
+  // The RPC strips codes, so read them for joined activities.
+  Future<List<Activity>> _withActivityCodes(List<Activity> activities) async {
+    final ids = [
+      for (final a in activities)
+        if (a.isJoined && !a.hasActivityCode) a.id,
+    ];
+    if (ids.isEmpty) return activities;
+
+    try {
+      final rows = await _supabase
+          .from(_table)
+          .select('id, activity_code')
+          .inFilter('id', ids);
+      final codes = {
+        for (final row in rows)
+          row['id'] as String: row['activity_code'] as String?,
+      };
+      return [
+        for (final a in activities)
+          codes[a.id] == null ? a : a.copyWith(activityCode: codes[a.id]),
+      ];
+    } catch (_) {
+      return activities;
+    }
   }
 
   // Completed activities count for any user, computed on the server.

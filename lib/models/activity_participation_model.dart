@@ -54,6 +54,8 @@ class PendingActivityRequest {
     required this.requesterName,
     required this.requestedAt,
     this.requesterUsername,
+    this.requesterAvatarUrl,
+    this.requesterGender,
   });
 
   final String participationId;
@@ -62,6 +64,8 @@ class PendingActivityRequest {
   final String requesterId;
   final String requesterName;
   final String? requesterUsername;
+  final String? requesterAvatarUrl;
+  final String? requesterGender;
   final DateTime requestedAt;
 
   factory PendingActivityRequest.fromJson(Map<String, dynamic> json) {
@@ -72,7 +76,23 @@ class PendingActivityRequest {
       requesterId: json['requester_id'] as String,
       requesterName: json['requester_name'] as String? ?? 'Synk user',
       requesterUsername: json['requester_username'] as String?,
+      requesterAvatarUrl: json['requester_avatar_url'] as String?,
+      requesterGender: json['requester_gender'] as String?,
       requestedAt: DateTime.parse(json['requested_at'] as String),
+    );
+  }
+
+  PendingActivityRequest withProfile({String? avatarUrl, String? gender}) {
+    return PendingActivityRequest(
+      participationId: participationId,
+      activityId: activityId,
+      activityTitle: activityTitle,
+      requesterId: requesterId,
+      requesterName: requesterName,
+      requesterUsername: requesterUsername,
+      requesterAvatarUrl: requesterAvatarUrl ?? avatarUrl,
+      requesterGender: requesterGender ?? gender,
+      requestedAt: requestedAt,
     );
   }
 }
@@ -113,13 +133,49 @@ class ActivityParticipationModel {
 
     final rows = response as List<dynamic>;
 
-    return rows
+    final requests = rows
         .map(
           (row) => PendingActivityRequest.fromJson(
             Map<String, dynamic>.from(row as Map),
           ),
         )
         .toList();
+
+    return _withProfiles(requests);
+  }
+
+  // The RPC has no photos, so fetch them separately.
+  Future<List<PendingActivityRequest>> _withProfiles(
+    List<PendingActivityRequest> requests,
+  ) async {
+    final ids = {
+      for (final r in requests)
+        if (r.requesterAvatarUrl == null) r.requesterId,
+    };
+    if (ids.isEmpty) return requests;
+
+    try {
+      final users = await _client
+          .from('users')
+          .select('id, avatar_url, gender')
+          .inFilter('id', ids.toList());
+      final byId = {for (final u in users) u['id'] as String: u};
+
+      return [
+        for (final r in requests)
+          r.withProfile(
+            avatarUrl: byId[r.requesterId]?['avatar_url'] as String?,
+            gender: byId[r.requesterId]?['gender'] as String?,
+          ),
+      ];
+    } catch (_) {
+      return requests;
+    }
+  }
+
+  Future<int> countPendingRequests() async {
+    final response = await _client.rpc('get_pending_activity_requests');
+    return response is List ? response.length : 0;
   }
 
   // Returns an activity's joined participants. Errors are passed to the caller.
