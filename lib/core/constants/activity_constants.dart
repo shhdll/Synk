@@ -27,7 +27,7 @@ class ActivityConstants {
 
   // Not documented as requirements; used only to keep cards and the details
   // screen readable and to stop accidental huge pastes.
-  static const int titleMaxLength = 60;
+  static const int titleMaxLength = 30;
   static const int descriptionMaxLength = 500;
   static const int locationNameMaxLength = 80;
 

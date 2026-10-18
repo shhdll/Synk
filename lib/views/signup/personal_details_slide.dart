@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../controllers/signup_controller.dart';
 import '../../core/constants/synk_colors.dart';
+import '../widgets/synk_date_picker.dart';
 
 class PersonalDetailsSlide extends StatelessWidget {
   final SignupController controller;
@@ -106,12 +107,13 @@ class PersonalDetailsSlide extends StatelessWidget {
                       }
                     }
 
-                    final selectedDate = await showDatePicker(
+                    final selectedDate = await showSynkDatePicker(
                       context: context,
                       initialDate: initialDate,
                       firstDate: firstDate,
                       lastDate: lastDate,
-                      helpText: 'Select birthday',
+                      title: 'Select birthday',
+                      confirmLabel: 'Set birthday',
                     );
 
                     if (selectedDate != null) {
