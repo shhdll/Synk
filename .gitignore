@@ -52,3 +52,6 @@ app.*.map.json
 .env*.local
 # Supabase local development files
 supabase/.temp/
+
+# Local JDK installs
+/android/oracleJdk-*/
