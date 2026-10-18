@@ -188,7 +188,7 @@ void main() {
       expect(find.text('@sara'), findsOneWidget);
       expect(find.text('Sara Ahmed'), findsNothing);
       expect(find.text('3/4 going'), findsOneWidget);
-      expect(find.text(' · 1 spot left'), findsOneWidget);
+      expect(find.text('One More Needed'), findsOneWidget);
       expect(find.textContaining('Join'), findsNothing);
       expect(find.text('Host'), findsNothing);
       expect(find.textContaining('Women'), findsNothing);

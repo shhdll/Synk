@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/synk_colors.dart';
 import '../../../models/activity_model.dart';
 import '../../../models/avatar_uploader.dart';
+import 'activity_status_chip.dart';
 import 'activity_thumbnail.dart';
 
 // Compact home feed card. Reading order: title, when and where, who is
@@ -137,7 +138,6 @@ class DiscoveryActivityCard extends StatelessWidget {
         ? activity.hostName!.trim()
         : 'Synk member';
     final avatarUrl = activity.hostAvatarUrl?.trim();
-    final status = _statusNote();
 
     return Row(
       children: [
@@ -176,30 +176,10 @@ class DiscoveryActivityCard extends StatelessWidget {
             color: SynkColors.textPrimary,
           ),
         ),
-        if (status != null)
-          Text(
-            ' · ${status.$1}',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: status.$2,
-            ),
-          ),
+        const SizedBox(width: 8),
+        ActivityStatusChip(availability: activity.availability),
       ],
     );
-  }
-
-  // Short note after the count, only when spots are running out.
-  (String, Color)? _statusNote() {
-    final spots = activity.spotsOpen;
-    if (spots == 0) return ('Full', SynkColors.textSecondary);
-    if (spots <= 2) {
-      return (
-        spots == 1 ? '1 spot left' : '2 spots left',
-        SynkColors.orangeDark,
-      );
-    }
-    return null;
   }
 }
 

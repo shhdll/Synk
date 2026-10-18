@@ -1,5 +1,22 @@
 import 'package:flutter/foundation.dart';
 
+// Whether people can still join an activity, from how many spots are open.
+enum ActivityAvailability {
+  available('Available'),
+  oneMoreNeeded('One More Needed'),
+  full('Full');
+
+  const ActivityAvailability(this.label);
+
+  final String label;
+
+  static ActivityAvailability fromSpotsOpen(int spotsOpen) {
+    if (spotsOpen <= 0) return full;
+    if (spotsOpen == 1) return oneMoreNeeded;
+    return available;
+  }
+}
+
 class Activity {
   Activity({
     required this.id,
@@ -91,17 +108,10 @@ class Activity {
     return (maxParticipants - joinedCount).clamp(0, maxParticipants);
   }
 
-  String get status {
-    if (spotsOpen == 0) {
-      return 'Full';
-    }
+  ActivityAvailability get availability =>
+      ActivityAvailability.fromSpotsOpen(spotsOpen);
 
-    if (spotsOpen == 1) {
-      return 'One More Needed';
-    }
-
-    return 'Available';
-  }
+  String get status => availability.label;
 
   // ---------------------------------------------------------------------------
   // Supabase mapping
