@@ -48,6 +48,18 @@ class ActivitiesModel {
         .toList();
   }
 
+  // Completed activities count for any user, computed on the server.
+  // Defaults to the signed-in user. Needs the
+  // 20261018_completed_activities_count migration.
+  Future<int> fetchCompletedCount({String? userId}) async {
+    final response = await _supabase.rpc(
+      'get_completed_activities_count',
+      params: {'target_user_id': ?userId},
+    );
+
+    return (response as num?)?.toInt() ?? 0;
+  }
+
   // Kept temporarily for callers that still use the previous method name.
   Future<List<Activity>> fetchJoined() {
     return fetchParticipating();

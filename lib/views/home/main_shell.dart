@@ -122,7 +122,7 @@ class _MainShellState extends State<MainShell> {
   @override
   Widget build(BuildContext context) {
     final pages = [
-      const ProfileView(),
+      ProfileView(activityStore: _activityStore),
        MapView( activityStore: _activityStore,
   isActive: _tab == HomeTab.map,),
       ActivitiesView(activityStore: _activityStore),

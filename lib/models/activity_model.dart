@@ -239,6 +239,16 @@ class ActivityStore extends ChangeNotifier {
       _personalActivities.where((activity) => activity.isPast).toList()
         ..sort((first, second) => second.dateTime.compareTo(first.dateTime));
 
+  // Activities the user hosted or was accepted into whose time has passed.
+  // Pending and waitlisted requests don't count.
+  int get completedCount => _personalActivities
+      .where(
+        (activity) =>
+            activity.isPast &&
+            (activity.isHostedBy(_currentUserId) || activity.isJoined),
+      )
+      .length;
+
   List<Activity> get feedUpcoming =>
       _feed.where((activity) => !activity.isPast).toList()
         ..sort((first, second) => first.dateTime.compareTo(second.dateTime));
