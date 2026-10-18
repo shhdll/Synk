@@ -8,8 +8,6 @@ import '../../core/constants/activity_constants.dart';
 import '../../core/constants/synk_colors.dart';
 import 'create_activity_widgets.dart';
 
-// Step 2 of Create Activity: how many people, an optional description and
-// photo, and who can see it.
 class StepDetails extends StatefulWidget {
   const StepDetails({super.key, required this.controller});
 
@@ -49,7 +47,6 @@ class _StepDetailsState extends State<StepDetails> {
         const CreateGroupLabel(text: 'Number of people'),
         const SizedBox(height: 10),
         _PeopleCard(controller: _c),
-        // "You + 3 available spots" under the stepper.
         Padding(
           padding: const EdgeInsets.fromLTRB(6, 8, 6, 0),
           child: Row(
@@ -132,7 +129,6 @@ class _StepDetailsState extends State<StepDetails> {
         const SizedBox(height: 24),
         const CreateGroupLabel(text: 'Visibility'),
         const SizedBox(height: 10),
-        // Both cards as tall as the taller one, whatever the text wraps to.
         IntrinsicHeight(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -164,7 +160,6 @@ class _StepDetailsState extends State<StepDetails> {
   }
 }
 
-// "Participants, including you" with a − n + stepper.
 class _PeopleCard extends StatelessWidget {
   const _PeopleCard({required this.controller});
 
@@ -224,7 +219,6 @@ class _PeopleCard extends StatelessWidget {
   }
 }
 
-// Plain round − / + button: solid orange for +, light grey for −. No glow.
 class _StepperButton extends StatelessWidget {
   const _StepperButton({
     required this.icon,
@@ -396,7 +390,6 @@ class _PhotoSection extends StatelessWidget {
   }
 }
 
-// Public / Private choice: orange tint and border when selected.
 class _VisibilityCard extends StatelessWidget {
   const _VisibilityCard({
     required this.icon,

@@ -16,7 +16,6 @@ import 'widgets/empty_state.dart';
 import 'widgets/my_activity_card.dart';
 import 'widgets/synk_filter_chip.dart';
 
-// Which of the user's activities to list: everything, or by their role.
 enum _RoleFilter {
   all('All'),
   hosting('Hosting'),
@@ -53,8 +52,7 @@ class _ActivitiesViewState extends State<ActivitiesView> {
   _RoleFilter _filter = _RoleFilter.all;
   bool _codeBubbleExpanded = true;
 
-  // Joined members per activity id, for the faces on each card. Loaded
-  // once per activity; cleared on pull-to-refresh.
+  // Participants per activity, for the faces on the cards.
   final Map<String, List<Map<String, dynamic>>> _people = {};
   final Set<String> _loadingPeople = {};
 
@@ -107,7 +105,6 @@ class _ActivitiesViewState extends State<ActivitiesView> {
         ..setMine(results[0])
         ..setParticipating(results[1]);
     } catch (_) {
-      // Keep the current lists when refreshing fails.
     }
   }
 
@@ -130,8 +127,6 @@ class _ActivitiesViewState extends State<ActivitiesView> {
     );
   }
 
-  // Same as Home: shrink the code bubble to its key while scrolling down,
-  // and bring the label back on scrolling up or at the top.
   bool _onUserScroll(UserScrollNotification notification) {
     if (notification.metrics.axis != Axis.vertical) return false;
     final atTop = notification.metrics.pixels <= 0;
@@ -206,7 +201,7 @@ class _ActivitiesViewState extends State<ActivitiesView> {
           ),
           Positioned(
             right: 16,
-            // Clears the raised + button, which sits ~30px above the bar.
+            // Above the raised + button.
             bottom: bottomInset + 44,
             child: CodeBubble(
               expanded: _codeBubbleExpanded,
@@ -226,8 +221,6 @@ class _ActivitiesViewState extends State<ActivitiesView> {
     int countOf(_RoleFilter f) =>
         inTab.where((a) => f.matches(roles[a.id]!)).length;
 
-    // Only offer roles the user actually has in this tab; fall back to
-    // All if the chosen one has emptied out.
     final filters = [
       for (final f in _RoleFilter.values)
         if (f == _RoleFilter.all || countOf(f) > 0) f,
@@ -239,7 +232,6 @@ class _ActivitiesViewState extends State<ActivitiesView> {
     final showRequests = hostsPrivate || _store.pendingRequestCount > 0;
 
     return ListView(
-      // Room for the code bubble and the bottom bar.
       padding: EdgeInsets.fromLTRB(16, 16, 16, bottomInset + 120),
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
@@ -311,11 +303,8 @@ class _ActivitiesViewState extends State<ActivitiesView> {
               activity: activity,
               role: roles[activity.id]!,
               participants: _people[activity.id],
-              // Pending requesters see members as anonymous faces.
               anonymous: roles[activity.id] == MyActivityRole.pending,
               onTap: () => _openActivity(activity),
-              // Anyone taking part can share the code; it's no use once
-              // the activity has started.
               showCode: !activity.isPast,
             ),
             const SizedBox(height: 12),
@@ -325,7 +314,6 @@ class _ActivitiesViewState extends State<ActivitiesView> {
   }
 }
 
-// Upcoming / Past switch.
 class _Segmented extends StatelessWidget {
   const _Segmented({required this.showPast, required this.onChanged});
 

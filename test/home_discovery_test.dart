@@ -107,7 +107,6 @@ void main() {
       controller.toggleCategory('Padel');
       expect(controller.filteredActivities.map((a) => a.id), ['a']);
 
-      // Categories are multi-select and count as one sheet section.
       controller.toggleCategory('Board Games');
       expect(controller.filteredActivities.map((a) => a.id), ['a', 'b']);
       expect(controller.activeFilterCount, 1);
@@ -137,7 +136,6 @@ void main() {
       const draft = ActivityFilters(spots: SpotsOption.hasSpots);
 
       expect(controller.countFor(draft), 2);
-      // A draft doesn't change the list until it is applied.
       expect(controller.filteredActivities, hasLength(3));
 
       controller.applyFilters(draft);
@@ -157,7 +155,6 @@ void main() {
       expect(controller.filters.customDate, inFive);
       expect(controller.filters.coversDay(inFive, DateTime.now()), isTrue);
 
-      // Tapping the only selected day again clears the date.
       controller.selectDay(inFive);
       expect(controller.filters.date, DateOption.any);
     });
@@ -177,7 +174,6 @@ void main() {
       controller.toggleCategory('Art');
       expect(controller.activityCountsByDay, {d(2): 1});
 
-      // Selecting a day doesn't hide the other days' availability.
       controller.selectDay(d(2));
       expect(controller.activityCountsByDay, {d(2): 1});
     });
@@ -236,12 +232,10 @@ void main() {
       ];
       final defaults = ActivityFilters.defaults;
       expect(ids(defaults.withTime(slot: DaySlot.night), items), ['night']);
-      // From 12:00: noon and later.
       expect(
         ids(defaults.withTime(fromMinute: 12 * 60), items),
         ['afternoon', 'evening', 'night'],
       );
-      // Picking one replaces the other; passing neither clears it.
       final both = defaults
           .withTime(fromMinute: 60)
           .withTime(slot: DaySlot.morning);
@@ -318,14 +312,12 @@ void main() {
         'olaya',
         'nowhere',
       ]);
-      // Without a location, both fall back to soonest.
       expect(by(SortOption.nearest), ['nowhere', 'diriyah', 'kafd', 'olaya']);
     });
 
     test('distance measures from the user', () {
       const within10 = ActivityFilters(distance: DistanceOption.within10);
       expect(ids(within10, places, me: olaya), ['kafd', 'olaya']);
-      // No location at all: the distance filter can't apply.
       expect(ids(within10, places), hasLength(4));
     });
 
@@ -422,7 +414,6 @@ void main() {
       expect(find.text('Padel night'), findsOneWidget);
       expect(find.text('@sara'), findsOneWidget);
       expect(find.text('Sara Ahmed'), findsNothing);
-      // Count and status share one pill.
       expect(find.text('3/4 One More Needed'), findsOneWidget);
       expect(find.textContaining('Join'), findsNothing);
       expect(find.text('Host'), findsNothing);

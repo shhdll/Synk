@@ -1,10 +1,4 @@
-// Categories offered by the category chips on Home, Map and the filter
-// sheet, with the words that place an activity in each one.
-//
-// Activities don't store a category yet (the create flow never sets
-// category_label), so an activity belongs to every category whose keyword
-// starts a word in its title or description. Activities matching none go
-// under [kOtherCategory]. Order here is the chip order.
+// Matched by keyword since activities don't store a category yet.
 const Map<String, List<String>> kActivityCategories = {
   'Padel': ['padel'],
   'Tennis': ['tennis', 'squash'],
@@ -37,5 +31,4 @@ const Map<String, List<String>> kActivityCategories = {
   'Photography': ['photo'],
 };
 
-// Chip for activities that fit no category above.
 const String kOtherCategory = 'Other';

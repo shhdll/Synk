@@ -229,8 +229,6 @@ class ActivityStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Join requests waiting on the user's private activities; shown as a
-  // badge on the Activities tab and the Join Requests row.
   int _pendingRequestCount = 0;
 
   int get pendingRequestCount => _pendingRequestCount;

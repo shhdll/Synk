@@ -34,10 +34,8 @@ class HomeView extends StatefulWidget {
   final ActivityStore activityStore;
   final bool isNewUser;
 
-  // Shared with the Map tab, so both show the same filters.
   final HomeDiscoveryController discoveryController;
 
-  // "Create one" in the no-matches state.
   final VoidCallback? onCreateActivity;
 
   // Injectable for tests; default to the Supabase-backed models.
@@ -344,7 +342,6 @@ class _HomeViewState extends State<HomeView> {
     final labels = _discoveryController.feedCategories;
     final selected = _discoveryController.filters.categories;
 
-    // Same chips as the filter sheet's Category section.
     return SizedBox(
       height: 38,
       child: ListView.separated(
@@ -374,8 +371,6 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  // "Art · Tue, Oct 20" for the current filters, with "Clear filters"
-  // whenever anything differs from the defaults.
   Widget _buildListTitle() {
     final filters = _discoveryController.filters;
     final parts = [
@@ -420,7 +415,6 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  // "Art", "Padel & Art", "Padel +2", or null for all categories.
   static String? _categorySummary(Set<String> categories) {
     final names = categories.toList();
     return switch (names.length) {
@@ -431,7 +425,6 @@ class _HomeViewState extends State<HomeView> {
     };
   }
 
-  // "No Art plans on Tue, Oct 20", "No plans this weekend", ...
   String _noMatchesTitle() {
     final filters = _discoveryController.filters;
     final category = filters.categories.length == 1

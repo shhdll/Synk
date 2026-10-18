@@ -19,7 +19,6 @@ class BottomBar extends StatelessWidget {
   final HomeTab selected;
   final ValueChanged<HomeTab> onSelect;
   final VoidCallback onAddTap;
-  // Pending join requests, shown on the Activities tab.
   final int activitiesBadge;
 
   @override

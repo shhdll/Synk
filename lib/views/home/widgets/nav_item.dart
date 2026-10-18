@@ -17,7 +17,6 @@ class NavItem extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
-  // Shown as a small count on the icon when above zero.
   final int badgeCount;
 
   @override

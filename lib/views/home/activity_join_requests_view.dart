@@ -15,7 +15,6 @@ import 'widgets/user_profile_sheet.dart';
 class ActivityJoinRequestsView extends StatefulWidget {
   const ActivityJoinRequestsView({super.key, required this.activityStore});
 
-  // Opens activity details, and keeps the Join Requests badge in sync.
   final ActivityStore activityStore;
 
   @override
@@ -39,7 +38,6 @@ class _ActivityJoinRequestsViewState extends State<ActivityJoinRequestsView> {
   void _refresh() {
     if (!mounted) return;
     setState(() {});
-    // The list is the source of truth once loaded; the badge follows it.
     if (!_controller.isLoading && _controller.errorMessage == null) {
       widget.activityStore.pendingRequestCount = _controller.requests.length;
     }
@@ -56,7 +54,6 @@ class _ActivityJoinRequestsViewState extends State<ActivityJoinRequestsView> {
     );
   }
 
-  // The host's own activity is usually already loaded; otherwise fetch it.
   Future<void> _openActivity(PendingActivityRequest request) async {
     var activity = _storeActivity(request.activityId);
     try {
@@ -82,7 +79,6 @@ class _ActivityJoinRequestsViewState extends State<ActivityJoinRequestsView> {
     super.dispose();
   }
 
-  // "Just now", "5m ago", "3h ago", "2d ago", then the date.
   String _formatRequestedAt(DateTime dateTime) {
     final localDate = dateTime.toLocal();
     final ago = DateTime.now().difference(localDate);
@@ -101,8 +97,6 @@ class _ActivityJoinRequestsViewState extends State<ActivityJoinRequestsView> {
     return null;
   }
 
-  // Requests bucketed by activity, soonest activity first (unknown dates
-  // last), each bucket oldest request first.
   List<List<PendingActivityRequest>> _groupedRequests() {
     final groups = <String, List<PendingActivityRequest>>{};
     for (final request in _controller.requests) {
@@ -213,8 +207,6 @@ class _ActivityJoinRequestsViewState extends State<ActivityJoinRequestsView> {
     );
   }
 
-  // One card per activity: the activity on top (tap for details), then
-  // everyone waiting to join it.
   Widget _buildActivityGroup(List<PendingActivityRequest> requests) {
     final first = requests.first;
     final activity = _storeActivity(first.activityId);
@@ -241,7 +233,6 @@ class _ActivityJoinRequestsViewState extends State<ActivityJoinRequestsView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Warm tinted band sets the activity apart from the people.
             Ink(
               color: SynkColors.orangeDark.withValues(alpha: 0.12),
               child: InkWell(
@@ -328,7 +319,6 @@ class _ActivityJoinRequestsViewState extends State<ActivityJoinRequestsView> {
     );
   }
 
-  // The requester (tap for their profile) with reject / accept buttons.
   Widget _buildRequestRow(PendingActivityRequest request) {
     final isReviewing = _controller.isReviewing(request.participationId);
     final username = request.requesterUsername;

@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/synk_colors.dart';
 
-// Synk's date picker, used everywhere a date is chosen (activity date,
-// date filter, birthdays). Monday-first month calendar in a bottom sheet;
-// tap the month title to jump between years. Returns null if dismissed.
+// Used for every date in the app.
 Future<DateTime?> showSynkDatePicker({
   required BuildContext context,
   required DateTime initialDate,
@@ -27,7 +25,6 @@ Future<DateTime?> showSynkDatePicker({
   );
 }
 
-// Synk's time picker: hour / minute / AM-PM wheels in the same sheet.
 Future<TimeOfDay?> showSynkTimePicker({
   required BuildContext context,
   required TimeOfDay initialTime,
@@ -41,7 +38,6 @@ Future<TimeOfDay?> showSynkTimePicker({
   );
 }
 
-// Bottom sheet frame shared by Synk's pickers: handle, title, content.
 class SynkPickerSheet extends StatelessWidget {
   const SynkPickerSheet({super.key, required this.title, required this.child});
 
@@ -95,7 +91,6 @@ class SynkPickerSheet extends StatelessWidget {
   }
 }
 
-// Full-width orange gradient button that confirms a picker.
 class SynkSheetConfirmButton extends StatelessWidget {
   const SynkSheetConfirmButton({
     super.key,
@@ -148,8 +143,6 @@ class SynkSheetConfirmButton extends StatelessWidget {
   }
 }
 
-// Compact month calendar: firstDate..lastDate inclusive, Monday-first
-// weeks. The month title switches to a year grid for far-away dates.
 class _DatePickerSheet extends StatefulWidget {
   const _DatePickerSheet({
     required this.initialDate,
@@ -225,7 +218,6 @@ class _DatePickerSheetState extends State<_DatePickerSheet> {
 
   void _toggleYears() {
     if (!_choosingYear) {
-      // Open with the visible year a couple of rows from the top.
       final row = (_last.year - _visibleMonth.year) ~/ 3;
       _yearScroll?.dispose();
       _yearScroll = ScrollController(
@@ -267,7 +259,6 @@ class _DatePickerSheetState extends State<_DatePickerSheet> {
     });
   }
 
-  // Shows [year], keeping the month when it is in range.
   void _pickYear(int year) {
     var month = DateTime(year, _visibleMonth.month);
     final firstMonth = DateTime(_first.year, _first.month);
@@ -388,7 +379,6 @@ class _DatePickerSheetState extends State<_DatePickerSheet> {
     ];
   }
 
-  // Newest year first, opened scrolled to the visible year.
   Widget _buildYearGrid() {
     final years = <int>[for (int y = _last.year; y >= _first.year; y--) y];
 
@@ -527,7 +517,6 @@ class _MonthNavButton extends StatelessWidget {
   }
 }
 
-// Compact scroll-wheel time picker (hour / minute / AM-PM).
 class _TimePickerSheet extends StatefulWidget {
   const _TimePickerSheet({required this.initialTime, required this.title});
 

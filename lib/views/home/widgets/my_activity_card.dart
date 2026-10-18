@@ -8,7 +8,6 @@ import '../../widgets/anonymous_avatar.dart';
 import 'activity_thumbnail.dart';
 import 'discovery_activity_card.dart';
 
-// The user's part in an activity, shown as a pill on the Activities tab.
 enum MyActivityRole {
   hosting('Hosting', Icons.star_rounded, SynkColors.orangeDark),
   joined('Joined', Icons.check_circle_rounded, SynkColors.teal),
@@ -28,8 +27,6 @@ enum MyActivityRole {
   }
 }
 
-// Activities tab card, in the same style as the Home cards: what, when,
-// where, then who's going (faces + count) and the user's role.
 class MyActivityCard extends StatelessWidget {
   const MyActivityCard({
     super.key,
@@ -41,17 +38,13 @@ class MyActivityCard extends StatelessWidget {
     this.anonymous = false,
   });
 
-  // Members' faces are hidden behind anonymous avatars (the viewer's
-  // request is still pending).
   final bool anonymous;
 
   final Activity activity;
   final MyActivityRole role;
-  // Joined members (not the host); null while loading.
+  // null while loading
   final List<Map<String, dynamic>>? participants;
   final VoidCallback onTap;
-  // Hosts and accepted members see the code as a thin strip under the
-  // card (when the server sent one).
   final bool showCode;
 
   @override
@@ -162,9 +155,7 @@ class MyActivityCard extends StatelessWidget {
 
   Widget _buildPeople() {
     final people = participants;
-    // The host counts as one of the people going, as on Home.
-    // Pending requesters aren't sent the member list, so their anonymous
-    // faces come from the count.
+    // Host counts as one. Pending users only get the count.
     final going = anonymous
         ? activity.joinedCount
         : people == null
@@ -220,7 +211,6 @@ class MyActivityCard extends StatelessWidget {
   }
 }
 
-// One-line "Code 482913 ⧉" strip; tapping it copies the code.
 class _CodeStrip extends StatelessWidget {
   const _CodeStrip({required this.code});
 

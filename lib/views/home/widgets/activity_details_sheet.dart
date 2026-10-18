@@ -51,8 +51,6 @@ class ActivityDetailsSheet extends StatefulWidget {
   // Called after the viewer joins, so the opening page can refresh.
   final VoidCallback? onParticipationChanged;
 
-  // Given only to the host of an upcoming activity; the sheet closes
-  // first, then this asks to confirm and deletes.
   final VoidCallback? onDelete;
 
   @override
@@ -90,8 +88,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     _loadHostProfile();
   }
 
-  // Hosted and joined activities are loaded without the host's profile,
-  // so fill in their name, handle and photo here instead of "Host".
+  // Our own activities come without the host profile.
   Future<void> _loadHostProfile() async {
     final hostId = _currentActivity.hostId;
     if (_currentActivity.hostName != null || hostId == null) return;
@@ -111,7 +108,6 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
         );
       });
     } catch (_) {
-      // Falls back to "Host".
     }
   }
 
@@ -177,11 +173,8 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     _currentActivity.maxParticipants,
   );
 
-  // Pending requesters see only the host, not the other members.
   bool get _hideMembers => _participationStatus == 'pending' && !_isViewerHost;
 
-  // Members other than the host, shown as anonymous rows to a pending
-  // requester.
   int get _anonymousCount =>
       (_joinedCount - 1).clamp(0, _currentActivity.maxParticipants);
 
@@ -349,7 +342,6 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     );
   }
 
-  // Host only: the code to share (private activities) and delete.
   Widget _buildHostTools() {
     final code = _currentActivity.activityCode;
 
@@ -987,7 +979,6 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
           )
         else ...[
           _buildParticipantsList(),
-          // Under the card, for someone whose request is still pending.
           if (_hideMembers && _anonymousCount > 0)
             const Padding(
               padding: EdgeInsets.fromLTRB(4, 8, 4, 0),
@@ -1034,9 +1025,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
             isHost: true,
           ),
 
-          // Someone still waiting for approval sees members as anonymous:
-          // how many, but not who. Built from the count, since the server
-          // doesn't send them the member list.
+          // Server doesn't send pending users the list, so use the count.
           if (_hideMembers)
             for (var i = 0; i < _anonymousCount; i++) ...[
               Padding(
@@ -1076,8 +1065,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
       children: [
         AnonymousAvatar(size: 38),
         SizedBox(width: 12),
-        // Same size as a member's name, just grey. One step bolder, since
-        // grey text at the same weight reads thinner and smaller than black.
+        // w800 so grey reads the same weight as the black names.
         Text(
           'Anonymous',
           maxLines: 1,
@@ -1100,7 +1088,6 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     required String? gender,
     required bool isHost,
   }) {
-    // Everyone but the viewer can be tapped to see their profile.
     final canOpen = userId != null && userId != _viewerId;
 
     return InkWell(

@@ -8,8 +8,7 @@ import '../../models/activity_model.dart';
 import '../../models/activity_participation_model.dart';
 import '../../utils/custom_widgets/synk_feedback.dart';
 
-// The whole "Have a code?" flow, shared by Home and Activities: opens the
-// sheet, refreshes the user's activities after a join, then confirms.
+// Shared by Home and Activities.
 Future<void> joinActivityWithCode(
   BuildContext context, {
   required ActivityStore activityStore,

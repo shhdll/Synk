@@ -23,7 +23,6 @@ class MapView extends StatefulWidget {
   });
 
   final ActivityStore activityStore;
-  // Shared with Home, so both tabs show the same filters.
   final HomeDiscoveryController discoveryController;
   final bool isActive;
 
@@ -41,7 +40,7 @@ class _MapViewState extends State<MapView> {
   GoogleMapController? _googleMap;
   String? _selectedId;
 
-  // Activity ids in swipe order (nearest first), set when a pin is tapped.
+  // Activity ids in swipe order.
   List<String> _swipeOrder = const [];
   PageController? _pageController;
   bool _preparingMarkers = false;
@@ -86,7 +85,7 @@ class _MapViewState extends State<MapView> {
 
   List<String> get _categories => _discovery.feedCategories;
 
-  // Null is the "All" chip.
+  // null = All
   void _setQuickCategory(String? category) {
     if (category == null) {
       if (_discovery.filters.categories.isNotEmpty) {
@@ -110,8 +109,7 @@ class _MapViewState extends State<MapView> {
     _needsMarkerRefresh = true;
     if (_preparingMarkers) return;
     _preparingMarkers = true;
-    // The shared discovery controller can notify while another tab is
-    // building, so rebuild the markers once that build has finished.
+    // Can notify mid-build from another tab, so defer.
     scheduleMicrotask(_prepareMarkers);
   }
 
@@ -161,9 +159,6 @@ class _MapViewState extends State<MapView> {
     }).toSet();
   }
 
-  // Opens the swipeable preview on [activity]. The other cards are the
-  // visible activities in the filter sheet's Sort by order, the same as
-  // the home list.
   void _onPinTap(Activity activity) {
     _swipeOrder = [for (final a in _activities) a.id];
 
@@ -187,9 +182,7 @@ class _MapViewState extends State<MapView> {
     setState(() => _selectedId = activity.id);
     _scheduleMarkerRefresh();
 
-    // One camera move: the map's bottom padding grows while a preview is
-    // open, so centering puts the pin above the card. (A follow-up scrollBy
-    // would cancel this animation on Android before it finishes.)
+    // One camera move, a second one cancels it on Android.
     await _googleMap?.animateCamera(
       CameraUpdate.newLatLngZoom(
         LatLng(activity.latitude!, activity.longitude!),
@@ -267,8 +260,6 @@ class _MapViewState extends State<MapView> {
                 compassEnabled: true,
                 padding: EdgeInsets.only(
                   top: topInset + 145,
-                  // bottomInset already includes the navigation bar; with a
-                  // preview open, keep the centered pin above the card.
                   bottom: selected == null ? bottomInset + 8 : 265,
                 ),
               ),
@@ -319,9 +310,6 @@ class _MapViewState extends State<MapView> {
                   ],
                 ),
               ),
-              // Zoom and my-location in the bottom-right corner, just above
-              // the navigation bar (bottomInset already includes it), or
-              // above the activity preview when one is open.
               Positioned(
                 right: 16,
                 bottom: selected == null ? bottomInset + 16 : 265,
@@ -410,7 +398,6 @@ class _MapViewState extends State<MapView> {
     );
   }
 
-  // Shares Home's search text, like the rest of the filters.
   Widget _searchField() {
     final search = _discovery.searchController;
     return TextField(
@@ -445,7 +432,6 @@ class _MapViewState extends State<MapView> {
     );
   }
 
-  // Plain + / − pill.
   Widget _zoomControls() {
     Widget button(IconData icon, String tooltip, CameraUpdate update) {
       return IconButton(
@@ -488,8 +474,6 @@ class _MapViewState extends State<MapView> {
         ),
       );
 
-  // Swipe left/right for the next/previous activity in Sort by order; the map
-  // follows the card in view. Neighbouring cards peek in at the edges.
   Widget _previewCarousel(List<Activity> visible) {
     final byId = {for (final a in visible) a.id: a};
     final pages = [

@@ -7,8 +7,7 @@ import '../models/activity_filters.dart';
 import '../models/activity_model.dart';
 import '../models/user_profile_model.dart';
 
-// Discovery feed plus the one shared filter state. Home (search, day strip,
-// category chips, filter sheet) and the Map tab all read and write it here.
+// Feed + filters shared by Home and Map.
 class HomeDiscoveryController extends ChangeNotifier {
   HomeDiscoveryController({
     ActivitiesModel? activitiesModel,
@@ -21,8 +20,6 @@ class HomeDiscoveryController extends ChangeNotifier {
 
   final TextEditingController searchController = TextEditingController();
 
-  // Every category, then "Other"; only those found in the feed are offered,
-  // so each activity in the feed is reachable from some chip.
   static final List<String> knownCategories = [
     ...kActivityCategories.keys,
     kOtherCategory,
@@ -58,16 +55,12 @@ class HomeDiscoveryController extends ChangeNotifier {
 
   GeoPoint? get userLocation => _userLocation;
   bool get isLocating => _isLocating;
-  // Permission denied or location services off, as opposed to a slow fix.
   bool get locationBlocked => _locationBlocked;
 
   bool get hasActiveFilters => searchQuery.isNotEmpty || !_filters.isDefault;
 
-  // Sheet sections that differ from their defaults (the filter badge).
   int get activeFilterCount => _filters.changedSectionCount;
 
-  // Categories to offer: those present in the feed, plus any still selected
-  // so they can be turned off.
   List<String> get feedCategories {
     final labels = categoriesInFeed(knownCategories);
     for (final selected in _filters.categories) {
@@ -76,8 +69,7 @@ class HomeDiscoveryController extends ChangeNotifier {
     return labels;
   }
 
-  // Activities per day for the day strip. Uses every filter except the
-  // date itself, so picking Padel only marks days that have Padel.
+  // Ignores the date filter so the strip still shows other days.
   Map<DateTime, int> get activityCountsByDay {
     final matching = _filters
         .withDate(DateOption.any)
@@ -90,8 +82,7 @@ class HomeDiscoveryController extends ChangeNotifier {
     return counts;
   }
 
-  // Loads the feed and, without prompting, the user's location. Safe to
-  // call from both Home and Map; only the first call does anything.
+  // Safe to call from both tabs, only loads once.
   Future<void> init() async {
     if (_started) return;
     _started = true;
@@ -133,8 +124,6 @@ class HomeDiscoveryController extends ChangeNotifier {
     }
   }
 
-  // Gets the user's location for "Near me". With [request], asks for
-  // permission or opens the relevant settings page if it was refused.
   Future<void> refreshLocation({bool request = false}) async {
     if (_isLocating) return;
     _isLocating = true;
@@ -187,7 +176,6 @@ class HomeDiscoveryController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // How many activities [draft] would show; the sheet's live count.
   int countFor(ActivityFilters draft) => draft
       .apply(_allActivities, userLocation: _userLocation, search: searchQuery)
       .length;
@@ -209,8 +197,6 @@ class HomeDiscoveryController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Day strip tap: selects that day, or clears the date if it was the
-  // only day selected.
   void selectDay(DateTime day, {DateTime? now}) {
     final today = DateUtils.dateOnly(now ?? DateTime.now());
     final picked = DateUtils.dateOnly(day);
@@ -228,7 +214,6 @@ class HomeDiscoveryController extends ChangeNotifier {
     });
   }
 
-  // Category chip tap on Home or Map.
   void toggleCategory(String category) {
     applyFilters(_filters.toggleCategory(category));
   }
@@ -237,7 +222,6 @@ class HomeDiscoveryController extends ChangeNotifier {
     applyFilters(_filters.copyWith(categories: const {}));
   }
 
-  // Resets the search, the sheet, the day strip and the category chips.
   void clearAllFilters() {
     searchController.clear();
     applyFilters(ActivityFilters.defaults);

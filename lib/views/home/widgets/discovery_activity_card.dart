@@ -162,7 +162,6 @@ class DiscoveryActivityCard extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        // "3/4 One More Needed", tinted by status.
         ActivityStatusChip.count(
           availability: activity.availability,
           label:

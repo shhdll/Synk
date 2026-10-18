@@ -3,8 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/synk_colors.dart';
 
-// Round sliders button that opens the filter sheet. Turns orange with a
-// count badge while [count] filter sections differ from their defaults.
 class FilterButton extends StatelessWidget {
   const FilterButton({super.key, required this.count, required this.onTap});
 

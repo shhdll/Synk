@@ -6,9 +6,6 @@ import '../../../core/constants/synk_colors.dart';
 import '../../../models/activities_model.dart';
 import '../../../models/avatar_uploader.dart';
 
-// Read-only profile of another user (e.g. someone asking to join), opened
-// as a bottom sheet. Shows what's passed in right away, then fills in the
-// bio, interests and stats once they load.
 Future<void> showUserProfileSheet({
   required BuildContext context,
   required String userId,
@@ -65,8 +62,7 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
   Future<void> _load() async {
     final client = Supabase.instance.client;
     final results = await Future.wait<Object?>([
-      // All columns, so a column missing from the table (age, rating)
-      // can't fail the query; only the ones shown below are read.
+      // select() so a missing column can't break it.
       client
           .from('users')
           .select()

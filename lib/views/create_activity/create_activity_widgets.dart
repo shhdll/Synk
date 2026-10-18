@@ -3,11 +3,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../core/constants/synk_colors.dart';
 
-// Pieces shared by the three Create Activity steps.
 
 const Color kFieldErrorColor = Color(0xFFE53935);
 
-// Section title above each field ("Activity title", "Location", ...).
 class CreateGroupLabel extends StatelessWidget {
   const CreateGroupLabel({
     super.key,
@@ -67,7 +65,6 @@ class CreateGroupLabel extends StatelessWidget {
   }
 }
 
-// White rounded card; outlined in red while its field has an error.
 class CreateCard extends StatelessWidget {
   const CreateCard({
     super.key,
@@ -105,7 +102,6 @@ class CreateCard extends StatelessWidget {
   }
 }
 
-// Red message right under a field; renders nothing when [text] is null.
 class FieldError extends StatelessWidget {
   const FieldError(this.text, {super.key});
 
@@ -141,11 +137,7 @@ class FieldError extends StatelessWidget {
   }
 }
 
-// Non-interactive Google Map centered on a place, with one pin.
-//
-// Keyed by the coordinates: GoogleMap only reads its camera and markers when
-// the platform view is created, so a new place needs a fresh map. Lite mode
-// renders it as a static image on Android.
+// Keyed by coordinates so a new place rebuilds the map.
 class LiteMapPreview extends StatelessWidget {
   const LiteMapPreview({
     super.key,

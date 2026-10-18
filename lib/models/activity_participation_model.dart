@@ -64,7 +64,6 @@ class PendingActivityRequest {
   final String requesterId;
   final String requesterName;
   final String? requesterUsername;
-  // Filled from the users table when the RPC doesn't return them.
   final String? requesterAvatarUrl;
   final String? requesterGender;
   final DateTime requestedAt;
@@ -145,8 +144,7 @@ class ActivityParticipationModel {
     return _withProfiles(requests);
   }
 
-  // The RPC has no photo, so look up each requester's avatar and gender
-  // (for the default avatar) in one query. Requests still load without them.
+  // The RPC has no photos, so fetch them separately.
   Future<List<PendingActivityRequest>> _withProfiles(
     List<PendingActivityRequest> requests,
   ) async {
@@ -175,7 +173,6 @@ class ActivityParticipationModel {
     }
   }
 
-  // How many requests are waiting for the host; drives the badges.
   Future<int> countPendingRequests() async {
     final response = await _client.rpc('get_pending_activity_requests');
     return response is List ? response.length : 0;

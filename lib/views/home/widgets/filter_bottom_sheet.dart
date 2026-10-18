@@ -7,9 +7,7 @@ import '../../../models/activity_filters.dart';
 import '../../widgets/synk_date_picker.dart';
 import 'synk_filter_chip.dart';
 
-// Advanced filters for the discovery feed. Edits a draft copy of the
-// controller's filters: "Show" applies it, Reset restores defaults in the
-// draft only, and closing (X, scrim, back) discards it.
+// Edits a draft; only Show applies it.
 Future<void> showHomeFilterBottomSheet({
   required BuildContext context,
   required HomeDiscoveryController controller,
@@ -49,7 +47,6 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     Navigator.of(context).pop();
   }
 
-  // Tapping the picked date clears it; otherwise opens the calendar.
   Future<void> _onPickDate() async {
     if (_draft.date == DateOption.custom) {
       _update(_draft.withDate(DateOption.any));
@@ -67,7 +64,6 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     }
   }
 
-  // Tapping the picked time clears it; otherwise opens the time wheels.
   Future<void> _onPickTime() async {
     if (_draft.fromMinute != null) {
       _update(_draft.withTime());
@@ -190,9 +186,6 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     );
   }
 
-  // Opposite pairs, one per row. One is always selected; Nearest and
-  // Farthest need the user's location, and the spots sorts are off while
-  // Spots is 1 left or Full.
   Widget _buildSort(bool hasLocation) {
     return _Section(
       label: 'Sort by',
@@ -289,7 +282,6 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     ];
   }
 
-  // Measured from the user's location, so disabled without it.
   Widget _buildDistance(bool hasLocation) {
     final options = DistanceOption.values.where(
       (o) => o != DistanceOption.any,
@@ -328,7 +320,6 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     );
   }
 
-  // 1 left and Full are off while sorting by spots (see SortOption.bySpots).
   Widget _buildSpots() {
     final options = SpotsOption.values.where((o) => o != SpotsOption.any);
 
@@ -397,8 +388,6 @@ class _Handle extends StatelessWidget {
   }
 }
 
-// Section label, then [children] laid out [columns] per row, each chip
-// stretched to an equal share of the full width.
 class _Section extends StatelessWidget {
   const _Section({
     required this.label,
@@ -419,7 +408,6 @@ class _Section extends StatelessWidget {
       final cells = <Widget>[];
       for (var j = i; j < i + columns; j++) {
         if (j > i) cells.add(const SizedBox(width: 8));
-        // Pad a short last row so its chips keep the same width.
         cells.add(
           Expanded(
             child: j < children.length ? children[j] : const SizedBox(),
@@ -451,7 +439,6 @@ class _Section extends StatelessWidget {
   }
 }
 
-// Two-line chip for the Time row: name over the hours it covers.
 class _TwoLineChip extends StatelessWidget {
   const _TwoLineChip({
     required this.title,

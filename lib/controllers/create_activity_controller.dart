@@ -11,7 +11,6 @@ import '../models/activity_photo_uploader.dart';
 // Image formats accepted for an activity photo.
 enum PhotoFormat { jpeg, png }
 
-// The required fields on the first step, each with its own inline error.
 enum CreateField { title, location, date, time }
 
 // Outcome of a create attempt.
@@ -132,7 +131,6 @@ class CreateActivityController extends ChangeNotifier {
     _locationAddress = null;
     _latitude = null;
     _longitude = null;
-    // Clearing it is leaving it empty, so say it's needed.
     _touched.add(CreateField.location);
     notifyListeners();
   }
@@ -145,7 +143,6 @@ class CreateActivityController extends ChangeNotifier {
 
   void setTime(TimeOfDay value) {
     _time = value;
-    // Checked right away, so a time that has already passed is flagged.
     _touched.add(CreateField.time);
     notifyListeners();
   }
@@ -281,7 +278,6 @@ class CreateActivityController extends ChangeNotifier {
   // Validation
   // ---------------------------------------------------------------------------
 
-  // Letters and spaces only (any alphabet), as the title field allows.
   static final RegExp titleAllowed = RegExp(r'[\p{L} ]', unicode: true);
 
   String? validateTitle(String? value) {
@@ -296,7 +292,6 @@ class CreateActivityController extends ChangeNotifier {
     return null;
   }
 
-  // Optional; only the length is checked.
   String? validateDescription(String? value) {
     final description = value?.trim() ?? '';
     if (description.length > ActivityConstants.descriptionMaxLength) {
@@ -305,15 +300,13 @@ class CreateActivityController extends ChangeNotifier {
     return null;
   }
 
-  // A field shows its error only once the user has left it (or tried to
-  // continue past it), never while they're still filling it in.
+  // Errors only show after the user leaves a field.
   final Set<CreateField> _touched = {};
 
   void touch(CreateField field) {
     if (_touched.add(field)) notifyListeners();
   }
 
-  // Shows every error on [step], as when the user presses Continue.
   void touchStep(int step) {
     final fields = switch (step) {
       0 => CreateField.values,
@@ -336,12 +329,9 @@ class CreateActivityController extends ChangeNotifier {
           : null,
   };
 
-  // The error to show under [field], or null.
   String? errorFor(CreateField field) =>
       _touched.contains(field) ? _fieldError(field) : null;
 
-  // Step 1 (title, location, date and time) must be complete; steps 2 and
-  // 3 have nothing required.
   bool _stepValid(int step) =>
       step != 0 || CreateField.values.every((f) => _fieldError(f) == null);
 
@@ -351,7 +341,6 @@ class CreateActivityController extends ChangeNotifier {
       !_isSubmitting &&
       !_isLoading;
 
-  // First problem on [step], or null when it's complete.
   String? stepBlocker(int step) {
     if (step != 0) return null;
     for (final field in CreateField.values) {
@@ -361,7 +350,6 @@ class CreateActivityController extends ChangeNotifier {
     return null;
   }
 
-  // The first thing stopping a submit, checked across every step.
   String? get submitBlocker =>
       stepBlocker(0) ?? validateDescription(descriptionController.text);
 

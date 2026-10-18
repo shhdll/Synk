@@ -35,12 +35,10 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   final ActivityParticipationModel _participationModel =
       ActivityParticipationModel();
 
-  // Re-checks join requests while the app is open, so the badge shows up
-  // without the host having to refresh.
+  // Poll for new join requests while the app is open.
   static const _requestPollInterval = Duration(minutes: 1);
   Timer? _requestPoll;
 
-  // One discovery feed and filter state for both Home and Map.
   late final HomeDiscoveryController _discoveryController =
       HomeDiscoveryController(activitiesModel: _activitiesModel);
 
@@ -69,7 +67,6 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     );
   }
 
-  // Coming back to the app is when a new request is most likely waiting.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) _loadPendingRequestCount();
@@ -90,7 +87,6 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       if (!mounted) return;
       _activityStore.pendingRequestCount = count;
     } catch (_) {
-      // Keep the current badge when loading fails.
     }
   }
 

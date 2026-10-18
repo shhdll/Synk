@@ -4,8 +4,7 @@ import '../../../core/constants/synk_colors.dart';
 import '../../../models/activity_model.dart';
 
 // Small pill showing whether an activity can still be joined:
-// Available, One More Needed, or Full. [ActivityStatusChip.count] shows
-// the "3/4 going" count instead, tinted in the same status color.
+// Available, One More Needed, or Full.
 class ActivityStatusChip extends StatelessWidget {
   const ActivityStatusChip({super.key, required this.availability})
     : countLabel = null;

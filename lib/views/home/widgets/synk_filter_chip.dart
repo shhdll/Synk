@@ -4,8 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/synk_colors.dart';
 import 'activity_thumbnail.dart';
 
-// Pill chip used by the filter sheet and Home's category row. White when
-// off, orange when selected; a null [onTap] shows it disabled at 40%.
 class SynkFilterChip extends StatelessWidget {
   const SynkFilterChip({
     super.key,
@@ -15,7 +13,6 @@ class SynkFilterChip extends StatelessWidget {
     this.icon,
   });
 
-  // A category chip, with that kind of activity's icon.
   SynkFilterChip.category({
     super.key,
     required String category,
@@ -46,8 +43,6 @@ class SynkFilterChip extends StatelessWidget {
           child: InkWell(
             onTap: onTap,
             borderRadius: BorderRadius.circular(19),
-            // Centered, and scaled down rather than cut off when stretched
-            // into a narrow equal-width cell.
             child: Container(
               height: 38,
               padding: const EdgeInsets.symmetric(horizontal: 12),

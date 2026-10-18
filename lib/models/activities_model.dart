@@ -50,10 +50,7 @@ class ActivitiesModel {
     return _withActivityCodes(activities);
   }
 
-  // The participations RPC leaves out activity codes. Activities the user
-  // has joined are readable directly (public ones, and private ones via
-  // the "Joined users can view private activities" policy), so fetch their
-  // codes from there. Pending requests stay without one.
+  // The RPC strips codes, so read them for joined activities.
   Future<List<Activity>> _withActivityCodes(List<Activity> activities) async {
     final ids = [
       for (final a in activities)

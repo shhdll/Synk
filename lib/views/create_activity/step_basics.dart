@@ -12,7 +12,6 @@ import '../widgets/synk_date_picker.dart';
 import 'create_activity_widgets.dart';
 import 'location_search_sheet.dart';
 
-// Step 1 of Create Activity: what it is, where, and when.
 class StepBasics extends StatefulWidget {
   const StepBasics({super.key, required this.controller});
 
@@ -31,7 +30,6 @@ class _StepBasicsState extends State<StepBasics> {
   void initState() {
     super.initState();
     _c.titleController.addListener(_rebuild);
-    // The title's error shows once the user leaves the field.
     _titleFocus.addListener(() {
       if (!_titleFocus.hasFocus) _c.touch(CreateField.title);
     });
@@ -59,7 +57,6 @@ class _StepBasicsState extends State<StepBasics> {
 
     if (!mounted) return;
     if (place == null) {
-      // Closed without choosing: they've left the field.
       _c.touch(CreateField.location);
       return;
     }
@@ -135,7 +132,7 @@ class _StepBasicsState extends State<StepBasics> {
 
   Widget _buildTitle() {
     final String title = _c.titleController.text;
-    // The icon follows what's typed, the same one Home will show for it.
+    // Icon follows the title, like on Home.
     final ActivityVisual visual = ActivityVisual.forText(title);
     final bool matched = title.trim().isNotEmpty;
 
@@ -286,7 +283,6 @@ class _StepBasicsState extends State<StepBasics> {
                         color: SynkColors.orangeDark,
                       ),
                     ),
-                  // Clear the place.
                   Positioned(
                     right: 10,
                     top: 10,
@@ -393,7 +389,6 @@ class _StepBasicsState extends State<StepBasics> {
     );
   }
 
-  // Today / Tomorrow / Pick a date, one row.
   Widget _buildDate() {
     final DateTime? date = _c.date;
     final bool isToday = date != null && _dateOnly(date) == _today;

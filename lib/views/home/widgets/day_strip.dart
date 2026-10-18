@@ -4,10 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/synk_colors.dart';
 import '../../../models/activity_filters.dart';
 
-// The next two weeks as tappable days. Highlights whatever the Date filter
-// covers (one day, or Fri–Sat for "This weekend"), so it and the filter
-// sheet always agree. Days with plans are white cards; days without are
-// flat and muted.
 class DayStrip extends StatelessWidget {
   const DayStrip({
     super.key,
@@ -30,7 +26,6 @@ class DayStrip extends StatelessWidget {
     final today = DateUtils.dateOnly(now);
 
     return SizedBox(
-      // Room for the card shadow.
       height: 66,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,

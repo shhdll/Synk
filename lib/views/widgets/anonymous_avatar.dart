@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/synk_colors.dart';
 
-// Stand-in picture for a member whose identity is hidden (shown to users
-// whose join request is still pending): a plain grey silhouette.
 class AnonymousAvatar extends StatelessWidget {
   const AnonymousAvatar({super.key, required this.size});
 

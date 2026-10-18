@@ -1,10 +1,4 @@
--- The signed-in user's joined, pending and waitlisted activities, now with:
--- * the activity code for everyone taking part, shown on their Activities
---   tab cards so they can share it. A code alone doesn't let anyone into a
---   private activity: joining with it still sends a request the host must
---   accept.
--- * participants_count (host + joined members), so a pending requester can
---   see how many are going, as anonymous faces, without seeing who.
+-- Adds the activity code and participants_count.
 create or replace function public.get_my_activity_participations()
 returns jsonb
 language sql
@@ -21,7 +15,7 @@ as $$
         participation.id,
         'participation_status',
         participation.status,
-        -- The host counts as the first participant.
+        -- host counts as one
         'participants_count',
         1 + (
           select count(*)

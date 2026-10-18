@@ -166,7 +166,6 @@ class _MyAppState extends State<MyApp> {
       title: 'Synk',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFFF9F5C)),
-        // One font everywhere, on Android and iOS alike.
         fontFamily: GoogleFonts.inter().fontFamily,
       ),
       home: StreamBuilder<AuthState>(

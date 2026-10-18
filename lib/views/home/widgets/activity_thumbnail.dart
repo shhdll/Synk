@@ -44,8 +44,6 @@ class ActivityThumbnail extends StatelessWidget {
   }
 }
 
-// Soft tinted tile with the activity's icon; fills whatever space it gets.
-// Stands in for a missing photo here and on the Activity tab's covers.
 class ActivityVisualTile extends StatelessWidget {
   const ActivityVisualTile({
     super.key,
@@ -170,7 +168,6 @@ class ActivityVisual {
   static ActivityVisual of(Activity activity) =>
       forText('${activity.categoryLabel} ${activity.title}');
 
-  // Also used on its own for category chips ("Padel", "Art").
   static ActivityVisual forText(String value) {
     final text = value.toLowerCase();
     for (final (keywords, visual) in _rules) {

@@ -6,9 +6,6 @@ import '../home/widgets/activity_thumbnail.dart';
 import '../home/widgets/discovery_activity_card.dart';
 import 'create_activity_widgets.dart';
 
-// Step 3 of Create Activity: everything at a glance before publishing,
-// with the photo up top and the place on a map. Tapping a row goes back to
-// the step where it's set.
 class StepReview extends StatelessWidget {
   const StepReview({super.key, required this.controller});
 
@@ -122,7 +119,6 @@ class StepReview extends StatelessWidget {
   }
 }
 
-// No photo: the same tinted icon tile the activity will get on Home.
 class _IconHero extends StatelessWidget {
   const _IconHero({required this.title});
 

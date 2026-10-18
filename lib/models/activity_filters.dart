@@ -7,7 +7,7 @@ import 'activity_model.dart';
 
 typedef GeoPoint = ({double latitude, double longitude});
 
-// Listed in opposite pairs; the sheet shows one pair per row.
+// Opposite pairs, one per row in the sheet.
 enum SortOption {
   soonest('Soonest'),
   latest('Latest'),
@@ -21,8 +21,6 @@ enum SortOption {
 
   bool get needsLocation => this == nearest || this == farthest;
 
-  // Orders by open spots, so it has nothing to sort when the Spots filter
-  // leaves a single count ([SpotsOption.isSingleCount]).
   bool get bySpots => this == almostFull || this == mostSpots;
 }
 
@@ -36,7 +34,7 @@ enum DateOption {
   final String label;
 }
 
-// Parts of the day, by the hour an activity starts ([startHour, endHour)).
+// [startHour, endHour)
 enum DaySlot {
   morning('Morning', '6 AM–12 PM', 6, 12),
   evening('Evening', '5–9 PM', 17, 21),
@@ -71,14 +69,10 @@ enum SpotsOption {
   const SpotsOption(this.label);
   final String label;
 
-  // Every match has the same number of open spots, so the spots sorts
-  // ([SortOption.bySpots]) can't be combined with it.
   bool get isSingleCount => this == oneLeft || this == full;
 }
 
-// Every advanced filter for the discovery feed. Immutable, so the filter
-// sheet can edit a draft copy and only replace the applied one on "Show".
-// The same [apply] produces both the home list and the sheet's live count.
+// Immutable so the sheet can edit a draft copy.
 @immutable
 class ActivityFilters {
   const ActivityFilters({
@@ -96,14 +90,11 @@ class ActivityFilters {
 
   final SortOption sort;
   final DateOption date;
-  // Set only when [date] is [DateOption.custom].
   final DateTime? customDate;
-  // Time of day: one slot, or a picked start time ([fromMinute] minutes
-  // after midnight; matches activities starting then or later). At most
-  // one is set; neither means any time.
+  // Either a slot or a start time, never both.
   final DaySlot? daySlot;
   final int? fromMinute;
-  // Empty means all categories.
+  // Empty = all.
   final Set<String> categories;
   final DistanceOption distance;
   final SpotsOption spots;
@@ -139,8 +130,6 @@ class ActivityFilters {
     );
   }
 
-  // Sets the time of day to [slot] or to "from [fromMinute]"; passing
-  // neither clears it.
   ActivityFilters withTime({DaySlot? slot, int? fromMinute}) {
     return ActivityFilters(
       sort: sort,
@@ -162,8 +151,6 @@ class ActivityFilters {
 
   bool get hasTime => daySlot != null || fromMinute != null;
 
-  // How many of the six sheet sections differ from their defaults; shown
-  // on the filter button badge.
   int get changedSectionCount {
     var count = 0;
     if (sort != defaults.sort) count++;
@@ -177,8 +164,6 @@ class ActivityFilters {
 
   bool get isDefault => changedSectionCount == 0;
 
-  // Days the date filter covers, as [start, end) local midnights.
-  // Null means any date.
   (DateTime, DateTime)? dateRange(DateTime now) {
     final today = DateTime(now.year, now.month, now.day);
     DateTime day(int offset) =>
@@ -206,7 +191,6 @@ class ActivityFilters {
     return !d.isBefore(range.$1) && d.isBefore(range.$2);
   }
 
-  // The single day selected, if the date filter covers exactly one.
   DateTime? singleDay(DateTime now) {
     final range = dateRange(now);
     if (range == null) return null;
@@ -215,7 +199,6 @@ class ActivityFilters {
     return next == end ? start : null;
   }
 
-  // "Today", "Tue, Oct 20", or null for any date.
   String? get dateLabel => switch (date) {
     DateOption.any => null,
     DateOption.custom =>
@@ -223,15 +206,12 @@ class ActivityFilters {
     _ => date.label,
   };
 
-  // "Evening", "From 7:30 PM", or null for any time.
   String? get timeLabel {
     if (daySlot != null) return daySlot!.label;
     if (fromMinute != null) return 'From ${formatMinute(fromMinute!)}';
     return null;
   }
 
-  // Filters and sorts [activities]. [search] is the home search bar text;
-  // Nearest, Farthest and Distance measure from [userLocation].
   List<Activity> apply(
     Iterable<Activity> activities, {
     GeoPoint? userLocation,
@@ -287,7 +267,6 @@ class ActivityFilters {
           if (activity.spotsOpen > 0) return false;
       }
 
-      // Almost full is about activities you can still join.
       if (sort == SortOption.almostFull && activity.spotsOpen < 1) {
         return false;
       }
@@ -297,8 +276,7 @@ class ActivityFilters {
 
     int bySoonest(Activity a, Activity b) => a.dateTime.compareTo(b.dateTime);
 
-    // Sorts by [key], soonest first on ties. Activities without a key
-    // (no coordinates) always go last.
+    // Ties go to the soonest, missing keys last.
     void sortBy(num? Function(Activity) key, {bool descending = false}) {
       result.sort((a, b) {
         final ka = key(a);
@@ -322,7 +300,6 @@ class ActivityFilters {
       case SortOption.farthest:
         from == null ? result.sort(bySoonest) : sortBy(kmTo, descending: true);
       case SortOption.almostFull:
-        // Fewest open spots first; full ones were filtered out above.
         sortBy((a) => a.spotsOpen);
       case SortOption.mostSpots:
         sortBy((a) => a.spotsOpen, descending: true);
@@ -331,7 +308,6 @@ class ActivityFilters {
     return result;
   }
 
-  // Title, description, location (name or address) or category label.
   static bool matchesSearch(Activity activity, String lowerQuery) {
     final searchable = [
       activity.title,
@@ -343,10 +319,7 @@ class ActivityFilters {
     return searchable.any((field) => field.toLowerCase().contains(lowerQuery));
   }
 
-  // Activities have no stored category yet, so a category also matches
-  // when one of its keywords (kActivityCategories) starts a word in the
-  // title or description. Unlisted names match themselves, with plurals
-  // matching their singular. [kOtherCategory] is everything else.
+  // No stored category yet, so match keywords in the title/description.
   static bool matchesCategory(Activity activity, String category) {
     final wanted = category.trim().toLowerCase();
     final label = activity.categoryLabel.trim().toLowerCase();
@@ -367,7 +340,6 @@ class ActivityFilters {
     );
   }
 
-  // Straight-line (great-circle) distance in kilometers.
   static double distanceKm(GeoPoint a, GeoPoint b) {
     const earthRadiusKm = 6371.0;
     double rad(double degrees) => degrees * math.pi / 180;
@@ -388,11 +360,9 @@ const _months = [
   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
 ];
 
-// "Tue, Oct 20".
 String formatShortDate(DateTime date) =>
     '${_weekdays[date.weekday - 1]}, ${_months[date.month - 1]} ${date.day}';
 
-// "7:30 PM" for [minuteOfDay] minutes after midnight.
 String formatMinute(int minuteOfDay) {
   final hour = minuteOfDay ~/ 60;
   final minute = (minuteOfDay % 60).toString().padLeft(2, '0');

@@ -138,7 +138,6 @@ class _CreateActivityViewState extends State<CreateActivityView> {
     final int step = _controller.currentStep;
 
     if (step < _stepCount - 1) {
-      // Problems show on the fields themselves, not in a popup.
       FocusScope.of(context).unfocus();
       _controller.touchStep(step);
       if (_controller.stepBlocker(step) != null) return;
@@ -150,7 +149,7 @@ class _CreateActivityViewState extends State<CreateActivityView> {
   }
 
   Future<void> _submit() async {
-    // E.g. the chosen time passed while reviewing: go back and show it.
+    // e.g. the time passed while on the review page
     if (_controller.stepBlocker(0) != null) {
       _controller.touchStep(0);
       _controller.goToStep(0);
