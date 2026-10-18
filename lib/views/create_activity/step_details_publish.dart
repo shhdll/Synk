@@ -7,8 +7,7 @@ import '../../controllers/create_activity_controller.dart';
 import '../../core/constants/activity_constants.dart';
 import '../../core/constants/synk_colors.dart';
 
-// Step 3 of the Create Activity wizard: description, optional photo,
-// visibility, and the summary the user confirms before publishing.
+// Step 3 of the Create Activity wizard: description, optional photo,visibility.
 class StepDetailsPublish extends StatefulWidget {
   const StepDetailsPublish({super.key, required this.controller});
 
@@ -60,9 +59,6 @@ class _StepDetailsPublishState extends State<StepDetailsPublish> {
   // Build
   // ---------------------------------------------------------------------------
 
-  // ---------------------------------------------------------------------------
-  // Build
-  // ---------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {

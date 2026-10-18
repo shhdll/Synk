@@ -284,9 +284,7 @@ class _Card extends StatelessWidget {
   }
 }
 
-// Nothing chosen yet: a polished discovery prompt rather than a settings
-// row — gradient search badge, strong hierarchy, and an explicit "Search"
-// affordance instead of a bare chevron.
+
 class _EmptyLocationCard extends StatelessWidget {
   const _EmptyLocationCard({required this.onTap});
 
@@ -504,23 +502,7 @@ class _SelectedLocationCard extends StatelessWidget {
   }
 }
 
-// A compact, non-interactive Google Map preview centered on the selected
-// place, with a single marker at that location.
-//
-// Keyed by the coordinates: GoogleMap only reads initialCameraPosition and
-// markers the first time its underlying platform view is created, so
-// changing them on an already-built GoogleMap does not move the camera or
-// the pin. Giving it a ValueKey derived from lat/lng means a new selection
-// (different key) makes Flutter tear down the old element and build a fresh
-// GoogleMap — which re-reads initialCameraPosition/markers on creation and
-// therefore recenters correctly. Same key (same coordinates) is left alone,
-// so re-tapping the same place doesn't needlessly rebuild the native view.
-//
-// Wrapped in IgnorePointer so the map never intercepts gestures: this is a
-// preview, not a real map screen, so taps fall through to the surrounding
-// InkWell and still open the location picker — no pan/zoom/toolbar/
-// navigation is introduced. liteModeEnabled renders it as a lightweight
-// static image on Android (our configured/tested platform for this).
+
 class _LocationMapPreview extends StatelessWidget {
   const _LocationMapPreview({
     required this.latitude,
@@ -629,10 +611,7 @@ class _LocationMapPreview extends StatelessWidget {
   }
 }
 
-// Small round "clear" control shown at the top-right of both map preview
-// states — a distinct action from "Change" (which reopens search): this one
-// removes the selected location entirely, via the same onClear callback the
-// card's own close button used to call.
+
 class _MapClearButton extends StatelessWidget {
   const _MapClearButton({required this.onTap});
 
@@ -659,8 +638,7 @@ class _MapClearButton extends StatelessWidget {
   }
 }
 
-// Fallback for the (unexpected) case where a location is selected but its
-// coordinates are missing — keeps the UI safe without force-unwrapping.
+
 class _MapPreviewPlaceholder extends StatelessWidget {
   const _MapPreviewPlaceholder({required this.onTap, required this.onClear});
 

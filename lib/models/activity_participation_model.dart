@@ -122,6 +122,20 @@ class ActivityParticipationModel {
         .toList();
   }
 
+  // Returns an activity's joined participants. Errors are passed to the caller.
+  Future<List<Map<String, dynamic>>> fetchJoinedParticipants(
+    String activityId,
+  ) async {
+    final response = await _client.rpc(
+      'get_activity_participants_list',
+      params: {'p_activity_id': activityId},
+    );
+
+    final rows = response as List<dynamic>;
+
+    return rows.map((row) => Map<String, dynamic>.from(row as Map)).toList();
+  }
+
   // Allows the host to accept or reject a private activity request.
   Future<ActivityJoinResult> reviewRequest({
     required String participationId,
@@ -130,6 +144,36 @@ class ActivityParticipationModel {
     final response = await _client.rpc(
       'review_activity_join_request',
       params: {'participation_id': participationId, 'accept_request': accept},
+    );
+
+    return ActivityJoinResult.fromJson(
+      Map<String, dynamic>.from(response as Map),
+    );
+  }
+
+  // Leaves an activity or its waitlist, or cancels a pending request.
+  Future<ActivityJoinResult> leaveActivity(String activityId) async {
+    final response = await _client.rpc(
+      'leave_activity',
+      params: {'requested_activity_id': activityId},
+    );
+
+    return ActivityJoinResult.fromJson(
+      Map<String, dynamic>.from(response as Map),
+    );
+  }
+
+  // Makes a joined participant the new host and removes the current host.
+  Future<ActivityJoinResult> transferHostAndLeave({
+    required String activityId,
+    required String newHostUserId,
+  }) async {
+    final response = await _client.rpc(
+      'transfer_host_and_leave',
+      params: {
+        'requested_activity_id': activityId,
+        'new_host_user_id': newHostUserId,
+      },
     );
 
     return ActivityJoinResult.fromJson(

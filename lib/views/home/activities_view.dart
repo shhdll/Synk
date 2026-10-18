@@ -6,6 +6,7 @@ import '../../models/activity_model.dart';
 import '../../utils/custom_widgets/synk_dialog.dart';
 import '../../utils/custom_widgets/synk_feedback.dart';
 import 'activity_join_requests_view.dart';
+import 'widgets/activity_details_sheet.dart';
 import 'widgets/activity_list.dart';
 
 class ActivitiesView extends StatefulWidget {
@@ -51,7 +52,16 @@ class _ActivitiesViewState extends State<ActivitiesView> {
     );
   }
 
-  Future<void> _confirmDelete(Activity activity) async {
+  // Resolves to true only when the activity was deleted.
+  // [showError] lets a caller display failures where the user can see them.
+  Future<bool> _confirmDelete(
+    Activity activity, {
+    void Function(String message)? showError,
+  }) async {
+    if (_deleteController.isDeleting(activity.id)) {
+      return false;
+    }
+
     final action = await SynkDialog.destructive(
       icon: Icons.delete_outline_rounded,
       title: 'Delete activity?',
@@ -62,20 +72,24 @@ class _ActivitiesViewState extends State<ActivitiesView> {
 
     // The destructive action is the secondary button.
     if (action != SynkDialogAction.secondary || !mounted) {
-      return;
+      return false;
     }
 
     final wasDeleted = await _deleteController.deleteActivity(activity.id);
 
-    if (!mounted) return;
+    if (!mounted) return wasDeleted;
 
     if (!wasDeleted) {
-      SynkFeedback.showError(
-        context,
-        _deleteController.errorMessage ??
-            'Unable to delete the activity. Please try again.',
-      );
-      return;
+      final message =
+          _deleteController.errorMessage ??
+          'Unable to delete the activity. Please try again.';
+
+      if (showError != null) {
+        showError(message);
+      } else {
+        SynkFeedback.showError(context, message);
+      }
+      return false;
     }
 
     // Remove the deleted activity immediately from Home and Activities.
@@ -85,6 +99,23 @@ class _ActivitiesViewState extends State<ActivitiesView> {
       context,
       title: 'Activity Deleted',
       message: 'The activity has been deleted successfully.',
+    );
+
+    return true;
+  }
+
+  void _openDetails(Activity activity) {
+    // An activity that is being deleted cannot be opened.
+    if (_deleteController.isDeleting(activity.id)) {
+      return;
+    }
+
+    showActivityDetailsSheet(
+      context: context,
+      activity: activity,
+      activityStore: widget.activityStore,
+      onDeleteActivity: (target, showError) =>
+          _confirmDelete(target, showError: showError),
     );
   }
 
@@ -229,6 +260,7 @@ class _ActivitiesViewState extends State<ActivitiesView> {
                           emptyMessage: 'Tap the + button to plan one.',
                           onDeleteActivity: _confirmDelete,
                           isDeletingActivity: _deleteController.isDeleting,
+                          onActivityTap: _openDetails,
                         ),
                         ActivityList(
                           activities: widget.activityStore.past,

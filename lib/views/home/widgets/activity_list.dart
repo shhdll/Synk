@@ -15,6 +15,7 @@ class ActivityList extends StatelessWidget {
     required this.currentUserId,
     this.onDeleteActivity,
     this.isDeletingActivity,
+    this.onActivityTap,
   });
 
   final List<Activity> activities;
@@ -28,6 +29,9 @@ class ActivityList extends StatelessWidget {
 
   // Reports whether a specific activity is currently being deleted.
   final bool Function(String activityId)? isDeletingActivity;
+
+  // Called when a card is tapped, for example to open its details.
+  final ValueChanged<Activity>? onActivityTap;
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +62,11 @@ class ActivityList extends StatelessWidget {
           onDelete: canManageActivity && onDeleteActivity != null
               ? () {
                   onDeleteActivity!(activity);
+                }
+              : null,
+          onTap: onActivityTap != null
+              ? () {
+                  onActivityTap!(activity);
                 }
               : null,
         );

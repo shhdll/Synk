@@ -51,9 +51,7 @@ class StepSchedulePeople extends StatelessWidget {
   String _formatTime(BuildContext context, TimeOfDay time) =>
       time.format(context);
 
-  // Compact, on-brand replacements for the native Material date/time
-  // pickers. Same validation as before (date can't be before today, date
-  // range is capped at a year out) — only the picker UI itself changed.
+
   Future<void> _pickDate(BuildContext context) async {
     final DateTime today = _dateOnly(DateTime.now());
     final DateTime? picked = await showModalBottomSheet<DateTime>(
@@ -208,8 +206,7 @@ class _GroupLabel extends StatelessWidget {
   }
 }
 
-// Small gray caption row with a leading icon, used under the date/time
-// fields and under the people field, matching the mockup's hint rows.
+
 class _HintRow extends StatelessWidget {
   const _HintRow({required this.icon, required this.text});
 
@@ -240,9 +237,7 @@ class _HintRow extends StatelessWidget {
   }
 }
 
-// Today / Tomorrow shortcut chip — compact, content-sized, matching the
-// approved mockup's pill style (tinted-orange fill when selected, rather
-// than the previous full-width gradient chip).
+
 class _ChoiceChipCard extends StatelessWidget {
   const _ChoiceChipCard({
     required this.label,
@@ -292,8 +287,7 @@ class _ChoiceChipCard extends StatelessWidget {
   }
 }
 
-// Compact tappable field card (icon, small label, value, chevron) used for
-// the side-by-side Date and Start cards, matching the mockup.
+
 class _FieldCard extends StatelessWidget {
   const _FieldCard({
     required this.icon,
@@ -391,8 +385,7 @@ class _FieldCard extends StatelessWidget {
   }
 }
 
-// Participants row card: icon + label on the left, a pill stepper on the
-// right, matching the mockup's People section.
+
 class _PeopleCard extends StatelessWidget {
   const _PeopleCard({
     required this.participants,
@@ -599,12 +592,7 @@ class _ValueRow extends StatelessWidget {
   }
 }
 
-// -----------------------------------------------------------------------------
-// Custom in-app date & time pickers (replace the native Material dialogs)
-// -----------------------------------------------------------------------------
 
-// Shared bottom-sheet chrome (drag handle + rounded top + Synk background),
-// matching the convention already used by LocationSearchSheet.
 class _PickerSheetShell extends StatelessWidget {
   const _PickerSheetShell({required this.title, required this.child});
 
@@ -707,8 +695,7 @@ class _SheetConfirmButton extends StatelessWidget {
   }
 }
 
-// Compact month calendar. Same range rules as the previous showDatePicker
-// call: firstDate..lastDate inclusive, Monday-first weeks.
+
 class _DatePickerSheet extends StatefulWidget {
   const _DatePickerSheet({
     required this.initialDate,
@@ -932,8 +919,7 @@ class _MonthNavButton extends StatelessWidget {
   }
 }
 
-// Compact scroll-wheel time picker (hour / minute / AM-PM), same value
-// range and precision as the previous showTimePicker call.
+// Compact scroll-wheel time picker (hour / minute / AM-PM
 class _TimePickerSheet extends StatefulWidget {
   const _TimePickerSheet({required this.initialTime});
 

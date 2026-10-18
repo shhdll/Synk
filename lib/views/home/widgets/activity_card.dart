@@ -11,6 +11,7 @@ class ActivityCard extends StatelessWidget {
     this.showActivityCode = false,
     this.onDelete,
     this.isDeleting = false,
+    this.onTap,
   });
 
   final Activity activity;
@@ -21,6 +22,9 @@ class ActivityCard extends StatelessWidget {
 
   // Disables the button and shows loading while deletion is running.
   final bool isDeleting;
+
+  // Opens the activity details. The card's buttons keep their own taps.
+  final VoidCallback? onTap;
 
   static const double _coverHeight = 128;
   static const Alignment _photoAlignment = Alignment(0, -0.3);
@@ -228,7 +232,7 @@ class ActivityCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final participationBadge = _buildParticipationBadge();
 
-    return Container(
+    final card = Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Colors.white,
@@ -401,6 +405,16 @@ if (onDelete != null)
           ),
         ],
       ),
+    );
+
+    if (onTap == null) {
+      return card;
+    }
+
+    return GestureDetector(
+      // An activity that is being deleted cannot be opened.
+      onTap: isDeleting ? null : onTap,
+      child: card,
     );
   }
 }
