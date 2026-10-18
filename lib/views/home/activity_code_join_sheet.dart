@@ -3,13 +3,59 @@ import 'package:flutter/services.dart';
 
 import '../../controllers/activity_join_controller.dart';
 import '../../core/constants/synk_colors.dart';
+import '../../models/activities_model.dart';
+import '../../models/activity_model.dart';
 import '../../models/activity_participation_model.dart';
+import '../../utils/custom_widgets/synk_feedback.dart';
+
+// The whole "Have a code?" flow, shared by Home and Activities: opens the
+// sheet, refreshes the user's activities after a join, then confirms.
+Future<void> joinActivityWithCode(
+  BuildContext context, {
+  required ActivityStore activityStore,
+  ActivitiesModel? activitiesModel,
+  VoidCallback? onJoined,
+}) async {
+  final result = await showActivityCodeJoinSheet(context);
+
+  // The user closed the sheet without completing a join.
+  if (!context.mounted || result == null) return;
+
+  try {
+    // Refresh joined, pending, and waitlisted activities
+    final participating = await (activitiesModel ?? ActivitiesModel())
+        .fetchParticipating();
+
+    if (!context.mounted) return;
+    activityStore.setParticipating(participating);
+    onJoined?.call();
+  } catch (_) {
+    // The join succeeded in Supabase, so the confirmation
+    // still appears if refreshing temporarily fails.
+  }
+
+  if (!context.mounted) return;
+
+  final title = switch (result.result) {
+    'joined' => 'Joined!',
+    'already_joined' => 'Already Joined',
+    'pending' => 'Request Sent!',
+    'already_pending' => 'Request Already Sent',
+    'waitlisted' => 'Added to Waitlist!',
+    'already_waitlisted' => 'Already Waitlisted',
+    _ => 'Done!',
+  };
+
+  await SynkFeedback.showSuccessDialog(
+    context,
+    title: title,
+    message: result.message,
+  );
+}
 
 // Opens the code sheet and returns the successful join result.
 // A null result means the user closed the sheet without joining.
-Future<ActivityJoinResult?> showActivityCodeJoinSheet(
-  BuildContext context,
-) {
+Future<ActivityJoinResult?> showActivityCodeJoinSheet(BuildContext context) {
   return showModalBottomSheet<ActivityJoinResult>(
     context: context,
     isScrollControlled: true,
@@ -29,8 +75,7 @@ class ActivityCodeJoinSheet extends StatefulWidget {
   }
 }
 
-class _ActivityCodeJoinSheetState
-    extends State<ActivityCodeJoinSheet> {
+class _ActivityCodeJoinSheetState extends State<ActivityCodeJoinSheet> {
   late final ActivityJoinController _controller;
 
   @override
@@ -77,21 +122,12 @@ class _ActivityCodeJoinSheetState
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.viewInsetsOf(context).bottom,
-      ),
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: Container(
-        padding: const EdgeInsets.fromLTRB(
-          24,
-          12,
-          24,
-          28,
-        ),
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 28),
         decoration: const BoxDecoration(
           color: SynkColors.background,
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(28),
-          ),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: SingleChildScrollView(
           child: Column(
@@ -100,16 +136,10 @@ class _ActivityCodeJoinSheetState
               Container(
                 width: 44,
                 height: 5,
-                margin: const EdgeInsets.only(
-                  bottom: 22,
-                ),
+                margin: const EdgeInsets.only(bottom: 22),
                 decoration: BoxDecoration(
-                  color:
-                      SynkColors.textSecondary.withValues(
-                    alpha: 0.20,
-                  ),
-                  borderRadius:
-                      BorderRadius.circular(20),
+                  color: SynkColors.textSecondary.withValues(alpha: 0.20),
+                  borderRadius: BorderRadius.circular(20),
                 ),
               ),
               Row(
@@ -118,12 +148,8 @@ class _ActivityCodeJoinSheetState
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color:
-                          SynkColors.orangeDark.withValues(
-                        alpha: 0.10,
-                      ),
-                      borderRadius:
-                          BorderRadius.circular(14),
+                      color: SynkColors.orangeDark.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     child: const Icon(
                       Icons.key_rounded,
@@ -134,17 +160,14 @@ class _ActivityCodeJoinSheetState
                   const SizedBox(width: 14),
                   const Expanded(
                     child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           'Join with a code',
                           style: TextStyle(
                             fontSize: 21,
-                            fontWeight:
-                                FontWeight.w800,
-                            color:
-                                SynkColors.textPrimary,
+                            fontWeight: FontWeight.w800,
+                            color: SynkColors.textPrimary,
                           ),
                         ),
                         SizedBox(height: 3),
@@ -152,22 +175,18 @@ class _ActivityCodeJoinSheetState
                           'Enter the 6-digit activity code.',
                           style: TextStyle(
                             fontSize: 14,
-                            color: SynkColors
-                                .textSecondary,
+                            color: SynkColors.textSecondary,
                           ),
                         ),
                       ],
                     ),
                   ),
                   IconButton(
-                    onPressed:
-                        _controller.isLoading
-                            ? null
-                            : () {
-                                Navigator.pop(
-                                  context,
-                                );
-                              },
+                    onPressed: _controller.isLoading
+                        ? null
+                        : () {
+                            Navigator.pop(context);
+                          },
                     icon: const Icon(
                       Icons.close_rounded,
                       color: SynkColors.textPrimary,
@@ -177,19 +196,15 @@ class _ActivityCodeJoinSheetState
               ),
               const SizedBox(height: 24),
               TextField(
-                controller:
-                    _controller.codeController,
+                controller: _controller.codeController,
                 autofocus: true,
                 keyboardType: TextInputType.number,
                 textInputAction: TextInputAction.done,
                 textAlign: TextAlign.center,
                 maxLength: 6,
                 inputFormatters: [
-                  FilteringTextInputFormatter
-                      .digitsOnly,
-                  LengthLimitingTextInputFormatter(
-                    6,
-                  ),
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(6),
                 ],
                 onChanged: (_) {
                   _controller.clearFeedback();
@@ -207,69 +222,40 @@ class _ActivityCodeJoinSheetState
                 decoration: InputDecoration(
                   hintText: '000000',
                   hintStyle: TextStyle(
-                    color: SynkColors.textSecondary
-                        .withValues(alpha: 0.45),
+                    color: SynkColors.textSecondary.withValues(alpha: 0.45),
                   ),
                   counterText: '',
-                  errorText:
-                      _controller.errorMessage,
+                  errorText: _controller.errorMessage,
                   filled: true,
-                  fillColor:
-                      Colors.white.withValues(
-                    alpha: 0.78,
-                  ),
-                  contentPadding:
-                      const EdgeInsets.symmetric(
+                  fillColor: Colors.white.withValues(alpha: 0.78),
+                  contentPadding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 20,
                   ),
                   border: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(18),
                     borderSide: BorderSide.none,
                   ),
-                  enabledBorder:
-                      OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(18),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(18),
                     borderSide: BorderSide(
-                      color: SynkColors
-                          .textSecondary
-                          .withValues(alpha: 0.14),
+                      color: SynkColors.textSecondary.withValues(alpha: 0.14),
                     ),
                   ),
-                  focusedBorder:
-                      const OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.all(
-                      Radius.circular(18),
-                    ),
+                  focusedBorder: const OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(18)),
                     borderSide: BorderSide(
-                      color:
-                          SynkColors.orangeDark,
+                      color: SynkColors.orangeDark,
                       width: 2,
                     ),
                   ),
-                  errorBorder:
-                      const OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.all(
-                      Radius.circular(18),
-                    ),
-                    borderSide: BorderSide(
-                      color: Colors.redAccent,
-                    ),
+                  errorBorder: const OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(18)),
+                    borderSide: BorderSide(color: Colors.redAccent),
                   ),
-                  focusedErrorBorder:
-                      const OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.all(
-                      Radius.circular(18),
-                    ),
-                    borderSide: BorderSide(
-                      color: Colors.redAccent,
-                      width: 2,
-                    ),
+                  focusedErrorBorder: const OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(18)),
+                    borderSide: BorderSide(color: Colors.redAccent, width: 2),
                   ),
                 ),
               ),
@@ -278,28 +264,22 @@ class _ActivityCodeJoinSheetState
                 width: double.infinity,
                 height: 56,
                 child: FilledButton(
-                  onPressed:
-                      _controller.isLoading
-                          ? null
-                          : _submitCode,
+                  onPressed: _controller.isLoading ? null : _submitCode,
                   style: FilledButton.styleFrom(
-                    backgroundColor:
-                        SynkColors.orangeDark,
-                    disabledBackgroundColor:
-                        SynkColors.orangeDark
-                            .withValues(alpha: 0.45),
+                    backgroundColor: SynkColors.orangeDark,
+                    disabledBackgroundColor: SynkColors.orangeDark.withValues(
+                      alpha: 0.45,
+                    ),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(18),
                     ),
                   ),
                   child: _controller.isLoading
                       ? const SizedBox(
                           width: 23,
                           height: 23,
-                          child:
-                              CircularProgressIndicator(
+                          child: CircularProgressIndicator(
                             strokeWidth: 2.5,
                             color: Colors.white,
                           ),
@@ -308,8 +288,7 @@ class _ActivityCodeJoinSheetState
                           'Join Activity',
                           style: TextStyle(
                             fontSize: 16,
-                            fontWeight:
-                                FontWeight.w700,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                 ),

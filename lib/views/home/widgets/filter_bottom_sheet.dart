@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-import '../../../core/constants/synk_colors.dart';
 import '../../../controllers/home_discovery_controller.dart';
+import '../../../core/constants/synk_colors.dart';
+import '../../../models/activity_filters.dart';
+import '../../widgets/synk_date_picker.dart';
+import 'synk_filter_chip.dart';
 
+// Advanced filters for the discovery feed. Edits a draft copy of the
+// controller's filters: "Show" applies it, Reset restores defaults in the
+// draft only, and closing (X, scrim, back) discards it.
 Future<void> showHomeFilterBottomSheet({
   required BuildContext context,
   required HomeDiscoveryController controller,
@@ -11,9 +18,15 @@ Future<void> showHomeFilterBottomSheet({
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
+    barrierColor: SynkColors.ink.withValues(alpha: 0.45),
     builder: (context) => FilterBottomSheet(controller: controller),
   );
 }
+
+const _handleColor = Color(0xFFD8CDBB);
+
+TextStyle _inter(double size, FontWeight weight, Color color) =>
+    GoogleFonts.inter(fontSize: size, fontWeight: weight, color: color);
 
 class FilterBottomSheet extends StatefulWidget {
   const FilterBottomSheet({super.key, required this.controller});
@@ -25,346 +38,506 @@ class FilterBottomSheet extends StatefulWidget {
 }
 
 class _FilterBottomSheetState extends State<FilterBottomSheet> {
-  late TimeFilterOption _timeOption;
-  DateTime? _customDate;
-  String? _selectedLocation;
-  late final TextEditingController _customLocationController;
+  late ActivityFilters _draft = widget.controller.filters;
 
-  @override
-  void initState() {
-    super.initState();
-    _timeOption = widget.controller.selectedTimeFilter;
-    _customDate = widget.controller.customSelectedDate;
-    _selectedLocation = widget.controller.selectedLocation;
-    _customLocationController = TextEditingController(
-      text: _selectedLocation ?? '',
-    );
-  }
+  HomeDiscoveryController get _c => widget.controller;
 
-  @override
-  void dispose() {
-    _customLocationController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _pickDate() async {
-    final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _customDate ?? now,
-      firstDate: now,
-      lastDate: now.add(const Duration(days: 365)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: SynkColors.orangeDark,
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: SynkColors.textPrimary,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null) {
-      setState(() {
-        _timeOption = TimeFilterOption.customDate;
-        _customDate = picked;
-      });
-    }
-  }
+  void _update(ActivityFilters next) => setState(() => _draft = next);
 
   void _apply() {
-    final customLoc = _customLocationController.text.trim();
-    final locationToApply = customLoc.isNotEmpty ? customLoc : _selectedLocation;
-
-    widget.controller.setTimeFilter(_timeOption, customDate: _customDate);
-    widget.controller.setLocationFilter(locationToApply);
+    _c.applyFilters(_draft);
     Navigator.of(context).pop();
   }
 
-  void _reset() {
-    setState(() {
-      _timeOption = TimeFilterOption.all;
-      _customDate = null;
-      _selectedLocation = null;
-      _customLocationController.clear();
-    });
+  // Tapping the picked date clears it; otherwise opens the calendar.
+  Future<void> _onPickDate() async {
+    if (_draft.date == DateOption.custom) {
+      _update(_draft.withDate(DateOption.any));
+      return;
+    }
+    final today = DateUtils.dateOnly(DateTime.now());
+    final picked = await showSynkDatePicker(
+      context: context,
+      initialDate: today,
+      firstDate: today,
+      lastDate: today.add(const Duration(days: 365)),
+    );
+    if (picked != null && mounted) {
+      _update(_draft.withDate(DateOption.custom, customDate: picked));
+    }
+  }
+
+  // Tapping the picked time clears it; otherwise opens the time wheels.
+  Future<void> _onPickTime() async {
+    if (_draft.fromMinute != null) {
+      _update(_draft.withTime());
+      return;
+    }
+    final picked = await showSynkTimePicker(
+      context: context,
+      initialTime: const TimeOfDay(hour: 18, minute: 0),
+      title: 'Starting from',
+    );
+    if (picked != null && mounted) {
+      _update(_draft.withTime(fromMinute: picked.hour * 60 + picked.minute));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final availableLocs = widget.controller.availableLocations;
+    final media = MediaQuery.of(context);
 
-    return Container(
-      padding: EdgeInsets.only(
-        top: 20,
-        left: 24,
-        right: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Handle bar
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-            ),
-            const SizedBox(height: 18),
+    return ListenableBuilder(
+      listenable: _c,
+      builder: (context, _) {
+        final count = _c.countFor(_draft);
+        final hasLocation = _c.userLocation != null;
 
-            // Header Row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Row(
-                  children: [
-                    Icon(
-                      Icons.tune_rounded,
-                      color: SynkColors.orangeDark,
-                      size: 22,
-                    ),
-                    SizedBox(width: 8),
-                    Text(
-                      'Filter Activities',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -0.5,
-                        color: SynkColors.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-                TextButton(
-                  onPressed: _reset,
-                  child: const Text(
-                    'Reset',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: SynkColors.textSecondary,
-                    ),
+        return Container(
+          constraints: BoxConstraints(maxHeight: media.size.height * 0.85),
+          decoration: const BoxDecoration(
+            color: SynkColors.background,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          padding: EdgeInsets.fromLTRB(20, 10, 20, 24 + media.padding.bottom),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const _Handle(),
+              const SizedBox(height: 14),
+              _buildHeader(),
+              const SizedBox(height: 14),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildSort(hasLocation),
+                      const SizedBox(height: 14),
+                      _buildDate(),
+                      const SizedBox(height: 14),
+                      _buildTime(),
+                      ..._buildCategories(),
+                      const SizedBox(height: 14),
+                      _buildDistance(hasLocation),
+                      const SizedBox(height: 14),
+                      _buildSpots(),
+                    ],
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 20),
-
-            // 1. Time Filter Section
-            const Text(
-              'Date & Time',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-                color: SynkColors.textPrimary,
               ),
-            ),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _buildTimeChip(TimeFilterOption.all, 'Any Time'),
-                _buildTimeChip(TimeFilterOption.today, 'Today'),
-                _buildTimeChip(TimeFilterOption.thisWeek, 'This Week'),
-                _buildCustomDateChip(),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            // 2. Location Filter Section
-            const Text(
-              'Location & Neighborhood',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-                color: SynkColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            // Location Search Input
-            TextField(
-              controller: _customLocationController,
-              onChanged: (text) {
-                setState(() {
-                  _selectedLocation = text.trim();
-                });
-              },
-              decoration: InputDecoration(
-                hintText: 'Search city or neighborhood...',
-                prefixIcon: const Icon(
-                  Icons.place_rounded,
-                  color: SynkColors.orangeDark,
-                  size: 20,
-                ),
-                suffixIcon: _customLocationController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear_rounded, size: 18),
-                        onPressed: () {
-                          _customLocationController.clear();
-                          setState(() {
-                            _selectedLocation = null;
-                          });
-                        },
-                      )
-                    : null,
-                filled: true,
-                fillColor: SynkColors.backgroundLight,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-
-            if (availableLocs.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: availableLocs.map((loc) {
-                  final isSelected =
-                      _selectedLocation?.toLowerCase() == loc.toLowerCase() ||
-                      _customLocationController.text.toLowerCase() ==
-                          loc.toLowerCase();
-
-                  return ChoiceChip(
-                    label: Text(loc),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      setState(() {
-                        if (selected) {
-                          _selectedLocation = loc;
-                          _customLocationController.text = loc;
-                        } else {
-                          _selectedLocation = null;
-                          _customLocationController.clear();
-                        }
-                      });
-                    },
-                    selectedColor: SynkColors.orange.withValues(alpha: 0.25),
-                    backgroundColor: SynkColors.backgroundLight,
-                    labelStyle: TextStyle(
-                      fontSize: 13,
-                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                      color: isSelected
-                          ? SynkColors.orangeDark
-                          : SynkColors.textPrimary,
-                    ),
-                    side: BorderSide(
-                      color: isSelected
-                          ? SynkColors.orangeDark
-                          : Colors.transparent,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  );
-                }).toList(),
-              ),
+              const SizedBox(height: 14),
+              _buildShowButton(count),
             ],
+          ),
+        );
+      },
+    );
+  }
 
-            const SizedBox(height: 28),
-
-            // Apply Button
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton(
-                onPressed: _apply,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: SynkColors.orangeDark,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
+  Widget _buildHeader() {
+    return SizedBox(
+      height: 40,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Material(
+              color: Colors.white,
+              shape: const CircleBorder(),
+              child: IconButton(
+                tooltip: 'Close',
+                onPressed: () => Navigator.of(context).pop(),
+                constraints: const BoxConstraints.tightFor(
+                  width: 40,
+                  height: 40,
                 ),
-                child: const Text(
-                  'Apply Filters',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                padding: EdgeInsets.zero,
+                icon: const Icon(
+                  Icons.close_rounded,
+                  size: 20,
+                  color: SynkColors.ink,
                 ),
               ),
             ),
-          ],
+          ),
+          Text(
+            'Filters',
+            style: GoogleFonts.inter(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: SynkColors.ink,
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () => _update(ActivityFilters.defaults),
+              style: TextButton.styleFrom(
+                foregroundColor: SynkColors.tealText,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+              ),
+              child: Text(
+                'Reset',
+                style: _inter(14, FontWeight.w700, SynkColors.tealText),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Opposite pairs, one per row. One is always selected; Nearest and
+  // Farthest need the user's location, and the spots sorts are off while
+  // Spots is 1 left or Full.
+  Widget _buildSort(bool hasLocation) {
+    return _Section(
+      label: 'Sort by',
+      columns: 2,
+      children: [
+        for (final option in SortOption.values)
+          SynkFilterChip(
+            label: option.label,
+            selected: _draft.sort == option,
+            onTap:
+                (option.needsLocation && !hasLocation) ||
+                    (option.bySpots && _draft.spots.isSingleCount)
+                ? null
+                : () => _update(_draft.copyWith(sort: option)),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildDate() {
+    final custom = _draft.date == DateOption.custom ? _draft.customDate : null;
+
+    SynkFilterChip day(DateOption option) => SynkFilterChip(
+      label: option.label,
+      selected: _draft.date == option,
+      onTap: () => _update(
+        _draft.withDate(_draft.date == option ? DateOption.any : option),
+      ),
+    );
+
+    return _Section(
+      label: 'Date',
+      columns: 3,
+      children: [
+        day(DateOption.today),
+        day(DateOption.tomorrow),
+        SynkFilterChip(
+          label: custom == null ? 'Pick a date' : formatShortDate(custom),
+          icon: Icons.calendar_month_rounded,
+          selected: custom != null,
+          onTap: _onPickDate,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTime() {
+    final from = _draft.fromMinute;
+
+    return _Section(
+      label: 'Time',
+      columns: 4,
+      children: [
+        for (final slot in DaySlot.values)
+          _TwoLineChip(
+            title: slot.label,
+            subtitle: slot.hours,
+            selected: _draft.daySlot == slot,
+            onTap: () => _update(
+              _draft.daySlot == slot
+                  ? _draft.withTime()
+                  : _draft.withTime(slot: slot),
+            ),
+          ),
+        _TwoLineChip(
+          title: from == null ? 'Pick' : 'From',
+          subtitle: from == null ? 'a time' : formatMinute(from),
+          icon: Icons.schedule_rounded,
+          selected: from != null,
+          onTap: _onPickTime,
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _buildCategories() {
+    final categories = _c.feedCategories;
+    if (categories.isEmpty) return const [];
+
+    return [
+      const SizedBox(height: 14),
+      _Section(
+        label: 'Category',
+        columns: 3,
+        children: [
+          for (final category in categories)
+            SynkFilterChip.category(
+              category: category,
+              selected: _draft.categories.contains(category),
+              onTap: () => _update(_draft.toggleCategory(category)),
+            ),
+        ],
+      ),
+    ];
+  }
+
+  // Measured from the user's location, so disabled without it.
+  Widget _buildDistance(bool hasLocation) {
+    final options = DistanceOption.values.where(
+      (o) => o != DistanceOption.any,
+    );
+
+    return _Section(
+      label: 'Within',
+      columns: 3,
+      trailing: hasLocation
+          ? null
+          : _c.isLocating
+          ? Text(
+              'Locating…',
+              style: _inter(13, FontWeight.w600, SynkColors.labelGrey),
+            )
+          : _LinkButton(
+              label: _c.locationBlocked ? 'Allow location' : 'Try again',
+              onTap: () => _c.refreshLocation(request: true),
+            ),
+      children: [
+        for (final option in options)
+          SynkFilterChip(
+            label: option.label,
+            selected: _draft.distance == option,
+            onTap: hasLocation
+                ? () => _update(
+                    _draft.copyWith(
+                      distance: _draft.distance == option
+                          ? DistanceOption.any
+                          : option,
+                    ),
+                  )
+                : null,
+          ),
+      ],
+    );
+  }
+
+  // 1 left and Full are off while sorting by spots (see SortOption.bySpots).
+  Widget _buildSpots() {
+    final options = SpotsOption.values.where((o) => o != SpotsOption.any);
+
+    return _Section(
+      label: 'Spots',
+      columns: 3,
+      children: [
+        for (final option in options)
+          SynkFilterChip(
+            label: option.label,
+            selected: _draft.spots == option,
+            onTap: option.isSingleCount && _draft.sort.bySpots
+                ? null
+                : () => _update(
+              _draft.copyWith(
+                spots: _draft.spots == option ? SpotsOption.any : option,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildShowButton(int count) {
+    final label = switch (count) {
+      0 => 'No matches, try fewer filters',
+      1 => 'Show 1 activity',
+      _ => 'Show $count activities',
+    };
+
+    return SizedBox(
+      height: 52,
+      child: FilledButton(
+        onPressed: count == 0 ? null : _apply,
+        style: FilledButton.styleFrom(
+          backgroundColor: SynkColors.ink,
+          foregroundColor: Colors.white,
+          disabledBackgroundColor: _handleColor,
+          disabledForegroundColor: SynkColors.ink,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(26),
+          ),
+          textStyle: _inter(16, FontWeight.w700, Colors.white),
+        ),
+        child: Text(label),
+      ),
+    );
+  }
+}
+
+class _Handle extends StatelessWidget {
+  const _Handle();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        width: 40,
+        height: 5,
+        decoration: BoxDecoration(
+          color: _handleColor,
+          borderRadius: BorderRadius.circular(3),
         ),
       ),
     );
   }
+}
 
-  Widget _buildTimeChip(TimeFilterOption option, String label) {
-    final isSelected = _timeOption == option;
+// Section label, then [children] laid out [columns] per row, each chip
+// stretched to an equal share of the full width.
+class _Section extends StatelessWidget {
+  const _Section({
+    required this.label,
+    required this.columns,
+    required this.children,
+    this.trailing,
+  });
 
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (_) {
-        setState(() {
-          _timeOption = option;
-          _customDate = null;
-        });
-      },
-      selectedColor: SynkColors.orange.withValues(alpha: 0.25),
-      backgroundColor: SynkColors.backgroundLight,
-      labelStyle: TextStyle(
-        fontSize: 13,
-        fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-        color: isSelected ? SynkColors.orangeDark : SynkColors.textPrimary,
-      ),
-      side: BorderSide(
-        color: isSelected ? SynkColors.orangeDark : Colors.transparent,
-      ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+  final String label;
+  final int columns;
+  final List<Widget> children;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = <Widget>[];
+    for (var i = 0; i < children.length; i += columns) {
+      final cells = <Widget>[];
+      for (var j = i; j < i + columns; j++) {
+        if (j > i) cells.add(const SizedBox(width: 8));
+        // Pad a short last row so its chips keep the same width.
+        cells.add(
+          Expanded(
+            child: j < children.length ? children[j] : const SizedBox(),
+          ),
+        );
+      }
+      if (rows.isNotEmpty) rows.add(const SizedBox(height: 8));
+      rows.add(Row(children: cells));
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: _inter(13, FontWeight.w700, SynkColors.labelGrey),
+              ),
+            ),
+            ?trailing,
+          ],
+        ),
+        const SizedBox(height: 8),
+        ...rows,
+      ],
     );
   }
+}
 
-  Widget _buildCustomDateChip() {
-    final isSelected = _timeOption == TimeFilterOption.customDate;
-    final dateStr = _customDate != null
-        ? '${_customDate!.month}/${_customDate!.day}'
-        : 'Pick Date';
+// Two-line chip for the Time row: name over the hours it covers.
+class _TwoLineChip extends StatelessWidget {
+  const _TwoLineChip({
+    required this.title,
+    required this.subtitle,
+    required this.selected,
+    required this.onTap,
+    this.icon,
+  });
 
-    return ActionChip(
-      avatar: const Icon(
-        Icons.calendar_month_rounded,
-        size: 16,
-        color: SynkColors.orangeDark,
+  final String title;
+  final String subtitle;
+  final bool selected;
+  final VoidCallback onTap;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final foreground = selected ? SynkColors.onSelected : SynkColors.ink;
+
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: Material(
+        color: selected ? SynkColors.selected : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            height: 52,
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            alignment: Alignment.center,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (icon != null) ...[
+                        Icon(icon, size: 14, color: foreground),
+                        const SizedBox(width: 4),
+                      ],
+                      Text(title, style: _inter(13, FontWeight.w600, foreground)),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: _inter(
+                      11,
+                      FontWeight.w400,
+                      selected ? SynkColors.onSelected : SynkColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
-      label: Text(isSelected && _customDate != null ? dateStr : 'Custom Date'),
-      onPressed: _pickDate,
-      backgroundColor: isSelected
-          ? SynkColors.orange.withValues(alpha: 0.25)
-          : SynkColors.backgroundLight,
-      labelStyle: TextStyle(
-        fontSize: 13,
-        fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-        color: isSelected ? SynkColors.orangeDark : SynkColors.textPrimary,
+    );
+  }
+}
+
+class _LinkButton extends StatelessWidget {
+  const _LinkButton({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: onTap,
+      style: TextButton.styleFrom(
+        foregroundColor: SynkColors.tealText,
+        minimumSize: const Size(0, 24),
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
-      side: BorderSide(
-        color: isSelected ? SynkColors.orangeDark : Colors.transparent,
+      child: Text(
+        label,
+        style: _inter(13, FontWeight.w700, SynkColors.tealText),
       ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
     );
   }
 }

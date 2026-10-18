@@ -1,33 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/constants/interest_emojis.dart';
 import '../../core/constants/synk_colors.dart';
 import '../../controllers/home_discovery_controller.dart';
 import '../../models/activities_model.dart';
+import '../../models/activity_filters.dart';
 import '../../models/activity_model.dart';
 import '../../models/user_profile_model.dart';
-import '../../utils/custom_widgets/synk_feedback.dart';
 import '../widgets/synk_blob_background.dart';
 import 'activity_code_join_sheet.dart';
 import 'widgets/activity_card_skeleton.dart';
 import 'widgets/activity_details_sheet.dart';
 import 'widgets/code_bubble.dart';
+import 'widgets/day_strip.dart';
 import 'widgets/discovery_activity_card.dart';
 import 'widgets/empty_state.dart';
 import 'widgets/filter_bottom_sheet.dart';
+import 'widgets/filter_button.dart';
+import 'widgets/synk_filter_chip.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({
     super.key,
     required this.activityStore,
+    required this.discoveryController,
     this.isNewUser = false,
+    this.onCreateActivity,
     this.activitiesModel,
     this.profileModel,
   });
 
   final ActivityStore activityStore;
   final bool isNewUser;
+
+  // Shared with the Map tab, so both show the same filters.
+  final HomeDiscoveryController discoveryController;
+
+  // "Create one" in the no-matches state.
+  final VoidCallback? onCreateActivity;
 
   // Injectable for tests; default to the Supabase-backed models.
   final ActivitiesModel? activitiesModel;
@@ -42,32 +53,19 @@ class _HomeViewState extends State<HomeView> {
       widget.profileModel ?? UserProfileModel();
   late final ActivitiesModel _activitiesModel =
       widget.activitiesModel ?? ActivitiesModel();
-  late final HomeDiscoveryController _discoveryController;
+  HomeDiscoveryController get _discoveryController =>
+      widget.discoveryController;
 
   String _firstName = 'there';
   bool _codeBubbleExpanded = true;
-
-  // Known categories, in onboarding order. Only those matching at least
-  // one loaded activity get a chip.
-  static final List<String> _presetCategories = kInterestEmojis.keys.toList();
 
   static const double _gutter = 16;
 
   @override
   void initState() {
     super.initState();
-    _discoveryController = HomeDiscoveryController(
-      activitiesModel: _activitiesModel,
-      profileModel: _profileModel,
-    );
     _discoveryController.init();
     _loadFirstName();
-  }
-
-  @override
-  void dispose() {
-    _discoveryController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadFirstName() async {
@@ -81,42 +79,13 @@ class _HomeViewState extends State<HomeView> {
     }
   }
 
-  Future<void> _openActivityCodeSheet() async {
-    final result = await showActivityCodeJoinSheet(context);
-
-    // The user closed the sheet without completing a join.
-    if (!mounted || result == null) return;
-
-    try {
-      // Refresh joined, pending, and waitlisted activities
-      final participating = await _activitiesModel.fetchParticipating();
-
-      if (!mounted) return;
-      widget.activityStore.setParticipating(participating);
-
-      // Also silently reload discovery feed to update participation markers
-      _discoveryController.loadFeed(isSilent: true);
-    } catch (_) {
-      // The join succeeded in Supabase, so the confirmation
-      // still appears if refreshing temporarily fails.
-    }
-
-    if (!mounted) return;
-
-    final title = switch (result.result) {
-      'joined' => 'Joined!',
-      'already_joined' => 'Already Joined',
-      'pending' => 'Request Sent!',
-      'already_pending' => 'Request Already Sent',
-      'waitlisted' => 'Added to Waitlist!',
-      'already_waitlisted' => 'Already Waitlisted',
-      _ => 'Done!',
-    };
-
-    await SynkFeedback.showSuccessDialog(
+  Future<void> _openActivityCodeSheet() {
+    return joinActivityWithCode(
       context,
-      title: title,
-      message: result.message,
+      activityStore: widget.activityStore,
+      activitiesModel: _activitiesModel,
+      // Also silently reload discovery feed to update participation markers
+      onJoined: () => _discoveryController.loadFeed(isSilent: true),
     );
   }
 
@@ -194,8 +163,6 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Widget _buildScrollView() {
-    final hasExtraFilters = _discoveryController.activeFilterCount > 0;
-
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(
         parent: BouncingScrollPhysics(),
@@ -214,18 +181,28 @@ class _HomeViewState extends State<HomeView> {
             ),
           ),
         ),
-        if (_discoveryController.categoriesInFeed(_presetCategories).isNotEmpty)
+        if (_discoveryController.feedCategories.isNotEmpty)
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.only(top: 14),
               child: _buildCategoryChipsBar(),
             ),
           ),
-        if (hasExtraFilters)
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(_gutter, 12, _gutter, 0),
-            sliver: SliverToBoxAdapter(child: _buildActiveFiltersRow()),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 14),
+            child: DayStrip(
+              filters: _discoveryController.filters,
+              countsByDay: _discoveryController.activityCountsByDay,
+              onDayTap: _discoveryController.selectDay,
+              padding: const EdgeInsets.symmetric(horizontal: _gutter),
+            ),
           ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(_gutter, 18, _gutter, 0),
+          sliver: SliverToBoxAdapter(child: _buildListTitle()),
+        ),
         _buildFeedContent(),
       ],
     );
@@ -238,7 +215,7 @@ class _HomeViewState extends State<HomeView> {
         : (hasName ? 'Hey $_firstName' : 'Hey there');
     final headline = widget.isNewUser
         ? "Let's find your people"
-        : 'Find your people';
+        : 'Ready for something new?';
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -298,8 +275,6 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Widget _buildSearchAndFilterRow() {
-    final activeCount = _discoveryController.activeFilterCount;
-    final hasFilters = activeCount > 0;
     final border = BorderSide(
       color: SynkColors.textSecondary.withValues(alpha: 0.14),
     );
@@ -356,47 +331,22 @@ class _HomeViewState extends State<HomeView> {
             ),
           ),
         ),
-        const SizedBox(width: 8),
-        Badge(
-          isLabelVisible: hasFilters,
-          label: Text('$activeCount'),
-          backgroundColor: SynkColors.orangeDark,
-          child: Material(
-            color: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-              side: hasFilters
-                  ? const BorderSide(color: SynkColors.orangeDark)
-                  : border,
-            ),
-            child: InkWell(
-              onTap: _openFilterSheet,
-              customBorder: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: SizedBox.square(
-                dimension: 48,
-                child: Icon(
-                  Icons.tune_rounded,
-                  size: 20,
-                  color: hasFilters
-                      ? SynkColors.orangeDark
-                      : SynkColors.textPrimary,
-                ),
-              ),
-            ),
-          ),
+        const SizedBox(width: 10),
+        FilterButton(
+          count: _discoveryController.activeFilterCount,
+          onTap: _openFilterSheet,
         ),
       ],
     );
   }
 
   Widget _buildCategoryChipsBar() {
-    final labels = _discoveryController.categoriesInFeed(_presetCategories);
-    final selected = _discoveryController.selectedCategory;
+    final labels = _discoveryController.feedCategories;
+    final selected = _discoveryController.filters.categories;
 
+    // Same chips as the filter sheet's Category section.
     return SizedBox(
-      height: 34,
+      height: 38,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: _gutter),
@@ -405,140 +355,99 @@ class _HomeViewState extends State<HomeView> {
         separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           if (index == 0) {
-            return _buildCategoryChip(
+            return SynkFilterChip(
               label: 'All',
-              isSelected: selected == null,
+              selected: selected.isEmpty,
               onTap: () {
-                if (selected != null) {
-                  _discoveryController.setCategoryFilter(null);
-                }
+                if (selected.isNotEmpty) _discoveryController.clearCategories();
               },
             );
           }
           final label = labels[index - 1];
-          return _buildCategoryChip(
-            label: label,
-            isSelected: selected == label,
-            onTap: () => _discoveryController.setCategoryFilter(label),
+          return SynkFilterChip.category(
+            category: label,
+            selected: selected.contains(label),
+            onTap: () => _discoveryController.toggleCategory(label),
           );
         },
       ),
     );
   }
 
-  Widget _buildCategoryChip({
-    required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: isSelected
-          ? SynkColors.textPrimary
-          : Colors.white.withValues(alpha: 0.7),
-      shape: StadiumBorder(
-        side: BorderSide(
-          color: isSelected
-              ? SynkColors.textPrimary
-              : SynkColors.textSecondary.withValues(alpha: 0.22),
+  // "Art · Tue, Oct 20" for the current filters, with "Clear filters"
+  // whenever anything differs from the defaults.
+  Widget _buildListTitle() {
+    final filters = _discoveryController.filters;
+    final parts = [
+      ?_categorySummary(filters.categories),
+      ?filters.dateLabel,
+      ?filters.timeLabel,
+    ];
+
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            parts.isEmpty ? 'Upcoming plans' : parts.join(' · '),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.leagueSpartan(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: SynkColors.ink,
+            ),
+          ),
         ),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const StadiumBorder(),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          child: Center(
-            widthFactor: 1,
+        if (!filters.isDefault)
+          TextButton(
+            onPressed: _discoveryController.clearAllFilters,
+            style: TextButton.styleFrom(
+              foregroundColor: SynkColors.tealText,
+              minimumSize: const Size(0, 32),
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
             child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? Colors.white : SynkColors.textPrimary,
+              'Clear filters',
+              style: GoogleFonts.roboto(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: SynkColors.tealText,
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  // Time and location filters from the filter sheet. Search and category
-  // already show in their own controls.
-  Widget _buildActiveFiltersRow() {
-    final chips = <Widget>[];
-
-    final timeFilter = _discoveryController.selectedTimeFilter;
-    if (timeFilter != TimeFilterOption.all) {
-      var timeLabel = timeFilter.label;
-      final custom = _discoveryController.customSelectedDate;
-      if (timeFilter == TimeFilterOption.customDate && custom != null) {
-        timeLabel = DiscoveryActivityCard.formatWhen(custom).split(' · ').first;
-      }
-      chips.add(
-        _buildActiveFilterChip(
-          label: timeLabel,
-          onRemove: () =>
-              _discoveryController.setTimeFilter(TimeFilterOption.all),
-        ),
-      );
-    }
-
-    final location = _discoveryController.selectedLocation;
-    if (location != null) {
-      chips.add(
-        _buildActiveFilterChip(
-          label: location,
-          onRemove: () => _discoveryController.setLocationFilter(null),
-        ),
-      );
-    }
-
-    return Wrap(
-      spacing: 6,
-      runSpacing: 6,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        ...chips,
-        TextButton(
-          onPressed: _discoveryController.clearAllFilters,
-          style: TextButton.styleFrom(
-            foregroundColor: SynkColors.orangeDark,
-            minimumSize: const Size(0, 28),
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            textStyle: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          child: const Text('Clear'),
-        ),
       ],
     );
   }
 
-  Widget _buildActiveFilterChip({
-    required String label,
-    required VoidCallback onRemove,
-  }) {
-    return InputChip(
-      label: Text(label),
-      onDeleted: onRemove,
-      deleteIcon: const Icon(Icons.close_rounded, size: 14),
-      deleteIconColor: SynkColors.orangeDark,
-      labelStyle: const TextStyle(
-        fontSize: 12.5,
-        fontWeight: FontWeight.w600,
-        color: SynkColors.orangeDark,
-      ),
-      backgroundColor: SynkColors.orange.withValues(alpha: 0.12),
-      side: BorderSide.none,
-      shape: const StadiumBorder(),
-      visualDensity: VisualDensity.compact,
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      padding: const EdgeInsets.symmetric(horizontal: 2),
-    );
+  // "Art", "Padel & Art", "Padel +2", or null for all categories.
+  static String? _categorySummary(Set<String> categories) {
+    final names = categories.toList();
+    return switch (names.length) {
+      0 => null,
+      1 => names.first,
+      2 => '${names.first} & ${names.last}',
+      _ => '${names.first} +${names.length - 1}',
+    };
+  }
+
+  // "No Art plans on Tue, Oct 20", "No plans this weekend", ...
+  String _noMatchesTitle() {
+    final filters = _discoveryController.filters;
+    final category = filters.categories.length == 1
+        ? '${filters.categories.first} '
+        : '';
+    final when = switch (filters.date) {
+      DateOption.any => '',
+      DateOption.custom => ' on ${filters.dateLabel}',
+      _ => ' ${filters.dateLabel!.toLowerCase()}',
+    };
+    if (category.isEmpty && when.isEmpty) {
+      return filters.isDefault
+          ? 'No plans match "${_discoveryController.searchQuery}"'
+          : 'No plans match your filters';
+    }
+    return 'No ${category}plans$when';
   }
 
   Widget _buildFeedContent() {
@@ -562,6 +471,20 @@ class _HomeViewState extends State<HomeView> {
       final failed = _discoveryController.errorMessage != null;
       final filtered = !failed && _discoveryController.hasActiveFilters;
 
+      if (filtered) {
+        return SliverFillRemaining(
+          hasScrollBody: false,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 120),
+            child: _NoMatches(
+              title: _noMatchesTitle(),
+              onCreate: widget.onCreateActivity,
+              onClear: _discoveryController.clearAllFilters,
+            ),
+          ),
+        );
+      }
+
       return SliverFillRemaining(
         hasScrollBody: false,
         child: Padding(
@@ -569,23 +492,15 @@ class _HomeViewState extends State<HomeView> {
           child: EmptyState(
             icon: failed
                 ? Icons.cloud_off_rounded
-                : filtered
-                ? Icons.search_off_rounded
                 : Icons.event_available_rounded,
             title: failed
                 ? "We couldn't reach Synk"
-                : filtered
-                ? 'Nothing matches yet'
                 : "It's quiet here for now",
             message: failed
                 ? 'Check your connection and try again.'
-                : filtered
-                ? 'Try another search or clear your filters.'
                 : 'New plans pop up all the time. Tap + to start one.',
-            actionLabel: filtered ? 'Clear filters' : 'Refresh',
-            onAction: filtered
-                ? _discoveryController.clearAllFilters
-                : () => _discoveryController.loadFeed(),
+            actionLabel: 'Refresh',
+            onAction: () => _discoveryController.loadFeed(),
           ),
         ),
       );
@@ -603,6 +518,92 @@ class _HomeViewState extends State<HomeView> {
             onTap: () => _onActivityTap(activity),
           );
         },
+      ),
+    );
+  }
+}
+
+class _NoMatches extends StatelessWidget {
+  const _NoMatches({required this.title, required this.onClear, this.onCreate});
+
+  final String title;
+  final VoidCallback onClear;
+  final VoidCallback? onCreate;
+
+  @override
+  Widget build(BuildContext context) {
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(22),
+    );
+    final labelStyle = GoogleFonts.roboto(
+      fontSize: 14,
+      fontWeight: FontWeight.w700,
+    );
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 96,
+              height: 96,
+              decoration: BoxDecoration(
+                color: SynkColors.orange.withValues(alpha: 0.16),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.event_busy_rounded,
+                size: 44,
+                color: SynkColors.orangeDark,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.leagueSpartan(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: SynkColors.ink,
+              ),
+            ),
+            const SizedBox(height: 18),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                if (onCreate != null)
+                  FilledButton(
+                    onPressed: onCreate,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: SynkColors.ink,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(0, 44),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      shape: shape,
+                      textStyle: labelStyle,
+                    ),
+                    child: const Text('Create one'),
+                  ),
+                OutlinedButton(
+                  onPressed: onClear,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: SynkColors.ink,
+                    side: const BorderSide(color: SynkColors.ink, width: 1.5),
+                    minimumSize: const Size(0, 44),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    shape: shape,
+                    textStyle: labelStyle,
+                  ),
+                  child: const Text('Clear filters'),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

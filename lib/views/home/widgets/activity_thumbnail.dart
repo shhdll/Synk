@@ -26,12 +26,14 @@ class ActivityThumbnail extends StatelessWidget {
       child: SizedBox.square(
         dimension: size,
         child: photoUrl == null || photoUrl.isEmpty
-            ? _Fallback(activity: activity, size: size)
+            ? ActivityVisualTile(activity: activity, iconSize: size * 0.40)
             : Image.network(
                 photoUrl,
                 fit: BoxFit.cover,
-                errorBuilder: (_, _, _) =>
-                    _Fallback(activity: activity, size: size),
+                errorBuilder: (_, _, _) => ActivityVisualTile(
+                  activity: activity,
+                  iconSize: size * 0.40,
+                ),
                 frameBuilder: (_, child, frame, wasSynchronouslyLoaded) {
                   if (wasSynchronouslyLoaded || frame != null) return child;
                   return const ColoredBox(color: SynkColors.backgroundLight);
@@ -42,11 +44,17 @@ class ActivityThumbnail extends StatelessWidget {
   }
 }
 
-class _Fallback extends StatelessWidget {
-  const _Fallback({required this.activity, required this.size});
+// Soft tinted tile with the activity's icon; fills whatever space it gets.
+// Stands in for a missing photo here and on the Activity tab's covers.
+class ActivityVisualTile extends StatelessWidget {
+  const ActivityVisualTile({
+    super.key,
+    required this.activity,
+    required this.iconSize,
+  });
 
   final Activity activity;
-  final double size;
+  final double iconSize;
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +74,7 @@ class _Fallback extends StatelessWidget {
       child: Center(
         child: Icon(
           visual.icon,
-          size: size * 0.40,
+          size: iconSize,
           color: Color.lerp(visual.tint, SynkColors.textPrimary, 0.35),
         ),
       ),
@@ -159,8 +167,12 @@ class ActivityVisual {
     _orange,
   );
 
-  static ActivityVisual of(Activity activity) {
-    final text = '${activity.categoryLabel} ${activity.title}'.toLowerCase();
+  static ActivityVisual of(Activity activity) =>
+      forText('${activity.categoryLabel} ${activity.title}');
+
+  // Also used on its own for category chips ("Padel", "Art").
+  static ActivityVisual forText(String value) {
+    final text = value.toLowerCase();
     for (final (keywords, visual) in _rules) {
       // Match at word starts so "run" finds "running" but not "brunch".
       if (keywords.any(

@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../controllers/home_discovery_controller.dart';
 import '../../core/constants/synk_colors.dart';
 import '../../models/activities_model.dart';
 import '../../models/activity_model.dart';
+import '../../models/activity_participation_model.dart';
 import '../../models/home_tab.dart';
 import '../create_activity/create_activity_view.dart';
 import 'activities_view.dart';
@@ -26,8 +30,19 @@ class MainShell extends StatefulWidget {
   State<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends State<MainShell> {
+class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   final ActivitiesModel _activitiesModel = ActivitiesModel();
+  final ActivityParticipationModel _participationModel =
+      ActivityParticipationModel();
+
+  // Re-checks join requests while the app is open, so the badge shows up
+  // without the host having to refresh.
+  static const _requestPollInterval = Duration(minutes: 1);
+  Timer? _requestPoll;
+
+  // One discovery feed and filter state for both Home and Map.
+  late final HomeDiscoveryController _discoveryController =
+      HomeDiscoveryController(activitiesModel: _activitiesModel);
 
   late final ActivityStore _activityStore;
   late HomeTab _tab;
@@ -46,6 +61,18 @@ class _MainShellState extends State<MainShell> {
 
     // Loads hosted, participating, and public activities.
     _loadActivities();
+
+    WidgetsBinding.instance.addObserver(this);
+    _requestPoll = Timer.periodic(
+      _requestPollInterval,
+      (_) => _loadPendingRequestCount(),
+    );
+  }
+
+  // Coming back to the app is when a new request is most likely waiting.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _loadPendingRequestCount();
   }
 
   Future<void> _loadActivities() async {
@@ -53,7 +80,18 @@ class _MainShellState extends State<MainShell> {
       _loadMyActivities(),
       _loadParticipatingActivities(),
       _loadPublicFeed(),
+      _loadPendingRequestCount(),
     ]);
+  }
+
+  Future<void> _loadPendingRequestCount() async {
+    try {
+      final count = await _participationModel.countPendingRequests();
+      if (!mounted) return;
+      _activityStore.pendingRequestCount = count;
+    } catch (_) {
+      // Keep the current badge when loading fails.
+    }
   }
 
   // Loads activities created by the signed-in user.
@@ -72,8 +110,7 @@ class _MainShellState extends State<MainShell> {
   // Loads joined, pending, and waitlisted activities.
   Future<void> _loadParticipatingActivities() async {
     try {
-      final activities =
-          await _activitiesModel.fetchParticipating();
+      final activities = await _activitiesModel.fetchParticipating();
 
       if (!mounted) return;
 
@@ -86,8 +123,7 @@ class _MainShellState extends State<MainShell> {
   // Loads upcoming public activities for the Home feed.
   Future<void> _loadPublicFeed() async {
     try {
-      final activities =
-          await _activitiesModel.fetchPublicFeed();
+      final activities = await _activitiesModel.fetchPublicFeed();
 
       if (!mounted) return;
 
@@ -99,7 +135,10 @@ class _MainShellState extends State<MainShell> {
 
   @override
   void dispose() {
+    _requestPoll?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     _activityStore.dispose();
+    _discoveryController.dispose();
     super.dispose();
   }
 
@@ -107,28 +146,34 @@ class _MainShellState extends State<MainShell> {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) {
-          return CreateActivityView(
-            store: _activityStore,
-          );
+          return CreateActivityView(store: _activityStore);
         },
         fullscreenDialog: true,
       ),
     );
 
     // Refresh activities after returning from Create Activity.
-    await _loadActivities();
+    await Future.wait([
+      _loadActivities(),
+      _discoveryController.loadFeed(isSilent: true),
+    ]);
   }
 
   @override
   Widget build(BuildContext context) {
     final pages = [
       ProfileView(activityStore: _activityStore),
-       MapView( activityStore: _activityStore,
-  isActive: _tab == HomeTab.map,),
+      MapView(
+        activityStore: _activityStore,
+        discoveryController: _discoveryController,
+        isActive: _tab == HomeTab.map,
+      ),
       ActivitiesView(activityStore: _activityStore),
       HomeView(
         activityStore: _activityStore,
+        discoveryController: _discoveryController,
         isNewUser: widget.isNewUser,
+        onCreateActivity: _openAddActivity,
       ),
     ];
 
@@ -142,16 +187,18 @@ class _MainShellState extends State<MainShell> {
     return Scaffold(
       backgroundColor: SynkColors.background,
       extendBody: true,
-      body: IndexedStack(
-        index: stackIndex,
-        children: pages,
-      ),
-      bottomNavigationBar: BottomBar(
-        selected: _tab,
-        onSelect: (tab) {
-          setState(() => _tab = tab);
-        },
-        onAddTap: _openAddActivity,
+      body: IndexedStack(index: stackIndex, children: pages),
+      bottomNavigationBar: ListenableBuilder(
+        listenable: _activityStore,
+        builder: (context, _) => BottomBar(
+          selected: _tab,
+          onSelect: (tab) {
+            setState(() => _tab = tab);
+            if (tab == HomeTab.activities) _loadPendingRequestCount();
+          },
+          onAddTap: _openAddActivity,
+          activitiesBadge: _activityStore.pendingRequestCount,
+        ),
       ),
     );
   }

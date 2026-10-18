@@ -162,22 +162,13 @@ class DiscoveryActivityCard extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        const Icon(
-          Icons.people_outline_rounded,
-          size: 15,
-          color: SynkColors.textSecondary,
+        // "3/4 One More Needed", tinted by status.
+        ActivityStatusChip.count(
+          availability: activity.availability,
+          label:
+              '${activity.joinedCount}/${activity.maxParticipants} '
+              '${activity.availability.label}',
         ),
-        const SizedBox(width: 4),
-        Text(
-          '${activity.joinedCount}/${activity.maxParticipants} going',
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: SynkColors.textPrimary,
-          ),
-        ),
-        const SizedBox(width: 8),
-        ActivityStatusChip(availability: activity.availability),
       ],
     );
   }

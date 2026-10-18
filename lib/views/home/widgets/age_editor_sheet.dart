@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/synk_colors.dart';
+import '../../widgets/synk_date_picker.dart';
 
 // Bottom-sheet editor for age. Mirrors the signup flow: age is derived
 // from a birthday picked with the same 16-90 year restriction, in the
@@ -46,14 +47,15 @@ class _AgeEditorSheetState extends State<AgeEditorSheet> {
       today.day,
     );
 
-    final selectedDate = await showDatePicker(
+    final selectedDate = await showSynkDatePicker(
       context: context,
       initialDate: initialDate.isBefore(firstDate)
           ? firstDate
           : (initialDate.isAfter(lastDate) ? lastDate : initialDate),
       firstDate: firstDate,
       lastDate: lastDate,
-      helpText: 'Select birthday',
+      title: 'Select birthday',
+      confirmLabel: 'Set birthday',
     );
 
     if (selectedDate == null) return;

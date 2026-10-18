@@ -10,12 +10,15 @@ class NavItem extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.badgeCount = 0,
   });
 
   final IconData icon;
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  // Shown as a small count on the icon when above zero.
+  final int badgeCount;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +31,13 @@ class NavItem extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 24, color: color),
+            Badge(
+              isLabelVisible: badgeCount > 0,
+              label: Text(badgeCount > 9 ? '9+' : '$badgeCount'),
+              backgroundColor: SynkColors.badge,
+              textColor: Colors.white,
+              child: Icon(icon, size: 24, color: color),
+            ),
             const SizedBox(height: 3),
             Text(
               label,

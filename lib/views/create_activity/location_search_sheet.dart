@@ -221,16 +221,16 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
                           ),
                         )
                       : (_query.text.isNotEmpty
-                          ? IconButton(
-                              onPressed: _clearQuery,
-                              tooltip: 'Clear search',
-                              icon: const Icon(
-                                Icons.close_rounded,
-                                size: 18,
-                                color: SynkColors.textSecondary,
-                              ),
-                            )
-                          : null),
+                            ? IconButton(
+                                onPressed: _clearQuery,
+                                tooltip: 'Clear search',
+                                icon: const Icon(
+                                  Icons.close_rounded,
+                                  size: 18,
+                                  color: SynkColors.textSecondary,
+                                ),
+                              )
+                            : null),
                 ),
               ),
             ),
@@ -268,22 +268,22 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
                       ),
                     )
                   : _results.isEmpty
-                      ? _EmptySearchState(
-                          text: _query.text.trim().isEmpty
-                              ? 'Start typing to search Riyadh venues.'
-                              : (_isSearching ? '' : 'No matches found.'),
-                        )
-                      : ListView.separated(
-                          itemCount: _results.length,
-                          separatorBuilder: (_, _) => const SizedBox(height: 8),
-                          itemBuilder: (BuildContext context, int index) {
-                            final PlaceSuggestion suggestion = _results[index];
-                            return _PlaceResultRow(
-                              suggestion: suggestion,
-                              onTap: () => _select(suggestion),
-                            );
-                          },
-                        ),
+                  ? _EmptySearchState(
+                      text: _query.text.trim().isEmpty
+                          ? 'Start typing to search Riyadh venues.'
+                          : (_isSearching ? '' : 'No matches found.'),
+                    )
+                  : ListView.separated(
+                      itemCount: _results.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 8),
+                      itemBuilder: (BuildContext context, int index) {
+                        final PlaceSuggestion suggestion = _results[index];
+                        return _PlaceResultRow(
+                          suggestion: suggestion,
+                          onTap: () => _select(suggestion),
+                        );
+                      },
+                    ),
             ),
           ],
         ),
@@ -323,8 +323,9 @@ class _PlaceResultRow extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           child: Row(
-            crossAxisAlignment:
-                hasAddress ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+            crossAxisAlignment: hasAddress
+                ? CrossAxisAlignment.start
+                : CrossAxisAlignment.center,
             children: <Widget>[
               Container(
                 height: 38,

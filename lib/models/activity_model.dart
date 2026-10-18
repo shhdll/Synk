@@ -178,6 +178,7 @@ class Activity {
     String? hostAvatarUrl,
     String? hostGender,
     int? participantsCount,
+    String? activityCode,
   }) {
     return Activity(
       id: id,
@@ -200,7 +201,7 @@ class Activity {
       categoryEmoji: categoryEmoji,
       categoryLabel: categoryLabel,
       createdAt: createdAt,
-      activityCode: activityCode,
+      activityCode: activityCode ?? this.activityCode,
       participationId: participationId ?? this.participationId,
       participationStatus: participationStatus ?? this.participationStatus,
     );
@@ -225,6 +226,18 @@ class ActivityStore extends ChangeNotifier {
     }
 
     _currentUserId = value;
+    notifyListeners();
+  }
+
+  // Join requests waiting on the user's private activities; shown as a
+  // badge on the Activities tab and the Join Requests row.
+  int _pendingRequestCount = 0;
+
+  int get pendingRequestCount => _pendingRequestCount;
+
+  set pendingRequestCount(int value) {
+    if (_pendingRequestCount == value) return;
+    _pendingRequestCount = value;
     notifyListeners();
   }
 

@@ -2,11 +2,21 @@ import 'package:flutter/material.dart';
 
 import '../../controllers/activity_join_requests_controller.dart';
 import '../../core/constants/synk_colors.dart';
+import '../../models/activities_model.dart';
+import '../../models/activity_filters.dart';
+import '../../models/activity_model.dart';
 import '../../models/activity_participation_model.dart';
+import '../../models/avatar_uploader.dart';
 import '../../utils/custom_widgets/synk_feedback.dart';
+import 'widgets/activity_details_sheet.dart';
+import 'widgets/activity_thumbnail.dart';
+import 'widgets/user_profile_sheet.dart';
 
 class ActivityJoinRequestsView extends StatefulWidget {
-  const ActivityJoinRequestsView({super.key});
+  const ActivityJoinRequestsView({super.key, required this.activityStore});
+
+  // Opens activity details, and keeps the Join Requests badge in sync.
+  final ActivityStore activityStore;
 
   @override
   State<ActivityJoinRequestsView> createState() {
@@ -27,9 +37,42 @@ class _ActivityJoinRequestsViewState extends State<ActivityJoinRequestsView> {
   }
 
   void _refresh() {
-    if (mounted) {
-      setState(() {});
+    if (!mounted) return;
+    setState(() {});
+    // The list is the source of truth once loaded; the badge follows it.
+    if (!_controller.isLoading && _controller.errorMessage == null) {
+      widget.activityStore.pendingRequestCount = _controller.requests.length;
     }
+  }
+
+  void _openRequester(PendingActivityRequest request) {
+    showUserProfileSheet(
+      context: context,
+      userId: request.requesterId,
+      name: request.requesterName,
+      username: request.requesterUsername,
+      avatarUrl: request.requesterAvatarUrl,
+      gender: request.requesterGender,
+    );
+  }
+
+  // The host's own activity is usually already loaded; otherwise fetch it.
+  Future<void> _openActivity(PendingActivityRequest request) async {
+    var activity = _storeActivity(request.activityId);
+    try {
+      activity ??= await ActivitiesModel().fetchById(request.activityId);
+    } catch (_) {}
+    if (!mounted) return;
+
+    if (activity == null) {
+      SynkFeedback.showError(context, 'Unable to open this activity.');
+      return;
+    }
+    await showActivityDetailsSheet(
+      context: context,
+      activity: activity,
+      activityStore: widget.activityStore,
+    );
   }
 
   @override
@@ -39,17 +82,45 @@ class _ActivityJoinRequestsViewState extends State<ActivityJoinRequestsView> {
     super.dispose();
   }
 
+  // "Just now", "5m ago", "3h ago", "2d ago", then the date.
   String _formatRequestedAt(DateTime dateTime) {
     final localDate = dateTime.toLocal();
+    final ago = DateTime.now().difference(localDate);
 
-    final hour = localDate.hour % 12 == 0 ? 12 : localDate.hour % 12;
+    if (ago.inMinutes < 1) return 'Just now';
+    if (ago.inHours < 1) return '${ago.inMinutes}m ago';
+    if (ago.inDays < 1) return '${ago.inHours}h ago';
+    if (ago.inDays < 7) return '${ago.inDays}d ago';
+    return formatShortDate(localDate);
+  }
 
-    final minute = localDate.minute.toString().padLeft(2, '0');
+  Activity? _storeActivity(String activityId) {
+    for (final a in widget.activityStore.mine) {
+      if (a.id == activityId) return a;
+    }
+    return null;
+  }
 
-    final period = localDate.hour >= 12 ? 'PM' : 'AM';
+  // Requests bucketed by activity, soonest activity first (unknown dates
+  // last), each bucket oldest request first.
+  List<List<PendingActivityRequest>> _groupedRequests() {
+    final groups = <String, List<PendingActivityRequest>>{};
+    for (final request in _controller.requests) {
+      groups.putIfAbsent(request.activityId, () => []).add(request);
+    }
+    for (final group in groups.values) {
+      group.sort((a, b) => a.requestedAt.compareTo(b.requestedAt));
+    }
+    DateTime? startOf(List<PendingActivityRequest> g) =>
+        _storeActivity(g.first.activityId)?.dateTime;
 
-    return '${localDate.day}/${localDate.month}/${localDate.year}'
-        ' · $hour:$minute $period';
+    return groups.values.toList()..sort((a, b) {
+      final da = startOf(a);
+      final db = startOf(b);
+      if (da != null && db != null) return da.compareTo(db);
+      if (da == null && db == null) return 0;
+      return da == null ? 1 : -1;
+    });
   }
 
   // Reviews the request and shows feedback using the shared Synk style.
@@ -132,48 +203,25 @@ class _ActivityJoinRequestsViewState extends State<ActivityJoinRequestsView> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
         children: [
-          const Text(
-            'Private activity requests',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.5,
-              color: SynkColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'Review users who want to join your private activities.',
-            style: TextStyle(
-              fontSize: 14,
-              height: 1.4,
-              color: SynkColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 20),
-          ..._controller.requests.map((request) {
-            return Padding(
+          for (final group in _groupedRequests())
+            Padding(
               padding: const EdgeInsets.only(bottom: 14),
-              child: _buildRequestCard(request),
-            );
-          }),
+              child: _buildActivityGroup(group),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildRequestCard(PendingActivityRequest request) {
-    final isReviewing = _controller.isReviewing(request.participationId);
-
-    final username = request.requesterUsername;
-    final trimmedName = request.requesterName.trim();
-
-    final firstLetter = trimmedName.isEmpty
-        ? '?'
-        : trimmedName.characters.first.toUpperCase();
+  // One card per activity: the activity on top (tap for details), then
+  // everyone waiting to join it.
+  Widget _buildActivityGroup(List<PendingActivityRequest> requests) {
+    final first = requests.first;
+    final activity = _storeActivity(first.activityId);
+    final count = requests.length;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.82),
         borderRadius: BorderRadius.circular(20),
@@ -188,161 +236,205 @@ class _ActivityJoinRequestsViewState extends State<ActivityJoinRequestsView> {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 46,
-                height: 46,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: SynkColors.orangeDark.withValues(alpha: 0.10),
-                  shape: BoxShape.circle,
-                ),
-                child: Text(
-                  firstLetter,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: SynkColors.orangeDark,
+      child: Material(
+        color: Colors.transparent,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Warm tinted band sets the activity apart from the people.
+            Ink(
+              color: SynkColors.orangeDark.withValues(alpha: 0.12),
+              child: InkWell(
+                onTap: () => _openActivity(first),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 14, 10, 14),
+                  child: Row(
+                    children: [
+                      if (activity != null)
+                        ActivityThumbnail(
+                          activity: activity,
+                          size: 48,
+                          radius: 12,
+                        )
+                      else
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.event_rounded,
+                            color: SynkColors.orangeDark,
+                          ),
+                        ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              first.activityTitle,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: SynkColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              [
+                                if (activity != null)
+                                  '${formatShortDate(activity.dateTime)} · '
+                                      '${formatMinute(activity.dateTime.hour * 60 + activity.dateTime.minute)}',
+                                '$count ${count == 1 ? 'request' : 'requests'}',
+                              ].join(' · '),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                                color: SynkColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        color: SynkColors.textSecondary,
+                      ),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+            for (final (i, request) in requests.indexed) ...[
+              if (i > 0)
+                Divider(
+                  height: 1,
+                  indent: 14,
+                  endIndent: 14,
+                  color: SynkColors.textSecondary.withValues(alpha: 0.10),
+                ),
+              _buildRequestRow(request),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  // The requester (tap for their profile) with reject / accept buttons.
+  Widget _buildRequestRow(PendingActivityRequest request) {
+    final isReviewing = _controller.isReviewing(request.participationId);
+    final username = request.requesterUsername;
+    final avatarUrl = request.requesterAvatarUrl?.trim();
+    final fallbackAvatar = AvatarUploader.defaultImageForGender(
+      request.requesterGender,
+    );
+    final subtitle = [
+      if (username != null && username.isNotEmpty) '@$username',
+      _formatRequestedAt(request.requestedAt),
+    ].join(' · ');
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 6, 12, 6),
+      child: Row(
+        children: [
+          Expanded(
+            child: InkWell(
+              onTap: () => _openRequester(request),
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.all(6),
+                child: Row(
                   children: [
-                    Text(
-                      request.requesterName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: SynkColors.textPrimary,
-                      ),
-                    ),
-                    if (username != null && username.isNotEmpty)
-                      Text(
-                        '@$username',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: SynkColors.textSecondary,
+                    ClipOval(
+                      child: Image(
+                        image: avatarUrl != null && avatarUrl.startsWith('http')
+                            ? NetworkImage(avatarUrl)
+                            : fallbackAvatar,
+                        width: 40,
+                        height: 40,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => Image(
+                          image: fallbackAvatar,
+                          width: 40,
+                          height: 40,
+                          fit: BoxFit.cover,
                         ),
                       ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            request.requesterName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: SynkColors.textPrimary,
+                            ),
+                          ),
+                          Text(
+                            subtitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: SynkColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
-              const Icon(
-                Icons.lock_outline_rounded,
-                size: 20,
-                color: SynkColors.textSecondary,
-              ),
-            ],
+            ),
           ),
-          const SizedBox(height: 15),
-          Row(
-            children: [
-              const Icon(
-                Icons.event_rounded,
-                size: 18,
-                color: SynkColors.orangeDark,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  request.activityTitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: SynkColors.textPrimary,
-                  ),
+          const SizedBox(width: 6),
+          if (isReviewing)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 30),
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.3,
+                  color: SynkColors.orangeDark,
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(
-                Icons.schedule_rounded,
-                size: 17,
-                color: SynkColors.textSecondary,
+            )
+          else ...[
+            IconButton.filled(
+              tooltip: 'Reject',
+              onPressed: () => _reviewRequest(request: request, accept: false),
+              style: IconButton.styleFrom(
+                backgroundColor: SynkColors.badge,
+                foregroundColor: Colors.white,
               ),
-              const SizedBox(width: 8),
-              Text(
-                _formatRequestedAt(request.requestedAt),
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: SynkColors.textSecondary,
-                ),
+              icon: const Icon(Icons.close_rounded, size: 20),
+            ),
+            const SizedBox(width: 4),
+            IconButton.filled(
+              tooltip: 'Accept',
+              onPressed: () => _reviewRequest(request: request, accept: true),
+              style: IconButton.styleFrom(
+                backgroundColor: SynkColors.teal,
+                foregroundColor: Colors.white,
               ),
-            ],
-          ),
-          const SizedBox(height: 17),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: isReviewing
-                      ? null
-                      : () {
-                          _reviewRequest(request: request, accept: false);
-                        },
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.redAccent,
-                    side: BorderSide(
-                      color: Colors.redAccent.withValues(alpha: 0.45),
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(13),
-                    ),
-                    minimumSize: const Size.fromHeight(46),
-                  ),
-                  child: const Text(
-                    'Reject',
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: FilledButton(
-                  onPressed: isReviewing
-                      ? null
-                      : () {
-                          _reviewRequest(request: request, accept: true);
-                        },
-                  style: FilledButton.styleFrom(
-                    backgroundColor: SynkColors.orangeDark,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(13),
-                    ),
-                    minimumSize: const Size.fromHeight(46),
-                  ),
-                  child: isReviewing
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.3,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text(
-                          'Accept',
-                          style: TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                ),
-              ),
-            ],
-          ),
+              icon: const Icon(Icons.check_rounded, size: 20),
+            ),
+          ],
         ],
       ),
     );

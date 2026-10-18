@@ -11,6 +11,9 @@ import '../models/activity_photo_uploader.dart';
 // Image formats accepted for an activity photo.
 enum PhotoFormat { jpeg, png }
 
+// The required fields on the first step, each with its own inline error.
+enum CreateField { title, location, date, time }
+
 // Outcome of a create attempt.
 //
 // [activity] is non-null when the row was created. [photoWarning] explains a
@@ -32,9 +35,8 @@ class CreateActivityResult {
 }
 
 class CreateActivityController extends ChangeNotifier {
-  CreateActivityController({
-    ActivitiesModel? activitiesModel,
-  }) : _activitiesModel = activitiesModel ?? ActivitiesModel();
+  CreateActivityController({ActivitiesModel? activitiesModel})
+    : _activitiesModel = activitiesModel ?? ActivitiesModel();
 
   final ActivitiesModel _activitiesModel;
 
@@ -130,16 +132,21 @@ class CreateActivityController extends ChangeNotifier {
     _locationAddress = null;
     _latitude = null;
     _longitude = null;
+    // Clearing it is leaving it empty, so say it's needed.
+    _touched.add(CreateField.location);
     notifyListeners();
   }
 
   void setDate(DateTime value) {
     _date = DateTime(value.year, value.month, value.day);
+    _touched.add(CreateField.date);
     notifyListeners();
   }
 
   void setTime(TimeOfDay value) {
     _time = value;
+    // Checked right away, so a time that has already passed is flagged.
+    _touched.add(CreateField.time);
     notifyListeners();
   }
 
@@ -210,8 +217,7 @@ class CreateActivityController extends ChangeNotifier {
       if (!_extensionMatches(picked.path, format)) {
         // e.g. JPEG bytes saved as ".png": the stored content type would be
         // wrong, so ask for a file whose name matches what it actually is.
-        _photoError =
-            "This image's file type and its contents don't match. Try another photo.";
+        _photoError = "This image's file type and its contents don't match. Try another photo.";
         return;
       }
 
@@ -275,64 +281,89 @@ class CreateActivityController extends ChangeNotifier {
   // Validation
   // ---------------------------------------------------------------------------
 
+  // Letters and spaces only (any alphabet), as the title field allows.
+  static final RegExp titleAllowed = RegExp(r'[\p{L} ]', unicode: true);
+
   String? validateTitle(String? value) {
     final title = value?.trim() ?? '';
-    if (title.isEmpty) return 'Please give your activity a title';
-    if (title.length > ActivityConstants.titleMaxLength) {
-      return 'Title must be ${ActivityConstants.titleMaxLength} characters or fewer';
+    if (title.isEmpty) return 'Add a title';
+    if (title.characters.length > ActivityConstants.titleMaxLength) {
+      return 'Keep it to ${ActivityConstants.titleMaxLength} letters';
+    }
+    if (!RegExp(r'^[\p{L} ]+$', unicode: true).hasMatch(title)) {
+      return 'Use letters only';
     }
     return null;
   }
 
+  // Optional; only the length is checked.
   String? validateDescription(String? value) {
     final description = value?.trim() ?? '';
-    if (description.isEmpty) return 'Please describe your activity';
     if (description.length > ActivityConstants.descriptionMaxLength) {
-      return 'Description must be ${ActivityConstants.descriptionMaxLength} characters or fewer';
+      return 'Keep it to ${ActivityConstants.descriptionMaxLength} characters';
     }
     return null;
   }
 
-  // Step 1: title + a chosen location.
-  bool get step1Valid =>
-      validateTitle(titleController.text) == null && _locationName.isNotEmpty;
+  // A field shows its error only once the user has left it (or tried to
+  // continue past it), never while they're still filling it in.
+  final Set<CreateField> _touched = {};
 
-  // Step 2: a date and time that are not in the past.
-  bool get step2Valid {
-    final start = startsAt;
-    return start != null && start.isAfter(DateTime.now());
+  void touch(CreateField field) {
+    if (_touched.add(field)) notifyListeners();
   }
 
-  // Step 3: a description.
-  bool get step3Valid => validateDescription(descriptionController.text) == null;
+  // Shows every error on [step], as when the user presses Continue.
+  void touchStep(int step) {
+    final fields = switch (step) {
+      0 => CreateField.values,
+      _ => const <CreateField>[],
+    };
+    final before = _touched.length;
+    _touched.addAll(fields);
+    if (_touched.length != before) notifyListeners();
+  }
+
+  String? _fieldError(CreateField field) => switch (field) {
+    CreateField.title => validateTitle(titleController.text),
+    CreateField.location => _locationName.isEmpty ? 'Choose a location' : null,
+    CreateField.date => _date == null ? 'Pick a date' : null,
+    CreateField.time =>
+      _time == null
+          ? 'Pick a time'
+          : startsAt != null && !startsAt!.isAfter(DateTime.now())
+          ? 'This time has already passed'
+          : null,
+  };
+
+  // The error to show under [field], or null.
+  String? errorFor(CreateField field) =>
+      _touched.contains(field) ? _fieldError(field) : null;
+
+  // Step 1 (title, location, date and time) must be complete; steps 2 and
+  // 3 have nothing required.
+  bool _stepValid(int step) =>
+      step != 0 || CreateField.values.every((f) => _fieldError(f) == null);
 
   bool get canSubmit =>
-      step1Valid && step2Valid && step3Valid && !_isSubmitting && !_isLoading;
+      _stepValid(0) &&
+      validateDescription(descriptionController.text) == null &&
+      !_isSubmitting &&
+      !_isLoading;
 
-  // Message for the step the user is on, or null when it's complete.
+  // First problem on [step], or null when it's complete.
   String? stepBlocker(int step) {
-    switch (step) {
-      case 0:
-        if (validateTitle(titleController.text) != null) {
-          return 'Please give your activity a title';
-        }
-        if (_locationName.isEmpty) return 'Please choose a location';
-        return null;
-      case 1:
-        if (_date == null) return 'Please pick a date';
-        if (_time == null) return 'Please pick a start time';
-        if (!step2Valid) return 'Pick a date and time in the future';
-        return null;
-      case 2:
-        return validateDescription(descriptionController.text);
-      default:
-        return null;
+    if (step != 0) return null;
+    for (final field in CreateField.values) {
+      final error = _fieldError(field);
+      if (error != null) return error;
     }
+    return null;
   }
 
-  // The first thing stopping a submit, checked across all three steps.
+  // The first thing stopping a submit, checked across every step.
   String? get submitBlocker =>
-      stepBlocker(0) ?? stepBlocker(1) ?? stepBlocker(2);
+      stepBlocker(0) ?? validateDescription(descriptionController.text);
 
   // ---------------------------------------------------------------------------
   // Submit — insert first, then upload the photo, then attach it.

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'models/auth_deep_link_handler.dart';
@@ -165,6 +166,8 @@ class _MyAppState extends State<MyApp> {
       title: 'Synk',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFFF9F5C)),
+        // One font everywhere, on Android and iOS alike.
+        fontFamily: GoogleFonts.inter().fontFamily,
       ),
       home: StreamBuilder<AuthState>(
         stream: _authModel.authStateChanges,

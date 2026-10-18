@@ -13,11 +13,14 @@ class BottomBar extends StatelessWidget {
     required this.selected,
     required this.onSelect,
     required this.onAddTap,
+    this.activitiesBadge = 0,
   });
 
   final HomeTab selected;
   final ValueChanged<HomeTab> onSelect;
   final VoidCallback onAddTap;
+  // Pending join requests, shown on the Activities tab.
+  final int activitiesBadge;
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +60,7 @@ class BottomBar extends StatelessWidget {
                   icon: Icons.event_note_rounded,
                   label: 'Activities',
                   selected: selected == HomeTab.activities,
+                  badgeCount: activitiesBadge,
                   onTap: () => onSelect(HomeTab.activities),
                 ),
                 // Reserves space for the big + button floating above.
