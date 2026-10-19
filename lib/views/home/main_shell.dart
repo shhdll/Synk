@@ -56,6 +56,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
         Supabase.instance.client.auth.currentUser?.id;
 
     _tab = widget.initialTab;
+    _activityStore.addListener(_openMapForFocus);
 
     // Loads hosted, participating, and public activities.
     _loadActivities();
@@ -65,6 +66,12 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       _requestPollInterval,
       (_) => _loadPendingRequestCount(),
     );
+  }
+
+  void _openMapForFocus() {
+    if (_activityStore.mapFocus != null && _tab != HomeTab.map) {
+      setState(() => _tab = HomeTab.map);
+    }
   }
 
   @override
@@ -133,6 +140,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   void dispose() {
     _requestPoll?.cancel();
     WidgetsBinding.instance.removeObserver(this);
+    _activityStore.removeListener(_openMapForFocus);
     _activityStore.dispose();
     _discoveryController.dispose();
     super.dispose();

@@ -40,6 +40,10 @@ class _MapViewState extends State<MapView> {
   GoogleMapController? _googleMap;
   String? _selectedId;
 
+  // Opened via "View on map"; shown even if the filters would hide it.
+  Activity? _extra;
+  Activity? _pendingFocus;
+
   // Activity ids in swipe order.
   List<String> _swipeOrder = const [];
   PageController? _pageController;
@@ -56,7 +60,20 @@ class _MapViewState extends State<MapView> {
   void initState() {
     super.initState();
     _discovery.addListener(_scheduleMarkerRefresh);
+    widget.activityStore.addListener(_takeFocus);
     if (widget.isActive) _start();
+    _takeFocus();
+  }
+
+  void _takeFocus() {
+    final focus = widget.activityStore.takeMapFocus();
+    if (focus == null || !focus.hasCoordinates) return;
+    _extra = focus;
+    if (_googleMap == null) {
+      _pendingFocus = focus;
+    } else {
+      _onPinTap(focus);
+    }
   }
 
   @override
@@ -67,21 +84,28 @@ class _MapViewState extends State<MapView> {
 
   Future<void> _start() async {
     _discovery.init();
-    await _centerOnUser();
+    await _centerOnUser(unlessSelected: true);
   }
 
-  Future<void> _centerOnUser() async {
+  Future<void> _centerOnUser({bool unlessSelected = false}) async {
     await _location.locateUser();
     if (!mounted) return;
+    // Don't pull the camera away from an activity opened via "View on map".
+    if (unlessSelected && _selectedId != null) return;
     final target = _location.userLocation;
     if (target != null) {
       await _googleMap?.animateCamera(CameraUpdate.newLatLngZoom(target, 14));
     }
   }
 
-  List<Activity> get _activities => _discovery.filteredActivities
-      .where((a) => a.isPublic && a.hasCoordinates && a.spotsOpen > 0)
-      .toList();
+  List<Activity> get _activities {
+    final list = _discovery.filteredActivities
+        .where((a) => a.isPublic && a.hasCoordinates && a.spotsOpen > 0)
+        .toList();
+    final extra = _extra;
+    if (extra != null && !list.any((a) => a.id == extra.id)) list.add(extra);
+    return list;
+  }
 
   List<String> get _categories => _discovery.feedCategories;
 
@@ -174,6 +198,7 @@ class _MapViewState extends State<MapView> {
     setState(() {
       _selectedId = null;
       _swipeOrder = const [];
+      _extra = null;
     });
     _scheduleMarkerRefresh();
   }
@@ -212,6 +237,7 @@ class _MapViewState extends State<MapView> {
   @override
   void dispose() {
     _discovery.removeListener(_scheduleMarkerRefresh);
+    widget.activityStore.removeListener(_takeFocus);
     _googleMap?.dispose();
     _pageController?.dispose();
     _location.dispose();
@@ -243,8 +269,12 @@ class _MapViewState extends State<MapView> {
                 ),
                 onMapCreated: (controller) {
                   _googleMap = controller;
+                  final focus = _pendingFocus;
+                  _pendingFocus = null;
                   final current = _location.userLocation;
-                  if (current != null) {
+                  if (focus != null) {
+                    _onPinTap(focus);
+                  } else if (current != null) {
                     unawaited(controller.animateCamera(
                       CameraUpdate.newLatLngZoom(current, 14),
                     ));
