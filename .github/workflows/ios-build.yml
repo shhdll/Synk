@@ -1,0 +1,65 @@
+# Builds an unsigned Synk.ipa on a GitHub-hosted Mac, so the app can be
+# sideloaded onto an iPhone from Windows (Sideloadly / AltStore) with a free
+# Apple ID. Run it from the Actions tab ("Build iOS app" > Run workflow) and
+# download Synk-ios from the run's Artifacts section.
+#
+# Required repository secrets (Settings > Secrets and variables > Actions):
+#   SUPABASE_URL, SUPABASE_ANON_KEY  - same values as the local .env
+#   MAPS_API_KEY                     - Google Maps key with "Maps SDK for iOS" enabled
+name: Build iOS app
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'lib/**'
+      - 'ios/**'
+      - 'assets/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - '.github/workflows/ios-build.yml'
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.3'
+          channel: stable
+          cache: true
+
+      - name: Write secrets
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+        run: |
+          printf 'SUPABASE_URL=%s\nSUPABASE_ANON_KEY=%s\n' "$SUPABASE_URL" "$SUPABASE_ANON_KEY" > .env
+          printf 'MAPS_API_KEY=%s\n' "$MAPS_API_KEY" > ios/Flutter/Secrets.xcconfig
+
+      # AppDelegate imports GoogleMaps directly, which is the documented
+      # CocoaPods setup for google_maps_flutter.
+      - name: Use CocoaPods
+        run: flutter config --no-enable-swift-package-manager
+
+      - run: flutter pub get
+
+      - name: Build
+        run: flutter build ios --release --no-codesign
+
+      - name: Package IPA
+        run: |
+          mkdir -p Payload
+          cp -R build/ios/iphoneos/Runner.app Payload/
+          zip -qr Synk.ipa Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Synk-ios
+          path: Synk.ipa
+          retention-days: 14

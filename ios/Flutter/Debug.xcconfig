@@ -1,0 +1,3 @@
+#include "Generated.xcconfig"
+// Git-ignored; defines MAPS_API_KEY. See ios/Runner/Info.plist.
+#include? "Secrets.xcconfig"
