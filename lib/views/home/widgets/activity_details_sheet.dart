@@ -1251,20 +1251,61 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
               ),
             ],
           ),
-          if (MapsLauncher.canOpen(_currentActivity)) ...[
+          if (_currentActivity.hasCoordinates ||
+              MapsLauncher.canOpen(_currentActivity)) ...[
             const SizedBox(height: 14),
-            _buildOpenInMapsButton(),
+            Row(
+              children: [
+                if (_currentActivity.hasCoordinates)
+                  Expanded(child: _buildViewOnMapButton()),
+                if (_currentActivity.hasCoordinates &&
+                    MapsLauncher.canOpen(_currentActivity))
+                  const SizedBox(width: 10),
+                if (MapsLauncher.canOpen(_currentActivity))
+                  _buildOpenInMapsButton(),
+              ],
+            ),
           ],
         ],
       ),
     );
   }
 
-  // Opens the activity's location in Google Maps (app or browser).
-  Widget _buildOpenInMapsButton() {
+  static final _mapButtonShape = RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(14),
+    side: BorderSide(color: SynkColors.textSecondary.withValues(alpha: 0.18)),
+  );
+
+  // Closes this sheet (and any page under it) and shows the pin on our map.
+  Widget _buildViewOnMapButton() {
     return SizedBox(
-      width: double.infinity,
+      height: 48,
       child: TextButton.icon(
+        onPressed: () {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+          widget.activityStore.showOnMap(_currentActivity);
+        },
+        icon: const Icon(
+          Icons.map_rounded,
+          size: 20,
+          color: SynkColors.orangeDark,
+        ),
+        label: const Text('View on map'),
+        style: TextButton.styleFrom(
+          foregroundColor: SynkColors.textPrimary,
+          backgroundColor: Colors.white,
+          shape: _mapButtonShape,
+          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+        ),
+      ),
+    );
+  }
+
+  // Square Google Maps button: opens the place in the Google Maps app.
+  Widget _buildOpenInMapsButton() {
+    return SizedBox.square(
+      dimension: 48,
+      child: TextButton(
         onPressed: () async {
           final messenger = ScaffoldMessenger.of(context);
           bool opened;
@@ -1279,24 +1320,18 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
             );
           }
         },
-        // Official Google Maps pin (assets/google_maps_logo.png).
-        icon: Image.asset(
-          'assets/google_maps_logo.png',
-          height: 20,
-          errorBuilder: (_, _, _) => const Icon(Icons.map_rounded, size: 18),
-        ),
-        label: const Text('Open in Google Maps'),
         style: TextButton.styleFrom(
-          foregroundColor: SynkColors.textPrimary,
           backgroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-            side: BorderSide(
-              color: SynkColors.textSecondary.withValues(alpha: 0.18),
-            ),
+          padding: EdgeInsets.zero,
+          shape: _mapButtonShape,
+        ),
+        child: Tooltip(
+          message: 'Open in Google Maps',
+          child: Image.asset(
+            'assets/google_maps_logo.png',
+            height: 24,
+            errorBuilder: (_, _, _) => const Icon(Icons.map_rounded, size: 20),
           ),
-          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
         ),
       ),
     );

@@ -396,7 +396,8 @@ class CreateActivityController extends ChangeNotifier {
           isPublic: _isPublic,
         ),
       );
-    } catch (_) {
+    } catch (error) {
+      debugPrint('SYNK: create activity failed: $error');
       _errorMessage = "We couldn't create your activity. Please try again.";
       _isSubmitting = false;
       _setLoading(false);

@@ -234,6 +234,22 @@ class ActivityStore extends ChangeNotifier {
 
   int get participationVersion => _participationVersion;
 
+  // Set by "View on map"; the shell switches tabs and the map takes it.
+  Activity? _mapFocus;
+
+  Activity? get mapFocus => _mapFocus;
+
+  void showOnMap(Activity activity) {
+    _mapFocus = activity;
+    notifyListeners();
+  }
+
+  Activity? takeMapFocus() {
+    final focus = _mapFocus;
+    _mapFocus = null;
+    return focus;
+  }
+
   int _pendingRequestCount = 0;
 
   int get pendingRequestCount => _pendingRequestCount;
