@@ -4,11 +4,8 @@ Works from **Windows or Mac**.
 
 ## 1. Install Sideloadly
 
-| Windows | Mac |
-| --- | --- |
-| 1. Install **iTunes** from Apple's site: [64-bit](https://www.apple.com/itunes/download/win64) · [32-bit](https://www.apple.com/itunes/download/win32) | — |
-| 2. Install **Sideloadly**: [sideloadly.io](https://sideloadly.io) | 1. Install **Sideloadly**: [sideloadly.io](https://sideloadly.io) |
-| 3. Restart your PC | |
+1. Download and install **Sideloadly**: [sideloadly.io](https://sideloadly.io)
+2. **Windows only:** also install **iTunes** from [Apple's site](https://www.apple.com/itunes/download/win64), then restart your PC.
 
 ## 2. Download the app
 
