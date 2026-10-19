@@ -130,8 +130,8 @@ class _EditProfileViewState extends State<EditProfileView> {
   Future<void> _pickBirthday() async {
     final today = DateTime.now();
 
-    // Oldest allowed: 90 years old
-    final firstDate = DateTime(today.year - 90, today.month, today.day);
+    // Oldest allowed: 65 years old
+    final firstDate = DateTime(today.year - 65, today.month, today.day);
 
     // Youngest allowed: 16 years old
     final lastDate = DateTime(today.year - 16, today.month, today.day);
@@ -278,8 +278,8 @@ class _EditProfileViewState extends State<EditProfileView> {
     // ---------------------------------------------------------
 
     if (_controller.age != null) {
-      if (_controller.age! < 16 || _controller.age! > 90) {
-        _showMessage('Adult must be between 16 and 90 years old.');
+      if (_controller.age! < 16 || _controller.age! > 65) {
+        _showMessage('Adult must be between 16 and 65 years old.');
         return;
       }
     }
@@ -375,6 +375,16 @@ class _EditProfileViewState extends State<EditProfileView> {
     _showMessage(message);
   }
 
+  Future<void> _adjustPhoto() async {
+    final message = await _controller.adjustPhoto();
+
+    if (!mounted || message == null) {
+      return;
+    }
+
+    _showMessage(message);
+  }
+
   Future<void> _removePhoto() async {
     final message = await _controller.removePhoto();
 
@@ -401,6 +411,8 @@ class _EditProfileViewState extends State<EditProfileView> {
 
     if (action == 'change') {
       await _changePhoto();
+    } else if (action == 'adjust') {
+      await _adjustPhoto();
     } else if (action == 'remove') {
       await _removePhoto();
     }

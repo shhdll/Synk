@@ -1,10 +1,13 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart'
+    show consolidateHttpClientResponseBytes;
 import 'package:flutter/widgets.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../utils/photo_cropper.dart';
 import 'user_profile_model.dart';
 
 class AvatarUpdateResult {
@@ -53,30 +56,17 @@ class AvatarUploader {
     );
     if (picked == null) return const AvatarUpdateResult(picked: false);
 
+    final croppedPath = await _crop(picked.path);
+    if (croppedPath == null) return const AvatarUpdateResult(picked: false);
+
     final userId = Supabase.instance.client.auth.currentUser?.id ?? 'me';
-    final extension = picked.path.split('.').last;
+    final extension = croppedPath.split('.').last;
 
     final documentsDir = await getApplicationDocumentsDirectory();
-    final localFile = await File(picked.path)
+    final localFile = await File(croppedPath)
         .copy('${documentsDir.path}/avatar_$userId.$extension');
 
-    String? avatarUrl;
-    try {
-      final storagePath = '$userId/avatar.$extension';
-      await Supabase.instance.client.storage
-          .from('avatars')
-          .upload(
-            storagePath,
-            localFile,
-            fileOptions: const FileOptions(upsert: true),
-          );
-      avatarUrl = Supabase.instance.client.storage
-          .from('avatars')
-          .getPublicUrl(storagePath);
-    } catch (_) {
-      // No 'avatars' bucket yet (or no permission) — the local copy above
-      // still makes the photo show up on this device.
-    }
+    final avatarUrl = await _upload(userId, localFile);
 
     await _profileModel.updateProfile({
       'avatar_local_path': localFile.path,
@@ -92,20 +82,89 @@ class AvatarUploader {
   }
 
   // Picks a photo for an edit form without changing the saved profile.
-  static Future<String?> pickDraft() async {
+  // Keeps the uncropped original too, so the photo can be adjusted again.
+  static Future<({String cropped, String source})?> pickDraft() async {
     final picked = await _picker.pickImage(
       source: ImageSource.gallery,
-      maxWidth: 1024,
-      imageQuality: 85,
+      maxWidth: 1600,
+      imageQuality: 90,
     );
     if (picked == null) return null;
 
+    final source = await _copyToDocuments(picked.path, 'src_draft');
+    final cropped = await cropDraft(source);
+    if (cropped == null) {
+      await discardSourceDraft(source);
+      return null;
+    }
+    return (cropped: cropped, source: source);
+  }
+
+  // Opens Move and Scale on [sourcePath]. Returns a new draft, or null if
+  // the user cancels.
+  static Future<String?> cropDraft(String sourcePath) async {
+    final croppedPath = await _crop(sourcePath);
+    if (croppedPath == null) return null;
+    return _copyToDocuments(croppedPath, 'draft');
+  }
+
+  static Future<String> _copyToDocuments(String path, String kind) async {
     final userId = Supabase.instance.client.auth.currentUser?.id ?? 'me';
-    final extension = picked.path.split('.').last;
+    final extension = path.split('.').last;
     final documentsDir = await getApplicationDocumentsDirectory();
-    final draftPath =
-        '${documentsDir.path}/avatar_${userId}_draft_${DateTime.now().microsecondsSinceEpoch}.$extension';
-    return (await File(picked.path).copy(draftPath)).path;
+    final copyPath =
+        '${documentsDir.path}/avatar_${userId}_${kind}_${DateTime.now().microsecondsSinceEpoch}.$extension';
+    return (await File(path).copy(copyPath)).path;
+  }
+
+  // Where the uncropped original of the saved photo is kept on this device.
+  static Future<String> _savedSourcePath() async {
+    final userId = Supabase.instance.client.auth.currentUser?.id ?? 'me';
+    final documentsDir = await getApplicationDocumentsDirectory();
+    return '${documentsDir.path}/avatar_${userId}_source';
+  }
+
+  // What to start from when adjusting: the uncropped original if this phone
+  // has it, otherwise the current photo itself.
+  static Future<String?> adjustableSource(Map<String, dynamic> profile) async {
+    final saved = await _savedSourcePath();
+    if (File(saved).existsSync()) return saved;
+
+    final localPath = (profile['avatar_local_path'] as String?)?.trim();
+    if (localPath != null && File(localPath).existsSync()) return localPath;
+
+    final url = (profile['avatar_url'] as String?)?.trim();
+    if (url == null || url.isEmpty) return null;
+    final client = HttpClient();
+    try {
+      final response = await (await client.getUrl(Uri.parse(url))).close();
+      if (response.statusCode != 200) return null;
+      final bytes = await consolidateHttpClientResponseBytes(response);
+      final file = File(
+        '${(await getTemporaryDirectory()).path}/avatar_download.jpg',
+      );
+      await file.writeAsBytes(bytes);
+      return file.path;
+    } catch (_) {
+      return null;
+    } finally {
+      client.close();
+    }
+  }
+
+  // Keeps the original of a photo that was just saved.
+  static Future<void> saveSource(String sourcePath) async {
+    final saved = await _savedSourcePath();
+    if (sourcePath == saved) return;
+    await File(sourcePath).copy(saved);
+    await discardSourceDraft(sourcePath);
+  }
+
+  // Deletes an unsaved original. Never touches the saved one.
+  static Future<void> discardSourceDraft(String? path) async {
+    if (path == null || !path.contains('_src_draft_')) return;
+    final file = File(path);
+    if (await file.exists()) await file.delete();
   }
 
   // Commits a previously picked draft photo and returns its profile metadata.
@@ -118,24 +177,58 @@ class AvatarUploader {
       '${documentsDir.path}/avatar_$userId.$extension',
     );
 
-    String? avatarUrl;
-    try {
-      final storagePath = '$userId/avatar.$extension';
-      await Supabase.instance.client.storage
-          .from('avatars')
-          .upload(
-            storagePath,
-            localFile,
-            fileOptions: const FileOptions(upsert: true),
-          );
-      avatarUrl = Supabase.instance.client.storage
-          .from('avatars')
-          .getPublicUrl(storagePath);
-    } catch (_) {
-      // Local avatar still works when cloud storage is unavailable.
-    }
+    final avatarUrl = await _upload(userId, localFile);
     if (await draftFile.exists()) await draftFile.delete();
     return {'avatar_local_path': localFile.path, 'avatar_url': ?avatarUrl};
+  }
+
+  static Future<String?> _crop(String path) => cropPhoto(
+    path,
+    circle: true,
+    maxWidth: 1024,
+  );
+
+  // Uploads to avatars/<userId>/avatar.<ext> and returns its public URL, or
+  // null when the upload fails (the local copy still shows on this device).
+  static Future<String?> _upload(String userId, File file) async {
+    final extension = file.path.split('.').last.toLowerCase();
+    final storagePath = '$userId/avatar.$extension';
+    try {
+      final storage = Supabase.instance.client.storage.from('avatars');
+      await storage.upload(
+        storagePath,
+        file,
+        fileOptions: const FileOptions(upsert: true),
+      );
+      // The path never changes, so add a version or others keep seeing the
+      // old cached photo.
+      final url = storage.getPublicUrl(storagePath);
+      return '$url?v=${DateTime.now().millisecondsSinceEpoch}';
+    } catch (error) {
+      debugPrint('Avatar upload failed: $error');
+      return null;
+    }
+  }
+
+  // Photos picked before cloud storage worked only exist on that phone.
+  // Uploads them once so other users can see them too.
+  static Future<String?> uploadLocalIfMissing(
+    Map<String, dynamic> profile,
+  ) async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    final url = (profile['avatar_url'] as String?)?.trim();
+    final localPath = (profile['avatar_local_path'] as String?)?.trim();
+    if (userId == null ||
+        (url != null && url.isNotEmpty) ||
+        localPath == null ||
+        !File(localPath).existsSync()) {
+      return null;
+    }
+    final avatarUrl = await _upload(userId, File(localPath));
+    if (avatarUrl != null) {
+      await _profileModel.updateProfile({'avatar_url': avatarUrl});
+    }
+    return avatarUrl;
   }
 
   static Future<void> discardDraft(String? draftPath) async {
@@ -147,6 +240,9 @@ class AvatarUploader {
   // Deletes the local copy, best-effort clears the cloud copy, and clears
   // the profile's avatar fields so the UI falls back to the default icon.
   static Future<void> removePhoto(Map<String, dynamic> metadata) async {
+    final source = File(await _savedSourcePath());
+    if (await source.exists()) await source.delete();
+
     final localPath = (metadata['avatar_local_path'] as String?)?.trim();
     if (localPath != null && localPath.isNotEmpty) {
       final file = File(localPath);

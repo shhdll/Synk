@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../controllers/onboarding_controller.dart';
+import '../core/constants/interest_emojis.dart';
 import '../core/constants/synk_colors.dart';
 
 import '../controllers/signup_controller.dart';
@@ -26,25 +27,6 @@ class _OnboardingViewState extends State<OnboardingView>
   late final SignupController _signupController;
   late final AnimationController _blobAnimationController;
   late final PageController _pageController;
-
-  static const List<Map<String, String>> _interests = [
-    {'emoji': '🎾', 'label': 'Padel'},
-    {'emoji': '🎲', 'label': 'Board Games'},
-    {'emoji': '🏎️', 'label': 'Karting'},
-    {'emoji': '🗝️', 'label': 'Escape Room'},
-    {'emoji': '♟️', 'label': 'Chess'},
-    {'emoji': '🧗', 'label': 'Climbing'},
-    {'emoji': '🎳', 'label': 'Bowling'},
-    {'emoji': '🏓', 'label': 'Table Tennis'},
-    {'emoji': '⚽', 'label': 'Football'},
-    {'emoji': '🏀', 'label': 'Basketball'},
-    {'emoji': '🥾', 'label': 'Hiking'},
-    {'emoji': '🏕️', 'label': 'Camping'},
-    {'emoji': '🍳', 'label': 'Cooking'},
-    {'emoji': '🍿', 'label': 'Movies'},
-    {'emoji': '🎨', 'label': 'Art'},
-    {'emoji': '🎤', 'label': 'Karaoke'},
-  ];
 
   @override
   void initState() {
@@ -113,11 +95,13 @@ class _OnboardingViewState extends State<OnboardingView>
       },
       child: Scaffold(
         backgroundColor: SynkColors.background,
-        body: SafeArea(
-          child: Stack(
-            children: [
-              Positioned.fill(child: _buildAnimatedBackground()),
-              Positioned.fill(
+        // Background runs under the status and navigation bars; only the
+        // content stays inside the safe area.
+        body: Stack(
+          children: [
+            Positioned.fill(child: _buildAnimatedBackground()),
+            Positioned.fill(
+              child: SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 28),
                   child: Column(
@@ -149,8 +133,8 @@ class _OnboardingViewState extends State<OnboardingView>
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -451,9 +435,12 @@ class _OnboardingViewState extends State<OnboardingView>
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             child: Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: _interests.map(_buildInterestChip).toList(),
+              spacing: 7,
+              runSpacing: 8,
+              children: [
+                for (final entry in kInterestEmojis.entries)
+                  _buildInterestChip(entry.key, entry.value),
+              ],
             ),
           ),
         ),
@@ -461,9 +448,7 @@ class _OnboardingViewState extends State<OnboardingView>
     );
   }
 
-  Widget _buildInterestChip(Map<String, String> interest) {
-    final label = interest['label']!;
-    final emoji = interest['emoji']!;
+  Widget _buildInterestChip(String label, String emoji) {
     final isSelected = _controller.selectedInterests.contains(label);
 
     return GestureDetector(
@@ -471,12 +456,12 @@ class _OnboardingViewState extends State<OnboardingView>
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
         decoration: BoxDecoration(
           color: isSelected
               ? SynkColors.orange.withValues(alpha: 0.20)
               : Colors.white.withValues(alpha: 0.72),
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isSelected
                 ? SynkColors.orange
@@ -487,12 +472,12 @@ class _OnboardingViewState extends State<OnboardingView>
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 20)),
-            const SizedBox(width: 8),
+            Text(emoji, style: const TextStyle(fontSize: 14)),
+            const SizedBox(width: 5),
             Text(
               label,
               style: TextStyle(
-                fontSize: 15,
+                fontSize: 13,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
                 color: SynkColors.textPrimary,
               ),

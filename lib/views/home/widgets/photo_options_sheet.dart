@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/synk_colors.dart';
 
-// Asks whether to change or remove the profile photo. Pops 'change',
-// 'remove', or null (dismissed without choosing).
+// Asks whether to change, adjust or remove the profile photo. Pops
+// 'change', 'adjust', 'remove', or null (dismissed without choosing).
 class PhotoOptionsSheet extends StatelessWidget {
   const PhotoOptionsSheet({super.key, required this.hasPhoto});
 
@@ -11,54 +11,64 @@ class PhotoOptionsSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-        decoration: const BoxDecoration(
-          color: SynkColors.background,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 18),
-                decoration: BoxDecoration(
-                  color: SynkColors.textSecondary.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(999),
-                ),
+    return Container(
+      // Runs under the navigation bar so no dark strip shows below it.
+      padding: EdgeInsets.fromLTRB(
+        24,
+        20,
+        24,
+        24 + MediaQuery.viewPaddingOf(context).bottom,
+      ),
+      decoration: const BoxDecoration(
+        color: SynkColors.background,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 18),
+              decoration: BoxDecoration(
+                color: SynkColors.textSecondary.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(999),
               ),
             ),
-            const Text(
-              'Profile photo',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: SynkColors.textPrimary,
-              ),
+          ),
+          const Text(
+            'Profile photo',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: SynkColors.textPrimary,
             ),
-            const SizedBox(height: 14),
+          ),
+          const SizedBox(height: 14),
+          _OptionTile(
+            icon: Icons.photo_camera_outlined,
+            label: hasPhoto ? 'Change photo' : 'Add photo',
+            onTap: () => Navigator.of(context).pop('change'),
+          ),
+          if (hasPhoto) ...[
+            const SizedBox(height: 10),
             _OptionTile(
-              icon: Icons.photo_camera_outlined,
-              label: hasPhoto ? 'Change photo' : 'Add photo',
-              onTap: () => Navigator.of(context).pop('change'),
+              icon: Icons.crop_rounded,
+              label: 'Adjust photo',
+              onTap: () => Navigator.of(context).pop('adjust'),
             ),
-            if (hasPhoto) ...[
-              const SizedBox(height: 10),
-              _OptionTile(
-                icon: Icons.delete_outline_rounded,
-                label: 'Remove photo',
-                iconColor: const Color(0xFFE53935),
-                textColor: const Color(0xFFE53935),
-                onTap: () => Navigator.of(context).pop('remove'),
-              ),
-            ],
+            const SizedBox(height: 10),
+            _OptionTile(
+              icon: Icons.delete_outline_rounded,
+              label: 'Remove photo',
+              iconColor: const Color(0xFFE53935),
+              textColor: const Color(0xFFE53935),
+              onTap: () => Navigator.of(context).pop('remove'),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }

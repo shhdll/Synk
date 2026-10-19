@@ -62,9 +62,9 @@ class PersonalDetailsSlide extends StatelessWidget {
                   onTap: () async {
                     final today = DateTime.now();
 
-                    // Oldest allowed: 50 years old
+                    // Oldest allowed: 65 years old
                     final firstDate = DateTime(
-                      today.year - 50,
+                      today.year - 65,
                       today.month,
                       today.day,
                     );

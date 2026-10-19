@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/auth_model.dart';
+import '../utils/auth_errors.dart';
 import '../views/onboarding_view.dart';
+
+// Which field a login error belongs to, so the view can show it there.
+enum LoginErrorType { noAccount, wrongCredentials, emailNotConfirmed, other }
 
 class LoginController extends ChangeNotifier {
   LoginController({AuthModel? authModel})
@@ -12,14 +16,22 @@ class LoginController extends ChangeNotifier {
 
   bool _isLoading = false;
   String? _errorMessage;
+  LoginErrorType? _errorType;
+  String? _accountEmail;
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  LoginErrorType? get errorType => _errorType;
+
+  // The account's email, set even when logging in by username. Used to send
+  // unconfirmed users to the verification screen.
+  String? get accountEmail => _accountEmail;
 
   // Clear previous error message when user retypes or switches tabs
   void clearError() {
-    if (_errorMessage != null) {
+    if (_errorMessage != null || _errorType != null) {
       _errorMessage = null;
+      _errorType = null;
       notifyListeners();
     }
   }
@@ -28,51 +40,83 @@ class LoginController extends ChangeNotifier {
   Future<bool> loginWithEmail({
     required String email,
     required String password,
-  }) async {
-    _setLoading(true);
-    _errorMessage = null;
-
-    try {
-      final response = await _authModel.signInWithEmail(
-        email: email,
-        password: password,
-      );
-
-      return response.user != null;
-    } on AuthException catch (e) {
-      _errorMessage = e.message;
-      return false;
-    } catch (_) {
-      _errorMessage = 'Unable to log in. Please try again.';
-      return false;
-    } finally {
-      _setLoading(false);
-    }
+  }) {
+    return _login(() async => email.trim(), password, byUsername: false);
   }
 
   // Signs in strictly using username
   Future<bool> loginWithUsername({
     required String username,
     required String password,
+  }) {
+    return _login(
+      () => _authModel.emailForUsername(username),
+      password,
+      byUsername: true,
+    );
+  }
+
+  Future<bool> _login(
+    Future<String?> Function() resolveEmail,
+    String password, {
+    required bool byUsername,
   }) async {
     _setLoading(true);
     _errorMessage = null;
+    _errorType = null;
+    _accountEmail = null;
 
     try {
-      final response = await _authModel.signInWithUsername(
-        username: username,
+      final email = await resolveEmail();
+      if (email == null) {
+        _errorType = LoginErrorType.noAccount;
+        _errorMessage = 'No account found with this username';
+        return false;
+      }
+      _accountEmail = email;
+
+      final response = await _authModel.signInWithEmail(
+        email: email,
         password: password,
       );
-
       return response.user != null;
     } on AuthException catch (e) {
-      _errorMessage = e.message;
+      _setAuthError(e, byUsername: byUsername);
       return false;
-    } catch (_) {
-      _errorMessage = 'Unable to log in. Please try again.';
+    } catch (e) {
+      debugPrint('Login failed: $e');
+      _errorType = LoginErrorType.other;
+      _errorMessage = isNetworkError(e)
+          ? kNetworkErrorMessage
+          : 'Unable to log in. Please try again.';
       return false;
     } finally {
       _setLoading(false);
+    }
+  }
+
+  void _setAuthError(AuthException e, {required bool byUsername}) {
+    final message = e.message.toLowerCase();
+    if (e.code == 'email_not_confirmed' ||
+        message.contains('email not confirmed')) {
+      _errorType = LoginErrorType.emailNotConfirmed;
+      _errorMessage = 'Please verify your email first.';
+    } else if (e.code == 'invalid_credentials' ||
+        message.contains('invalid login credentials')) {
+      _errorType = LoginErrorType.wrongCredentials;
+      _errorMessage = byUsername
+          ? 'Incorrect username or password'
+          : 'Incorrect email or password';
+    } else if (isNetworkError(e)) {
+      _errorType = LoginErrorType.other;
+      _errorMessage = kNetworkErrorMessage;
+    } else if (isRateLimited(e)) {
+      _errorType = LoginErrorType.other;
+      _errorMessage = kRateLimitMessage;
+    } else {
+      debugPrint('Login auth error: ${e.code} ${e.message}');
+      _errorType = LoginErrorType.other;
+      _errorMessage = 'Unable to log in. Please try again.';
     }
   }
 

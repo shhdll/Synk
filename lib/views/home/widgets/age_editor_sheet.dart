@@ -4,7 +4,7 @@ import '../../../core/constants/synk_colors.dart';
 import '../../widgets/synk_date_picker.dart';
 
 // Bottom-sheet editor for age. Mirrors the signup flow: age is derived
-// from a birthday picked with the same 16-90 year restriction, in the
+// from a birthday picked with the same 16-65 year restriction, in the
 // same DD/MM/YYYY format, rather than being typed in directly.
 class AgeEditorSheet extends StatefulWidget {
   const AgeEditorSheet({super.key, required this.currentAge});
@@ -35,8 +35,8 @@ class _AgeEditorSheetState extends State<AgeEditorSheet> {
   Future<void> _pickBirthday() async {
     final today = DateTime.now();
 
-    // Oldest allowed: 90 years old.
-    final firstDate = DateTime(today.year - 90, today.month, today.day);
+    // Oldest allowed: 65 years old.
+    final firstDate = DateTime(today.year - 65, today.month, today.day);
 
     // Youngest allowed: 16 years old.
     final lastDate = DateTime(today.year - 16, today.month, today.day);

@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/constants/activity_constants.dart';
+import '../utils/photo_cropper.dart';
 
 // Result of uploading an activity photo.
 //
@@ -34,12 +35,21 @@ class ActivityPhotoUploader {
   // Opens the system photo picker. Returns null when the user cancels.
   // The file is not uploaded here — the caller shows it as a preview and
   // uploads it after the activity has been created.
-  static Future<XFile?> pick() {
-    return _picker.pickImage(
+  static Future<XFile?> pick() async {
+    final picked = await _picker.pickImage(
       source: ImageSource.gallery,
       maxWidth: ActivityConstants.photoMaxWidth,
       imageQuality: ActivityConstants.photoQuality,
     );
+    if (picked == null) return null;
+
+    // 2:1 matches the photo header on the activity details sheet.
+    final croppedPath = await cropPhoto(
+      picked.path,
+      aspectRatio: 2,
+      maxWidth: ActivityConstants.photoMaxWidth.toInt(),
+    );
+    return croppedPath == null ? null : XFile(croppedPath);
   }
 
   // Uploads [file] for an activity that already exists and returns its
