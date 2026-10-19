@@ -45,7 +45,7 @@ class PushNotificationService {
 
       await _localNotifications.initialize(
         settings: const InitializationSettings(
-          android: AndroidInitializationSettings('ic_notification'),
+            android: AndroidInitializationSettings('ic_launcher_foreground'),
         ),
         onDidReceiveNotificationResponse: (response) {
           _dispatchActivityTap(response.payload);
@@ -202,7 +202,7 @@ class PushNotificationService {
           _channelName,
           channelDescription:
               'Updates when a spot opens in a waitlisted activity.',
-          icon: 'ic_notification',
+          icon: 'ic_launcher_foreground',
           importance: Importance.high,
           priority: Priority.high,
         ),
