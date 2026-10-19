@@ -1,12 +1,12 @@
 # Install Synk on your iPhone
 
-Free, no paid Apple account needed. Works from **Windows or Mac**.
+Works from **Windows or Mac**.
 
 ## 1. Install Sideloadly
 
 | Windows | Mac |
 | --- | --- |
-| 1. Install **iTunes** from Apple's site (**not** the Microsoft Store): [64-bit](https://www.apple.com/itunes/download/win64) · [32-bit](https://www.apple.com/itunes/download/win32) | — |
+| 1. Install **iTunes** from Apple's site: [64-bit](https://www.apple.com/itunes/download/win64) · [32-bit](https://www.apple.com/itunes/download/win32) | — |
 | 2. Install **Sideloadly**: [sideloadly.io](https://sideloadly.io) | 1. Install **Sideloadly**: [sideloadly.io](https://sideloadly.io) |
 | 3. Restart your PC | |
 
@@ -31,6 +31,38 @@ Free, no paid Apple account needed. Works from **Windows or Mac**.
 1. **Settings → Privacy & Security → Developer Mode** → on → restart → **Turn On**.
 2. **Settings → General → VPN & Device Management** → your email → **Trust**.
 3. Open **Synk**.
+
+## Have a Mac? Run it live with hot reload
+
+Instead of steps 1–4, you can `flutter run` straight onto your iPhone, like on Android.
+
+**One-time setup**
+
+1. Install [Flutter](https://docs.flutter.dev/get-started/install/macos/mobile-ios) and **Xcode** from the [Mac App Store](https://apps.apple.com/app/xcode/id497799835). Open Xcode once and let it install the iOS components.
+2. Install CocoaPods and switch Flutter to it:
+   ```sh
+   brew install cocoapods
+   flutter config --no-enable-swift-package-manager
+   ```
+3. Add the secret files (ask a teammate for the values):
+   - `.env` in the project root (`SUPABASE_URL`, `SUPABASE_ANON_KEY`)
+   - `ios/Flutter/Secrets.xcconfig` containing `MAPS_API_KEY=<the iOS Maps key>`
+4. Run `flutter pub get`, then `open ios/Runner.xcworkspace`.
+5. In Xcode: **Runner** target → **Signing & Capabilities**:
+   - **Team:** **Add an Account…** → sign in with your Apple ID → pick **(Personal Team)**.
+   - **Bundle Identifier:** change to something unique, e.g. `com.yourname.synk`.
+     **Don't commit this change.**
+6. On the iPhone: turn on **Developer Mode** (step 4 above).
+
+**Every time**
+
+Plug in the iPhone and run:
+
+```sh
+flutter run
+```
+
+Hot reload (`r`) works like on Android. The first launch may ask you to **Trust** your Apple ID on the iPhone (step 4 above).
 
 ## Important
 
