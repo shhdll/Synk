@@ -7,6 +7,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'models/auth_deep_link_handler.dart';
 import 'models/auth_model.dart';
+import 'services/push_notification_service.dart';
+import 'views/home/activity_notification_route.dart';
 import 'views/home/main_shell.dart';
 import 'views/new_password_view.dart';
 import 'views/welcome_view.dart';
@@ -20,6 +22,8 @@ Future<void> main() async {
     url: dotenv.env['SUPABASE_URL']!,
     publishableKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
+
+  await PushNotificationService.instance.initialize();
 
   runApp(const MyApp());
 }
@@ -52,6 +56,13 @@ class _MyAppState extends State<MyApp> {
     super.initState();
 
     // ---- Password recovery deep link -------------------------------------
+    PushNotificationService.instance.setActivityTapHandler(
+      _openNotificationActivity,
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _drainPendingActivityNotification();
+    });
+
     // After the user opens the reset email link, supabase_flutter exchanges
     // it for a recovery session and emits passwordRecovery. If the link is
     // expired or already used, the exchange fails and the error is
@@ -76,6 +87,29 @@ class _MyAppState extends State<MyApp> {
     // (picked up by the listener above).
     _deepLinkHandler = AuthDeepLinkHandler(onResult: _onAuthLinkResult)
       ..start();
+  }
+
+  String? _pendingNotificationActivityId;
+
+  void _openNotificationActivity(String activityId) {
+    final navigator = _navigatorKey.currentState;
+    if (navigator == null) {
+      _pendingNotificationActivityId = activityId;
+      return;
+    }
+
+    navigator.push(
+      MaterialPageRoute<void>(
+        builder: (_) => ActivityNotificationRoute(activityId: activityId),
+      ),
+    );
+  }
+
+  void _drainPendingActivityNotification() {
+    final activityId = _pendingNotificationActivityId;
+    if (activityId == null || _navigatorKey.currentState == null) return;
+    _pendingNotificationActivityId = null;
+    _openNotificationActivity(activityId);
   }
 
   void _onAuthLinkResult(OtpType type, AuthLinkOutcome outcome) {
