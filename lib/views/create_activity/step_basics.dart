@@ -76,11 +76,13 @@ class _StepBasicsState extends State<StepBasics> {
 
   Future<void> _pickDate() async {
     _titleFocus.unfocus();
+    final lastDate = ActivityConstants.latestAllowedDate(DateTime.now());
+    final currentDate = _c.date ?? _today;
     final DateTime? picked = await showSynkDatePicker(
       context: context,
-      initialDate: _c.date ?? _today,
+      initialDate: currentDate.isAfter(lastDate) ? lastDate : currentDate,
       firstDate: _today,
-      lastDate: _today.add(const Duration(days: 365)),
+      lastDate: lastDate,
     );
     if (picked != null) {
       _c.setDate(picked);

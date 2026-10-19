@@ -156,7 +156,7 @@ class Activity {
     return {
       'host_id': hostId,
       'title': title.trim(),
-      'description': description.trim(),
+      'description': description.trim().isEmpty ? null : description.trim(),
       'starts_at': dateTime.toUtc().toIso8601String(),
       'location_name': location.trim(),
       'location_address': locationAddress?.trim(),

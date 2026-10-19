@@ -20,6 +20,16 @@ Future<void> joinActivityWithCode(
   // The user closed the sheet without completing a join.
   if (!context.mounted || result == null) return;
 
+  if (result.result == 'time_conflict') {
+    await SynkFeedback.showErrorDialog(
+      context,
+      title: 'Unable to Join',
+      message:
+          'This activity conflicts with one you’ve already joined or created.',
+    );
+    return;
+  }
+
   try {
     // Refresh joined, pending, and waitlisted activities
     final participating = await (activitiesModel ?? ActivitiesModel())

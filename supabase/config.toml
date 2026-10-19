@@ -9,3 +9,8 @@ entrypoint = "./functions/places-proxy/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/places-proxy/*.html" ]
+
+[functions.notify-waitlist-promotion]
+enabled = true
+# The function validates a random webhook secret from Supabase Vault itself.
+verify_jwt = false

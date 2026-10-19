@@ -50,5 +50,6 @@ app.*.map.json
 # Environment variables and secrets
 .env
 .env*.local
+/android/app/google-services.json
 # Supabase local development files
 supabase/.temp/
