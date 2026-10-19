@@ -320,7 +320,11 @@ class CreateActivityController extends ChangeNotifier {
   String? _fieldError(CreateField field) => switch (field) {
     CreateField.title => validateTitle(titleController.text),
     CreateField.location => _locationName.isEmpty ? 'Choose a location' : null,
-    CreateField.date => _date == null ? 'Pick a date' : null,
+    CreateField.date => _date == null
+        ? 'Pick a date'
+        : _date!.isAfter(ActivityConstants.latestAllowedDate(DateTime.now()))
+        ? 'Choose a date within the next 3 months'
+        : null,
     CreateField.time =>
       _time == null
           ? 'Pick a time'
@@ -393,8 +397,7 @@ class CreateActivityController extends ChangeNotifier {
         ),
       );
     } catch (_) {
-      _errorMessage =
-          "Couldn't create the activity. Check your connection and try again.";
+      _errorMessage = "We couldn't create your activity. Please try again.";
       _isSubmitting = false;
       _setLoading(false);
       return const CreateActivityResult();

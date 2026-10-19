@@ -6,6 +6,27 @@
 class ActivityConstants {
   ActivityConstants._();
 
+  static const int maxAdvanceMonths = 3;
+
+  // Calendar-month limit shared by the date picker and form validation.
+  static DateTime latestAllowedDate(DateTime from) {
+    final firstOfTargetMonth = DateTime(
+      from.year,
+      from.month + maxAdvanceMonths,
+      1,
+    );
+    final lastDayOfTargetMonth = DateTime(
+      firstOfTargetMonth.year,
+      firstOfTargetMonth.month + 1,
+      0,
+    );
+    return DateTime(
+      firstOfTargetMonth.year,
+      firstOfTargetMonth.month,
+      from.day.clamp(1, lastDayOfTargetMonth.day).toInt(),
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // Participants
   // ---------------------------------------------------------------------------

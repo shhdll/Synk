@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/constants/auth_constants.dart';
+import '../services/push_notification_service.dart';
 
 class AuthModel {
   AuthModel({this.supabaseClient});
@@ -64,6 +65,11 @@ class AuthModel {
 
   // Ends the current user's session.
   Future<void> signOut() async {
+    if (PushNotificationService.instance.isInitialized) {
+      await PushNotificationService.instance.unregisterCurrentDevice(
+        client: _supabase,
+      );
+    }
     await _supabase.auth.signOut();
   }
 

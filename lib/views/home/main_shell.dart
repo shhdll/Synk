@@ -9,6 +9,7 @@ import '../../models/activities_model.dart';
 import '../../models/activity_model.dart';
 import '../../models/activity_participation_model.dart';
 import '../../models/home_tab.dart';
+import '../../services/push_notification_service.dart';
 import '../create_activity/create_activity_view.dart';
 import 'activities_view.dart';
 import 'home_view.dart';
@@ -57,6 +58,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
 
     _tab = widget.initialTab;
 
+    unawaited(PushNotificationService.instance.registerForCurrentUser());
+
     // Loads hosted, participating, and public activities.
     _loadActivities();
 
@@ -69,7 +72,10 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _loadPendingRequestCount();
+    if (state == AppLifecycleState.resumed) {
+      _loadPendingRequestCount();
+      unawaited(PushNotificationService.instance.registerForCurrentUser());
+    }
   }
 
   Future<void> _loadActivities() async {
@@ -86,8 +92,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       final count = await _participationModel.countPendingRequests();
       if (!mounted) return;
       _activityStore.pendingRequestCount = count;
-    } catch (_) {
-    }
+    } catch (_) {}
   }
 
   // Loads activities created by the signed-in user.

@@ -47,6 +47,7 @@ class ActivityJoinController extends ChangeNotifier {
         'already_joined',
         'already_waitlisted',
         'already_pending',
+        'time_conflict',
       };
 
       if (successfulResults.contains(response.result)) {

@@ -52,6 +52,36 @@ class SynkFeedback {
             title: title,
             message: message,
             buttonLabel: buttonLabel,
+            icon: Icons.check_rounded,
+            iconBackground: SynkColors.teal,
+            iconColor: Colors.white,
+          ),
+        );
+      },
+    );
+  }
+
+  // Shows a blocking error popup using the same card and button style.
+  static Future<void> showErrorDialog(
+    BuildContext context, {
+    required String title,
+    required String message,
+    String buttonLabel = 'Got it',
+  }) async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: const Color(0x6B1E1C24),
+      builder: (_) {
+        return BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+          child: _SuccessDialog(
+            title: title,
+            message: message,
+            buttonLabel: buttonLabel,
+            icon: Icons.event_busy_rounded,
+            iconBackground: const Color(0x24FF7A36),
+            iconColor: SynkColors.orangeDark,
           ),
         );
       },
@@ -107,11 +137,17 @@ class _SuccessDialog extends StatelessWidget {
     required this.title,
     required this.message,
     required this.buttonLabel,
+    required this.icon,
+    required this.iconBackground,
+    required this.iconColor,
   });
 
   final String title;
   final String message;
   final String buttonLabel;
+  final IconData icon;
+  final Color iconBackground;
+  final Color iconColor;
 
   @override
   Widget build(BuildContext context) {
@@ -142,7 +178,7 @@ class _SuccessDialog extends StatelessWidget {
                 width: 64,
                 height: 64,
                 decoration: BoxDecoration(
-                  color: SynkColors.teal,
+                  color: iconBackground,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
@@ -152,10 +188,10 @@ class _SuccessDialog extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Icon(
-                  Icons.check_rounded,
+                child: Icon(
+                  icon,
                   size: 32,
-                  color: Colors.white,
+                  color: iconColor,
                 ),
               ),
             ),
