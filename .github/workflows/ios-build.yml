@@ -1,24 +1,17 @@
 # Builds an unsigned Synk.ipa on a GitHub-hosted Mac, so the app can be
 # sideloaded onto an iPhone from Windows (Sideloadly / AltStore) with a free
 # Apple ID. Run it from the Actions tab ("Build iOS app" > Run workflow) and
-# download Synk-ios from the run's Artifacts section.
+# download Synk-ios from the run's Artifacts section. Full guide: docs/IOS_SETUP.md
 #
 # Required repository secrets (Settings > Secrets and variables > Actions):
 #   SUPABASE_URL, SUPABASE_ANON_KEY  - same values as the local .env
 #   MAPS_API_KEY                     - Google Maps key with "Maps SDK for iOS" enabled
 name: Build iOS app
 
+# Manual only, so pushes to main don't spend Actions minutes or fail before
+# the secrets below are added.
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - 'lib/**'
-      - 'ios/**'
-      - 'assets/**'
-      - 'pubspec.yaml'
-      - 'pubspec.lock'
-      - '.github/workflows/ios-build.yml'
 
 jobs:
   build:
