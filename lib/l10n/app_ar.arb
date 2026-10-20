@@ -611,5 +611,20 @@
   "serverChooseAnotherHost": "اختر مشارك آخر ليصبح المنظم",
   "serverParticipantLeft": "المشارك المختار لم يعد في النشاط",
   "serverLeftAndTransferred": "غادرت النشاط ونقلت التنظيم",
-  "settings": "الإعدادات"
+  "settings": "الإعدادات",
+  "weCouldntSaveYourChanges": "تعذر حفظ التغييرات، حاول مرة أخرى",
+  "changesSaved": "تم حفظ التغييرات!",
+  "changesSavedBanner": "تم حفظ التغييرات",
+  "yourActivityDetailsHaveBeenUpdated": "تم تحديث تفاصيل نشاطك",
+  "editActivity": "تعديل النشاط",
+  "replacePhoto": "تغيير الصورة",
+  "uploadActivityPhoto": "رفع صورة النشاط",
+  "photoCouldntBeDetached": "تعذر إزالة الصورة من النشاط",
+  "photoDetachedFileNotRemoved": "تمت إزالة الصورة من النشاط لكن تعذر حذف ملفها",
+  "cannotUpdateActivitySignedOut": "سجل دخولك لتعديل النشاط",
+  "activityNotFoundOrCannotUpdate": "النشاط غير موجود أو لا يمكن تعديله",
+  "activityUpdates": "تحديثات الأنشطة",
+  "updatesToActivitiesYouHaveJoined": "تحديثات الأنشطة التي انضممت لها",
+  "activityUpdated": "تم تحديث النشاط",
+  "anActivityYouJoinedHasNew": "تغيرت تفاصيل نشاط انضممت له"
 }

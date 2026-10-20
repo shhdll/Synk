@@ -25,6 +25,8 @@ class PushNotificationService {
 
   static const String _channelId = 'waitlist_promotions';
   static String get _channelName => appL10n.waitlistPromotions;
+  static const String _activityUpdatesChannelId = 'activity_updates';
+  static String get _activityUpdatesChannelName => appL10n.activityUpdates;
 
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
@@ -34,6 +36,7 @@ class PushNotificationService {
   String? _registeredToken;
   String? _pendingActivityId;
   void Function(String activityId)? _onActivityTap;
+  void Function(String activityId)? _onActivityUpdated;
   bool _initialized = false;
 
   bool get isInitialized => _initialized;
@@ -66,9 +69,27 @@ class PushNotificationService {
           >()
           ?.createNotificationChannel(channel);
 
-      FirebaseMessaging.onMessage.listen(
-        (message) => unawaited(_showForegroundNotification(message)),
+      final activityUpdatesChannel = AndroidNotificationChannel(
+        _activityUpdatesChannelId,
+        _activityUpdatesChannelName,
+        description: 'Updates to activities you have joined.',
+        importance: Importance.high,
       );
+      await _localNotifications
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.createNotificationChannel(activityUpdatesChannel);
+
+      FirebaseMessaging.onMessage.listen((message) {
+        unawaited(_showForegroundNotification(message));
+        if (message.data['type'] == 'activity_updated') {
+          final activityId = message.data['activity_id'] as String?;
+          if (activityId != null && activityId.isNotEmpty) {
+            _onActivityUpdated?.call(activityId);
+          }
+        }
+      });
       FirebaseMessaging.onMessageOpenedApp.listen(
         (message) => _dispatchActivityTap(message.data['activity_id']),
       );
@@ -99,6 +120,10 @@ class PushNotificationService {
       _pendingActivityId = null;
       handler(pending);
     }
+  }
+
+  void setActivityUpdatedHandler(void Function(String activityId)? handler) {
+    _onActivityUpdated = handler;
   }
 
   Future<void> registerForCurrentUser() async {
@@ -193,17 +218,28 @@ class PushNotificationService {
   }
 
   Future<void> _showForegroundNotification(RemoteMessage message) async {
-    if (message.data['type'] != 'waitlist_promotion') return;
+    final type = message.data['type'] as String?;
+    if (type != 'waitlist_promotion' && type != 'activity_updated') return;
     final activityId = message.data['activity_id'] as String?;
     if (activityId == null || activityId.isEmpty) return;
+
+    final activityUpdated = type == 'activity_updated';
+    final channelId = activityUpdated
+        ? _activityUpdatesChannelId
+        : _channelId;
+    final channelName = activityUpdated
+        ? _activityUpdatesChannelName
+        : _channelName;
+    final channelDescription = activityUpdated
+        ? appL10n.updatesToActivitiesYouHaveJoined
+        : appL10n.updatesWhenASpotOpensIn;
 
     try {
       final details = NotificationDetails(
         android: AndroidNotificationDetails(
-          _channelId,
-          _channelName,
-          channelDescription:
-              appL10n.updatesWhenASpotOpensIn,
+          channelId,
+          channelName,
+          channelDescription: channelDescription,
           icon: 'ic_launcher_foreground',
           importance: Importance.high,
           priority: Priority.high,
@@ -212,8 +248,14 @@ class PushNotificationService {
       await _localNotifications.show(
         id: (message.data['event_id'] as String?)?.hashCode ??
             (DateTime.now().millisecondsSinceEpoch & 0x7fffffff),
-        title: message.notification?.title ?? appL10n.youreIn,
-        body: message.notification?.body ?? appL10n.aSpotOpenedUpInYour,
+        title:
+            message.notification?.title ??
+            (activityUpdated ? appL10n.activityUpdated : appL10n.youreIn),
+        body:
+            message.notification?.body ??
+            (activityUpdated
+                ? appL10n.anActivityYouJoinedHasNew
+                : appL10n.aSpotOpenedUpInYour),
         notificationDetails: details,
         payload: activityId,
       );

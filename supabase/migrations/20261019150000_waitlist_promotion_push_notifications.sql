@@ -8,12 +8,38 @@ create table if not exists public.push_device_tokens (
 
 alter table public.push_device_tokens enable row level security;
 
-create policy "Users manage their own push tokens"
-on public.push_device_tokens
-for all
-to authenticated
-using ((select auth.uid()) = user_id)
-with check ((select auth.uid()) = user_id);
+do $$
+declare
+  existing_policy record;
+begin
+  select cmd, roles, qual, with_check
+  into existing_policy
+  from pg_policies
+  where schemaname = 'public'
+    and tablename = 'push_device_tokens'
+    and policyname = 'Users manage their own push tokens';
+
+  if found then
+    -- Keep an existing waitlist policy, but fail closed if the same name was
+    -- used for a policy that does not scope reads and writes to the owner.
+    if existing_policy.cmd <> 'ALL'
+      or not ('authenticated' = any(existing_policy.roles))
+      or position('auth.uid' in lower(coalesce(existing_policy.qual, ''))) = 0
+      or position('user_id' in lower(coalesce(existing_policy.qual, ''))) = 0
+      or position('auth.uid' in lower(coalesce(existing_policy.with_check, ''))) = 0
+      or position('user_id' in lower(coalesce(existing_policy.with_check, ''))) = 0 then
+      raise exception 'Existing push token policy is not the expected owner-scoped policy.';
+    end if;
+  else
+    create policy "Users manage their own push tokens"
+    on public.push_device_tokens
+    for all
+    to authenticated
+    using ((select auth.uid()) = user_id)
+    with check ((select auth.uid()) = user_id);
+  end if;
+end;
+$$;
 
 grant select, insert, update, delete
 on public.push_device_tokens to authenticated;
@@ -42,7 +68,9 @@ grant select, update on public.waitlist_promotion_notification_outbox
   to service_role;
 grant select, delete on public.push_device_tokens to service_role;
 
-create extension if not exists pg_net with schema extensions;
+-- pg_net creates its own `net` schema. The notification triggers below use
+-- net.http_post, so do not request the unrelated `extensions` schema here.
+create extension if not exists pg_net;
 
 create or replace function public.enqueue_waitlist_promotion_notification()
 returns trigger

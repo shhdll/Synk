@@ -35,10 +35,26 @@ class CreateActivityResult {
 }
 
 class CreateActivityController extends ChangeNotifier {
-  CreateActivityController({ActivitiesModel? activitiesModel})
-    : _activitiesModel = activitiesModel ?? ActivitiesModel();
+  CreateActivityController({ActivitiesModel? activitiesModel, Activity? activity})
+    : _activitiesModel = activitiesModel ?? ActivitiesModel(),
+      _editingActivity = activity {
+    if (activity != null) {
+      titleController.text = activity.title;
+      descriptionController.text = activity.description;
+      _locationName = activity.location;
+      _locationAddress = activity.locationAddress;
+      _latitude = activity.latitude;
+      _longitude = activity.longitude;
+      _date = DateTime(activity.dateTime.year, activity.dateTime.month, activity.dateTime.day);
+      _time = TimeOfDay.fromDateTime(activity.dateTime);
+      _participants = activity.maxParticipants;
+      _isPublic = activity.isPublic;
+    }
+  }
 
   final ActivitiesModel _activitiesModel;
+  final Activity? _editingActivity;
+  bool get isEditing => _editingActivity != null;
 
   // ---------------------------------------------------------------------------
   // Draft
@@ -60,6 +76,7 @@ class CreateActivityController extends ChangeNotifier {
 
   XFile? _photo;
   PhotoFormat? _photoFormat;
+  bool _removeExistingPhoto = false;
 
   int _currentStep = 0;
   bool _isLoading = false;
@@ -77,6 +94,8 @@ class CreateActivityController extends ChangeNotifier {
   int get participants => _participants;
   bool get isPublic => _isPublic;
   XFile? get photo => _photo;
+  String? get existingPhotoUrl =>
+      _removeExistingPhoto ? null : _editingActivity?.photoUrl;
   PhotoFormat? get photoFormat => _photoFormat;
   File? get photoFile => _photo == null ? null : File(_photo!.path);
   int get currentStep => _currentStep;
@@ -100,15 +119,32 @@ class CreateActivityController extends ChangeNotifier {
 
   // True once the user has entered anything worth losing. Drives the
   // "Discard activity?" dialog: an untouched draft leaves without asking.
-  bool get isDirty =>
-      titleController.text.trim().isNotEmpty ||
-      descriptionController.text.trim().isNotEmpty ||
-      _locationName.isNotEmpty ||
-      _date != null ||
-      _time != null ||
-      _photo != null ||
-      _participants != ActivityConstants.defaultParticipants ||
-      !_isPublic;
+  bool get isDirty {
+    final original = _editingActivity;
+    if (original != null) {
+      final originalDescription = original.description.trim();
+      return titleController.text.trim() != original.title.trim() ||
+          descriptionController.text.trim() != originalDescription ||
+          _locationName != original.location ||
+          _locationAddress != original.locationAddress ||
+          _latitude != original.latitude ||
+          _longitude != original.longitude ||
+          startsAt != original.dateTime ||
+          _participants != original.maxParticipants ||
+          _isPublic != original.isPublic ||
+          _photo != null ||
+          _removeExistingPhoto;
+    }
+
+    return titleController.text.trim().isNotEmpty ||
+        descriptionController.text.trim().isNotEmpty ||
+        _locationName.isNotEmpty ||
+        _date != null ||
+        _time != null ||
+        _photo != null ||
+        _participants != ActivityConstants.defaultParticipants ||
+        !_isPublic;
+  }
 
   // ---------------------------------------------------------------------------
   // Draft mutations
@@ -221,6 +257,7 @@ class CreateActivityController extends ChangeNotifier {
 
       _photo = picked;
       _photoFormat = format;
+      _removeExistingPhoto = false;
     } finally {
       _isPickingPhoto = false;
       notifyListeners();
@@ -230,6 +267,7 @@ class CreateActivityController extends ChangeNotifier {
   void removePhoto() {
     _photo = null;
     _photoFormat = null;
+    _removeExistingPhoto = _editingActivity?.hasPhoto ?? false;
     _photoError = null;
     notifyListeners();
   }
@@ -385,9 +423,8 @@ class CreateActivityController extends ChangeNotifier {
 
     Activity created;
     try {
-      created = await _activitiesModel.create(
-        Activity(
-          id: '',
+      final draft = Activity(
+          id: _editingActivity?.id ?? '',
           title: titleController.text,
           description: descriptionController.text,
           dateTime: start,
@@ -397,11 +434,25 @@ class CreateActivityController extends ChangeNotifier {
           longitude: _longitude,
           maxParticipants: _participants,
           isPublic: _isPublic,
-        ),
-      );
+          categoryEmoji: _editingActivity?.categoryEmoji ?? '',
+          categoryLabel: _editingActivity?.categoryLabel ?? '',
+          photoUrl: _removeExistingPhoto ? null : _editingActivity?.photoUrl,
+          hostId: _editingActivity?.hostId,
+          hostName: _editingActivity?.hostName,
+          hostUsername: _editingActivity?.hostUsername,
+          hostAvatarUrl: _editingActivity?.hostAvatarUrl,
+          hostGender: _editingActivity?.hostGender,
+          participantsCount: _editingActivity?.participantsCount,
+          activityCode: _editingActivity?.activityCode,
+        );
+      created = isEditing
+          ? await _activitiesModel.update(draft)
+          : await _activitiesModel.create(draft);
     } catch (error) {
       debugPrint('SYNK: create activity failed: $error');
-      _errorMessage = appL10n.weCouldntCreateYourActivityPlease;
+      _errorMessage = isEditing
+          ? appL10n.weCouldntSaveYourChanges
+          : appL10n.weCouldntCreateYourActivityPlease;
       _isSubmitting = false;
       _setLoading(false);
       return const CreateActivityResult();
@@ -410,6 +461,40 @@ class CreateActivityController extends ChangeNotifier {
     // From here the activity exists. Nothing below may undo that.
     final file = _photo;
     if (file == null) {
+      if (isEditing && _removeExistingPhoto) {
+        final hostId = _editingActivity?.hostId;
+        if (hostId != null) {
+          var photoWarning = appL10n.photoCouldntBeDetached;
+          try {
+            final detached = await _activitiesModel.updatePhotoUrl(
+              created.id,
+              null,
+            );
+            created = detached.copyWith(
+              hostName: created.hostName,
+              hostUsername: created.hostUsername,
+              hostAvatarUrl: created.hostAvatarUrl,
+              hostGender: created.hostGender,
+              participantsCount: created.participantsCount,
+            );
+            final removed = await ActivityPhotoUploader.remove(
+              hostId: hostId,
+              activityId: created.id,
+            );
+            photoWarning = removed
+                ? ''
+                : appL10n.photoDetachedFileNotRemoved;
+          } catch (_) {
+            // Keep the attached photo when clearing its database URL fails.
+          }
+          _isSubmitting = false;
+          _setLoading(false);
+          return CreateActivityResult(
+            activity: created,
+            photoWarning: photoWarning.isEmpty ? null : photoWarning,
+          );
+        }
+      }
       _isSubmitting = false;
       _setLoading(false);
       return CreateActivityResult(activity: created);
@@ -418,6 +503,7 @@ class CreateActivityController extends ChangeNotifier {
     final upload = await ActivityPhotoUploader.upload(
       activityId: created.id,
       file: file,
+      cacheBust: isEditing,
     );
 
     if (!upload.succeeded) {
@@ -432,9 +518,18 @@ class CreateActivityController extends ChangeNotifier {
     // Attach the URL, retrying once before giving up.
     for (var attempt = 0; attempt < 2; attempt++) {
       try {
-        final withPhoto = await _activitiesModel.updatePhotoUrl(
+        final updatedPhoto = await _activitiesModel.updatePhotoUrl(
           created.id,
           upload.url,
+        );
+        final withPhoto = updatedPhoto.copyWith(
+          hostName: created.hostName,
+          hostUsername: created.hostUsername,
+          hostAvatarUrl: created.hostAvatarUrl,
+          hostGender: created.hostGender,
+          participantsCount: created.participantsCount,
+          participationId: created.participationId,
+          participationStatus: created.participationStatus,
         );
         _isSubmitting = false;
         _setLoading(false);

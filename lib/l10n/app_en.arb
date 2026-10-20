@@ -846,5 +846,41 @@
   "settings": "Settings",
   "@settings": {
     "description": "Title of the Settings page and the gear button on Profile"
+  },
+  "weCouldntSaveYourChanges": "We couldn't save your changes. Please try again.",
+  "@weCouldntSaveYourChanges": {
+    "description": "Editing an activity failed"
+  },
+  "changesSaved": "Changes saved!",
+  "@changesSaved": {
+    "description": "Title after editing an activity"
+  },
+  "changesSavedBanner": "Changes saved",
+  "@changesSavedBanner": {
+    "description": "Banner after editing an activity"
+  },
+  "yourActivityDetailsHaveBeenUpdated": "Your activity details have been updated.",
+  "editActivity": "Edit activity",
+  "replacePhoto": "Replace Photo",
+  "uploadActivityPhoto": "Upload Activity Photo",
+  "photoCouldntBeDetached": "The photo couldn't be detached from the activity.",
+  "photoDetachedFileNotRemoved": "The photo was detached, but its stored file couldn't be removed.",
+  "cannotUpdateActivitySignedOut": "Cannot update an activity while signed out.",
+  "activityNotFoundOrCannotUpdate": "The activity was not found or cannot be updated.",
+  "activityUpdates": "Activity updates",
+  "@activityUpdates": {
+    "description": "Notification channel name in Android settings"
+  },
+  "updatesToActivitiesYouHaveJoined": "Updates to activities you have joined.",
+  "@updatesToActivitiesYouHaveJoined": {
+    "description": "Notification channel description in Android settings"
+  },
+  "activityUpdated": "Activity updated",
+  "@activityUpdated": {
+    "description": "Notification title when a joined activity changes"
+  },
+  "anActivityYouJoinedHasNew": "An activity you joined has new details.",
+  "@anActivityYouJoinedHasNew": {
+    "description": "Notification text when a joined activity changes"
   }
 }

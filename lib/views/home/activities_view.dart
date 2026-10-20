@@ -15,6 +15,7 @@ import 'widgets/code_bubble.dart';
 import 'widgets/empty_state.dart';
 import 'widgets/my_activity_card.dart';
 import 'widgets/synk_filter_chip.dart';
+import '../create_activity/create_activity_view.dart';
 
 enum _RoleFilter {
   all,
@@ -128,6 +129,25 @@ class _ActivitiesViewState extends State<ActivitiesView> {
       activity: activity,
       activityStore: _store,
       onDelete: canDelete ? () => _confirmDelete(activity) : null,
+      onEdit: canDelete ? () => _editActivity(activity) : null,
+    );
+  }
+
+  Future<void> _editActivity(Activity activity) async {
+    final outcome = await Navigator.of(context).push<CreateActivityOutcome>(
+      MaterialPageRoute(
+        builder: (_) => CreateActivityView(
+          store: _store,
+          activity: activity,
+        ),
+      ),
+    );
+    if (!mounted || outcome == null) return;
+    _store.upsert(outcome.activity);
+    SynkFeedback.showSuccessDialog(
+      context,
+      title: context.l10n.changesSavedBanner,
+      message: context.l10n.yourActivityDetailsHaveBeenUpdated,
     );
   }
 

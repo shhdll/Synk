@@ -16,6 +16,12 @@ declare
     'activity-photos: owner update',
     'activity-photos: owner delete'
   ];
+  allowed_avatar_policies constant text[] := array[
+    'avatars: owner insert',
+    'avatars: owner update',
+    'avatars: owner delete'
+  ];
+  allowed constant text[] := expected || allowed_avatar_policies;
   unexpected text;
 begin
   if (
@@ -34,7 +40,7 @@ begin
   where schemaname = 'storage'
     and tablename = 'objects'
     and cmd in ('INSERT', 'UPDATE', 'DELETE', 'ALL')
-    and policyname <> all (expected);
+    and policyname <> all (allowed);
 
   if unexpected is not null then
     raise exception 'Other write policies exist on storage.objects: %',

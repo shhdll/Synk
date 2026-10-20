@@ -28,6 +28,7 @@ Future<void> showActivityDetailsSheet({
   required ActivityStore activityStore,
   VoidCallback? onParticipationChanged,
   VoidCallback? onDelete,
+  VoidCallback? onEdit,
 }) {
   return showModalBottomSheet(
     context: context,
@@ -38,6 +39,7 @@ Future<void> showActivityDetailsSheet({
       activityStore: activityStore,
       onParticipationChanged: onParticipationChanged,
       onDelete: onDelete,
+      onEdit: onEdit,
     ),
   );
 }
@@ -49,6 +51,7 @@ class ActivityDetailsSheet extends StatefulWidget {
     required this.activityStore,
     this.onParticipationChanged,
     this.onDelete,
+    this.onEdit,
   });
 
   final Activity activity;
@@ -58,6 +61,7 @@ class ActivityDetailsSheet extends StatefulWidget {
   final VoidCallback? onParticipationChanged;
 
   final VoidCallback? onDelete;
+  final VoidCallback? onEdit;
 
   @override
   State<ActivityDetailsSheet> createState() => _ActivityDetailsSheetState();
@@ -99,6 +103,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     super.initState();
     _currentActivity = widget.activity;
     _participationStatus = _storedParticipationStatus();
+    widget.activityStore.addListener(_syncActivityFromStore);
     _loadParticipants();
     _loadOwnProfile();
     _loadHostProfile();
@@ -129,8 +134,17 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
 
   @override
   void dispose() {
+    widget.activityStore.removeListener(_syncActivityFromStore);
     _leaveController.dispose();
     super.dispose();
+  }
+
+  void _syncActivityFromStore() {
+    final latest = widget.activityStore.byId(_currentActivity.id);
+    if (!mounted || latest == null || identical(latest, _currentActivity)) {
+      return;
+    }
+    setState(() => _currentActivity = latest);
   }
 
   Future<void> _loadOwnProfile() async {
@@ -475,25 +489,45 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
               ],
             ),
           ),
-        if (widget.onDelete != null) ...[
+        if (widget.onDelete != null || widget.onEdit != null) ...[
           const SizedBox(height: 10),
-          TextButton.icon(
-            onPressed: () {
-              Navigator.of(context).pop();
-              widget.onDelete!();
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFFE85D5D),
-              minimumSize: const Size.fromHeight(46),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-            ),
-            icon: const Icon(Icons.delete_outline_rounded, size: 20),
-            label: Text(
-              context.l10n.deleteActivity,
-              style: TextStyle(fontWeight: FontWeight.w700),
-            ),
+          Row(
+            children: [
+              if (widget.onEdit != null)
+                Expanded(
+                  child: TextButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      widget.onEdit!();
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: SynkColors.orangeDark,
+                      minimumSize: const Size.fromHeight(46),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    icon: const Icon(Icons.edit_outlined, size: 20),
+                    label: Text(context.l10n.editActivity, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              if (widget.onEdit != null && widget.onDelete != null)
+                const SizedBox(width: 8),
+              if (widget.onDelete != null)
+                Expanded(
+                  child: TextButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      widget.onDelete!();
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFFE85D5D),
+                      minimumSize: const Size.fromHeight(46),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    icon: const Icon(Icons.delete_outline_rounded, size: 20),
+                    label: Text(context.l10n.deleteActivity, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  ),
+                ),
+            ],
           ),
         ],
       ],

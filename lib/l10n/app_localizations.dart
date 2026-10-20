@@ -3769,6 +3769,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Settings'**
   String get settings;
+
+  /// Editing an activity failed
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t save your changes. Please try again.'**
+  String get weCouldntSaveYourChanges;
+
+  /// Title after editing an activity
+  ///
+  /// In en, this message translates to:
+  /// **'Changes saved!'**
+  String get changesSaved;
+
+  /// Banner after editing an activity
+  ///
+  /// In en, this message translates to:
+  /// **'Changes saved'**
+  String get changesSavedBanner;
+
+  /// No description provided for @yourActivityDetailsHaveBeenUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Your activity details have been updated.'**
+  String get yourActivityDetailsHaveBeenUpdated;
+
+  /// No description provided for @editActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit activity'**
+  String get editActivity;
+
+  /// No description provided for @replacePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace Photo'**
+  String get replacePhoto;
+
+  /// No description provided for @uploadActivityPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload Activity Photo'**
+  String get uploadActivityPhoto;
+
+  /// No description provided for @photoCouldntBeDetached.
+  ///
+  /// In en, this message translates to:
+  /// **'The photo couldn\'t be detached from the activity.'**
+  String get photoCouldntBeDetached;
+
+  /// No description provided for @photoDetachedFileNotRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'The photo was detached, but its stored file couldn\'t be removed.'**
+  String get photoDetachedFileNotRemoved;
+
+  /// No description provided for @cannotUpdateActivitySignedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot update an activity while signed out.'**
+  String get cannotUpdateActivitySignedOut;
+
+  /// No description provided for @activityNotFoundOrCannotUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'The activity was not found or cannot be updated.'**
+  String get activityNotFoundOrCannotUpdate;
+
+  /// Notification channel name in Android settings
+  ///
+  /// In en, this message translates to:
+  /// **'Activity updates'**
+  String get activityUpdates;
+
+  /// Notification channel description in Android settings
+  ///
+  /// In en, this message translates to:
+  /// **'Updates to activities you have joined.'**
+  String get updatesToActivitiesYouHaveJoined;
+
+  /// Notification title when a joined activity changes
+  ///
+  /// In en, this message translates to:
+  /// **'Activity updated'**
+  String get activityUpdated;
+
+  /// Notification text when a joined activity changes
+  ///
+  /// In en, this message translates to:
+  /// **'An activity you joined has new details.'**
+  String get anActivityYouJoinedHasNew;
 }
 
 class _AppLocalizationsDelegate

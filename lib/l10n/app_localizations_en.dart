@@ -2071,4 +2071,57 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settings => 'Settings';
+
+  @override
+  String get weCouldntSaveYourChanges =>
+      'We couldn\'t save your changes. Please try again.';
+
+  @override
+  String get changesSaved => 'Changes saved!';
+
+  @override
+  String get changesSavedBanner => 'Changes saved';
+
+  @override
+  String get yourActivityDetailsHaveBeenUpdated =>
+      'Your activity details have been updated.';
+
+  @override
+  String get editActivity => 'Edit activity';
+
+  @override
+  String get replacePhoto => 'Replace Photo';
+
+  @override
+  String get uploadActivityPhoto => 'Upload Activity Photo';
+
+  @override
+  String get photoCouldntBeDetached =>
+      'The photo couldn\'t be detached from the activity.';
+
+  @override
+  String get photoDetachedFileNotRemoved =>
+      'The photo was detached, but its stored file couldn\'t be removed.';
+
+  @override
+  String get cannotUpdateActivitySignedOut =>
+      'Cannot update an activity while signed out.';
+
+  @override
+  String get activityNotFoundOrCannotUpdate =>
+      'The activity was not found or cannot be updated.';
+
+  @override
+  String get activityUpdates => 'Activity updates';
+
+  @override
+  String get updatesToActivitiesYouHaveJoined =>
+      'Updates to activities you have joined.';
+
+  @override
+  String get activityUpdated => 'Activity updated';
+
+  @override
+  String get anActivityYouJoinedHasNew =>
+      'An activity you joined has new details.';
 }

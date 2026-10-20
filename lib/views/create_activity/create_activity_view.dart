@@ -24,10 +24,11 @@ class CreateActivityOutcome {
 // The Create Activity wizard shell.
 
 class CreateActivityView extends StatefulWidget {
-  const CreateActivityView({super.key, this.store});
+  const CreateActivityView({super.key, this.store, this.activity});
 
  
   final ActivityStore? store;
+  final Activity? activity;
 
   @override
   State<CreateActivityView> createState() => _CreateActivityViewState();
@@ -42,12 +43,13 @@ class _CreateActivityViewState extends State<CreateActivityView> {
     context.l10n.review,
   ];
 
-  final CreateActivityController _controller = CreateActivityController();
+  late final CreateActivityController _controller;
   final PageController _pageController = PageController();
 
   @override
   void initState() {
     super.initState();
+    _controller = CreateActivityController(activity: widget.activity);
     _controller.addListener(_onControllerChanged);
   }
 
@@ -150,7 +152,9 @@ class _CreateActivityViewState extends State<CreateActivityView> {
     if (!result.created) {
       _showMessage(
         _controller.errorMessage ??
-            context.l10n.weCouldntCreateYourActivityPlease,
+            (_controller.isEditing
+                ? context.l10n.weCouldntSaveYourChanges
+                : context.l10n.weCouldntCreateYourActivityPlease),
       );
       return;
     }
@@ -163,13 +167,17 @@ class _CreateActivityViewState extends State<CreateActivityView> {
       if (result.photoWarning != null) result.photoWarning!,
       if (result.orphanWarning != null) result.orphanWarning!,
     ];
+    final String successMessage = _controller.isEditing
+        ? context.l10n.yourActivityDetailsHaveBeenUpdated
+        : context.l10n.yourActivityIsLiveAndReady;
     final String message = warnings.isEmpty
-        ? context.l10n.yourActivityIsLiveAndReady
-        : '${context.l10n.yourActivityIsLiveAndReady}\n\n'
-              '${warnings.join('\n')}';
+        ? successMessage
+        : '$successMessage\n\n${warnings.join('\n')}';
 
     final SynkDialogAction? choice = await SynkDialog.success(
-      title: context.l10n.activityCreated,
+      title: _controller.isEditing
+          ? context.l10n.changesSaved
+          : context.l10n.activityCreated,
       message: message,
       primaryLabel: context.l10n.viewActivity,
       secondaryLabel: context.l10n.done,
@@ -342,7 +350,11 @@ class _CreateActivityViewState extends State<CreateActivityView> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
                           Text(
-                            isLastStep ? context.l10n.createActivity : context.l10n.continueButton,
+                            isLastStep
+                                ? (_controller.isEditing
+                                      ? context.l10n.saveChanges
+                                      : context.l10n.createActivity)
+                                : context.l10n.continueButton,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,

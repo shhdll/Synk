@@ -1989,4 +1989,52 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settings => 'الإعدادات';
+
+  @override
+  String get weCouldntSaveYourChanges => 'تعذر حفظ التغييرات، حاول مرة أخرى';
+
+  @override
+  String get changesSaved => 'تم حفظ التغييرات!';
+
+  @override
+  String get changesSavedBanner => 'تم حفظ التغييرات';
+
+  @override
+  String get yourActivityDetailsHaveBeenUpdated => 'تم تحديث تفاصيل نشاطك';
+
+  @override
+  String get editActivity => 'تعديل النشاط';
+
+  @override
+  String get replacePhoto => 'تغيير الصورة';
+
+  @override
+  String get uploadActivityPhoto => 'رفع صورة النشاط';
+
+  @override
+  String get photoCouldntBeDetached => 'تعذر إزالة الصورة من النشاط';
+
+  @override
+  String get photoDetachedFileNotRemoved =>
+      'تمت إزالة الصورة من النشاط لكن تعذر حذف ملفها';
+
+  @override
+  String get cannotUpdateActivitySignedOut => 'سجل دخولك لتعديل النشاط';
+
+  @override
+  String get activityNotFoundOrCannotUpdate =>
+      'النشاط غير موجود أو لا يمكن تعديله';
+
+  @override
+  String get activityUpdates => 'تحديثات الأنشطة';
+
+  @override
+  String get updatesToActivitiesYouHaveJoined =>
+      'تحديثات الأنشطة التي انضممت لها';
+
+  @override
+  String get activityUpdated => 'تم تحديث النشاط';
+
+  @override
+  String get anActivityYouJoinedHasNew => 'تغيرت تفاصيل نشاط انضممت له';
 }

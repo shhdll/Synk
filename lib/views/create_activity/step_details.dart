@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -120,6 +121,8 @@ class _StepDetailsState extends State<StepDetails> {
         const SizedBox(height: 10),
         _PhotoSection(
           photo: _c.photo,
+          existingPhotoUrl: _c.existingPhotoUrl,
+          isEditing: _c.isEditing,
           isPicking: _c.isPickingPhoto,
           hasError: _c.photoError != null,
           onPick: _c.pickPhoto,
@@ -262,6 +265,8 @@ class _StepperButton extends StatelessWidget {
 class _PhotoSection extends StatelessWidget {
   const _PhotoSection({
     required this.photo,
+    required this.existingPhotoUrl,
+    required this.isEditing,
     required this.isPicking,
     required this.hasError,
     required this.onPick,
@@ -269,6 +274,8 @@ class _PhotoSection extends StatelessWidget {
   });
 
   final XFile? photo;
+  final String? existingPhotoUrl;
+  final bool isEditing;
   final bool isPicking;
   final bool hasError;
   final Future<void> Function() onPick;
@@ -277,7 +284,16 @@ class _PhotoSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final XFile? selected = photo;
+    final String? currentUrl = existingPhotoUrl;
 
+    if (isEditing) {
+      return _buildEditPhoto(context, selected, currentUrl);
+    }
+
+    return _buildCreatePhoto(selected);
+  }
+
+  Widget _buildCreatePhoto(XFile? selected) {
     if (selected == null) {
       return Material(
         color: Colors.transparent,
@@ -312,7 +328,7 @@ class _PhotoSection extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    context.l10n.addAPhoto,
+                    appL10n.addAPhoto,
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -339,44 +355,48 @@ class _PhotoSection extends StatelessWidget {
         children: <Widget>[
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.file(
-              File(selected.path),
+            child: SizedBox(
               height: 64,
               width: 64,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => Container(
-                height: 64,
-                width: 64,
-                color: SynkColors.backgroundLight,
-                child: const Icon(
-                  Icons.broken_image_outlined,
-                  color: SynkColors.textSecondary,
-                ),
-              ),
+              child: selected != null
+                  ? Image.file(
+                      File(selected.path),
+                      fit: BoxFit.cover,
+                      errorBuilder: _photoErrorPlaceholder,
+                    )
+                  : const SizedBox.shrink(),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              context.l10n.photoAdded,
-              style: TextStyle(
-                fontSize: 15,
+              appL10n.photoAdded,
+              style: const TextStyle(
+                fontSize: 14,
                 fontWeight: FontWeight.w700,
                 color: SynkColors.textPrimary,
               ),
             ),
           ),
           IconButton(
-            tooltip: context.l10n.changePhoto,
+            tooltip: appL10n.changePhoto,
             onPressed: isPicking ? null : onPick,
-            icon: const Icon(
-              Icons.photo_camera_outlined,
-              size: 20,
-              color: SynkColors.orangeDark,
-            ),
+            icon: isPicking
+                ? const SizedBox.square(
+                    dimension: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: SynkColors.orangeDark,
+                    ),
+                  )
+                : const Icon(
+                    Icons.photo_camera_outlined,
+                    size: 20,
+                    color: SynkColors.orangeDark,
+                  ),
           ),
           IconButton(
-            tooltip: context.l10n.removePhoto,
+            tooltip: appL10n.removePhoto,
             onPressed: onRemove,
             icon: const Icon(
               Icons.delete_outline_rounded,
@@ -388,6 +408,210 @@ class _PhotoSection extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildEditPhoto(
+    BuildContext context,
+    XFile? selected,
+    String? currentUrl,
+  ) {
+    final hasPhoto = selected != null || (currentUrl?.isNotEmpty ?? false);
+    final borderColor = hasError ? SynkColors.orangeDark : SynkColors.orange;
+
+    return CustomPaint(
+      painter: _DashedRoundedBorderPainter(
+        color: borderColor.withValues(alpha: 0.82),
+        radius: 18,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Material(
+          color: Colors.white.withValues(alpha: 0.68),
+          child: hasPhoto
+              ? Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final height = (constraints.maxWidth * 0.48)
+                          .clamp(110.0, 150.0)
+                          .toDouble();
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            height: height,
+                            width: double.infinity,
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(13),
+                                  child: selected != null
+                                      ? Image.file(
+                                          File(selected.path),
+                                          fit: BoxFit.cover,
+                                          errorBuilder: _photoErrorPlaceholder,
+                                        )
+                                      : Image.network(
+                                          currentUrl!,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: _photoErrorPlaceholder,
+                                        ),
+                                ),
+                                Positioned(
+                                  top: 7,
+                                  right: 7,
+                                  child: Material(
+                                    color: Colors.white.withValues(alpha: 0.94),
+                                    shape: const CircleBorder(),
+                                    child: InkWell(
+                                      customBorder: const CircleBorder(),
+                                      onTap: onRemove,
+                                      child: const SizedBox.square(
+                                        dimension: 32,
+                                        child: Icon(
+                                          Icons.close_rounded,
+                                          size: 19,
+                                          color: SynkColors.textPrimary,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 9),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 42,
+                            child: OutlinedButton.icon(
+                              onPressed: isPicking ? null : onPick,
+                              icon: isPicking
+                                  ? const SizedBox.square(
+                                      dimension: 17,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: SynkColors.orangeDark,
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.photo_camera_outlined,
+                                      size: 18,
+                                    ),
+                              label: Text(context.l10n.replacePhoto),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: SynkColors.orangeDark,
+                                side: BorderSide(
+                                  color: SynkColors.orange.withValues(alpha: 0.55),
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                textStyle: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                )
+              : InkWell(
+                  onTap: isPicking ? null : onPick,
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 126,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (isPicking)
+                          const SizedBox.square(
+                            dimension: 28,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.4,
+                              color: SynkColors.orangeDark,
+                            ),
+                          )
+                        else
+                          const Icon(
+                            Icons.cloud_upload_outlined,
+                            size: 34,
+                            color: SynkColors.orangeDark,
+                          ),
+                        const SizedBox(height: 8),
+                        Text(
+                          context.l10n.uploadActivityPhoto,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: SynkColors.orangeDark,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+        ),
+      ),
+    );
+  }
+
+  Widget _photoErrorPlaceholder(
+    BuildContext context,
+    Object error,
+    StackTrace? stackTrace,
+  ) => Container(
+    height: 64,
+    width: 64,
+    color: SynkColors.backgroundLight,
+    child: const Icon(
+      Icons.broken_image_outlined,
+      color: SynkColors.textSecondary,
+    ),
+  );
+}
+
+class _DashedRoundedBorderPainter extends CustomPainter {
+  const _DashedRoundedBorderPainter({required this.color, required this.radius});
+
+  final Color color;
+  final double radius;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const strokeWidth = 1.5;
+    const dashLength = 7.0;
+    const gapLength = 5.0;
+    final rect = Rect.fromLTWH(
+      strokeWidth / 2,
+      strokeWidth / 2,
+      size.width - strokeWidth,
+      size.height - strokeWidth,
+    );
+    final path = Path()
+      ..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(radius)));
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+
+    for (final metric in path.computeMetrics()) {
+      var distance = 0.0;
+      while (distance < metric.length) {
+        final end = math.min(distance + dashLength, metric.length).toDouble();
+        canvas.drawPath(metric.extractPath(distance, end), paint);
+        distance += dashLength + gapLength;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedRoundedBorderPainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.radius != radius;
 }
 
 class _VisibilityCard extends StatelessWidget {
