@@ -6,6 +6,7 @@ import '../../../l10n/l10n.dart';
 import '../../../models/activity_model.dart';
 import '../../../models/avatar_uploader.dart';
 import '../../widgets/anonymous_avatar.dart';
+import '../../../utils/share_activity.dart';
 import 'activity_thumbnail.dart';
 import 'discovery_activity_card.dart';
 
@@ -150,7 +151,14 @@ class MyActivityCard extends StatelessWidget {
                 ),
                 if (showCode && activity.hasActivityCode) ...[
                   const SizedBox(height: 10),
-                  _CodeStrip(code: activity.activityCode!),
+                  _CodeStrip(
+                    activity: activity,
+                    code: activity.activityCode!,
+                    // Only people who are in can invite others.
+                    canShare:
+                        role == MyActivityRole.hosting ||
+                        role == MyActivityRole.joined,
+                  ),
                 ],
               ],
             ),
@@ -219,9 +227,15 @@ class MyActivityCard extends StatelessWidget {
 }
 
 class _CodeStrip extends StatelessWidget {
-  const _CodeStrip({required this.code});
+  const _CodeStrip({
+    required this.activity,
+    required this.code,
+    required this.canShare,
+  });
 
+  final Activity activity;
   final String code;
+  final bool canShare;
 
   @override
   Widget build(BuildContext context) {
@@ -273,6 +287,27 @@ class _CodeStrip extends StatelessWidget {
                 size: 14,
                 color: SynkColors.orangeDark,
               ),
+              if (canShare) ...[
+                const SizedBox(width: 4),
+                Builder(
+                  builder: (buttonContext) => IconButton(
+                    tooltip: context.l10n.shareCode,
+                    onPressed: () =>
+                        shareActivityCode(buttonContext, activity, code),
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints.tightFor(
+                      width: 32,
+                      height: 28,
+                    ),
+                    icon: const Icon(
+                      Icons.share_rounded,
+                      size: 15,
+                      color: SynkColors.orangeDark,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

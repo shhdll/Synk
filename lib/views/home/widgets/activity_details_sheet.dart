@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../controllers/activity_leave_controller.dart';
@@ -15,6 +14,7 @@ import '../../../models/user_profile_model.dart';
 import '../../../utils/custom_widgets/synk_dialog.dart';
 import '../../../utils/custom_widgets/synk_feedback.dart';
 import '../../../utils/maps_launcher.dart';
+import '../../../utils/share_activity.dart';
 import '../../widgets/anonymous_avatar.dart';
 import '../../widgets/crown_icon.dart';
 import 'activity_thumbnail.dart';
@@ -359,8 +359,15 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                           ],
                           const SizedBox(height: 22),
                           _buildParticipantsSection(),
-                          if (_isViewerHost && !_currentActivity.isPast) ...[
+                          if (_shareableCode != null) ...[
                             const SizedBox(height: 22),
+                            _buildCodeRow(_shareableCode!),
+                          ],
+                          if (_isViewerHost &&
+                              !_currentActivity.isPast &&
+                              (widget.onDelete != null ||
+                                  widget.onEdit != null)) ...[
+                            const SizedBox(height: 10),
                             _buildHostTools(),
                           ],
                           const SizedBox(height: 10),
@@ -379,51 +386,20 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     );
   }
 
-  // Opens the phone's share menu with a ready-made invite in the app's
-  // language, so the host doesn't have to type the details.
-  Future<void> _shareCode(BuildContext buttonContext, String code) async {
-    final l10n = context.l10n;
-    final activity = _currentActivity;
-    final title = activity.title.trim();
-    final date = activity.dateTime;
-    final message = l10n.shareMessage(
-      title.isEmpty ? l10n.untitledActivity : title,
-      '${formatShortDate(date)} · ${formatTime(date.hour, date.minute)}',
-      activity.location.trim().isNotEmpty
-          ? activity.location.trim()
-          : (activity.locationAddress ?? '').trim(),
-      code,
-    );
-
-    // iPads show the menu as a popover pointing at the button.
-    final box = buttonContext.findRenderObject() as RenderBox?;
-    try {
-      await SharePlus.instance.share(
-        ShareParams(
-          text: message,
-          sharePositionOrigin: box == null
-              ? null
-              : box.localToGlobal(Offset.zero) & box.size,
-        ),
-      );
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(content: Text(context.l10n.couldntOpenTheShareMenu)),
-        );
-    }
+  // The host and joined participants can copy or share the code of an
+  // upcoming activity. Feed activities don't carry it, so fall back to the
+  // viewer's own copy in the store.
+  String? get _shareableCode {
+    if (_currentActivity.isPast) return null;
+    if (!_isViewerHost && _participationStatus != 'joined') return null;
+    final code =
+        _currentActivity.activityCode ??
+        widget.activityStore.byId(_currentActivity.id)?.activityCode;
+    return (code == null || code.isEmpty) ? null : code;
   }
 
-  Widget _buildHostTools() {
-    final code = _currentActivity.activityCode;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (code != null && code.isNotEmpty)
-          Container(
+  Widget _buildCodeRow(String code) {
+    return Container(
             padding: const EdgeInsetsDirectional.fromSTEB(14, 6, 6, 6),
             decoration: BoxDecoration(
               color: SynkColors.orangeDark.withValues(alpha: 0.08),
@@ -478,7 +454,8 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                 Builder(
                   builder: (buttonContext) => IconButton(
                     tooltip: context.l10n.shareCode,
-                    onPressed: () => _shareCode(buttonContext, code),
+                    onPressed: () =>
+                        shareActivityCode(buttonContext, _currentActivity, code),
                     icon: const Icon(
                       Icons.share_rounded,
                       size: 18,
@@ -488,9 +465,13 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                 ),
               ],
             ),
-          ),
-        if (widget.onDelete != null || widget.onEdit != null) ...[
-          const SizedBox(height: 10),
+          );
+  }
+
+  Widget _buildHostTools() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
           Row(
             children: [
               if (widget.onEdit != null)
@@ -529,7 +510,6 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                 ),
             ],
           ),
-        ],
       ],
     );
   }
