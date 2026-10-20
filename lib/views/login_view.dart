@@ -4,7 +4,11 @@ import 'forgot_password_view.dart';
 import 'home/main_shell.dart';
 
 import '../controllers/login_controller.dart';
+import '../core/constants/auth_constants.dart';
 import '../core/constants/synk_colors.dart';
+import '../screens/auth/email_verification_screen.dart';
+import 'widgets/synk_blob_background.dart';
+import 'widgets/synk_input_decoration.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -31,6 +35,11 @@ class _LoginViewState extends State<LoginView> {
   // Controls whether the password is hidden or visible.
   bool _obscurePassword = true;
 
+  // Errors from the server, shown under the field they belong to until the
+  // user edits it.
+  String? _identifierServerError;
+  String? _passwordServerError;
+
   @override
   void dispose() {
     // Releases the controllers when the screen is removed.
@@ -41,22 +50,39 @@ class _LoginViewState extends State<LoginView> {
     super.dispose();
   }
 
+  void _clearServerErrors() {
+    if (_identifierServerError == null && _passwordServerError == null) {
+      return;
+    }
+    setState(() {
+      _identifierServerError = null;
+      _passwordServerError = null;
+    });
+  }
+
   Future<void> _handleLogin() async {
+    FocusScope.of(context).unfocus();
+    _identifierServerError = null;
+    _passwordServerError = null;
+
     // Stops the login request when any field is invalid.
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text;
     final bool success;
-    if (_loginWithUsernameMode) {
+    // An email typed into the username tab still works.
+    if (_loginWithUsernameMode && !username.contains('@')) {
       success = await _loginController.loginWithUsername(
-        username: _usernameController.text.trim(),
-        password: _passwordController.text,
+        username: username,
+        password: password,
       );
     } else {
       success = await _loginController.loginWithEmail(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
+        email: _loginWithUsernameMode ? username : _emailController.text.trim(),
+        password: password,
       );
     }
 
@@ -71,6 +97,31 @@ class _LoginViewState extends State<LoginView> {
         (route) => false,
       );
       return;
+    }
+
+    switch (_loginController.errorType) {
+      case LoginErrorType.noAccount:
+        setState(() => _identifierServerError = _loginController.errorMessage);
+        _formKey.currentState!.validate();
+        return;
+      case LoginErrorType.wrongCredentials:
+        setState(() => _passwordServerError = _loginController.errorMessage);
+        _formKey.currentState!.validate();
+        return;
+      case LoginErrorType.emailNotConfirmed:
+        // Signed up but never confirmed: continue verification instead.
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => EmailVerificationScreen(
+              email: _loginController.accountEmail ?? '',
+              password: password,
+            ),
+          ),
+        );
+        return;
+      case LoginErrorType.other:
+      case null:
+        break;
     }
 
     // Displays the login error.
@@ -109,11 +160,17 @@ class _LoginViewState extends State<LoginView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: SynkColors.background,
-      body: SafeArea(
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          const Positioned.fill(child: SynkBlobBackground()),
+          SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Form(
             key: _formKey,
+            // Shows each field's error as soon as the user leaves it.
+            autovalidateMode: AutovalidateMode.onUnfocus,
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -214,6 +271,7 @@ class _LoginViewState extends State<LoginView> {
                                   _loginWithUsernameMode = true;
                                 });
                                 _loginController.clearError();
+                                _clearServerErrors();
                               }
                             },
                             child: AnimatedContainer(
@@ -247,6 +305,7 @@ class _LoginViewState extends State<LoginView> {
                                   _loginWithUsernameMode = false;
                                 });
                                 _loginController.clearError();
+                                _clearServerErrors();
                               }
                             },
                             child: AnimatedContainer(
@@ -282,41 +341,19 @@ class _LoginViewState extends State<LoginView> {
                   if (_loginWithUsernameMode)
                     TextFormField(
                       controller: _usernameController,
-                      style: const TextStyle(color: SynkColors.textPrimary),
+                      style: synkInputTextStyle,
+                      textInputAction: TextInputAction.next,
+                      onChanged: (_) => _clearServerErrors(),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Please enter your username';
                         }
-                        return null;
+                        return _identifierServerError;
                       },
-                      decoration: InputDecoration(
-                        label: _requiredLabel('Username'),
-                        hintText: 'Username',
-                        hintStyle: const TextStyle(
-                          color: SynkColors.textSecondary,
-                        ),
-                        filled: true,
-                        fillColor: Colors.white,
-                        prefixIcon: const Padding(
-                          padding: EdgeInsets.only(left: 18, right: 10),
-                          child: Icon(
-                            Icons.alternate_email,
-                            color: SynkColors.textSecondary,
-                            size: 20,
-                          ),
-                        ),
-                        prefixIconConstraints: const BoxConstraints(
-                          minWidth: 0,
-                          minHeight: 0,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 18,
-                          horizontal: 20,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30),
-                          borderSide: BorderSide.none,
-                        ),
+                      decoration: synkInputDecoration(
+                        label: 'Username',
+                        hint: 'Username',
+                        icon: Icons.alternate_email_rounded,
                       ),
                     )
                   // Dedicated Email input field
@@ -324,44 +361,22 @@ class _LoginViewState extends State<LoginView> {
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
-                      style: const TextStyle(color: SynkColors.textPrimary),
+                      style: synkInputTextStyle,
+                      textInputAction: TextInputAction.next,
+                      onChanged: (_) => _clearServerErrors(),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Please enter your email';
                         }
-                        if (!value.trim().contains('@')) {
+                        if (!AuthConstants.emailRegex.hasMatch(value.trim())) {
                           return 'Please enter a valid email';
                         }
-                        return null;
+                        return _identifierServerError;
                       },
-                      decoration: InputDecoration(
-                        label: _requiredLabel('Email'),
-                        hintText: 'Email address',
-                        hintStyle: const TextStyle(
-                          color: SynkColors.textSecondary,
-                        ),
-                        filled: true,
-                        fillColor: Colors.white,
-                        prefixIcon: const Padding(
-                          padding: EdgeInsets.only(left: 18, right: 10),
-                          child: Icon(
-                            Icons.email_outlined,
-                            color: SynkColors.textSecondary,
-                            size: 20,
-                          ),
-                        ),
-                        prefixIconConstraints: const BoxConstraints(
-                          minWidth: 0,
-                          minHeight: 0,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 18,
-                          horizontal: 20,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30),
-                          borderSide: BorderSide.none,
-                        ),
+                      decoration: synkInputDecoration(
+                        label: 'Email',
+                        hint: 'Email address',
+                        icon: Icons.email_outlined,
                       ),
                     ),
 
@@ -371,33 +386,22 @@ class _LoginViewState extends State<LoginView> {
                   TextFormField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
-                    style: const TextStyle(color: SynkColors.textPrimary),
+                    style: synkInputTextStyle,
+                    textInputAction: TextInputAction.done,
+                    onChanged: (_) => _clearServerErrors(),
+                    onFieldSubmitted: (_) {
+                      if (!_loginController.isLoading) _handleLogin();
+                    },
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your password';
                       }
-                      return null;
+                      return _passwordServerError;
                     },
-                    decoration: InputDecoration(
-                      label: _requiredLabel('Password'),
-                      hintText: 'Password',
-                      hintStyle: const TextStyle(
-                        color: SynkColors.textSecondary,
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                      prefixIcon: const Padding(
-                        padding: EdgeInsets.only(left: 18, right: 10),
-                        child: Icon(
-                          Icons.lock_outline,
-                          color: SynkColors.textSecondary,
-                          size: 20,
-                        ),
-                      ),
-                      prefixIconConstraints: const BoxConstraints(
-                        minWidth: 0,
-                        minHeight: 0,
-                      ),
+                    decoration: synkInputDecoration(
+                      label: 'Password',
+                      hint: 'Password',
+                      icon: Icons.lock_outline,
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword
@@ -410,14 +414,6 @@ class _LoginViewState extends State<LoginView> {
                             _obscurePassword = !_obscurePassword;
                           });
                         },
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: 18,
-                        horizontal: 20,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide.none,
                       ),
                     ),
                   ),
@@ -519,19 +515,8 @@ class _LoginViewState extends State<LoginView> {
           ),
         ),
       ),
+        ],
+      ),
     );
   }
-
-  Widget _requiredLabel(String text) => Text.rich(
-    TextSpan(
-      children: [
-        TextSpan(text: text),
-        const TextSpan(
-          text: ' *',
-          style: TextStyle(color: Color(0xFFE53935)),
-        ),
-      ],
-      style: const TextStyle(color: SynkColors.textSecondary),
-    ),
-  );
 }

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/auth_model.dart';
+import '../models/avatar_uploader.dart';
 import '../models/user_profile_model.dart';
 
 class ProfileController extends ChangeNotifier {
@@ -44,6 +45,12 @@ class ProfileController extends ChangeNotifier {
 
     _isLoading = false;
     notifyListeners();
+
+    final avatarUrl = await AvatarUploader.uploadLocalIfMissing(_profile);
+    if (avatarUrl != null) {
+      _profile = {..._profile, 'avatar_url': avatarUrl};
+      notifyListeners();
+    }
   }
 
   /// Updates the username after format validation and uniqueness check.

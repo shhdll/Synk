@@ -48,23 +48,18 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
                 const Text(
                   'Create your\naccount.',
                   style: TextStyle(
-                    fontSize: 40,
+                    fontSize: 34,
                     fontWeight: FontWeight.w900,
                     height: 1.05,
-                    letterSpacing: -1.5,
+                    letterSpacing: -1.3,
                     color: SynkColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 10),
-                const Text(
-                  'Enter your credentials to complete sign up.',
-                  style: TextStyle(fontSize: 15, color: Color(0xFF6B7280)),
-                ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 18),
 
                 // Username
                 _buildField(
@@ -77,7 +72,7 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                   errorText: signupController.usernameError,
                   onChanged: (_) => signupController.onUsernameChanged(),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 10),
 
                 // Email
                 _buildField(
@@ -90,7 +85,7 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                   errorText: signupController.emailError,
                   onChanged: (_) => signupController.onEmailChanged(),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 10),
 
                 // Password
                 _buildField(
@@ -100,7 +95,7 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                   hint: '••••••••',
                   icon: Icons.lock_outline_rounded,
                   obscureText: _obscurePassword,
-                  errorText: null,
+                  errorText: signupController.passwordError,
                   onChanged: (_) {
                     signupController.clearPasswordError();
                     setState(() {});
@@ -116,7 +111,7 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                         setState(() => _obscurePassword = !_obscurePassword),
                   ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 10),
 
                 // Confirm Password
                 _buildField(
@@ -126,7 +121,7 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                   hint: 'Re-type password',
                   icon: Icons.lock_outline_rounded,
                   obscureText: _obscureConfirmPassword,
-                  errorText: null,
+                  errorText: signupController.confirmPasswordError,
                   onChanged: (_) {
                     signupController.clearConfirmPasswordError();
                     setState(() {});
@@ -160,7 +155,7 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                   ),
                 ],
 
-                const SizedBox(height: 28),
+                const SizedBox(height: 20),
 
                 // Submit Button
                 SizedBox(
@@ -208,10 +203,8 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                                     .emailController
                                     .text
                                     .trim();
-                                final password = signupController
-                                    .passwordController
-                                    .text
-                                    .trim();
+                                final password =
+                                    signupController.passwordController.text;
                                 Navigator.of(context).pushAndRemoveUntil(
                                   MaterialPageRoute(
                                     builder: (context) =>
@@ -244,7 +237,7 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                           ),
                   ),
                 ),
-                const SizedBox(height: 120),
+                const SizedBox(height: 16),
               ],
             );
           },
@@ -255,39 +248,37 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
 
   Widget _buildPasswordRequirements(SignupController signupController) {
     final password = signupController.passwordController.text;
+    final rules = [
+      _PasswordRequirement(text: '8+ characters', met: password.length >= 8),
+      _PasswordRequirement(
+        text: 'Uppercase letter',
+        met: RegExp(r'[A-Z]').hasMatch(password),
+      ),
+      _PasswordRequirement(
+        text: 'Lowercase letter',
+        met: RegExp(r'[a-z]').hasMatch(password),
+      ),
+      _PasswordRequirement(
+        text: 'A number',
+        met: RegExp(r'[0-9]').hasMatch(password),
+      ),
+      _PasswordRequirement(
+        text: 'Special character',
+        met: RegExp(r'[@$!%*?&_\-#^~+=<>.,:;/\\]|[^a-zA-Z0-9]')
+            .hasMatch(password),
+      ),
+    ];
+
+    // Two columns so the button fits without scrolling.
     return Padding(
       padding: const EdgeInsets.only(left: 12, right: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _PasswordRequirement(
-            text: 'At least 8 characters',
-            met: password.length >= 8,
-          ),
-          _PasswordRequirement(
-            text: 'At least one uppercase letter',
-            met: RegExp(r'[A-Z]').hasMatch(password),
-          ),
-          _PasswordRequirement(
-            text: 'At least one lowercase letter',
-            met: RegExp(r'[a-z]').hasMatch(password),
-          ),
-          _PasswordRequirement(
-            text: 'At least one number',
-            met: RegExp(r'[0-9]').hasMatch(password),
-          ),
-          _PasswordRequirement(
-            text: 'At least one special character',
-            met: RegExp(r'[@$!%*?&_\-#^~+=<>.,:;/\\]|[^a-zA-Z0-9]')
-                .hasMatch(password),
-          ),
-          _PasswordRequirement(
-            text: 'Confirmation password matches',
-            met:
-                password.isNotEmpty &&
-                password == signupController.confirmPasswordController.text,
-          ),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) => Wrap(
+          children: [
+            for (final rule in rules)
+              SizedBox(width: constraints.maxWidth / 2, child: rule),
+          ],
+        ),
       ),
     );
   }

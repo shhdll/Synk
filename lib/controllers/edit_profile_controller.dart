@@ -6,6 +6,7 @@ import '../core/constants/auth_constants.dart';
 import '../models/auth_model.dart';
 import '../models/avatar_uploader.dart';
 import '../models/user_profile_model.dart';
+import '../utils/auth_errors.dart';
 
 class EditProfileController extends ChangeNotifier {
   EditProfileController({AuthModel? authModel, UserProfileModel? profileModel})
@@ -50,6 +51,8 @@ class EditProfileController extends ChangeNotifier {
   String _gender = '';
   String _email = '';
   String? _draftAvatarPath;
+  // Uncropped photo the draft was cut from, for adjusting again.
+  String? _draftSourcePath;
   bool _removeAvatarDraft = false;
 
   String get name => _name;
@@ -188,7 +191,7 @@ class EditProfileController extends ChangeNotifier {
           final existing = await Supabase.instance.client
               .from('users')
               .select('id')
-              .ilike('username', clean)
+              .ilike('username', escapeLike(clean))
               .neq('id', currentUid)
               .maybeSingle();
 
@@ -314,6 +317,10 @@ class EditProfileController extends ChangeNotifier {
         await AvatarUploader.discardDraft(_draftAvatarPath);
         _draftAvatarPath = null;
       }
+      if (_draftSourcePath != null) {
+        await AvatarUploader.saveSource(_draftSourcePath!);
+        _draftSourcePath = null;
+      }
       _removeAvatarDraft = false;
 
       // Email belongs to Supabase Auth.
@@ -358,14 +365,47 @@ class EditProfileController extends ChangeNotifier {
     String? message;
 
     try {
-      final pickedPath = await AvatarUploader.pickDraft();
-      if (pickedPath != null) {
+      final picked = await AvatarUploader.pickDraft();
+      if (picked != null) {
         await AvatarUploader.discardDraft(_draftAvatarPath);
-        _draftAvatarPath = pickedPath;
+        await AvatarUploader.discardSourceDraft(_draftSourcePath);
+        _draftAvatarPath = picked.cropped;
+        _draftSourcePath = picked.source;
         _removeAvatarDraft = false;
       }
     } catch (_) {
       message = 'Unable to update your photo. Please try again.';
+    } finally {
+      _isUploadingPhoto = false;
+      notifyListeners();
+    }
+
+    return message;
+  }
+
+  // Re-opens Move and Scale on the current photo.
+  Future<String?> adjustPhoto() async {
+    _isUploadingPhoto = true;
+    notifyListeners();
+
+    String? message;
+
+    try {
+      final source =
+          _draftSourcePath ?? await AvatarUploader.adjustableSource(_profile);
+      if (source == null) {
+        message = "Couldn't load your photo. Please try again.";
+      } else {
+        final cropped = await AvatarUploader.cropDraft(source);
+        if (cropped != null) {
+          await AvatarUploader.discardDraft(_draftAvatarPath);
+          _draftAvatarPath = cropped;
+          _draftSourcePath = source;
+          _removeAvatarDraft = false;
+        }
+      }
+    } catch (_) {
+      message = 'Unable to adjust your photo. Please try again.';
     } finally {
       _isUploadingPhoto = false;
       notifyListeners();
@@ -382,7 +422,9 @@ class EditProfileController extends ChangeNotifier {
 
     try {
       await AvatarUploader.discardDraft(_draftAvatarPath);
+      await AvatarUploader.discardSourceDraft(_draftSourcePath);
       _draftAvatarPath = null;
+      _draftSourcePath = null;
       _removeAvatarDraft = true;
     } catch (_) {
       message = 'Unable to remove your photo. Please try again.';
@@ -396,7 +438,9 @@ class EditProfileController extends ChangeNotifier {
 
   Future<void> discardPhotoChanges() async {
     await AvatarUploader.discardDraft(_draftAvatarPath);
+    await AvatarUploader.discardSourceDraft(_draftSourcePath);
     _draftAvatarPath = null;
+    _draftSourcePath = null;
     _removeAvatarDraft = false;
     notifyListeners();
   }

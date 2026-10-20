@@ -6,6 +6,7 @@ import '../controllers/reset_password_controller.dart';
 import '../core/constants/synk_colors.dart';
 import '../utils/custom_widgets/puzzle_piece_tile.dart';
 import 'widgets/reset_link_info_row.dart';
+import 'widgets/synk_blob_background.dart';
 
 class ForgotPasswordView extends StatefulWidget {
   const ForgotPasswordView({super.key, this.initialEmail = ''});
@@ -130,7 +131,11 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: SynkColors.background,
-      body: SafeArea(
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          const Positioned.fill(child: SynkBlobBackground()),
+          SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Form(
@@ -204,6 +209,8 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
             ),
           ),
         ),
+      ),
+        ],
       ),
     );
   }

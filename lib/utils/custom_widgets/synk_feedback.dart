@@ -26,39 +26,56 @@ class SynkFeedback {
     return action == SynkDialogAction.secondary;
   }
 
-  // Keeps the existing save confirmation unchanged.
   static Future<void> showSaved(
     BuildContext context, {
     String message = savedMessage,
-  }) {
-    return showSuccessDialog(context, title: 'Saved!', message: message);
+  }) async {
+    showToast(
+      context,
+      title: 'Saved',
+      message: message == savedMessage ? null : message,
+    );
   }
 
-  // Shared success popup for completed actions.
+  // Confirms a finished action with a banner that hides itself, so the
+  // user doesn't have to tap anything. Returns right away.
   static Future<void> showSuccessDialog(
     BuildContext context, {
     required String title,
     required String message,
-    String buttonLabel = 'Done',
   }) async {
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      barrierColor: const Color(0x6B1E1C24),
-      builder: (_) {
-        return BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-          child: _SuccessDialog(
-            title: title,
-            message: message,
-            buttonLabel: buttonLabel,
-            icon: Icons.check_rounded,
-            iconBackground: SynkColors.teal,
-            iconColor: Colors.white,
-          ),
-        );
-      },
+    showToast(context, title: title, message: message);
+  }
+
+  static OverlayEntry? _toast;
+
+  // Slides a small banner down from the top, above sheets and dialogs.
+  static void showToast(
+    BuildContext context, {
+    required String title,
+    String? message,
+    bool success = true,
+  }) {
+    final overlay = Overlay.maybeOf(context, rootOverlay: true);
+    if (overlay == null) return;
+
+    final previous = _toast;
+    if (previous != null && previous.mounted) previous.remove();
+
+    late final OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (_) => _Toast(
+        title: title,
+        message: message,
+        success: success,
+        onDismissed: () {
+          if (entry.mounted) entry.remove();
+          if (_toast == entry) _toast = null;
+        },
+      ),
     );
+    _toast = entry;
+    overlay.insert(entry);
   }
 
   // Shows a blocking error popup using the same card and button style.
@@ -88,46 +105,151 @@ class SynkFeedback {
     );
   }
 
-  // Shows errors using the shared floating Snackbar.
   static void showError(BuildContext context, String message) {
-    _show(context, message, success: false);
+    showToast(context, title: message, success: false);
+  }
+}
+
+class _Toast extends StatefulWidget {
+  const _Toast({
+    required this.title,
+    required this.message,
+    required this.success,
+    required this.onDismissed,
+  });
+
+  final String title;
+  final String? message;
+  final bool success;
+  final VoidCallback onDismissed;
+
+  @override
+  State<_Toast> createState() => _ToastState();
+}
+
+class _ToastState extends State<_Toast> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 280),
+    reverseDuration: const Duration(milliseconds: 200),
+  );
+  late final Animation<Offset> _slide = Tween(
+    begin: const Offset(0, -1.4),
+    end: Offset.zero,
+  ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+  bool _closing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.forward();
+    // Longer messages stay a bit longer.
+    final length = widget.title.length + (widget.message?.length ?? 0);
+    final ms = (1800 + length * 35).clamp(2500, 5000);
+    Future.delayed(Duration(milliseconds: ms), _close);
   }
 
-  static void _show(
-    BuildContext context,
-    String message, {
-    required bool success,
-  }) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(
-                success ? Icons.check_circle_outline : Icons.error_outline,
-                color: Colors.white,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  message,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
+  Future<void> _close() async {
+    if (_closing || !mounted) return;
+    _closing = true;
+    await _controller.reverse();
+    widget.onDismissed();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = widget.success ? SynkColors.teal : const Color(0xFFE53935);
+    final message = widget.message;
+
+    return Positioned(
+      top: MediaQuery.paddingOf(context).top + 8,
+      left: 16,
+      right: 16,
+      child: SlideTransition(
+        position: _slide,
+        child: FadeTransition(
+          opacity: _controller,
+          child: GestureDetector(
+            onTap: _close,
+            onVerticalDragEnd: (details) {
+              if ((details.primaryVelocity ?? 0) < 0) _close();
+            },
+            child: Material(
+              color: Colors.white,
+              elevation: 0,
+              borderRadius: BorderRadius.circular(18),
+              shadowColor: Colors.transparent,
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(14, 12, 16, 12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.12),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        widget.success
+                            ? Icons.check_rounded
+                            : Icons.priority_high_rounded,
+                        size: 18,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.title,
+                            style: const TextStyle(
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.w800,
+                              color: SynkColors.textPrimary,
+                            ),
+                          ),
+                          if (message != null && message.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              message,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                height: 1.3,
+                                color: SynkColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-          backgroundColor: success ? SynkColors.teal : const Color(0xFFE85D5D),
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(20),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            ),
           ),
         ),
-      );
+      ),
+    );
   }
 }
 

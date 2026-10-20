@@ -47,7 +47,22 @@ class AuthConstants {
   }
 
   /// Email validation pattern.
-  static final RegExp emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+  static final RegExp emailRegex = RegExp(
+    r'^[\w.+-]+@([\w-]+\.)+[A-Za-z]{2,}$',
+  );
+
+  /// Usernames: 3–30 letters, numbers, dots or underscores.
+  static final RegExp usernameRegex = RegExp(r'^[a-zA-Z0-9._]{3,30}$');
+
+  static String? validateUsername(String username) {
+    if (username.isEmpty) return 'Username is required';
+    if (username.length < 3) return 'Username must be at least 3 characters';
+    if (username.length > 30) return 'Username can be at most 30 characters';
+    if (!usernameRegex.hasMatch(username)) {
+      return 'Username can only contain letters, numbers, underscores, and dots';
+    }
+    return null;
+  }
 
   /// Custom URL scheme that opens the app. Must match AndroidManifest.xml.
   static const String appScheme = 'io.supabase.synk';

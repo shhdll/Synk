@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/constants/auth_constants.dart';
+import '../utils/auth_errors.dart';
 
 class SignupController extends ChangeNotifier {
   // Fields
@@ -51,7 +52,13 @@ class SignupController extends ChangeNotifier {
       }
     });
     passwordFocusNode.addListener(() {
-      if (!passwordFocusNode.hasFocus) validatePassword();
+      if (!passwordFocusNode.hasFocus) {
+        validatePassword();
+        // Re-check the confirmation if the password changed after it.
+        if (confirmPasswordController.text.isNotEmpty) {
+          validateConfirmPassword();
+        }
+      }
     });
     confirmPasswordFocusNode.addListener(() {
       if (!confirmPasswordFocusNode.hasFocus) validateConfirmPassword();
@@ -71,7 +78,7 @@ class SignupController extends ChangeNotifier {
       return false;
     }
     final age = _calculateAge(birthday);
-    if (age == null || age < 16 || age > 50) {
+    if (age == null || age < 16 || age > 65) {
       return false;
     }
     return true;
@@ -176,6 +183,7 @@ class SignupController extends ChangeNotifier {
 
   String? _nameValidationError(String name) {
     if (name.isEmpty) return 'Full name is required';
+    if (name.length > 50) return 'Name can be at most 50 characters';
     if (!RegExp(r'^[\p{L}\p{M} ]+$', unicode: true).hasMatch(name)) {
       return 'Name can only contain letters and spaces';
     }
@@ -190,8 +198,8 @@ class SignupController extends ChangeNotifier {
       final age = _calculateAge(text);
       if (age == null) {
         birthdayError = 'Please enter a valid birthday';
-      } else if (age < 16 || age > 50) {
-        birthdayError = 'Age must be between 16 and 50 years';
+      } else if (age < 16 || age > 65) {
+        birthdayError = 'Age must be between 16 and 65 years';
       } else {
         birthdayError = null;
       }
@@ -212,17 +220,17 @@ class SignupController extends ChangeNotifier {
   }
 
   void validatePassword() {
-    passwordError = AuthConstants.validatePassword(
-      passwordController.text.trim(),
-    );
+    passwordError = AuthConstants.validatePassword(passwordController.text);
     notifyListeners();
   }
 
+  // Passwords aren't trimmed anywhere, so what's saved is exactly what the
+  // user types on the login screen.
   void validateConfirmPassword() {
-    final confirmation = confirmPasswordController.text.trim();
+    final confirmation = confirmPasswordController.text;
     confirmPasswordError = confirmation.isEmpty
         ? 'Please confirm your password'
-        : confirmation != passwordController.text.trim()
+        : confirmation != passwordController.text
         ? 'Passwords do not match'
         : null;
     notifyListeners();
@@ -292,8 +300,8 @@ class SignupController extends ChangeNotifier {
       if (age == null) {
         birthdayError = 'Please enter a valid birthday';
         isValid = false;
-      } else if (age < 16 || age > 50) {
-        birthdayError = 'Age must be between 16 and 50 years';
+      } else if (age < 16 || age > 65) {
+        birthdayError = 'Age must be between 16 and 65 years';
         isValid = false;
       }
     }
@@ -319,23 +327,11 @@ class SignupController extends ChangeNotifier {
 
     final username = usernameController.text.trim();
     final email = emailController.text.trim();
-    final password = passwordController.text.trim();
-    final confirmPassword = confirmPasswordController.text.trim();
+    final password = passwordController.text;
+    final confirmPassword = confirmPasswordController.text;
 
-    final usernameRegex = RegExp(r'^[a-zA-Z0-9._]{3,30}$');
-
-    // Validate username format
-    if (username.isEmpty) {
-      usernameError = 'Username is required';
-      isValid = false;
-    } else if (username.length < 3) {
-      usernameError = 'Username must be at least 3 characters';
-      isValid = false;
-    } else if (!usernameRegex.hasMatch(username)) {
-      usernameError =
-          'Username can only contain letters, numbers, underscores, and dots';
-      isValid = false;
-    }
+    usernameError = AuthConstants.validateUsername(username);
+    if (usernameError != null) isValid = false;
 
     // Validate email
     if (email.isEmpty) {
@@ -370,15 +366,9 @@ class SignupController extends ChangeNotifier {
   Future<void> checkUsernameAvailability() async {
     final username = usernameController.text.trim().toLowerCase();
 
-    if (username.isEmpty) {
-      usernameError = 'Username is required';
-      notifyListeners();
-      return;
-    }
-
-    final usernameRegex = RegExp(r'^[a-zA-Z0-9._]{3,30}$');
-    if (!usernameRegex.hasMatch(username)) {
-      usernameError = 'Username must be 3–30 characters and can only include letters, numbers, dots, and underscores.';
+    final formatError = AuthConstants.validateUsername(username);
+    if (formatError != null) {
+      usernameError = formatError;
       notifyListeners();
       return;
     }
@@ -387,8 +377,12 @@ class SignupController extends ChangeNotifier {
       final existingUser = await Supabase.instance.client
           .from('users')
           .select('id')
-          .ilike('username', username)
+          .ilike('username', escapeLike(username))
+          .limit(1)
           .maybeSingle();
+
+      // The user kept typing while this was loading.
+      if (usernameController.text.trim().toLowerCase() != username) return;
 
       if (existingUser != null) {
         usernameError = 'This username is already taken';
@@ -422,8 +416,11 @@ class SignupController extends ChangeNotifier {
       final existingUser = await Supabase.instance.client
           .from('users')
           .select('id')
-          .ilike('email', email)
+          .ilike('email', escapeLike(email))
+          .limit(1)
           .maybeSingle();
+
+      if (emailController.text.trim().toLowerCase() != email) return;
 
       if (existingUser != null) {
         emailError = 'An account with this email already exists';
@@ -457,12 +454,14 @@ class SignupController extends ChangeNotifier {
         Supabase.instance.client
             .from('users')
             .select('id')
-            .ilike('username', cleanUsername)
+            .ilike('username', escapeLike(cleanUsername))
+            .limit(1)
             .maybeSingle(),
         Supabase.instance.client
             .from('users')
             .select('id')
-            .ilike('email', cleanEmail)
+            .ilike('email', escapeLike(cleanEmail))
+            .limit(1)
             .maybeSingle(),
       ]);
 
@@ -488,8 +487,8 @@ class SignupController extends ChangeNotifier {
       final age = _calculateAge(birthdayController.text.trim());
 
       final response = await Supabase.instance.client.auth.signUp(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
+        email: cleanEmail,
+        password: passwordController.text,
         emailRedirectTo: AuthConstants.emailRedirectUrl,
         data: {
           'username': cleanUsername,
@@ -502,34 +501,10 @@ class SignupController extends ChangeNotifier {
 
       final user = response.user;
 
-      // Detect if user already exists based on Supabase response
-      bool isExistingUser = false;
-      if (user != null) {
-        // 1. With email enumeration protection, identities is empty or null
-        if (user.identities == null || user.identities!.isEmpty) {
-          isExistingUser = true;
-        }
-
-        // 2. If the user was already confirmed, it is an existing account
-        if (user.emailConfirmedAt != null &&
-            user.emailConfirmedAt!.isNotEmpty) {
-          isExistingUser = true;
-        }
-
-        // 3. If createdAt is older than 15 seconds, account already existed in Supabase
-        if (user.createdAt.isNotEmpty) {
-          final createdAt = DateTime.tryParse(user.createdAt);
-          if (createdAt != null) {
-            final ageDifference = DateTime.now()
-                .toUtc()
-                .difference(createdAt.toUtc())
-                .abs();
-            if (ageDifference.inSeconds > 15) {
-              isExistingUser = true;
-            }
-          }
-        }
-      }
+      // For an email that's already registered, Supabase returns a fake user
+      // with no identities instead of an error.
+      final isExistingUser =
+          user != null && (user.identities == null || user.identities!.isEmpty);
 
       if (isExistingUser) {
         emailError = 'An account with this email already exists';
@@ -551,7 +526,7 @@ class SignupController extends ChangeNotifier {
           await Supabase.instance.client.from('users').upsert({
             'id': user.id,
             'username': cleanUsername,
-            'email': emailController.text.trim(),
+            'email': cleanEmail,
             'full_name': nameController.text.trim(),
             'age': age,
             'gender': selectedGender,
@@ -577,7 +552,15 @@ class SignupController extends ChangeNotifier {
     } on AuthException catch (e) {
       final msg = e.message.toLowerCase();
 
-      if (msg.contains('already registered') ||
+      if (isNetworkError(e)) {
+        generalError = kNetworkErrorMessage;
+      } else if (isRateLimited(e)) {
+        generalError = kRateLimitMessage;
+      } else if (msg.contains('database error')) {
+        // Usually the username was taken between the check and sign up.
+        debugPrint('Signup database error: ${e.message}');
+        generalError = "We couldn't create your account. Please try again.";
+      } else if (msg.contains('already registered') ||
           msg.contains('user already exists') ||
           msg.contains('already exists') ||
           msg.contains('already in use')) {
@@ -591,13 +574,12 @@ class SignupController extends ChangeNotifier {
       }
     } on PostgrestException catch (e) {
       debugPrint('PostgrestException during signup: ${e.message}');
-      generalError = e.message;
+      generalError = kGenericErrorMessage;
     } catch (e) {
       debugPrint('Unexpected signup error: $e');
-      final errorStr = e.toString().replaceFirst('Exception: ', '');
-      generalError = errorStr.isNotEmpty
-          ? errorStr
-          : 'An unexpected error occurred. Please try again.';
+      generalError = isNetworkError(e)
+          ? kNetworkErrorMessage
+          : kGenericErrorMessage;
     } finally {
       isLoading = false;
       notifyListeners();

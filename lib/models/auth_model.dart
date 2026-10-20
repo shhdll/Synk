@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/constants/auth_constants.dart';
 import '../services/push_notification_service.dart';
+import '../utils/auth_errors.dart';
 
 class AuthModel {
   AuthModel({this.supabaseClient});
@@ -25,25 +26,29 @@ class AuthModel {
     required String username,
     required String password,
   }) async {
-    final cleanUsername = username.trim().toLowerCase();
-
-    // Look up the email mapped to this username in public.users
-    final userRecord = await _supabase
-        .from('users')
-        .select('email')
-        .ilike('username', cleanUsername)
-        .maybeSingle();
-
-    if (userRecord == null || userRecord['email'] == null) {
-      throw const AuthException('No account found with this username.');
+    final email = await emailForUsername(username);
+    if (email == null) {
+      throw const AuthException(
+        'No account found with this username.',
+        code: 'username_not_found',
+      );
     }
-
-    final email = userRecord['email'] as String;
 
     return await _supabase.auth.signInWithPassword(
       email: email,
       password: password,
     );
+  }
+
+  // Looks up the email mapped to this username in public.users.
+  Future<String?> emailForUsername(String username) async {
+    final userRecord = await _supabase
+        .from('users')
+        .select('email')
+        .ilike('username', escapeLike(username.trim().toLowerCase()))
+        .limit(1)
+        .maybeSingle();
+    return userRecord?['email'] as String?;
   }
 
   // Signs up a new user, saving their username and email in user_metadata.
