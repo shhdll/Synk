@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/synk_colors.dart';
+import '../../../l10n/l10n.dart';
 
 // Floating "Have a code?" bubble in the corner of Home, like a chat
 // launcher. Shrinks to just the key while the user scrolls down the feed
@@ -14,11 +15,11 @@ class CodeBubble extends StatelessWidget {
   // Chat-bubble shape: round everywhere except the corner nearest the
   // screen edge, which acts as the bubble's tail.
   static const _shape = RoundedRectangleBorder(
-    borderRadius: BorderRadius.only(
-      topLeft: Radius.circular(24),
-      topRight: Radius.circular(24),
-      bottomLeft: Radius.circular(24),
-      bottomRight: Radius.circular(6),
+    borderRadius: BorderRadiusDirectional.only(
+      topStart: Radius.circular(24),
+      topEnd: Radius.circular(24),
+      bottomStart: Radius.circular(24),
+      bottomEnd: Radius.circular(6),
     ),
   );
 
@@ -31,12 +32,12 @@ class CodeBubble extends StatelessWidget {
       curve: Curves.elasticOut,
       builder: (context, scale, child) => Transform.scale(
         scale: scale,
-        alignment: Alignment.bottomRight,
+        alignment: AlignmentDirectional.bottomEnd,
         child: child,
       ),
       child: Semantics(
         button: true,
-        label: 'Have an activity code? Join with it',
+        label: context.l10n.haveAnActivityCodeJoinWith,
         child: DecoratedBox(
           decoration: ShapeDecoration(
             shape: _shape,
@@ -62,7 +63,7 @@ class CodeBubble extends StatelessWidget {
                 child: AnimatedSize(
                   duration: const Duration(milliseconds: 220),
                   curve: Curves.easeOutCubic,
-                  alignment: Alignment.centerRight,
+                  alignment: AlignmentDirectional.centerEnd,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -73,8 +74,8 @@ class CodeBubble extends StatelessWidget {
                       ),
                       if (expanded) ...[
                         const SizedBox(width: 8),
-                        const Text(
-                          'Have a code?',
+                        Text(
+                          context.l10n.haveACode,
                           maxLines: 1,
                           style: TextStyle(
                             fontSize: 14,

@@ -1,3 +1,5 @@
+import '../../l10n/l10n.dart';
+
 class AuthConstants {
   AuthConstants._();
 
@@ -20,7 +22,7 @@ class AuthConstants {
   /// - At least 1 special character
   static String? validatePassword(String? password) {
     if (password == null || password.isEmpty) {
-      return 'Password is required';
+      return appL10n.passwordIsRequired;
     }
     final isLongEnough = password.length >= minPasswordLength;
     final hasUpper = hasUppercase.hasMatch(password);
@@ -29,19 +31,19 @@ class AuthConstants {
     final hasSpecial = hasSpecialChar.hasMatch(password);
 
     if (!isLongEnough) {
-      return 'Password must be at least 8 characters';
+      return appL10n.passwordMustBeAtLeast8;
     }
     if (!hasUpper) {
-      return 'Password must contain at least 1 uppercase letter';
+      return appL10n.passwordNeedsUppercase;
     }
     if (!hasLower) {
-      return 'Password must contain at least 1 lowercase letter';
+      return appL10n.passwordNeedsLowercase;
     }
     if (!hasNum) {
-      return 'Password must contain at least 1 number';
+      return appL10n.passwordNeedsNumber;
     }
     if (!hasSpecial) {
-      return 'Password must contain at least 1 special character (e.g., @\$!%*?&)';
+      return appL10n.passwordNeedsSpecial;
     }
     return null;
   }
@@ -55,11 +57,11 @@ class AuthConstants {
   static final RegExp usernameRegex = RegExp(r'^[a-zA-Z0-9._]{3,30}$');
 
   static String? validateUsername(String username) {
-    if (username.isEmpty) return 'Username is required';
-    if (username.length < 3) return 'Username must be at least 3 characters';
-    if (username.length > 30) return 'Username can be at most 30 characters';
+    if (username.isEmpty) return appL10n.usernameIsRequired;
+    if (username.length < 3) return appL10n.usernameMustBeAtLeast3;
+    if (username.length > 30) return appL10n.usernameCanBeAtMost30;
     if (!usernameRegex.hasMatch(username)) {
-      return 'Username can only contain letters, numbers, underscores, and dots';
+      return appL10n.usernameCanOnlyContainLettersNumbers;
     }
     return null;
   }

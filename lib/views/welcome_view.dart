@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import '../controllers/welcome_controller.dart';
 import '../core/constants/synk_colors.dart';
+import '../l10n/l10n.dart';
+import 'widgets/language_toggle.dart';
 
 class WelcomeView extends StatefulWidget {
   const WelcomeView({super.key});
@@ -100,9 +102,12 @@ class _WelcomeViewState extends State<WelcomeView>
           // 4. Top Header (Logo + Name)
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.only(left: 28.0, top: 12.0),
+              padding: const EdgeInsetsDirectional.only(
+                start: 28.0,
+                top: 12.0,
+                end: 20.0,
+              ),
               child: Row(
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
                     width: 44,
@@ -142,6 +147,8 @@ class _WelcomeViewState extends State<WelcomeView>
                       color: SynkColors.textPrimary,
                     ),
                   ),
+                  const Spacer(),
+                  const LanguageToggle(),
                 ],
               ),
             ),
@@ -188,8 +195,8 @@ class _WelcomeViewState extends State<WelcomeView>
           children: [
             // Keep the headline below the logo and app name layered above it.
             const SizedBox(height: 72),
-            const Text(
-              'Find your\nmissing piece.',
+            Text(
+              context.l10n.findYourMissingPiece,
               style: TextStyle(
                 fontSize: 38,
                 fontWeight: FontWeight.w900,
@@ -241,7 +248,9 @@ class _WelcomeViewState extends State<WelcomeView>
                                   final item =
                                       activities[i % activities.length];
                                   return Container(
-                                    margin: const EdgeInsets.only(right: 12),
+                                    margin: const EdgeInsetsDirectional.only(
+                                      end: 12,
+                                    ),
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 16,
                                       vertical: 10,
@@ -270,7 +279,7 @@ class _WelcomeViewState extends State<WelcomeView>
                                         ),
                                         const SizedBox(width: 8),
                                         Text(
-                                          item.label,
+                                          valueLabel(item.label),
                                           style: const TextStyle(
                                             fontSize: 14,
                                             fontWeight: FontWeight.w800,
@@ -309,8 +318,8 @@ class _WelcomeViewState extends State<WelcomeView>
             const Spacer(flex: 2),
 
             // Centered Header & Tagline
-            const Text(
-              'Ready to Synk?',
+            Text(
+              context.l10n.readyToSynk,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 38,
@@ -324,7 +333,7 @@ class _WelcomeViewState extends State<WelcomeView>
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
-                'Join thousands already doing what they love, together!',
+                context.l10n.joinThousandsAlreadyDoingWhatThey,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 15,
@@ -358,11 +367,11 @@ class _WelcomeViewState extends State<WelcomeView>
                     ),
                   ],
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Sign Up',
+                      context.l10n.signUp,
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 17,
@@ -402,9 +411,9 @@ class _WelcomeViewState extends State<WelcomeView>
                     ),
                   ],
                 ),
-                child: const Center(
+                child: Center(
                   child: Text(
-                    'Log In',
+                    context.l10n.logIn,
                     style: TextStyle(
                       color: SynkColors.textPrimary,
                       fontSize: 17,

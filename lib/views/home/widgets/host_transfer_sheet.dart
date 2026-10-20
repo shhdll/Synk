@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/synk_colors.dart';
+import '../../../l10n/l10n.dart';
 import '../../../models/activity_participation_model.dart';
 import '../../../models/avatar_uploader.dart';
 
@@ -97,7 +98,7 @@ class _HostTransferSheetState extends State<HostTransferSheet> {
       candidates.add(
         HostTransferCandidate(
           userId: userId,
-          name: name == null || name.isEmpty ? 'Synk member' : name,
+          name: name == null || name.isEmpty ? context.l10n.synkMember : name,
         ),
       );
       _profiles[userId] = row;
@@ -161,8 +162,8 @@ class _HostTransferSheetState extends State<HostTransferSheet> {
                 ),
               ),
             ),
-            const Text(
-              'Choose a new host',
+            Text(
+              context.l10n.chooseANewHost,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
@@ -170,10 +171,8 @@ class _HostTransferSheetState extends State<HostTransferSheet> {
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
-              'The person you choose gets full host permissions, including '
-              'managing join requests and deleting the activity. You will '
-              'leave the activity.',
+            Text(
+              context.l10n.thePersonYouChooseGetsFull,
               style: TextStyle(
                 fontSize: 13,
                 height: 1.4,
@@ -210,8 +209,8 @@ class _HostTransferSheetState extends State<HostTransferSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Unable to load participants. Please try again.',
+            Text(
+              context.l10n.unableToLoadParticipantsPleaseTry,
               style: TextStyle(
                 fontSize: 13.5,
                 height: 1.4,
@@ -226,8 +225,8 @@ class _HostTransferSheetState extends State<HostTransferSheet> {
                 padding: EdgeInsets.zero,
               ),
               icon: const Icon(Icons.refresh_rounded, size: 18),
-              label: const Text(
-                'Retry',
+              label: Text(
+                context.l10n.retry,
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
               ),
             ),
@@ -237,11 +236,10 @@ class _HostTransferSheetState extends State<HostTransferSheet> {
     }
 
     if (_candidates.isEmpty) {
-      return const Padding(
+      return Padding(
         padding: EdgeInsets.symmetric(vertical: 20),
         child: Text(
-          'No one can take over yet. Only joined participants can become '
-          'the host. You can delete the activity instead.',
+          context.l10n.noOneCanTakeOverYet,
           style: TextStyle(
             fontSize: 13.5,
             height: 1.4,
@@ -371,8 +369,8 @@ class _HostTransferSheetState extends State<HostTransferSheet> {
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              child: const Text(
-                'Cancel',
+              child: Text(
+                context.l10n.cancel,
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
               ),
             ),
@@ -394,8 +392,8 @@ class _HostTransferSheetState extends State<HostTransferSheet> {
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              child: const Text(
-                'Continue',
+              child: Text(
+                context.l10n.continueButton,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w800,

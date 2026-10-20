@@ -1,14 +1,18 @@
 import 'package:flutter/foundation.dart';
 
+import '../l10n/l10n.dart';
+
 // Whether people can still join an activity, from how many spots are open.
 enum ActivityAvailability {
-  available('Available'),
-  oneMoreNeeded('One More Needed'),
-  full('Full');
+  available,
+  oneMoreNeeded,
+  full;
 
-  const ActivityAvailability(this.label);
-
-  final String label;
+  String get label => switch (this) {
+    available => appL10n.available,
+    oneMoreNeeded => appL10n.oneMoreNeeded,
+    full => appL10n.full,
+  };
 
   static ActivityAvailability fromSpotsOpen(int spotsOpen) {
     if (spotsOpen <= 0) return full;

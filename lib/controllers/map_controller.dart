@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../l10n/l10n.dart';
+
 class MapController extends ChangeNotifier {
   // Default location: Riyadh, Saudi Arabia.
   static const LatLng defaultCenter = LatLng(24.7136, 46.6753);
@@ -35,7 +37,7 @@ class MapController extends ChangeNotifier {
 
       if (!serviceEnabled) {
         _locationMessage =
-            'Please enable location services to find nearby activities.';
+            appL10n.pleaseEnableLocationServicesToFind;
         return;
       }
 
@@ -48,14 +50,13 @@ class MapController extends ChangeNotifier {
 
       if (permission == LocationPermission.denied) {
         _locationMessage =
-            'Location permission was denied.';
+            appL10n.locationPermissionWasDenied;
         return;
       }
 
       if (permission == LocationPermission.deniedForever) {
         _locationMessage =
-            'Location permission is permanently denied. '
-            'Please enable it in your device settings.';
+            appL10n.locationPermissionIsPermanentlyDeniedPlease;
         return;
       }
 
@@ -78,7 +79,7 @@ class MapController extends ChangeNotifier {
       );
     } catch (error) {
       _locationMessage =
-          'Unable to retrieve your location. Showing Riyadh instead.';
+          appL10n.unableToRetrieveYourLocationShowing;
 
       debugPrint('Synk location error: $error');
     } finally {

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../controllers/reset_password_controller.dart';
 import '../core/constants/synk_colors.dart';
+import '../l10n/l10n.dart';
 import '../utils/custom_widgets/puzzle_piece_tile.dart';
 import 'forgot_password_view.dart';
 import 'login_view.dart';
@@ -108,7 +109,7 @@ class _NewPasswordViewState extends State<NewPasswordView>
 
       case UpdatePasswordResult.failure:
         _showSnackBar(
-          _controller.errorMessage ?? 'Unable to update your password.',
+          _controller.errorMessage ?? context.l10n.unableToUpdateYourPassword,
           success: false,
         );
         break;
@@ -127,7 +128,11 @@ class _NewPasswordViewState extends State<NewPasswordView>
 
     if (notify) {
       // The root ScaffoldMessenger survives navigation, so this shows on Login.
-      _showSnackBar('Password not changed.', success: false, neutral: true);
+      _showSnackBar(
+        context.l10n.passwordNotChanged,
+        success: false,
+        neutral: true,
+      );
     }
   }
 
@@ -214,7 +219,7 @@ class _NewPasswordViewState extends State<NewPasswordView>
                         const SizedBox(height: 40),
 
                         Align(
-                          alignment: Alignment.centerLeft,
+                          alignment: AlignmentDirectional.centerStart,
                           child: _linkExpired
                               ? const PuzzlePieceTile(
                                   state: PieceState.missing,
@@ -304,8 +309,8 @@ class _NewPasswordViewState extends State<NewPasswordView>
       key: key,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
-          'Create a new password',
+        Text(
+          context.l10n.createANewPassword,
           style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.bold,
@@ -318,7 +323,7 @@ class _NewPasswordViewState extends State<NewPasswordView>
         // New password
         _buildField(
           controller: _passwordController,
-          label: 'Password',
+          label: context.l10n.password,
           hint: '••••••••',
           icon: Icons.lock_outline_rounded,
           obscureText: _obscurePassword,
@@ -353,8 +358,8 @@ class _NewPasswordViewState extends State<NewPasswordView>
           },
           child: _buildField(
             controller: _confirmController,
-            label: 'Confirm Password',
-            hint: 'Re-type password',
+            label: context.l10n.confirmPassword,
+            hint: context.l10n.reTypePassword,
             icon: Icons.lock_outline_rounded,
             obscureText: _obscureConfirm,
             errorText: _confirmPasswordError,
@@ -403,8 +408,8 @@ class _NewPasswordViewState extends State<NewPasswordView>
                       strokeWidth: 2.5,
                     ),
                   )
-                : const Text(
-                    'Update password',
+                : Text(
+                    context.l10n.updatePassword,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
@@ -419,8 +424,8 @@ class _NewPasswordViewState extends State<NewPasswordView>
         Center(
           child: TextButton(
             onPressed: _controller.isLoading ? null : () => _cancelToLogin(),
-            child: const Text(
-              'Back to Log In',
+            child: Text(
+              context.l10n.backToLogIn,
               style: TextStyle(
                 color: SynkColors.orangeDark,
                 fontWeight: FontWeight.bold,
@@ -475,7 +480,7 @@ class _NewPasswordViewState extends State<NewPasswordView>
             ),
             decoration: InputDecoration(
               prefixIcon: Padding(
-                padding: const EdgeInsets.only(left: 14, right: 8),
+                padding: const EdgeInsetsDirectional.only(start: 14, end: 8),
                 child: Icon(icon, size: 20, color: const Color(0xFF6B7280)),
               ),
               prefixIconConstraints: const BoxConstraints(
@@ -529,8 +534,8 @@ class _NewPasswordViewState extends State<NewPasswordView>
       key: key,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
-          'This link has expired',
+        Text(
+          context.l10n.thisLinkHasExpired,
           style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.bold,
@@ -538,8 +543,8 @@ class _NewPasswordViewState extends State<NewPasswordView>
           ),
         ),
         const SizedBox(height: 8),
-        const Text(
-          "Reset links can only be used once and expire after a short time. Request a fresh one and we'll get you back in.",
+        Text(
+          context.l10n.resetLinksCanOnlyBeUsed,
           style: TextStyle(fontSize: 15, color: SynkColors.textSecondary),
         ),
         const SizedBox(height: 36),
@@ -555,8 +560,8 @@ class _NewPasswordViewState extends State<NewPasswordView>
               borderRadius: BorderRadius.circular(30),
             ),
           ),
-          child: const Text(
-            'Request a new link',
+          child: Text(
+            context.l10n.requestANewLink,
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
         ),
@@ -566,8 +571,8 @@ class _NewPasswordViewState extends State<NewPasswordView>
         Center(
           child: TextButton(
             onPressed: () => _cancelToLogin(notify: false),
-            child: const Text(
-              'Back to Log In',
+            child: Text(
+              context.l10n.backToLogIn,
               style: TextStyle(
                 color: SynkColors.orangeDark,
                 fontWeight: FontWeight.bold,

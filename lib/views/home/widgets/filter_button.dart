@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/synk_colors.dart';
+import '../../../l10n/l10n.dart';
 
 class FilterButton extends StatelessWidget {
   const FilterButton({super.key, required this.count, required this.onTap});
@@ -17,7 +18,7 @@ class FilterButton extends StatelessWidget {
 
     return Semantics(
       button: true,
-      label: active ? 'Filters, $count active' : 'Filters',
+      label: active ? context.l10n.filtersActive(count) : context.l10n.filters,
       excludeSemantics: true,
       child: SizedBox.square(
         dimension: size,
@@ -40,9 +41,9 @@ class FilterButton extends StatelessWidget {
               ),
             ),
             if (active)
-              Positioned(
+              PositionedDirectional(
                 top: -4,
-                right: -4,
+                end: -4,
                 child: Container(
                   constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
                   padding: const EdgeInsets.symmetric(horizontal: 3),

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/synk_colors.dart';
 import '../../controllers/home_discovery_controller.dart';
+import '../../l10n/l10n.dart';
 import '../../models/activities_model.dart';
 import '../../models/activity_filters.dart';
 import '../../models/activity_model.dart';
@@ -157,7 +157,7 @@ class _HomeViewState extends State<HomeView> {
         children: [
           const Positioned.fill(child: SynkBlobBackground()),
           SafeArea(
-            child: NotificationListener<UserScrollNotification>(
+            child: NotificationListener<ScrollNotification>(
               onNotification: _onUserScroll,
               child: RefreshIndicator(
                 color: SynkColors.orangeDark,
@@ -173,8 +173,8 @@ class _HomeViewState extends State<HomeView> {
               ),
             ),
           ),
-          Positioned(
-            right: _gutter,
+          PositionedDirectional(
+            end: _gutter,
             // Clears the raised + button, which sits ~30px above the bar.
             bottom: bottomInset + 44,
             child: CodeBubble(
@@ -187,16 +187,15 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  // Shrink the code bubble while reading down the feed; bring the label
-  // back when the user scrolls up or returns to the top.
-  bool _onUserScroll(UserScrollNotification notification) {
-    final atTop = notification.metrics.pixels <= 0;
-    final expand = atTop || notification.direction == ScrollDirection.forward;
-    final collapse = notification.direction == ScrollDirection.reverse;
-    if (expand && !_codeBubbleExpanded) {
-      setState(() => _codeBubbleExpanded = true);
-    } else if (collapse && !atTop && _codeBubbleExpanded) {
-      setState(() => _codeBubbleExpanded = false);
+  // Minimise the code bubble as soon as the list scrolls down; show the
+  // label again only back at the top.
+  bool _onUserScroll(ScrollNotification notification) {
+    if (notification.depth != 0 || notification.metrics.axis != Axis.vertical) {
+      return false;
+    }
+    final expand = notification.metrics.pixels <= 0;
+    if (expand != _codeBubbleExpanded) {
+      setState(() => _codeBubbleExpanded = expand);
     }
     return false;
   }
@@ -250,11 +249,13 @@ class _HomeViewState extends State<HomeView> {
   Widget _buildHeader() {
     final hasName = _firstName != 'there';
     final greeting = widget.isNewUser
-        ? (hasName ? 'Welcome, $_firstName' : 'Welcome to Synk')
-        : (hasName ? 'Hey $_firstName' : 'Hey there');
+        ? (hasName
+              ? context.l10n.welcomeName(_firstName)
+              : context.l10n.welcomeToSynk)
+        : (hasName ? context.l10n.heyName(_firstName) : context.l10n.heyThere);
     final headline = widget.isNewUser
-        ? "Let's find your people"
-        : 'Ready for something new?';
+        ? context.l10n.letsFindYourPeople
+        : context.l10n.readyForSomethingNew;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -333,7 +334,7 @@ class _HomeViewState extends State<HomeView> {
                 color: SynkColors.textPrimary,
               ),
               decoration: InputDecoration(
-                hintText: 'Search activities or locations...',
+                hintText: context.l10n.searchActivitiesOrLocations,
                 hintStyle: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
@@ -347,7 +348,7 @@ class _HomeViewState extends State<HomeView> {
                 suffixIcon: _discoveryController.searchQuery.isEmpty
                     ? null
                     : IconButton(
-                        tooltip: 'Clear search',
+                        tooltip: context.l10n.clearSearch,
                         onPressed: _discoveryController.clearSearch,
                         icon: const Icon(
                           Icons.close_rounded,
@@ -394,7 +395,7 @@ class _HomeViewState extends State<HomeView> {
         itemBuilder: (context, index) {
           if (index == 0) {
             return SynkFilterChip(
-              label: 'All',
+              label: context.l10n.all,
               selected: selected.isEmpty,
               onTap: () {
                 if (selected.isNotEmpty) _discoveryController.clearCategories();
@@ -424,7 +425,7 @@ class _HomeViewState extends State<HomeView> {
       children: [
         Expanded(
           child: Text(
-            parts.isEmpty ? 'Upcoming plans' : parts.join(' · '),
+            parts.isEmpty ? context.l10n.upcomingPlans : parts.join(' · '),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: GoogleFonts.leagueSpartan(
@@ -444,7 +445,7 @@ class _HomeViewState extends State<HomeView> {
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             child: Text(
-              'Clear filters',
+              context.l10n.clearFilters,
               style: GoogleFonts.roboto(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
@@ -469,19 +470,23 @@ class _HomeViewState extends State<HomeView> {
   String _noMatchesTitle() {
     final filters = _discoveryController.filters;
     final category = filters.categories.length == 1
-        ? '${filters.categories.first} '
+        ? valueLabel(filters.categories.first)
         : '';
     final when = switch (filters.date) {
       DateOption.any => '',
-      DateOption.custom => ' on ${filters.dateLabel}',
-      _ => ' ${filters.dateLabel!.toLowerCase()}',
+      DateOption.custom => context.l10n.onDate(filters.dateLabel ?? ''),
+      _ => filters.dateLabel!.toLowerCase(),
     };
     if (category.isEmpty && when.isEmpty) {
       return filters.isDefault
-          ? 'No plans match "${_discoveryController.searchQuery}"'
-          : 'No plans match your filters';
+          ? context.l10n.noPlansMatchQuery(_discoveryController.searchQuery)
+          : context.l10n.noPlansMatchYourFilters;
     }
-    return 'No ${category}plans$when';
+    // Either part can be empty, so tidy the spaces it leaves behind.
+    return context.l10n
+        .noCategoryPlans(category, when)
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
   }
 
   Widget _buildFeedContent() {
@@ -528,12 +533,12 @@ class _HomeViewState extends State<HomeView> {
                 ? Icons.cloud_off_rounded
                 : Icons.event_available_rounded,
             title: failed
-                ? "We couldn't reach Synk"
-                : "It's quiet here for now",
+                ? context.l10n.weCouldntReachSynk
+                : context.l10n.itsQuietHereForNow,
             message: failed
-                ? 'Check your connection and try again.'
-                : 'New plans pop up all the time. Tap + to start one.',
-            actionLabel: 'Refresh',
+                ? context.l10n.checkYourConnectionAndTryAgain
+                : context.l10n.newPlansPopUpAllThe,
+            actionLabel: context.l10n.refresh,
             onAction: () => _discoveryController.loadFeed(),
           ),
         ),
@@ -620,7 +625,7 @@ class _NoMatches extends StatelessWidget {
                       shape: shape,
                       textStyle: labelStyle,
                     ),
-                    child: const Text('Create one'),
+                    child: Text(context.l10n.createOne),
                   ),
                 OutlinedButton(
                   onPressed: onClear,
@@ -632,7 +637,7 @@ class _NoMatches extends StatelessWidget {
                     shape: shape,
                     textStyle: labelStyle,
                   ),
-                  child: const Text('Clear filters'),
+                  child: Text(context.l10n.clearFilters),
                 ),
               ],
             ),

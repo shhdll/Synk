@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart' show ImageProvider;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/constants/auth_constants.dart';
+import '../l10n/l10n.dart';
 import '../models/auth_model.dart';
 import '../models/avatar_uploader.dart';
 import '../models/user_profile_model.dart';
@@ -176,12 +177,12 @@ class EditProfileController extends ChangeNotifier {
     final clean = newUsername.trim().replaceAll('@', '').toLowerCase();
 
     if (clean.isEmpty) {
-      return 'Please enter your username.';
+      return appL10n.profileUsernameRequired;
     }
 
     final usernameRegex = RegExp(r'^[a-zA-Z0-9._]{3,30}$');
     if (!usernameRegex.hasMatch(clean)) {
-      return 'Username must be 3–30 characters and can only include letters, numbers, dots, and underscores.';
+      return appL10n.usernameMustBe330Characters;
     }
 
     if (clean != _originalUsername.toLowerCase()) {
@@ -196,7 +197,7 @@ class EditProfileController extends ChangeNotifier {
               .maybeSingle();
 
           if (existing != null) {
-            return 'This username is already taken.';
+            return appL10n.thisUsernameIsAlreadyTaken;
           }
         } catch (_) {
           // If query fails, continue
@@ -289,7 +290,7 @@ class EditProfileController extends ChangeNotifier {
               .maybeSingle();
 
           if (existing != null) {
-            throw const AuthException('This username is already taken.');
+            throw AuthException(appL10n.thisUsernameIsAlreadyTaken);
           }
         }
       }
@@ -326,7 +327,7 @@ class EditProfileController extends ChangeNotifier {
       // Email belongs to Supabase Auth.
       if (trimmedEmail.isNotEmpty && trimmedEmail != _originalEmail) {
         if (!AuthConstants.emailRegex.hasMatch(trimmedEmail)) {
-          throw const AuthException('Please enter a valid email address.');
+          throw AuthException(appL10n.profileEmailInvalid);
         }
         await _authModel.updateEmail(trimmedEmail);
       }
@@ -374,7 +375,7 @@ class EditProfileController extends ChangeNotifier {
         _removeAvatarDraft = false;
       }
     } catch (_) {
-      message = 'Unable to update your photo. Please try again.';
+      message = appL10n.unableToUpdateYourPhotoPlease;
     } finally {
       _isUploadingPhoto = false;
       notifyListeners();
@@ -394,7 +395,7 @@ class EditProfileController extends ChangeNotifier {
       final source =
           _draftSourcePath ?? await AvatarUploader.adjustableSource(_profile);
       if (source == null) {
-        message = "Couldn't load your photo. Please try again.";
+        message = appL10n.couldntLoadYourPhotoPleaseTry;
       } else {
         final cropped = await AvatarUploader.cropDraft(source);
         if (cropped != null) {
@@ -405,7 +406,7 @@ class EditProfileController extends ChangeNotifier {
         }
       }
     } catch (_) {
-      message = 'Unable to adjust your photo. Please try again.';
+      message = appL10n.unableToAdjustYourPhotoPlease;
     } finally {
       _isUploadingPhoto = false;
       notifyListeners();
@@ -427,7 +428,7 @@ class EditProfileController extends ChangeNotifier {
       _draftSourcePath = null;
       _removeAvatarDraft = true;
     } catch (_) {
-      message = 'Unable to remove your photo. Please try again.';
+      message = appL10n.unableToRemoveYourPhotoPlease;
     } finally {
       _isUploadingPhoto = false;
       notifyListeners();

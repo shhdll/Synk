@@ -1,0 +1,3806 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations_ar.dart';
+import 'app_localizations_en.dart';
+
+// ignore_for_file: type=lint
+
+/// Callers can lookup localized strings with an instance of AppLocalizations
+/// returned by `AppLocalizations.of(context)`.
+///
+/// Applications need to include `AppLocalizations.delegate()` in their app's
+/// `localizationDelegates` list, and the locales they support in the app's
+/// `supportedLocales` list. For example:
+///
+/// ```dart
+/// import 'l10n/app_localizations.dart';
+///
+/// return MaterialApp(
+///   localizationsDelegates: AppLocalizations.localizationsDelegates,
+///   supportedLocales: AppLocalizations.supportedLocales,
+///   home: MyApplicationHome(),
+/// );
+/// ```
+///
+/// ## Update pubspec.yaml
+///
+/// Please make sure to update your pubspec.yaml to include the following
+/// packages:
+///
+/// ```yaml
+/// dependencies:
+///   # Internationalization support.
+///   flutter_localizations:
+///     sdk: flutter
+///   intl: any # Use the pinned version from flutter_localizations
+///
+///   # Rest of dependencies
+/// ```
+///
+/// ## iOS Applications
+///
+/// iOS applications define key application metadata, including supported
+/// locales, in an Info.plist file that is built into the application bundle.
+/// To configure the locales supported by your app, you’ll need to edit this
+/// file.
+///
+/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
+/// Then, in the Project Navigator, open the Info.plist file under the Runner
+/// project’s Runner folder.
+///
+/// Next, select the Information Property List item, select Add Item from the
+/// Editor menu, then select Localizations from the pop-up menu.
+///
+/// Select and expand the newly-created Localizations item then, for each
+/// locale your application supports, add a new item and select the locale
+/// you wish to add from the pop-up menu in the Value field. This list should
+/// be consistent with the languages listed in the AppLocalizations.supportedLocales
+/// property.
+abstract class AppLocalizations {
+  AppLocalizations(String locale)
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+
+  final String localeName;
+
+  static AppLocalizations of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
+  }
+
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
+
+  /// A list of this localizations delegate along with the default localizations
+  /// delegates.
+  ///
+  /// Returns a list of localizations delegates containing this delegate along with
+  /// GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate,
+  /// and GlobalWidgetsLocalizations.delegate.
+  ///
+  /// Additional delegates can be added by appending to this list in
+  /// MaterialApp. This list does not have to be used at all if a custom list
+  /// of delegates is preferred or required.
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
+
+  /// A list of this localizations delegate's supported locales.
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('ar'),
+    Locale('en'),
+  ];
+
+  /// No description provided for @shareCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Share code'**
+  String get shareCode;
+
+  /// No description provided for @share.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get share;
+
+  /// No description provided for @shareMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Want to join us for {title}?\n📅 {date}\n📍 {place}\n\nEnter the code in Synk: {code}'**
+  String shareMessage(Object title, Object date, Object place, Object code);
+
+  /// No description provided for @couldntOpenTheShareMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the share menu.'**
+  String get couldntOpenTheShareMenu;
+
+  /// No description provided for @language.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get language;
+
+  /// No description provided for @appLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'App language'**
+  String get appLanguage;
+
+  /// No description provided for @languageEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get languageEnglish;
+
+  /// No description provided for @languageArabic.
+  ///
+  /// In en, this message translates to:
+  /// **'العربية'**
+  String get languageArabic;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @saveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get saveChanges;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get done;
+
+  /// No description provided for @doneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Done!'**
+  String get doneTitle;
+
+  /// No description provided for @continueButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueButton;
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @tryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get tryAgain;
+
+  /// No description provided for @refresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get refresh;
+
+  /// No description provided for @reset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get reset;
+
+  /// No description provided for @skip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get skip;
+
+  /// No description provided for @gotIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get gotIt;
+
+  /// No description provided for @choose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose'**
+  String get choose;
+
+  /// No description provided for @optional.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get optional;
+
+  /// No description provided for @notSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get notSet;
+
+  /// No description provided for @you.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get you;
+
+  /// No description provided for @saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get saved;
+
+  /// No description provided for @yourChangesHaveBeenSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Your changes have been saved.'**
+  String get yourChangesHaveBeenSaved;
+
+  /// No description provided for @discardChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard changes?'**
+  String get discardChanges;
+
+  /// No description provided for @unsavedChangesWillBeLost.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved changes will be lost'**
+  String get unsavedChangesWillBeLost;
+
+  /// No description provided for @keepEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get keepEditing;
+
+  /// No description provided for @discardAndLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard and leave'**
+  String get discardAndLeave;
+
+  /// No description provided for @synkMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Synk member'**
+  String get synkMember;
+
+  /// No description provided for @synkUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Synk user'**
+  String get synkUser;
+
+  /// No description provided for @communityMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Community Member'**
+  String get communityMember;
+
+  /// No description provided for @anonymous.
+  ///
+  /// In en, this message translates to:
+  /// **'Anonymous'**
+  String get anonymous;
+
+  /// No description provided for @untitledActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Untitled activity'**
+  String get untitledActivity;
+
+  /// No description provided for @home.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get home;
+
+  /// No description provided for @map.
+  ///
+  /// In en, this message translates to:
+  /// **'Map'**
+  String get map;
+
+  /// No description provided for @activities.
+  ///
+  /// In en, this message translates to:
+  /// **'Activities'**
+  String get activities;
+
+  /// No description provided for @profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profile;
+
+  /// No description provided for @create.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get create;
+
+  /// No description provided for @findYourMissingPiece.
+  ///
+  /// In en, this message translates to:
+  /// **'Find your\nmissing piece.'**
+  String get findYourMissingPiece;
+
+  /// No description provided for @readyToSynk.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to Synk?'**
+  String get readyToSynk;
+
+  /// No description provided for @joinThousandsAlreadyDoingWhatThey.
+  ///
+  /// In en, this message translates to:
+  /// **'Join thousands already doing what they love, together!'**
+  String get joinThousandsAlreadyDoingWhatThey;
+
+  /// No description provided for @welcomeBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome Back'**
+  String get welcomeBack;
+
+  /// No description provided for @logInToConnectAndJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in to connect and join activities around you.'**
+  String get logInToConnectAndJoin;
+
+  /// No description provided for @username.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get username;
+
+  /// No description provided for @email.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get email;
+
+  /// No description provided for @emailAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Email address'**
+  String get emailAddress;
+
+  /// No description provided for @password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get password;
+
+  /// No description provided for @pleaseEnterYourUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your username'**
+  String get pleaseEnterYourUsername;
+
+  /// No description provided for @pleaseEnterAValidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email'**
+  String get pleaseEnterAValidEmail;
+
+  /// No description provided for @pleaseEnterYourPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your password'**
+  String get pleaseEnterYourPassword;
+
+  /// No description provided for @forgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot Password?'**
+  String get forgotPassword;
+
+  /// No description provided for @logIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Log In'**
+  String get logIn;
+
+  /// No description provided for @dontHaveAnAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t have an account?'**
+  String get dontHaveAnAccount;
+
+  /// No description provided for @signUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Up'**
+  String get signUp;
+
+  /// No description provided for @unableToLogIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to log in.'**
+  String get unableToLogIn;
+
+  /// No description provided for @unableToLogInPleaseTry.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to log in. Please try again.'**
+  String get unableToLogInPleaseTry;
+
+  /// No description provided for @noAccountFoundWithThisUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'No account found with this username'**
+  String get noAccountFoundWithThisUsername;
+
+  /// No description provided for @pleaseVerifyYourEmailFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Please verify your email first.'**
+  String get pleaseVerifyYourEmailFirst;
+
+  /// No description provided for @incorrectUsernameOrPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect username or password'**
+  String get incorrectUsernameOrPassword;
+
+  /// No description provided for @incorrectEmailOrPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect email or password'**
+  String get incorrectEmailOrPassword;
+
+  /// No description provided for @tellUsAboutYourself.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell us about\nyourself.'**
+  String get tellUsAboutYourself;
+
+  /// No description provided for @thisHelpsCustomizeYourCommunityExperience.
+  ///
+  /// In en, this message translates to:
+  /// **'This helps customize your community experience.'**
+  String get thisHelpsCustomizeYourCommunityExperience;
+
+  /// No description provided for @fullName.
+  ///
+  /// In en, this message translates to:
+  /// **'Full name'**
+  String get fullName;
+
+  /// No description provided for @birthday.
+  ///
+  /// In en, this message translates to:
+  /// **'Birthday'**
+  String get birthday;
+
+  /// No description provided for @gender.
+  ///
+  /// In en, this message translates to:
+  /// **'Gender'**
+  String get gender;
+
+  /// No description provided for @female.
+  ///
+  /// In en, this message translates to:
+  /// **'Female'**
+  String get female;
+
+  /// No description provided for @male.
+  ///
+  /// In en, this message translates to:
+  /// **'Male'**
+  String get male;
+
+  /// No description provided for @createYourAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your\naccount.'**
+  String get createYourAccount;
+
+  /// No description provided for @completeRegistration.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete Registration'**
+  String get completeRegistration;
+
+  /// No description provided for @eightPlusCharacters.
+  ///
+  /// In en, this message translates to:
+  /// **'8+ characters'**
+  String get eightPlusCharacters;
+
+  /// No description provided for @uppercaseLetter.
+  ///
+  /// In en, this message translates to:
+  /// **'Uppercase letter'**
+  String get uppercaseLetter;
+
+  /// No description provided for @lowercaseLetter.
+  ///
+  /// In en, this message translates to:
+  /// **'Lowercase letter'**
+  String get lowercaseLetter;
+
+  /// No description provided for @aNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'A number'**
+  String get aNumber;
+
+  /// No description provided for @specialCharacter.
+  ///
+  /// In en, this message translates to:
+  /// **'Special character'**
+  String get specialCharacter;
+
+  /// No description provided for @fullNameIsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Full name is required'**
+  String get fullNameIsRequired;
+
+  /// No description provided for @nameCanBeAtMost50.
+  ///
+  /// In en, this message translates to:
+  /// **'Name can be at most 50 characters'**
+  String get nameCanBeAtMost50;
+
+  /// No description provided for @nameCanOnlyContainLettersAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Name can only contain letters and spaces'**
+  String get nameCanOnlyContainLettersAnd;
+
+  /// No description provided for @birthdayIsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Birthday is required'**
+  String get birthdayIsRequired;
+
+  /// No description provided for @pleaseEnterAValidBirthday.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid birthday'**
+  String get pleaseEnterAValidBirthday;
+
+  /// No description provided for @ageMustBeBetween16And.
+  ///
+  /// In en, this message translates to:
+  /// **'Age must be between 16 and 65 years'**
+  String get ageMustBeBetween16And;
+
+  /// No description provided for @emailAddressIsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Email address is required'**
+  String get emailAddressIsRequired;
+
+  /// No description provided for @anAccountWithThisEmailAlready.
+  ///
+  /// In en, this message translates to:
+  /// **'An account with this email already exists'**
+  String get anAccountWithThisEmailAlready;
+
+  /// No description provided for @pleaseSelectYourGender.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select your gender'**
+  String get pleaseSelectYourGender;
+
+  /// No description provided for @passwordTooWeakMix.
+  ///
+  /// In en, this message translates to:
+  /// **'Password is too weak. Please use at least {n} characters with a mix of letters, numbers, and symbols.'**
+  String passwordTooWeakMix(Object n);
+
+  /// No description provided for @weCouldntCreateYourAccountPlease.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t create your account. Please try again.'**
+  String get weCouldntCreateYourAccountPlease;
+
+  /// No description provided for @passwordIsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Password is required'**
+  String get passwordIsRequired;
+
+  /// No description provided for @passwordMustBeAtLeast8.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 8 characters'**
+  String get passwordMustBeAtLeast8;
+
+  /// No description provided for @passwordNeedsUppercase.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must contain at least 1 uppercase letter'**
+  String get passwordNeedsUppercase;
+
+  /// No description provided for @passwordNeedsLowercase.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must contain at least 1 lowercase letter'**
+  String get passwordNeedsLowercase;
+
+  /// No description provided for @passwordNeedsNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must contain at least 1 number'**
+  String get passwordNeedsNumber;
+
+  /// No description provided for @passwordNeedsSpecial.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must contain at least 1 special character (e.g., @\$!%*?&)'**
+  String get passwordNeedsSpecial;
+
+  /// No description provided for @usernameIsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Username is required'**
+  String get usernameIsRequired;
+
+  /// No description provided for @usernameMustBeAtLeast3.
+  ///
+  /// In en, this message translates to:
+  /// **'Username must be at least 3 characters'**
+  String get usernameMustBeAtLeast3;
+
+  /// No description provided for @usernameCanBeAtMost30.
+  ///
+  /// In en, this message translates to:
+  /// **'Username can be at most 30 characters'**
+  String get usernameCanBeAtMost30;
+
+  /// No description provided for @usernameCanOnlyContainLettersNumbers.
+  ///
+  /// In en, this message translates to:
+  /// **'Username can only contain letters, numbers, underscores, and dots'**
+  String get usernameCanOnlyContainLettersNumbers;
+
+  /// No description provided for @whatAreYouInto.
+  ///
+  /// In en, this message translates to:
+  /// **'What are you into?'**
+  String get whatAreYouInto;
+
+  /// No description provided for @pickTheActivitiesYouEnjoy.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the activities you enjoy.'**
+  String get pickTheActivitiesYouEnjoy;
+
+  /// No description provided for @whereDoYouLikeToHave.
+  ///
+  /// In en, this message translates to:
+  /// **'Where do you like to have fun?'**
+  String get whereDoYouLikeToHave;
+
+  /// No description provided for @tellUsWhatKindOfActivities.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell us what kind of activities you prefer.'**
+  String get tellUsWhatKindOfActivities;
+
+  /// No description provided for @howFarAreYouWillingTo.
+  ///
+  /// In en, this message translates to:
+  /// **'How far are you willing to go?'**
+  String get howFarAreYouWillingTo;
+
+  /// No description provided for @chooseHowCloseYouWantYour.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how close you want your activities to be.'**
+  String get chooseHowCloseYouWantYour;
+
+  /// No description provided for @indoor.
+  ///
+  /// In en, this message translates to:
+  /// **'Indoor'**
+  String get indoor;
+
+  /// No description provided for @outdoor.
+  ///
+  /// In en, this message translates to:
+  /// **'Outdoor'**
+  String get outdoor;
+
+  /// No description provided for @iDontMind.
+  ///
+  /// In en, this message translates to:
+  /// **'I don\'t mind'**
+  String get iDontMind;
+
+  /// No description provided for @inTheCity.
+  ///
+  /// In en, this message translates to:
+  /// **'In the city'**
+  String get inTheCity;
+
+  /// No description provided for @awayFromTheCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Away from the city'**
+  String get awayFromTheCity;
+
+  /// No description provided for @checkYourInbox.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your inbox'**
+  String get checkYourInbox;
+
+  /// No description provided for @weSentAConfirmationLinkTo.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a confirmation link to:'**
+  String get weSentAConfirmationLinkTo;
+
+  /// No description provided for @resendInSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend in {s}s'**
+  String resendInSeconds(Object s);
+
+  /// No description provided for @resendVerificationEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend verification email'**
+  String get resendVerificationEmail;
+
+  /// No description provided for @iveConfirmedMyEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'ve confirmed my email'**
+  String get iveConfirmedMyEmail;
+
+  /// No description provided for @backToSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to Sign In'**
+  String get backToSignIn;
+
+  /// No description provided for @notConfirmedYetTapTheLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Not confirmed yet. Tap the link in the email first.'**
+  String get notConfirmedYetTapTheLink;
+
+  /// No description provided for @alreadyConfirmedGoBackAndSign.
+  ///
+  /// In en, this message translates to:
+  /// **'Already confirmed? Go back and sign in.'**
+  String get alreadyConfirmedGoBackAndSign;
+
+  /// No description provided for @couldNotCheckRightNowPlease.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not check right now. Please try again.'**
+  String get couldNotCheckRightNowPlease;
+
+  /// No description provided for @verificationEmailResentPleaseCheckYour.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification email resent! Please check your inbox.'**
+  String get verificationEmailResentPleaseCheckYour;
+
+  /// No description provided for @failedToResendConfirmationEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to resend confirmation email.'**
+  String get failedToResendConfirmationEmail;
+
+  /// No description provided for @anUnexpectedErrorOccurredPleaseTry.
+  ///
+  /// In en, this message translates to:
+  /// **'An unexpected error occurred. Please try again.'**
+  String get anUnexpectedErrorOccurredPleaseTry;
+
+  /// No description provided for @forgotYourPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot your password?'**
+  String get forgotYourPassword;
+
+  /// No description provided for @itHappensEnterYourEmailAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'It happens. Enter your email and we\'ll send you a link to get back in.'**
+  String get itHappensEnterYourEmailAnd;
+
+  /// No description provided for @sendResetLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Send reset link'**
+  String get sendResetLink;
+
+  /// No description provided for @backToLogIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to Log In'**
+  String get backToLogIn;
+
+  /// No description provided for @forYourSecurityWellSendA.
+  ///
+  /// In en, this message translates to:
+  /// **'For your security, we\'ll send a link only if this email belongs to a Synk account.'**
+  String get forYourSecurityWellSendA;
+
+  /// No description provided for @weSentAResetLinkTo.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a reset link to'**
+  String get weSentAResetLinkTo;
+
+  /// No description provided for @theLinkCanOnlyBeUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'The link can only be used once'**
+  String get theLinkCanOnlyBeUsed;
+
+  /// No description provided for @openItOnThisDeviceSo.
+  ///
+  /// In en, this message translates to:
+  /// **'Open it on this device so Synk can sign you in'**
+  String get openItOnThisDeviceSo;
+
+  /// No description provided for @notThereCheckYourSpamFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Not there? Check your spam folder'**
+  String get notThereCheckYourSpamFolder;
+
+  /// No description provided for @resendLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend link'**
+  String get resendLink;
+
+  /// No description provided for @resendLinkCountdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend link in 0:{ss}'**
+  String resendLinkCountdown(Object ss);
+
+  /// No description provided for @wrongEmailEditIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong email? Edit it'**
+  String get wrongEmailEditIt;
+
+  /// No description provided for @unableToSendTheLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to send the link.'**
+  String get unableToSendTheLink;
+
+  /// No description provided for @aNewLinkIsOnIts.
+  ///
+  /// In en, this message translates to:
+  /// **'A new link is on its way.'**
+  String get aNewLinkIsOnIts;
+
+  /// No description provided for @pleaseEnterYourEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your email'**
+  String get pleaseEnterYourEmail;
+
+  /// No description provided for @pleaseEnterAValidEmailAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email address'**
+  String get pleaseEnterAValidEmailAddress;
+
+  /// No description provided for @pleaseConfirmYourPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Please confirm your password'**
+  String get pleaseConfirmYourPassword;
+
+  /// No description provided for @couldntSendTheLinkCheckYour.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send the link. Check your connection and try again.'**
+  String get couldntSendTheLinkCheckYour;
+
+  /// No description provided for @pleaseWaitAMomentBeforeRequesting.
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait a moment before requesting another link.'**
+  String get pleaseWaitAMomentBeforeRequesting;
+
+  /// No description provided for @passwordTooWeakMinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Password is too weak. Please use at least {n} characters.'**
+  String passwordTooWeakMinLength(Object n);
+
+  /// No description provided for @thatsYourCurrentPasswordPickA.
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s your current password. Pick a new one.'**
+  String get thatsYourCurrentPasswordPickA;
+
+  /// No description provided for @thisLinkIsNoLongerValid.
+  ///
+  /// In en, this message translates to:
+  /// **'This link is no longer valid. Please request a new one.'**
+  String get thisLinkIsNoLongerValid;
+
+  /// No description provided for @createANewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a new password'**
+  String get createANewPassword;
+
+  /// No description provided for @newPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get newPassword;
+
+  /// No description provided for @confirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Password'**
+  String get confirmPassword;
+
+  /// No description provided for @reTypePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-type password'**
+  String get reTypePassword;
+
+  /// No description provided for @updatePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Update password'**
+  String get updatePassword;
+
+  /// No description provided for @unableToUpdateYourPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to update your password.'**
+  String get unableToUpdateYourPassword;
+
+  /// No description provided for @passwordNotChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Password not changed.'**
+  String get passwordNotChanged;
+
+  /// No description provided for @thisLinkHasExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This link has expired'**
+  String get thisLinkHasExpired;
+
+  /// No description provided for @resetLinksCanOnlyBeUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset links can only be used once and expire after a short time. Request a fresh one and we\'ll get you back in.'**
+  String get resetLinksCanOnlyBeUsed;
+
+  /// No description provided for @requestANewLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Request a new link'**
+  String get requestANewLink;
+
+  /// No description provided for @youreBackIn.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re back in.'**
+  String get youreBackIn;
+
+  /// No description provided for @yourNewPasswordIsSetLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Your new password is set. Log in to pick up where you left off.'**
+  String get yourNewPasswordIsSetLog;
+
+  /// No description provided for @thisLinkHasExpiredOrWas.
+  ///
+  /// In en, this message translates to:
+  /// **'This link has expired or was already used. Please request a new one.'**
+  String get thisLinkHasExpiredOrWas;
+
+  /// No description provided for @confirmedNowOpenTheLinkSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed. Now open the link sent to your other email address.'**
+  String get confirmedNowOpenTheLinkSent;
+
+  /// No description provided for @yourEmailAddressWasUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Your email address was updated.'**
+  String get yourEmailAddressWasUpdated;
+
+  /// No description provided for @welcomeName.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome, {name}'**
+  String welcomeName(Object name);
+
+  /// No description provided for @welcomeToSynk.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Synk'**
+  String get welcomeToSynk;
+
+  /// No description provided for @heyName.
+  ///
+  /// In en, this message translates to:
+  /// **'Hey {name}'**
+  String heyName(Object name);
+
+  /// No description provided for @heyThere.
+  ///
+  /// In en, this message translates to:
+  /// **'Hey there'**
+  String get heyThere;
+
+  /// No description provided for @letsFindYourPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s find your people'**
+  String get letsFindYourPeople;
+
+  /// No description provided for @readyForSomethingNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready for something new?'**
+  String get readyForSomethingNew;
+
+  /// No description provided for @searchActivitiesOrLocations.
+  ///
+  /// In en, this message translates to:
+  /// **'Search activities or locations...'**
+  String get searchActivitiesOrLocations;
+
+  /// No description provided for @upcomingPlans.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming plans'**
+  String get upcomingPlans;
+
+  /// No description provided for @clearFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get clearFilters;
+
+  /// No description provided for @noPlansMatchQuery.
+  ///
+  /// In en, this message translates to:
+  /// **'No plans match \"{q}\"'**
+  String noPlansMatchQuery(Object q);
+
+  /// No description provided for @noPlansMatchYourFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'No plans match your filters'**
+  String get noPlansMatchYourFilters;
+
+  /// No description provided for @noCategoryPlans.
+  ///
+  /// In en, this message translates to:
+  /// **'No {category} plans {when}'**
+  String noCategoryPlans(Object category, Object when);
+
+  /// No description provided for @weCouldntReachSynk.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t reach Synk'**
+  String get weCouldntReachSynk;
+
+  /// No description provided for @itsQuietHereForNow.
+  ///
+  /// In en, this message translates to:
+  /// **'It\'s quiet here for now'**
+  String get itsQuietHereForNow;
+
+  /// No description provided for @checkYourConnectionAndTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and try again.'**
+  String get checkYourConnectionAndTryAgain;
+
+  /// No description provided for @newPlansPopUpAllThe.
+  ///
+  /// In en, this message translates to:
+  /// **'New plans pop up all the time. Tap + to start one.'**
+  String get newPlansPopUpAllThe;
+
+  /// No description provided for @createOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Create one'**
+  String get createOne;
+
+  /// No description provided for @haveACode.
+  ///
+  /// In en, this message translates to:
+  /// **'Have a code?'**
+  String get haveACode;
+
+  /// No description provided for @haveAnActivityCodeJoinWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Have an activity code? Join with it'**
+  String get haveAnActivityCodeJoinWith;
+
+  /// No description provided for @unableToLoadActivitiesPullDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load activities. Pull down to refresh.'**
+  String get unableToLoadActivitiesPullDown;
+
+  /// No description provided for @filters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get filters;
+
+  /// No description provided for @filtersActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters, {n} active'**
+  String filtersActive(Object n);
+
+  /// No description provided for @sortBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by'**
+  String get sortBy;
+
+  /// No description provided for @soonest.
+  ///
+  /// In en, this message translates to:
+  /// **'Soonest'**
+  String get soonest;
+
+  /// No description provided for @latest.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest'**
+  String get latest;
+
+  /// No description provided for @nearest.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearest'**
+  String get nearest;
+
+  /// No description provided for @farthest.
+  ///
+  /// In en, this message translates to:
+  /// **'Farthest'**
+  String get farthest;
+
+  /// No description provided for @almostFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Almost full'**
+  String get almostFull;
+
+  /// No description provided for @mostSpots.
+  ///
+  /// In en, this message translates to:
+  /// **'Most spots'**
+  String get mostSpots;
+
+  /// No description provided for @any.
+  ///
+  /// In en, this message translates to:
+  /// **'Any'**
+  String get any;
+
+  /// No description provided for @today.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get today;
+
+  /// No description provided for @tomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Tomorrow'**
+  String get tomorrow;
+
+  /// No description provided for @morning.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning'**
+  String get morning;
+
+  /// No description provided for @evening.
+  ///
+  /// In en, this message translates to:
+  /// **'Evening'**
+  String get evening;
+
+  /// No description provided for @night.
+  ///
+  /// In en, this message translates to:
+  /// **'Night'**
+  String get night;
+
+  /// No description provided for @slotMorningHours.
+  ///
+  /// In en, this message translates to:
+  /// **'6 AM–12 PM'**
+  String get slotMorningHours;
+
+  /// No description provided for @slotEveningHours.
+  ///
+  /// In en, this message translates to:
+  /// **'5–9 PM'**
+  String get slotEveningHours;
+
+  /// No description provided for @slotNightHours.
+  ///
+  /// In en, this message translates to:
+  /// **'9 PM–12 AM'**
+  String get slotNightHours;
+
+  /// No description provided for @within.
+  ///
+  /// In en, this message translates to:
+  /// **'Within'**
+  String get within;
+
+  /// No description provided for @fiveKm.
+  ///
+  /// In en, this message translates to:
+  /// **'5 km'**
+  String get fiveKm;
+
+  /// No description provided for @locating.
+  ///
+  /// In en, this message translates to:
+  /// **'Locating…'**
+  String get locating;
+
+  /// No description provided for @allowLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow location'**
+  String get allowLocation;
+
+  /// No description provided for @startingFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting from'**
+  String get startingFrom;
+
+  /// No description provided for @fromTime.
+  ///
+  /// In en, this message translates to:
+  /// **'From {time}'**
+  String fromTime(Object time);
+
+  /// No description provided for @pickATime.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a time'**
+  String get pickATime;
+
+  /// No description provided for @category.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get category;
+
+  /// No description provided for @spots.
+  ///
+  /// In en, this message translates to:
+  /// **'Spots'**
+  String get spots;
+
+  /// No description provided for @oneLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'1 left'**
+  String get oneLeft;
+
+  /// No description provided for @hasSpots.
+  ///
+  /// In en, this message translates to:
+  /// **'Has spots'**
+  String get hasSpots;
+
+  /// No description provided for @full.
+  ///
+  /// In en, this message translates to:
+  /// **'Full'**
+  String get full;
+
+  /// No description provided for @noMatchesTryFewerFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches, try fewer filters'**
+  String get noMatchesTryFewerFilters;
+
+  /// No description provided for @showOneActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Show 1 activity'**
+  String get showOneActivity;
+
+  /// No description provided for @showActivities.
+  ///
+  /// In en, this message translates to:
+  /// **'Show {n} activities'**
+  String showActivities(Object n);
+
+  /// No description provided for @todayAtTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Today, {time}'**
+  String todayAtTime(Object time);
+
+  /// No description provided for @tomorrowAtTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Tomorrow, {time}'**
+  String tomorrowAtTime(Object time);
+
+  /// No description provided for @available.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get available;
+
+  /// No description provided for @oneMoreNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'One More Needed'**
+  String get oneMoreNeeded;
+
+  /// No description provided for @joinedOfMaxGoing.
+  ///
+  /// In en, this message translates to:
+  /// **'{joined}/{max} going'**
+  String joinedOfMaxGoing(Object joined, Object max);
+
+  /// No description provided for @waitlisted.
+  ///
+  /// In en, this message translates to:
+  /// **'Waitlisted'**
+  String get waitlisted;
+
+  /// No description provided for @code.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get code;
+
+  /// No description provided for @dateAndTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Date & Time'**
+  String get dateAndTime;
+
+  /// No description provided for @viewOnMap.
+  ///
+  /// In en, this message translates to:
+  /// **'View on map'**
+  String get viewOnMap;
+
+  /// No description provided for @openInGoogleMaps.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in Google Maps'**
+  String get openInGoogleMaps;
+
+  /// No description provided for @couldntOpenGoogleMaps.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open Google Maps.'**
+  String get couldntOpenGoogleMaps;
+
+  /// No description provided for @aboutThisActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'About This Activity'**
+  String get aboutThisActivity;
+
+  /// No description provided for @participants.
+  ///
+  /// In en, this message translates to:
+  /// **'Participants'**
+  String get participants;
+
+  /// No description provided for @joinedOfMaxSpots.
+  ///
+  /// In en, this message translates to:
+  /// **'{joined} / {max} spots'**
+  String joinedOfMaxSpots(Object joined, Object max);
+
+  /// No description provided for @youllSeeWhosGoingOnceThe.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll see who\'s going once the host accepts you.'**
+  String get youllSeeWhosGoingOnceThe;
+
+  /// No description provided for @host.
+  ///
+  /// In en, this message translates to:
+  /// **'Host'**
+  String get host;
+
+  /// No description provided for @activityCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity code'**
+  String get activityCode;
+
+  /// No description provided for @copyCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy code'**
+  String get copyCode;
+
+  /// No description provided for @activityCodeCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity code copied'**
+  String get activityCodeCopied;
+
+  /// No description provided for @deleteActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete activity'**
+  String get deleteActivity;
+
+  /// No description provided for @youreOnTheWaitlist.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re on the waitlist'**
+  String get youreOnTheWaitlist;
+
+  /// No description provided for @waitingForHostApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for host approval'**
+  String get waitingForHostApproval;
+
+  /// No description provided for @youveJoinedThisActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve joined this activity'**
+  String get youveJoinedThisActivity;
+
+  /// No description provided for @joinWaitlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Join waitlist'**
+  String get joinWaitlist;
+
+  /// No description provided for @joinActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Join activity'**
+  String get joinActivity;
+
+  /// No description provided for @leaveActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave Activity'**
+  String get leaveActivity;
+
+  /// No description provided for @leaveActivityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave activity?'**
+  String get leaveActivityTitle;
+
+  /// No description provided for @confirmLeaveActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to leave this activity?'**
+  String get confirmLeaveActivity;
+
+  /// No description provided for @stay.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay'**
+  String get stay;
+
+  /// No description provided for @youLeftTheActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'You Left the Activity'**
+  String get youLeftTheActivity;
+
+  /// No description provided for @youHaveSuccessfullyLeftThisActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'You have successfully left this activity.'**
+  String get youHaveSuccessfullyLeftThisActivity;
+
+  /// No description provided for @leaveWaitlistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave waitlist?'**
+  String get leaveWaitlistTitle;
+
+  /// No description provided for @confirmLeaveWaitlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to leave the waitlist for this activity?'**
+  String get confirmLeaveWaitlist;
+
+  /// No description provided for @stayOnWaitlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay on Waitlist'**
+  String get stayOnWaitlist;
+
+  /// No description provided for @leaveWaitlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave Waitlist'**
+  String get leaveWaitlist;
+
+  /// No description provided for @youLeftTheWaitlist.
+  ///
+  /// In en, this message translates to:
+  /// **'You Left the Waitlist'**
+  String get youLeftTheWaitlist;
+
+  /// No description provided for @youHaveBeenRemovedFromThe.
+  ///
+  /// In en, this message translates to:
+  /// **'You have been removed from the waitlist.'**
+  String get youHaveBeenRemovedFromThe;
+
+  /// No description provided for @cancelRequestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel request?'**
+  String get cancelRequestTitle;
+
+  /// No description provided for @confirmCancelRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to cancel your request to join this activity?'**
+  String get confirmCancelRequest;
+
+  /// No description provided for @keepRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Request'**
+  String get keepRequest;
+
+  /// No description provided for @cancelRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel Request'**
+  String get cancelRequest;
+
+  /// No description provided for @requestCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Cancelled'**
+  String get requestCancelled;
+
+  /// No description provided for @yourJoinRequestHasBeenCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Your join request has been cancelled.'**
+  String get yourJoinRequestHasBeenCancelled;
+
+  /// No description provided for @youAreNowTheHostOf.
+  ///
+  /// In en, this message translates to:
+  /// **'You are now the host of this activity.'**
+  String get youAreNowTheHostOf;
+
+  /// No description provided for @transferHostingAndLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer hosting and leave?'**
+  String get transferHostingAndLeave;
+
+  /// No description provided for @transferHostMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} will become the host of this activity. You will no longer be able to manage it.'**
+  String transferHostMessage(Object name);
+
+  /// No description provided for @transferAndLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer & Leave'**
+  String get transferAndLeave;
+
+  /// No description provided for @newHostIs.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is now the host.'**
+  String newHostIs(Object name);
+
+  /// No description provided for @chooseANewHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a new host'**
+  String get chooseANewHost;
+
+  /// No description provided for @thePersonYouChooseGetsFull.
+  ///
+  /// In en, this message translates to:
+  /// **'The person you choose gets full host permissions, including managing join requests and deleting the activity. You will leave the activity.'**
+  String get thePersonYouChooseGetsFull;
+
+  /// No description provided for @unableToLoadParticipantsPleaseTry.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load participants. Please try again.'**
+  String get unableToLoadParticipantsPleaseTry;
+
+  /// No description provided for @noOneCanTakeOverYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No one can take over yet. Only joined participants can become the host. You can delete the activity instead.'**
+  String get noOneCanTakeOverYet;
+
+  /// No description provided for @thisActivityIsNoLongerAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This activity is no longer available.'**
+  String get thisActivityIsNoLongerAvailable;
+
+  /// No description provided for @unableToOpenThisActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to open this activity.'**
+  String get unableToOpenThisActivity;
+
+  /// No description provided for @all.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get all;
+
+  /// No description provided for @hosting.
+  ///
+  /// In en, this message translates to:
+  /// **'Hosting'**
+  String get hosting;
+
+  /// No description provided for @joined.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined'**
+  String get joined;
+
+  /// No description provided for @requested.
+  ///
+  /// In en, this message translates to:
+  /// **'Requested'**
+  String get requested;
+
+  /// No description provided for @upcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming'**
+  String get upcoming;
+
+  /// No description provided for @past.
+  ///
+  /// In en, this message translates to:
+  /// **'Past'**
+  String get past;
+
+  /// No description provided for @noPastActivities.
+  ///
+  /// In en, this message translates to:
+  /// **'No past activities'**
+  String get noPastActivities;
+
+  /// No description provided for @activitiesYouveBeenPartOfWill.
+  ///
+  /// In en, this message translates to:
+  /// **'Activities you\'ve been part of will show up here.'**
+  String get activitiesYouveBeenPartOfWill;
+
+  /// No description provided for @noUpcomingActivities.
+  ///
+  /// In en, this message translates to:
+  /// **'No upcoming activities'**
+  String get noUpcomingActivities;
+
+  /// No description provided for @joinOneFromHomeOrTap.
+  ///
+  /// In en, this message translates to:
+  /// **'Join one from Home, or tap + to plan your own.'**
+  String get joinOneFromHomeOrTap;
+
+  /// No description provided for @joinRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Join Requests'**
+  String get joinRequests;
+
+  /// No description provided for @deleteActivityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete activity?'**
+  String get deleteActivityTitle;
+
+  /// No description provided for @thisActionCannotBeUndoneThe.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be undone. The activity will be removed for everyone.'**
+  String get thisActionCannotBeUndoneThe;
+
+  /// No description provided for @keepActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Activity'**
+  String get keepActivity;
+
+  /// No description provided for @deleteActivityButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Activity'**
+  String get deleteActivityButton;
+
+  /// No description provided for @activityDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity Deleted'**
+  String get activityDeleted;
+
+  /// No description provided for @theActivityHasBeenDeletedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'The activity has been deleted successfully.'**
+  String get theActivityHasBeenDeletedSuccessfully;
+
+  /// No description provided for @unableToDeleteTheActivityPlease.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to delete the activity. Please try again.'**
+  String get unableToDeleteTheActivityPlease;
+
+  /// No description provided for @joinWithACode.
+  ///
+  /// In en, this message translates to:
+  /// **'Join with a code'**
+  String get joinWithACode;
+
+  /// No description provided for @enterThe6DigitActivityCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit activity code.'**
+  String get enterThe6DigitActivityCode;
+
+  /// No description provided for @joinActivityButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Join Activity'**
+  String get joinActivityButton;
+
+  /// No description provided for @enterAValid6DigitActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid 6-digit activity code.'**
+  String get enterAValid6DigitActivity;
+
+  /// No description provided for @unableToJoinTheActivityPlease.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to join the activity. Please try again.'**
+  String get unableToJoinTheActivityPlease;
+
+  /// No description provided for @unableToJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to Join'**
+  String get unableToJoin;
+
+  /// No description provided for @thisActivityConflictsWithOneYouve.
+  ///
+  /// In en, this message translates to:
+  /// **'This activity conflicts with one you\'ve already joined or created.'**
+  String get thisActivityConflictsWithOneYouve;
+
+  /// No description provided for @joinedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined!'**
+  String get joinedTitle;
+
+  /// No description provided for @alreadyJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'Already Joined'**
+  String get alreadyJoined;
+
+  /// No description provided for @requestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Sent!'**
+  String get requestSent;
+
+  /// No description provided for @requestAlreadySent.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Already Sent'**
+  String get requestAlreadySent;
+
+  /// No description provided for @addedToWaitlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to Waitlist!'**
+  String get addedToWaitlist;
+
+  /// No description provided for @alreadyWaitlisted.
+  ///
+  /// In en, this message translates to:
+  /// **'Already Waitlisted'**
+  String get alreadyWaitlisted;
+
+  /// No description provided for @justNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get justNow;
+
+  /// No description provided for @minutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{n}m ago'**
+  String minutesAgo(Object n);
+
+  /// No description provided for @hoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{n}h ago'**
+  String hoursAgo(Object n);
+
+  /// No description provided for @daysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{n}d ago'**
+  String daysAgo(Object n);
+
+  /// No description provided for @requestCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 request} other{{n} requests}}'**
+  String requestCount(int n);
+
+  /// No description provided for @requestApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Approved!'**
+  String get requestApproved;
+
+  /// No description provided for @requestRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Rejected'**
+  String get requestRejected;
+
+  /// No description provided for @requestApprovedTheUserWasAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Request approved. The user was added to the waitlist.'**
+  String get requestApprovedTheUserWasAdded;
+
+  /// No description provided for @requestApprovedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Request approved successfully.'**
+  String get requestApprovedSuccessfully;
+
+  /// No description provided for @requestRejectedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Request rejected successfully.'**
+  String get requestRejectedSuccessfully;
+
+  /// No description provided for @unableToReviewTheRequestPlease.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to review the request. Please try again.'**
+  String get unableToReviewTheRequestPlease;
+
+  /// No description provided for @unableToLoadJoinRequestsPlease.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load join requests. Please try again.'**
+  String get unableToLoadJoinRequestsPlease;
+
+  /// No description provided for @reject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get reject;
+
+  /// No description provided for @accept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get accept;
+
+  /// No description provided for @noPendingRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending requests'**
+  String get noPendingRequests;
+
+  /// No description provided for @requestsForYourPrivateActivitiesWill.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests for your private activities will appear here.'**
+  String get requestsForYourPrivateActivitiesWill;
+
+  /// No description provided for @newActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'New Activity'**
+  String get newActivity;
+
+  /// No description provided for @createActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Create activity'**
+  String get createActivity;
+
+  /// No description provided for @whatWhereAndWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'What, where & when'**
+  String get whatWhereAndWhen;
+
+  /// No description provided for @details.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get details;
+
+  /// No description provided for @review.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get review;
+
+  /// No description provided for @discardActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard activity?'**
+  String get discardActivity;
+
+  /// No description provided for @yourActivityIsLiveAndReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Your activity is live and ready for people to join.'**
+  String get yourActivityIsLiveAndReady;
+
+  /// No description provided for @activityCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity created!'**
+  String get activityCreated;
+
+  /// No description provided for @viewActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'View activity'**
+  String get viewActivity;
+
+  /// No description provided for @activityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity title'**
+  String get activityTitle;
+
+  /// No description provided for @location.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get location;
+
+  /// No description provided for @date.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get date;
+
+  /// No description provided for @time.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get time;
+
+  /// No description provided for @activityTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning padel'**
+  String get activityTitleHint;
+
+  /// No description provided for @tapToChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to change'**
+  String get tapToChange;
+
+  /// No description provided for @chooseATime.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a time'**
+  String get chooseATime;
+
+  /// No description provided for @pickAStartTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a start time'**
+  String get pickAStartTime;
+
+  /// No description provided for @setDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Set date'**
+  String get setDate;
+
+  /// No description provided for @setTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Set time'**
+  String get setTime;
+
+  /// No description provided for @searchForAPlace.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for a place'**
+  String get searchForAPlace;
+
+  /// No description provided for @locationSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Padel club, café, gym…'**
+  String get locationSearchHint;
+
+  /// No description provided for @clearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get clearSearch;
+
+  /// No description provided for @startTypingToSearchRiyadhVenues.
+  ///
+  /// In en, this message translates to:
+  /// **'Start typing to search Riyadh venues.'**
+  String get startTypingToSearchRiyadhVenues;
+
+  /// No description provided for @noMatchesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches found.'**
+  String get noMatchesFound;
+
+  /// No description provided for @numberOfPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of people'**
+  String get numberOfPeople;
+
+  /// No description provided for @youPlusAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{You + 1 available spot} other{You + {n} available spots}}'**
+  String youPlusAvailable(int n);
+
+  /// No description provided for @includingYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Including you'**
+  String get includingYou;
+
+  /// No description provided for @description.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get description;
+
+  /// No description provided for @activityDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Beginners welcome, bring water'**
+  String get activityDescriptionHint;
+
+  /// No description provided for @photo.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo'**
+  String get photo;
+
+  /// No description provided for @addAPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a photo'**
+  String get addAPhoto;
+
+  /// No description provided for @photoAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo added'**
+  String get photoAdded;
+
+  /// No description provided for @changePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Change photo'**
+  String get changePhoto;
+
+  /// No description provided for @removePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get removePhoto;
+
+  /// No description provided for @visibility.
+  ///
+  /// In en, this message translates to:
+  /// **'Visibility'**
+  String get visibility;
+
+  /// No description provided for @public.
+  ///
+  /// In en, this message translates to:
+  /// **'Public'**
+  String get public;
+
+  /// No description provided for @anyoneCanFindAndJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone can find and join'**
+  String get anyoneCanFindAndJoin;
+
+  /// No description provided for @private.
+  ///
+  /// In en, this message translates to:
+  /// **'Private'**
+  String get private;
+
+  /// No description provided for @joinByCodeYouApprove.
+  ///
+  /// In en, this message translates to:
+  /// **'Join by code, you approve'**
+  String get joinByCodeYouApprove;
+
+  /// No description provided for @whenLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'When'**
+  String get whenLabel;
+
+  /// No description provided for @whereLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Where'**
+  String get whereLabel;
+
+  /// No description provided for @people.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get people;
+
+  /// No description provided for @peopleSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} including you · {spots, plural, =1{1 spot open} other{{spots} spots open}}'**
+  String peopleSummary(Object n, int spots);
+
+  /// No description provided for @addATitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a title'**
+  String get addATitle;
+
+  /// No description provided for @keepItToLetters.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep it to {n} letters'**
+  String keepItToLetters(Object n);
+
+  /// No description provided for @useLettersOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Use letters only'**
+  String get useLettersOnly;
+
+  /// No description provided for @keepItToCharacters.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep it to {n} characters'**
+  String keepItToCharacters(Object n);
+
+  /// No description provided for @chooseALocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a location'**
+  String get chooseALocation;
+
+  /// No description provided for @pickADate.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a date'**
+  String get pickADate;
+
+  /// No description provided for @chooseADateWithinTheNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a date within the next 3 months'**
+  String get chooseADateWithinTheNext;
+
+  /// No description provided for @thisTimeHasAlreadyPassed.
+  ///
+  /// In en, this message translates to:
+  /// **'This time has already passed'**
+  String get thisTimeHasAlreadyPassed;
+
+  /// No description provided for @pleaseCompleteEveryStepBeforeCreating.
+  ///
+  /// In en, this message translates to:
+  /// **'Please complete every step before creating.'**
+  String get pleaseCompleteEveryStepBeforeCreating;
+
+  /// No description provided for @weCouldntCreateYourActivityPlease.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t create your activity. Please try again.'**
+  String get weCouldntCreateYourActivityPlease;
+
+  /// No description provided for @activityCreatedPhotoNotAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Your activity was created, but the photo couldn\'t be added to it.'**
+  String get activityCreatedPhotoNotAdded;
+
+  /// No description provided for @activityCreatedPhotoNotSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Your activity was created, but the photo couldn\'t be saved.'**
+  String get activityCreatedPhotoNotSaved;
+
+  /// No description provided for @couldntOpenYourPhotosPleaseTry.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open your photos. Please try again.'**
+  String get couldntOpenYourPhotosPleaseTry;
+
+  /// No description provided for @thatFileIsntAJpegOr.
+  ///
+  /// In en, this message translates to:
+  /// **'That file isn\'t a JPEG or PNG image.'**
+  String get thatFileIsntAJpegOr;
+
+  /// No description provided for @thisImagesFileTypeAndIts.
+  ///
+  /// In en, this message translates to:
+  /// **'This image\'s file type and its contents don\'t match. Try another photo.'**
+  String get thisImagesFileTypeAndIts;
+
+  /// No description provided for @theSelectedPlaceIsMissingIts.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected place is missing its address or coordinates.'**
+  String get theSelectedPlaceIsMissingIts;
+
+  /// No description provided for @placeSearchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Place search failed ({code}). Please try again.'**
+  String placeSearchFailed(Object code);
+
+  /// No description provided for @couldNotReachPlaceSearchCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach place search. Check your connection and try again.'**
+  String get couldNotReachPlaceSearchCheck;
+
+  /// No description provided for @placeSearchReturnedAnUnexpectedResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'Place search returned an unexpected response.'**
+  String get placeSearchReturnedAnUnexpectedResponse;
+
+  /// No description provided for @cannotCreateAnActivityWhileSigned.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot create an activity while signed out.'**
+  String get cannotCreateAnActivityWhileSigned;
+
+  /// No description provided for @cannotDeleteAnActivityWhileSigned.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot delete an activity while signed out.'**
+  String get cannotDeleteAnActivityWhileSigned;
+
+  /// No description provided for @theActivityWasNotFoundOr.
+  ///
+  /// In en, this message translates to:
+  /// **'The activity was not found or cannot be deleted.'**
+  String get theActivityWasNotFoundOr;
+
+  /// No description provided for @myLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'My location'**
+  String get myLocation;
+
+  /// No description provided for @searchActivitiesOrPlaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Search activities or places'**
+  String get searchActivitiesOrPlaces;
+
+  /// No description provided for @zoomIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom in'**
+  String get zoomIn;
+
+  /// No description provided for @zoomOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom out'**
+  String get zoomOut;
+
+  /// No description provided for @spotsLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 spot available} other{{n} spots available}}'**
+  String spotsLeft(int n);
+
+  /// No description provided for @pleaseEnableLocationServicesToFind.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enable location services to find nearby activities.'**
+  String get pleaseEnableLocationServicesToFind;
+
+  /// No description provided for @locationPermissionWasDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Location permission was denied.'**
+  String get locationPermissionWasDenied;
+
+  /// No description provided for @locationPermissionIsPermanentlyDeniedPlease.
+  ///
+  /// In en, this message translates to:
+  /// **'Location permission is permanently denied. Please enable it in your device settings.'**
+  String get locationPermissionIsPermanentlyDeniedPlease;
+
+  /// No description provided for @unableToRetrieveYourLocationShowing.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to retrieve your location. Showing Riyadh instead.'**
+  String get unableToRetrieveYourLocationShowing;
+
+  /// No description provided for @addAShortBioSoPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a short bio so people get to know you.'**
+  String get addAShortBioSoPeople;
+
+  /// No description provided for @unableToSaveBioPleaseTry.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to save bio. Please try again.'**
+  String get unableToSaveBioPleaseTry;
+
+  /// No description provided for @activityType.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity type'**
+  String get activityType;
+
+  /// No description provided for @preferredLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred location'**
+  String get preferredLocation;
+
+  /// No description provided for @ageYears.
+  ///
+  /// In en, this message translates to:
+  /// **'{age} yrs'**
+  String ageYears(Object age);
+
+  /// No description provided for @friends.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends'**
+  String get friends;
+
+  /// No description provided for @rating.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating'**
+  String get rating;
+
+  /// No description provided for @interests.
+  ///
+  /// In en, this message translates to:
+  /// **'Interests'**
+  String get interests;
+
+  /// No description provided for @preferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences'**
+  String get preferences;
+
+  /// No description provided for @about.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get about;
+
+  /// No description provided for @addInterestsSoPeopleGetTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Add interests so people get to know what you\'re into.'**
+  String get addInterestsSoPeopleGetTo;
+
+  /// No description provided for @editProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Profile'**
+  String get editProfile;
+
+  /// No description provided for @tapToChangePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to change photo'**
+  String get tapToChangePhoto;
+
+  /// No description provided for @name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get name;
+
+  /// No description provided for @yourName.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name'**
+  String get yourName;
+
+  /// No description provided for @bio.
+  ///
+  /// In en, this message translates to:
+  /// **'Bio'**
+  String get bio;
+
+  /// No description provided for @tellPeopleABitAboutYourself.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell people a bit about yourself...'**
+  String get tellPeopleABitAboutYourself;
+
+  /// No description provided for @birthdayHint.
+  ///
+  /// In en, this message translates to:
+  /// **'DD/MM/YYYY'**
+  String get birthdayHint;
+
+  /// No description provided for @selectBirthday.
+  ///
+  /// In en, this message translates to:
+  /// **'Select birthday'**
+  String get selectBirthday;
+
+  /// No description provided for @setBirthday.
+  ///
+  /// In en, this message translates to:
+  /// **'Set birthday'**
+  String get setBirthday;
+
+  /// No description provided for @selectYourBirthday.
+  ///
+  /// In en, this message translates to:
+  /// **'Select your birthday'**
+  String get selectYourBirthday;
+
+  /// No description provided for @editAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit age'**
+  String get editAge;
+
+  /// No description provided for @awaitingConfirmationOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting confirmation on {email}. Tap to resend or cancel.'**
+  String awaitingConfirmationOn(Object email);
+
+  /// No description provided for @tapToChangeYourEmailAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to change your email address.'**
+  String get tapToChangeYourEmailAddress;
+
+  /// No description provided for @changePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get changePassword;
+
+  /// No description provided for @pleaseEnterYourName.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your name.'**
+  String get pleaseEnterYourName;
+
+  /// No description provided for @adultMustBeBetween16And.
+  ///
+  /// In en, this message translates to:
+  /// **'Adult must be between 16 and 65 years old.'**
+  String get adultMustBeBetween16And;
+
+  /// No description provided for @profileEmailRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your email.'**
+  String get profileEmailRequired;
+
+  /// No description provided for @yourChangesHaveBeenSavedCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Your changes have been saved. Check your new email to confirm the address change.'**
+  String get yourChangesHaveBeenSavedCheck;
+
+  /// No description provided for @unableToSaveYourChangesPlease.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to save your changes. Please try again.'**
+  String get unableToSaveYourChangesPlease;
+
+  /// No description provided for @profileUsernameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your username.'**
+  String get profileUsernameRequired;
+
+  /// No description provided for @usernameMustBe330Characters.
+  ///
+  /// In en, this message translates to:
+  /// **'Username must be 3–30 characters and can only include letters, numbers, dots, and underscores.'**
+  String get usernameMustBe330Characters;
+
+  /// No description provided for @thisUsernameIsAlreadyTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'This username is already taken.'**
+  String get thisUsernameIsAlreadyTaken;
+
+  /// No description provided for @usernameCannotBeEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Username cannot be empty'**
+  String get usernameCannotBeEmpty;
+
+  /// No description provided for @profileEmailInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email address.'**
+  String get profileEmailInvalid;
+
+  /// No description provided for @profilePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile photo'**
+  String get profilePhoto;
+
+  /// No description provided for @addPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add photo'**
+  String get addPhoto;
+
+  /// No description provided for @adjustPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust photo'**
+  String get adjustPhoto;
+
+  /// No description provided for @moveAndScale.
+  ///
+  /// In en, this message translates to:
+  /// **'Move and Scale'**
+  String get moveAndScale;
+
+  /// No description provided for @unableToUpdateYourPhotoPlease.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to update your photo. Please try again.'**
+  String get unableToUpdateYourPhotoPlease;
+
+  /// No description provided for @couldntLoadYourPhotoPleaseTry.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your photo. Please try again.'**
+  String get couldntLoadYourPhotoPleaseTry;
+
+  /// No description provided for @unableToAdjustYourPhotoPlease.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to adjust your photo. Please try again.'**
+  String get unableToAdjustYourPhotoPlease;
+
+  /// No description provided for @unableToRemoveYourPhotoPlease.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to remove your photo. Please try again.'**
+  String get unableToRemoveYourPhotoPlease;
+
+  /// No description provided for @yourPhotoWasntSavedBecauseYoure.
+  ///
+  /// In en, this message translates to:
+  /// **'Your photo wasn\'t saved because you\'re signed out.'**
+  String get yourPhotoWasntSavedBecauseYoure;
+
+  /// No description provided for @savedOnThisDeviceCloudPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on this device (cloud photo storage isn\'t set up yet).'**
+  String get savedOnThisDeviceCloudPhoto;
+
+  /// No description provided for @editInterests.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Interests'**
+  String get editInterests;
+
+  /// No description provided for @yourInterests.
+  ///
+  /// In en, this message translates to:
+  /// **'Your interests'**
+  String get yourInterests;
+
+  /// No description provided for @tapAnInterestBelowToAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap an interest below to add it.'**
+  String get tapAnInterestBelowToAdd;
+
+  /// No description provided for @addMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Add more'**
+  String get addMore;
+
+  /// No description provided for @youveAddedEveryInterest.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve added every interest.'**
+  String get youveAddedEveryInterest;
+
+  /// No description provided for @unableToSavePleaseTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to save. Please try again.'**
+  String get unableToSavePleaseTryAgain;
+
+  /// No description provided for @changePasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Password'**
+  String get changePasswordTitle;
+
+  /// No description provided for @currentPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Current password'**
+  String get currentPassword;
+
+  /// No description provided for @enterYourCurrentPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your current password'**
+  String get enterYourCurrentPassword;
+
+  /// No description provided for @enterANewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a new password'**
+  String get enterANewPassword;
+
+  /// No description provided for @confirmNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm new password'**
+  String get confirmNewPassword;
+
+  /// No description provided for @reEnterTheNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-enter the new password'**
+  String get reEnterTheNewPassword;
+
+  /// No description provided for @useAtLeast8CharactersWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Use at least 8 characters with uppercase, lowercase, a number, and a special character.'**
+  String get useAtLeast8CharactersWith;
+
+  /// No description provided for @newPasswordMustBeDifferentFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'New password must be different from your current one'**
+  String get newPasswordMustBeDifferentFrom;
+
+  /// No description provided for @pleaseConfirmYourNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Please confirm your new password'**
+  String get pleaseConfirmYourNewPassword;
+
+  /// No description provided for @passwordsDoNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get passwordsDoNotMatch;
+
+  /// No description provided for @currentPasswordIsIncorrect.
+  ///
+  /// In en, this message translates to:
+  /// **'Current password is incorrect'**
+  String get currentPasswordIsIncorrect;
+
+  /// No description provided for @passwordIsTooWeakPleaseChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Password is too weak. Please choose a stronger one.'**
+  String get passwordIsTooWeakPleaseChoose;
+
+  /// No description provided for @yourSessionHasExpiredPleaseLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Your session has expired. Please log in again.'**
+  String get yourSessionHasExpiredPleaseLog;
+
+  /// No description provided for @couldntUpdateYourPasswordPleaseTry.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update your password. Please try again.'**
+  String get couldntUpdateYourPasswordPleaseTry;
+
+  /// No description provided for @couldntUpdateYourPasswordCheckYour.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update your password. Check your connection and try again.'**
+  String get couldntUpdateYourPasswordCheckYour;
+
+  /// No description provided for @changeEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Email'**
+  String get changeEmail;
+
+  /// No description provided for @pendingEmailChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending Email Change'**
+  String get pendingEmailChange;
+
+  /// No description provided for @confirmationIsCurrentlyInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmation is currently in progress'**
+  String get confirmationIsCurrentlyInProgress;
+
+  /// No description provided for @updateYourLoginAndContactEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Update your login and contact email'**
+  String get updateYourLoginAndContactEmail;
+
+  /// No description provided for @currentEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Current:'**
+  String get currentEmailLabel;
+
+  /// No description provided for @awaitingConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting Confirmation'**
+  String get awaitingConfirmation;
+
+  /// No description provided for @changeLinkSentTo.
+  ///
+  /// In en, this message translates to:
+  /// **'A change link was sent to {email}. Both your old and new email addresses must confirm the change before it updates.'**
+  String changeLinkSentTo(Object email);
+
+  /// No description provided for @resendConfirmationLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend Confirmation Links'**
+  String get resendConfirmationLinks;
+
+  /// No description provided for @cancelEmailChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel Email Change'**
+  String get cancelEmailChange;
+
+  /// No description provided for @useADifferentEmailAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a different email address'**
+  String get useADifferentEmailAddress;
+
+  /// No description provided for @pleaseEnterANewEmailAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a new email address.'**
+  String get pleaseEnterANewEmailAddress;
+
+  /// No description provided for @newEmailMustBeDifferentFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'New email must be different from current email.'**
+  String get newEmailMustBeDifferentFrom;
+
+  /// No description provided for @enterNewEmailAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter new email address'**
+  String get enterNewEmailAddress;
+
+  /// No description provided for @confirmationEmailsWillBeSentTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmation emails will be sent to both addresses. The change will take effect once confirmed.'**
+  String get confirmationEmailsWillBeSentTo;
+
+  /// No description provided for @sendVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Verification'**
+  String get sendVerification;
+
+  /// No description provided for @confirmationLinkSentPleaseCheckBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmation link sent! Please check both your current and new email inboxes to confirm the change.'**
+  String get confirmationLinkSentPleaseCheckBoth;
+
+  /// No description provided for @unableToUpdateEmailPleaseTry.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to update email. Please try again.'**
+  String get unableToUpdateEmailPleaseTry;
+
+  /// No description provided for @confirmationLinksResentCheckYourInboxes.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmation links resent! Check your inboxes to confirm.'**
+  String get confirmationLinksResentCheckYourInboxes;
+
+  /// No description provided for @pendingEmailChangeCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending email change cancelled.'**
+  String get pendingEmailChangeCancelled;
+
+  /// No description provided for @failedToCancelEmailChangeRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to cancel email change request.'**
+  String get failedToCancelEmailChangeRequest;
+
+  /// No description provided for @logOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Out'**
+  String get logOut;
+
+  /// No description provided for @logOutOfSynk.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out of Synk?'**
+  String get logOutOfSynk;
+
+  /// No description provided for @youllNeedToSignInAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll need to sign in again to access your profile, activities, and matches.'**
+  String get youllNeedToSignInAgain;
+
+  /// No description provided for @unableToLogOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to log out.'**
+  String get unableToLogOut;
+
+  /// No description provided for @unableToLogOutPleaseTry.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to log out. Please try again.'**
+  String get unableToLogOutPleaseTry;
+
+  /// No description provided for @noInternetConnectionCheckYourConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet connection. Check your connection and try again.'**
+  String get noInternetConnectionCheckYourConnection;
+
+  /// No description provided for @tooManyAttemptsPleaseWaitA.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Please wait a few minutes and try again.'**
+  String get tooManyAttemptsPleaseWaitA;
+
+  /// No description provided for @somethingWentWrongPleaseTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again.'**
+  String get somethingWentWrongPleaseTryAgain;
+
+  /// No description provided for @somethingWentWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong.'**
+  String get somethingWentWrong;
+
+  /// No description provided for @unableToTransferHostingPleaseTry.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to transfer hosting. Please try again.'**
+  String get unableToTransferHostingPleaseTry;
+
+  /// No description provided for @unableToLeaveTheActivityPlease.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to leave the activity. Please try again.'**
+  String get unableToLeaveTheActivityPlease;
+
+  /// No description provided for @waitlistPromotions.
+  ///
+  /// In en, this message translates to:
+  /// **'Waitlist promotions'**
+  String get waitlistPromotions;
+
+  /// No description provided for @updatesWhenASpotOpensIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Updates when a spot opens in a waitlisted activity.'**
+  String get updatesWhenASpotOpensIn;
+
+  /// No description provided for @youreIn.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re In! 🎉'**
+  String get youreIn;
+
+  /// No description provided for @aSpotOpenedUpInYour.
+  ///
+  /// In en, this message translates to:
+  /// **'A spot opened up in your activity.'**
+  String get aSpotOpenedUpInYour;
+
+  /// No description provided for @interestOpenToAnything.
+  ///
+  /// In en, this message translates to:
+  /// **'Open to Anything'**
+  String get interestOpenToAnything;
+
+  /// No description provided for @interestPadel.
+  ///
+  /// In en, this message translates to:
+  /// **'Padel'**
+  String get interestPadel;
+
+  /// No description provided for @interestTennis.
+  ///
+  /// In en, this message translates to:
+  /// **'Tennis'**
+  String get interestTennis;
+
+  /// No description provided for @interestBadminton.
+  ///
+  /// In en, this message translates to:
+  /// **'Badminton'**
+  String get interestBadminton;
+
+  /// No description provided for @interestTableTennis.
+  ///
+  /// In en, this message translates to:
+  /// **'Table Tennis'**
+  String get interestTableTennis;
+
+  /// No description provided for @interestFootball.
+  ///
+  /// In en, this message translates to:
+  /// **'Football'**
+  String get interestFootball;
+
+  /// No description provided for @interestBasketball.
+  ///
+  /// In en, this message translates to:
+  /// **'Basketball'**
+  String get interestBasketball;
+
+  /// No description provided for @interestVolleyball.
+  ///
+  /// In en, this message translates to:
+  /// **'Volleyball'**
+  String get interestVolleyball;
+
+  /// No description provided for @interestGolf.
+  ///
+  /// In en, this message translates to:
+  /// **'Golf'**
+  String get interestGolf;
+
+  /// No description provided for @interestBowling.
+  ///
+  /// In en, this message translates to:
+  /// **'Bowling'**
+  String get interestBowling;
+
+  /// No description provided for @interestKarting.
+  ///
+  /// In en, this message translates to:
+  /// **'Karting'**
+  String get interestKarting;
+
+  /// No description provided for @interestMartialArts.
+  ///
+  /// In en, this message translates to:
+  /// **'Martial Arts'**
+  String get interestMartialArts;
+
+  /// No description provided for @interestPaintball.
+  ///
+  /// In en, this message translates to:
+  /// **'Paintball'**
+  String get interestPaintball;
+
+  /// No description provided for @interestCycling.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycling'**
+  String get interestCycling;
+
+  /// No description provided for @interestRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get interestRunning;
+
+  /// No description provided for @interestHiking.
+  ///
+  /// In en, this message translates to:
+  /// **'Hiking'**
+  String get interestHiking;
+
+  /// No description provided for @interestClimbing.
+  ///
+  /// In en, this message translates to:
+  /// **'Climbing'**
+  String get interestClimbing;
+
+  /// No description provided for @interestCamping.
+  ///
+  /// In en, this message translates to:
+  /// **'Camping'**
+  String get interestCamping;
+
+  /// No description provided for @interestDesertTrips.
+  ///
+  /// In en, this message translates to:
+  /// **'Desert Trips'**
+  String get interestDesertTrips;
+
+  /// No description provided for @interestRoadTrips.
+  ///
+  /// In en, this message translates to:
+  /// **'Road Trips'**
+  String get interestRoadTrips;
+
+  /// No description provided for @interestBeach.
+  ///
+  /// In en, this message translates to:
+  /// **'Beach'**
+  String get interestBeach;
+
+  /// No description provided for @interestPicnic.
+  ///
+  /// In en, this message translates to:
+  /// **'Picnic'**
+  String get interestPicnic;
+
+  /// No description provided for @interestPicnics.
+  ///
+  /// In en, this message translates to:
+  /// **'Picnics'**
+  String get interestPicnics;
+
+  /// No description provided for @interestTravel.
+  ///
+  /// In en, this message translates to:
+  /// **'Travel'**
+  String get interestTravel;
+
+  /// No description provided for @interestFitness.
+  ///
+  /// In en, this message translates to:
+  /// **'Fitness'**
+  String get interestFitness;
+
+  /// No description provided for @interestYoga.
+  ///
+  /// In en, this message translates to:
+  /// **'Yoga'**
+  String get interestYoga;
+
+  /// No description provided for @interestSwimming.
+  ///
+  /// In en, this message translates to:
+  /// **'Swimming'**
+  String get interestSwimming;
+
+  /// No description provided for @interestDiving.
+  ///
+  /// In en, this message translates to:
+  /// **'Diving'**
+  String get interestDiving;
+
+  /// No description provided for @interestSkating.
+  ///
+  /// In en, this message translates to:
+  /// **'Skating'**
+  String get interestSkating;
+
+  /// No description provided for @interestDance.
+  ///
+  /// In en, this message translates to:
+  /// **'Dance'**
+  String get interestDance;
+
+  /// No description provided for @interestCoffee.
+  ///
+  /// In en, this message translates to:
+  /// **'Coffee'**
+  String get interestCoffee;
+
+  /// No description provided for @interestCooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Cooking'**
+  String get interestCooking;
+
+  /// No description provided for @interestFood.
+  ///
+  /// In en, this message translates to:
+  /// **'Food'**
+  String get interestFood;
+
+  /// No description provided for @interestShopping.
+  ///
+  /// In en, this message translates to:
+  /// **'Shopping'**
+  String get interestShopping;
+
+  /// No description provided for @interestBoardGames.
+  ///
+  /// In en, this message translates to:
+  /// **'Board Games'**
+  String get interestBoardGames;
+
+  /// No description provided for @interestCardGames.
+  ///
+  /// In en, this message translates to:
+  /// **'Card Games'**
+  String get interestCardGames;
+
+  /// No description provided for @interestChess.
+  ///
+  /// In en, this message translates to:
+  /// **'Chess'**
+  String get interestChess;
+
+  /// No description provided for @interestEscapeRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Escape Room'**
+  String get interestEscapeRoom;
+
+  /// No description provided for @interestTrivia.
+  ///
+  /// In en, this message translates to:
+  /// **'Trivia'**
+  String get interestTrivia;
+
+  /// No description provided for @interestGaming.
+  ///
+  /// In en, this message translates to:
+  /// **'Gaming'**
+  String get interestGaming;
+
+  /// No description provided for @interestMovies.
+  ///
+  /// In en, this message translates to:
+  /// **'Movies'**
+  String get interestMovies;
+
+  /// No description provided for @interestComedy.
+  ///
+  /// In en, this message translates to:
+  /// **'Comedy'**
+  String get interestComedy;
+
+  /// No description provided for @interestKaraoke.
+  ///
+  /// In en, this message translates to:
+  /// **'Karaoke'**
+  String get interestKaraoke;
+
+  /// No description provided for @interestMusic.
+  ///
+  /// In en, this message translates to:
+  /// **'Music'**
+  String get interestMusic;
+
+  /// No description provided for @interestArt.
+  ///
+  /// In en, this message translates to:
+  /// **'Art'**
+  String get interestArt;
+
+  /// No description provided for @interestPottery.
+  ///
+  /// In en, this message translates to:
+  /// **'Pottery'**
+  String get interestPottery;
+
+  /// No description provided for @interestMuseums.
+  ///
+  /// In en, this message translates to:
+  /// **'Museums'**
+  String get interestMuseums;
+
+  /// No description provided for @interestBooks.
+  ///
+  /// In en, this message translates to:
+  /// **'Books'**
+  String get interestBooks;
+
+  /// No description provided for @interestPhotography.
+  ///
+  /// In en, this message translates to:
+  /// **'Photography'**
+  String get interestPhotography;
+
+  /// No description provided for @interestLearning.
+  ///
+  /// In en, this message translates to:
+  /// **'Learning'**
+  String get interestLearning;
+
+  /// No description provided for @interestVolunteering.
+  ///
+  /// In en, this message translates to:
+  /// **'Volunteering'**
+  String get interestVolunteering;
+
+  /// No description provided for @interestPets.
+  ///
+  /// In en, this message translates to:
+  /// **'Pets'**
+  String get interestPets;
+
+  /// No description provided for @interestOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get interestOther;
+
+  /// No description provided for @weekdayMon.
+  ///
+  /// In en, this message translates to:
+  /// **'Mon'**
+  String get weekdayMon;
+
+  /// No description provided for @weekdayTue.
+  ///
+  /// In en, this message translates to:
+  /// **'Tue'**
+  String get weekdayTue;
+
+  /// No description provided for @weekdayWed.
+  ///
+  /// In en, this message translates to:
+  /// **'Wed'**
+  String get weekdayWed;
+
+  /// No description provided for @weekdayThu.
+  ///
+  /// In en, this message translates to:
+  /// **'Thu'**
+  String get weekdayThu;
+
+  /// No description provided for @weekdayFri.
+  ///
+  /// In en, this message translates to:
+  /// **'Fri'**
+  String get weekdayFri;
+
+  /// No description provided for @weekdaySat.
+  ///
+  /// In en, this message translates to:
+  /// **'Sat'**
+  String get weekdaySat;
+
+  /// No description provided for @weekdaySun.
+  ///
+  /// In en, this message translates to:
+  /// **'Sun'**
+  String get weekdaySun;
+
+  /// No description provided for @monthJanuary.
+  ///
+  /// In en, this message translates to:
+  /// **'January'**
+  String get monthJanuary;
+
+  /// No description provided for @monthFebruary.
+  ///
+  /// In en, this message translates to:
+  /// **'February'**
+  String get monthFebruary;
+
+  /// No description provided for @monthMarch.
+  ///
+  /// In en, this message translates to:
+  /// **'March'**
+  String get monthMarch;
+
+  /// No description provided for @monthApril.
+  ///
+  /// In en, this message translates to:
+  /// **'April'**
+  String get monthApril;
+
+  /// No description provided for @monthMay.
+  ///
+  /// In en, this message translates to:
+  /// **'May'**
+  String get monthMay;
+
+  /// No description provided for @monthJune.
+  ///
+  /// In en, this message translates to:
+  /// **'June'**
+  String get monthJune;
+
+  /// No description provided for @monthJuly.
+  ///
+  /// In en, this message translates to:
+  /// **'July'**
+  String get monthJuly;
+
+  /// No description provided for @monthAugust.
+  ///
+  /// In en, this message translates to:
+  /// **'August'**
+  String get monthAugust;
+
+  /// No description provided for @monthSeptember.
+  ///
+  /// In en, this message translates to:
+  /// **'September'**
+  String get monthSeptember;
+
+  /// No description provided for @monthOctober.
+  ///
+  /// In en, this message translates to:
+  /// **'October'**
+  String get monthOctober;
+
+  /// No description provided for @monthNovember.
+  ///
+  /// In en, this message translates to:
+  /// **'November'**
+  String get monthNovember;
+
+  /// No description provided for @monthDecember.
+  ///
+  /// In en, this message translates to:
+  /// **'December'**
+  String get monthDecember;
+
+  /// No description provided for @timeAm.
+  ///
+  /// In en, this message translates to:
+  /// **'AM'**
+  String get timeAm;
+
+  /// No description provided for @timePm.
+  ///
+  /// In en, this message translates to:
+  /// **'PM'**
+  String get timePm;
+
+  /// Short month name. Arabic uses the full name.
+  ///
+  /// In en, this message translates to:
+  /// **'Jan'**
+  String get monthShortJan;
+
+  /// No description provided for @monthShortFeb.
+  ///
+  /// In en, this message translates to:
+  /// **'Feb'**
+  String get monthShortFeb;
+
+  /// No description provided for @monthShortMar.
+  ///
+  /// In en, this message translates to:
+  /// **'Mar'**
+  String get monthShortMar;
+
+  /// No description provided for @monthShortApr.
+  ///
+  /// In en, this message translates to:
+  /// **'Apr'**
+  String get monthShortApr;
+
+  /// No description provided for @monthShortMay.
+  ///
+  /// In en, this message translates to:
+  /// **'May'**
+  String get monthShortMay;
+
+  /// No description provided for @monthShortJun.
+  ///
+  /// In en, this message translates to:
+  /// **'Jun'**
+  String get monthShortJun;
+
+  /// No description provided for @monthShortJul.
+  ///
+  /// In en, this message translates to:
+  /// **'Jul'**
+  String get monthShortJul;
+
+  /// No description provided for @monthShortAug.
+  ///
+  /// In en, this message translates to:
+  /// **'Aug'**
+  String get monthShortAug;
+
+  /// No description provided for @monthShortSep.
+  ///
+  /// In en, this message translates to:
+  /// **'Sep'**
+  String get monthShortSep;
+
+  /// No description provided for @monthShortOct.
+  ///
+  /// In en, this message translates to:
+  /// **'Oct'**
+  String get monthShortOct;
+
+  /// No description provided for @monthShortNov.
+  ///
+  /// In en, this message translates to:
+  /// **'Nov'**
+  String get monthShortNov;
+
+  /// No description provided for @monthShortDec.
+  ///
+  /// In en, this message translates to:
+  /// **'Dec'**
+  String get monthShortDec;
+
+  /// For example Tue, Oct 21
+  ///
+  /// In en, this message translates to:
+  /// **'{weekday}, {month} {day}'**
+  String shortDate(Object weekday, Object month, Object day);
+
+  /// For example 7:30 PM
+  ///
+  /// In en, this message translates to:
+  /// **'{time} {period}'**
+  String timeOfDay(Object time, Object period);
+
+  /// Distance filter, for example 10 km
+  ///
+  /// In en, this message translates to:
+  /// **'{n} km'**
+  String distanceKm(Object n);
+
+  /// One-letter day heading in the calendar
+  ///
+  /// In en, this message translates to:
+  /// **'M'**
+  String get weekdayLetterMon;
+
+  /// No description provided for @weekdayLetterTue.
+  ///
+  /// In en, this message translates to:
+  /// **'T'**
+  String get weekdayLetterTue;
+
+  /// No description provided for @weekdayLetterWed.
+  ///
+  /// In en, this message translates to:
+  /// **'W'**
+  String get weekdayLetterWed;
+
+  /// No description provided for @weekdayLetterThu.
+  ///
+  /// In en, this message translates to:
+  /// **'T'**
+  String get weekdayLetterThu;
+
+  /// No description provided for @weekdayLetterFri.
+  ///
+  /// In en, this message translates to:
+  /// **'F'**
+  String get weekdayLetterFri;
+
+  /// No description provided for @weekdayLetterSat.
+  ///
+  /// In en, this message translates to:
+  /// **'S'**
+  String get weekdayLetterSat;
+
+  /// No description provided for @weekdayLetterSun.
+  ///
+  /// In en, this message translates to:
+  /// **'S'**
+  String get weekdayLetterSun;
+
+  /// Full date with the year, for example Tue, Oct 21, 2026
+  ///
+  /// In en, this message translates to:
+  /// **'{weekday}, {month} {day}, {year}'**
+  String longDate(Object weekday, Object month, Object day, Object year);
+
+  /// First line of the time filter chip (Pick / a time)
+  ///
+  /// In en, this message translates to:
+  /// **'Pick'**
+  String get timeChipPick;
+
+  /// Second line of the time filter chip (Pick / a time)
+  ///
+  /// In en, this message translates to:
+  /// **'a time'**
+  String get timeChipATime;
+
+  /// First line of the time filter chip once a time is set (From / 7:30 PM)
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get timeChipFrom;
+
+  /// Screen reader label for a day in the day strip
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 plan} other{{n} plans}}'**
+  String planCount(int n);
+
+  /// Screen reader label for a day with no plans
+  ///
+  /// In en, this message translates to:
+  /// **'no plans'**
+  String get noPlans;
+
+  /// Used in: No Padel plans on Tue, Oct 21
+  ///
+  /// In en, this message translates to:
+  /// **'on {date}'**
+  String onDate(Object date);
+
+  /// No description provided for @serverNoActivityWithCode.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity was found with this code.'**
+  String get serverNoActivityWithCode;
+
+  /// No description provided for @serverYouAreTheHost.
+  ///
+  /// In en, this message translates to:
+  /// **'You are the host of this activity.'**
+  String get serverYouAreTheHost;
+
+  /// No description provided for @serverAlreadyJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'You have already joined this activity.'**
+  String get serverAlreadyJoined;
+
+  /// No description provided for @serverRequestWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Your request is waiting for host approval.'**
+  String get serverRequestWaiting;
+
+  /// No description provided for @serverRequestRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Your request was rejected by the host.'**
+  String get serverRequestRejected;
+
+  /// No description provided for @serverRequestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Your request was sent to the host.'**
+  String get serverRequestSent;
+
+  /// No description provided for @serverFullAddedToWaitlist.
+  ///
+  /// In en, this message translates to:
+  /// **'The activity is full. You were added to the waitlist.'**
+  String get serverFullAddedToWaitlist;
+
+  /// No description provided for @serverRequestNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'The join request was not found.'**
+  String get serverRequestNotFound;
+
+  /// No description provided for @serverOnlyHostCanReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the activity host can review this request.'**
+  String get serverOnlyHostCanReview;
+
+  /// No description provided for @serverPublicNoApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'Public activities do not require host approval.'**
+  String get serverPublicNoApproval;
+
+  /// No description provided for @serverAlreadyReviewed.
+  ///
+  /// In en, this message translates to:
+  /// **'This request has already been reviewed.'**
+  String get serverAlreadyReviewed;
+
+  /// No description provided for @serverUserHasConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'The user is already hosting an activity at this time or has joined another activity on this date.'**
+  String get serverUserHasConflict;
+
+  /// No description provided for @serverActivityNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This activity was not found.'**
+  String get serverActivityNotFound;
+
+  /// No description provided for @serverActivityPrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'This activity is private. Ask the host for its code.'**
+  String get serverActivityPrivate;
+
+  /// No description provided for @serverHostCannotLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Hosts cannot leave their own activity.'**
+  String get serverHostCannotLeave;
+
+  /// No description provided for @serverActivityStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'This activity has already started.'**
+  String get serverActivityStarted;
+
+  /// No description provided for @serverNotParticipating.
+  ///
+  /// In en, this message translates to:
+  /// **'You are no longer part of this activity.'**
+  String get serverNotParticipating;
+
+  /// No description provided for @serverOnlyHostCanTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the host can transfer this activity.'**
+  String get serverOnlyHostCanTransfer;
+
+  /// No description provided for @serverChooseAnotherHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose another participant to become the host.'**
+  String get serverChooseAnotherHost;
+
+  /// No description provided for @serverParticipantLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected participant is no longer in this activity.'**
+  String get serverParticipantLeft;
+
+  /// No description provided for @serverLeftAndTransferred.
+  ///
+  /// In en, this message translates to:
+  /// **'You left the activity and transferred hosting.'**
+  String get serverLeftAndTransferred;
+
+  /// Title of the Settings page and the gear button on Profile
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+}
+
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
+  const _AppLocalizationsDelegate();
+
+  @override
+  Future<AppLocalizations> load(Locale locale) {
+    return SynchronousFuture<AppLocalizations>(lookupAppLocalizations(locale));
+  }
+
+  @override
+  bool isSupported(Locale locale) =>
+      <String>['ar', 'en'].contains(locale.languageCode);
+
+  @override
+  bool shouldReload(_AppLocalizationsDelegate old) => false;
+}
+
+AppLocalizations lookupAppLocalizations(Locale locale) {
+  // Lookup logic when only language code is specified.
+  switch (locale.languageCode) {
+    case 'ar':
+      return AppLocalizationsAr();
+    case 'en':
+      return AppLocalizationsEn();
+  }
+
+  throw FlutterError(
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
+}

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:synk/l10n/app_localizations.dart';
 import 'package:synk/views/home/widgets/change_email_bottom_sheet.dart';
 
 void main() {
@@ -9,6 +10,8 @@ void main() {
 
     await tester.pumpWidget(
       const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: ChangeEmailBottomSheet(
             currentEmail: currentEmail,
@@ -32,6 +35,8 @@ void main() {
 
     await tester.pumpWidget(
       const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: ChangeEmailBottomSheet(
             currentEmail: currentEmail,

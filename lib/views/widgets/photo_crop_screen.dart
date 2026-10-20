@@ -8,6 +8,8 @@ import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 
+import '../../l10n/l10n.dart';
+
 // iPhone-style "Move and Scale": the photo moves and zooms behind a fixed
 // frame. Pops with the cropped JPEG's path, or null on Cancel.
 class PhotoCropScreen extends StatefulWidget {
@@ -198,8 +200,8 @@ class _PhotoCropScreenState extends State<PhotoCropScreen>
           child: Column(
             children: [
               const SizedBox(height: 14),
-              const Text(
-                'Move and Scale',
+              Text(
+                context.l10n.moveAndScale,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 17,
@@ -289,7 +291,7 @@ class _PhotoCropScreenState extends State<PhotoCropScreen>
         children: [
           TextButton(
             onPressed: _saving ? null : () => Navigator.of(context).pop(),
-            child: const Text('Cancel', style: style),
+            child: Text(context.l10n.cancel, style: style),
           ),
           TextButton(
             onPressed: _image == null || _saving ? null : _choose,
@@ -302,8 +304,8 @@ class _PhotoCropScreenState extends State<PhotoCropScreen>
                       color: Colors.white,
                     ),
                   )
-                : const Text(
-                    'Choose',
+                : Text(
+                    context.l10n.choose,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 17,

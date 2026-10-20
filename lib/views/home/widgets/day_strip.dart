@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/synk_colors.dart';
+import '../../../l10n/l10n.dart';
 import '../../../models/activity_filters.dart';
 
 class DayStrip extends StatelessWidget {
@@ -37,7 +38,7 @@ class DayStrip extends StatelessWidget {
           final day = DateTime(today.year, today.month, today.day + index);
           return _DayCell(
             day: day,
-            label: index == 0 ? 'Today' : shortWeekday(day),
+            label: index == 0 ? context.l10n.today : shortWeekday(day),
             selected: filters.coversDay(day, now),
             count: countsByDay[day] ?? 0,
             onTap: () => onDayTap(day),
@@ -90,7 +91,7 @@ class _DayCell extends StatelessWidget {
       selected: selected,
       label:
           '${formatShortDate(day)}, '
-          '${hasPlans ? '$count ${count == 1 ? 'plan' : 'plans'}' : 'no plans'}',
+          '${hasPlans ? context.l10n.planCount(count) : context.l10n.noPlans}',
       excludeSemantics: true,
       child: DecoratedBox(
         decoration: BoxDecoration(

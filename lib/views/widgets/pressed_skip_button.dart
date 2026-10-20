@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/synk_colors.dart';
+import '../../l10n/l10n.dart';
 
 // The "Skip" text button on onboarding slides, which turns orange while
 // pressed and can hide itself while keeping the layout stable.
@@ -52,7 +53,7 @@ class _PressedSkipButtonState extends State<PressedSkipButton> {
             fontWeight: FontWeight.w700,
             color: _isPressed ? SynkColors.orange : SynkColors.textSecondary,
           ),
-          child: const Text('Skip'),
+          child: Text(context.l10n.skip),
         ),
       ),
     );

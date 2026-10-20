@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../controllers/create_activity_controller.dart';
 import '../../core/constants/synk_colors.dart';
+import '../../l10n/l10n.dart';
 import '../home/widgets/activity_thumbnail.dart';
 import '../home/widgets/discovery_activity_card.dart';
 import 'create_activity_widgets.dart';
@@ -57,16 +58,16 @@ class StepReview extends StatelessWidget {
             children: <Widget>[
               _Row(
                 icon: Icons.schedule_rounded,
-                label: 'When',
+                label: context.l10n.whenLabel,
                 value: start == null
-                    ? 'Not set'
+                    ? context.l10n.notSet
                     : DiscoveryActivityCard.formatWhen(start),
                 onTap: () => c.goToStep(0),
               ),
               const _Divider(),
               _Row(
                 icon: Icons.place_rounded,
-                label: 'Where',
+                label: context.l10n.whereLabel,
                 value: c.locationName,
                 detail: c.locationAddress,
                 onTap: () => c.goToStep(0),
@@ -86,10 +87,8 @@ class StepReview extends StatelessWidget {
               const _Divider(),
               _Row(
                 icon: Icons.groups_rounded,
-                label: 'People',
-                value:
-                    '${c.participants} including you · '
-                    '$spots ${spots == 1 ? 'spot' : 'spots'} open',
+                label: context.l10n.people,
+                value: context.l10n.peopleSummary(c.participants, spots),
                 onTap: () => c.goToStep(1),
               ),
               const _Divider(),
@@ -97,15 +96,15 @@ class StepReview extends StatelessWidget {
                 icon: c.isPublic
                     ? Icons.public_rounded
                     : Icons.lock_outline_rounded,
-                label: 'Visibility',
-                value: c.isPublic ? 'Public' : 'Private',
+                label: context.l10n.visibility,
+                value: c.isPublic ? context.l10n.public : context.l10n.private,
                 onTap: () => c.goToStep(1),
               ),
               if (description.isNotEmpty) ...<Widget>[
                 const _Divider(),
                 _Row(
                   icon: Icons.notes_rounded,
-                  label: 'Description',
+                  label: context.l10n.description,
                   value: description,
                   multiline: true,
                   onTap: () => c.goToStep(1),
@@ -173,7 +172,7 @@ class _Row extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+        padding: const EdgeInsetsDirectional.fromSTEB(14, 12, 10, 12),
         child: Row(
           crossAxisAlignment: multiline
               ? CrossAxisAlignment.start

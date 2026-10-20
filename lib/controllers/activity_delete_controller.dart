@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../l10n/l10n.dart';
 import '../models/activities_model.dart';
 
 class ActivityDeleteController extends ChangeNotifier {
@@ -33,7 +34,7 @@ class ActivityDeleteController extends ChangeNotifier {
       await _activitiesModel.delete(activityId);
       return true;
     } catch (_) {
-      _errorMessage = 'Unable to delete the activity. Please try again.';
+      _errorMessage = appL10n.unableToDeleteTheActivityPlease;
       return false;
     } finally {
       _deletingActivityIds.remove(activityId);

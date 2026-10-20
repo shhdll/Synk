@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import '../../controllers/create_activity_controller.dart';
 import '../../core/constants/activity_constants.dart';
 import '../../core/constants/synk_colors.dart';
-import '../../models/activity_filters.dart';
+import '../../l10n/l10n.dart';
 import '../../models/place_search_model.dart';
 import '../home/widgets/activity_thumbnail.dart';
 import '../home/widgets/synk_filter_chip.dart';
@@ -109,22 +109,22 @@ class _StepBasicsState extends State<StepBasics> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
       children: <Widget>[
-        const CreateGroupLabel(text: 'Activity title', isRequired: true),
+        CreateGroupLabel(text: context.l10n.activityTitle, isRequired: true),
         const SizedBox(height: 10),
         _buildTitle(),
         FieldError(_c.errorFor(CreateField.title)),
         const SizedBox(height: 24),
-        const CreateGroupLabel(text: 'Location', isRequired: true),
+        CreateGroupLabel(text: context.l10n.location, isRequired: true),
         const SizedBox(height: 10),
         _buildLocation(),
         FieldError(_c.errorFor(CreateField.location)),
         const SizedBox(height: 24),
-        const CreateGroupLabel(text: 'Date', isRequired: true),
+        CreateGroupLabel(text: context.l10n.date, isRequired: true),
         const SizedBox(height: 10),
         _buildDate(),
         FieldError(_c.errorFor(CreateField.date)),
         const SizedBox(height: 24),
-        const CreateGroupLabel(text: 'Time', isRequired: true),
+        CreateGroupLabel(text: context.l10n.time, isRequired: true),
         const SizedBox(height: 10),
         _buildTime(),
         FieldError(_c.errorFor(CreateField.time)),
@@ -140,7 +140,7 @@ class _StepBasicsState extends State<StepBasics> {
 
     return CreateCard(
       hasError: _c.errorFor(CreateField.title) != null,
-      padding: const EdgeInsets.fromLTRB(12, 10, 14, 10),
+      padding: const EdgeInsetsDirectional.fromSTEB(12, 10, 14, 10),
       child: Row(
         children: <Widget>[
           AnimatedContainer(
@@ -180,8 +180,8 @@ class _StepBasicsState extends State<StepBasics> {
                 fontWeight: FontWeight.w600,
                 color: SynkColors.textPrimary,
               ),
-              decoration: const InputDecoration(
-                hintText: 'Morning padel',
+              decoration: InputDecoration(
+                hintText: context.l10n.activityTitleHint,
                 hintStyle: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
@@ -237,9 +237,9 @@ class _StepBasicsState extends State<StepBasics> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Choose a location',
+                    context.l10n.chooseALocation,
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -285,8 +285,8 @@ class _StepBasicsState extends State<StepBasics> {
                         color: SynkColors.orangeDark,
                       ),
                     ),
-                  Positioned(
-                    right: 10,
+                  PositionedDirectional(
+                    end: 10,
                     top: 10,
                     child: Material(
                       color: Colors.white,
@@ -305,8 +305,8 @@ class _StepBasicsState extends State<StepBasics> {
                       ),
                     ),
                   ),
-                  Positioned(
-                    right: 10,
+                  PositionedDirectional(
+                    end: 10,
                     bottom: 10,
                     child: Material(
                       color: SynkColors.orangeDark,
@@ -314,7 +314,7 @@ class _StepBasicsState extends State<StepBasics> {
                       child: InkWell(
                         borderRadius: BorderRadius.circular(16),
                         onTap: _openLocationPicker,
-                        child: const Padding(
+                        child: Padding(
                           padding: EdgeInsets.symmetric(
                             horizontal: 12,
                             vertical: 7,
@@ -329,7 +329,7 @@ class _StepBasicsState extends State<StepBasics> {
                               ),
                               SizedBox(width: 6),
                               Text(
-                                'Tap to change',
+                                context.l10n.tapToChange,
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
@@ -401,7 +401,7 @@ class _StepBasicsState extends State<StepBasics> {
       children: <Widget>[
         Expanded(
           child: SynkFilterChip(
-            label: 'Today',
+            label: context.l10n.today,
             selected: isToday,
             onTap: () => _c.setDate(_today),
           ),
@@ -409,7 +409,7 @@ class _StepBasicsState extends State<StepBasics> {
         const SizedBox(width: 8),
         Expanded(
           child: SynkFilterChip(
-            label: 'Tomorrow',
+            label: context.l10n.tomorrow,
             selected: isTomorrow,
             onTap: () => _c.setDate(_tomorrow),
           ),
@@ -417,7 +417,7 @@ class _StepBasicsState extends State<StepBasics> {
         const SizedBox(width: 8),
         Expanded(
           child: SynkFilterChip(
-            label: isOther ? formatShortDate(date) : 'Pick a date',
+            label: isOther ? formatShortDate(date) : context.l10n.pickADate,
             icon: Icons.calendar_month_rounded,
             selected: isOther,
             onTap: _pickDate,
@@ -447,7 +447,9 @@ class _StepBasicsState extends State<StepBasics> {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  time == null ? 'Choose a time' : time.format(context),
+                  time == null
+                      ? context.l10n.chooseATime
+                      : formatTime(time.hour, time.minute),
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,

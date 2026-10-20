@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/l10n.dart';
 import 'step_basics.dart';
 import 'step_details.dart';
 import 'step_review.dart';
@@ -35,10 +36,10 @@ class CreateActivityView extends StatefulWidget {
 class _CreateActivityViewState extends State<CreateActivityView> {
   static const int _stepCount = 3;
 
-  static const List<String> _stepTitles = <String>[
-    'What, where & when',
-    'Details',
-    'Review',
+  List<String> get _stepTitles => <String>[
+    context.l10n.whatWhereAndWhen,
+    context.l10n.details,
+    context.l10n.review,
   ];
 
   final CreateActivityController _controller = CreateActivityController();
@@ -98,10 +99,10 @@ class _CreateActivityViewState extends State<CreateActivityView> {
 
     final SynkDialogAction? action = await SynkDialog.destructive(
       icon: Icons.delete_outline_rounded,
-      title: 'Discard activity?',
-      message: "Your changes haven't been saved. If you leave now, you'll lose them.",
-      primaryLabel: 'Keep editing',
-      secondaryLabel: 'Discard and leave',
+      title: context.l10n.discardActivity,
+      message: context.l10n.unsavedChangesWillBeLost,
+      primaryLabel: context.l10n.keepEditing,
+      secondaryLabel: context.l10n.discardAndLeave,
     ).show(context, barrierDismissible: false);
 
     if (!mounted) return;
@@ -149,7 +150,7 @@ class _CreateActivityViewState extends State<CreateActivityView> {
     if (!result.created) {
       _showMessage(
         _controller.errorMessage ??
-            "We couldn't create your activity. Please try again.",
+            context.l10n.weCouldntCreateYourActivityPlease,
       );
       return;
     }
@@ -163,15 +164,15 @@ class _CreateActivityViewState extends State<CreateActivityView> {
       if (result.orphanWarning != null) result.orphanWarning!,
     ];
     final String message = warnings.isEmpty
-        ? 'Your activity is live and ready for people to join.'
-        : 'Your activity is live and ready for people to join.\n\n'
+        ? context.l10n.yourActivityIsLiveAndReady
+        : '${context.l10n.yourActivityIsLiveAndReady}\n\n'
               '${warnings.join('\n')}';
 
     final SynkDialogAction? choice = await SynkDialog.success(
-      title: 'Activity created!',
+      title: context.l10n.activityCreated,
       message: message,
-      primaryLabel: 'View activity',
-      secondaryLabel: 'Done',
+      primaryLabel: context.l10n.viewActivity,
+      secondaryLabel: context.l10n.done,
     ).show(context, barrierDismissible: false);
 
     if (!mounted) return;
@@ -341,7 +342,7 @@ class _CreateActivityViewState extends State<CreateActivityView> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
                           Text(
-                            isLastStep ? 'Create activity' : 'Continue',
+                            isLastStep ? context.l10n.createActivity : context.l10n.continueButton,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,

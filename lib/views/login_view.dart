@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import 'forgot_password_view.dart';
 import 'home/main_shell.dart';
 
@@ -135,7 +136,7 @@ class _LoginViewState extends State<LoginView> {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  _loginController.errorMessage ?? 'Unable to log in.',
+                  _loginController.errorMessage ?? context.l10n.unableToLogIn,
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -233,8 +234,8 @@ class _LoginViewState extends State<LoginView> {
 
                   const SizedBox(height: 40),
 
-                  const Text(
-                    'Welcome Back',
+                  Text(
+                    context.l10n.welcomeBack,
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
@@ -244,8 +245,8 @@ class _LoginViewState extends State<LoginView> {
 
                   const SizedBox(height: 8),
 
-                  const Text(
-                    'Log in to connect and join activities around you.',
+                  Text(
+                    context.l10n.logInToConnectAndJoin,
                     style: TextStyle(
                       fontSize: 15,
                       color: SynkColors.textSecondary,
@@ -285,7 +286,7 @@ class _LoginViewState extends State<LoginView> {
                               ),
                               alignment: Alignment.center,
                               child: Text(
-                                'Username',
+                                context.l10n.username,
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
@@ -319,7 +320,7 @@ class _LoginViewState extends State<LoginView> {
                               ),
                               alignment: Alignment.center,
                               child: Text(
-                                'Email',
+                                context.l10n.email,
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
@@ -346,13 +347,13 @@ class _LoginViewState extends State<LoginView> {
                       onChanged: (_) => _clearServerErrors(),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Please enter your username';
+                          return context.l10n.pleaseEnterYourUsername;
                         }
                         return _identifierServerError;
                       },
                       decoration: synkInputDecoration(
-                        label: 'Username',
-                        hint: 'Username',
+                        label: context.l10n.username,
+                        hint: context.l10n.username,
                         icon: Icons.alternate_email_rounded,
                       ),
                     )
@@ -366,16 +367,16 @@ class _LoginViewState extends State<LoginView> {
                       onChanged: (_) => _clearServerErrors(),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Please enter your email';
+                          return context.l10n.pleaseEnterYourEmail;
                         }
                         if (!AuthConstants.emailRegex.hasMatch(value.trim())) {
-                          return 'Please enter a valid email';
+                          return context.l10n.pleaseEnterAValidEmail;
                         }
                         return _identifierServerError;
                       },
                       decoration: synkInputDecoration(
-                        label: 'Email',
-                        hint: 'Email address',
+                        label: context.l10n.email,
+                        hint: context.l10n.emailAddress,
                         icon: Icons.email_outlined,
                       ),
                     ),
@@ -394,13 +395,13 @@ class _LoginViewState extends State<LoginView> {
                     },
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
+                        return context.l10n.pleaseEnterYourPassword;
                       }
                       return _passwordServerError;
                     },
                     decoration: synkInputDecoration(
-                      label: 'Password',
-                      hint: 'Password',
+                      label: context.l10n.password,
+                      hint: context.l10n.password,
                       icon: Icons.lock_outline,
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -422,7 +423,7 @@ class _LoginViewState extends State<LoginView> {
 
                   // Password recovery navigation.
                   Align(
-                    alignment: Alignment.centerRight,
+                    alignment: AlignmentDirectional.centerEnd,
                     child: TextButton(
                       onPressed: () {
                         Navigator.push(
@@ -434,8 +435,8 @@ class _LoginViewState extends State<LoginView> {
                           ),
                         );
                       },
-                      child: const Text(
-                        'Forgot Password?',
+                      child: Text(
+                        context.l10n.forgotPassword,
                         style: TextStyle(
                           color: SynkColors.orangeDark,
                           fontWeight: FontWeight.bold,
@@ -474,8 +475,8 @@ class _LoginViewState extends State<LoginView> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Text(
-                                'Log In',
+                            : Text(
+                                context.l10n.logIn,
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -491,16 +492,16 @@ class _LoginViewState extends State<LoginView> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
-                        "Don't have an account?",
+                      Text(
+                        context.l10n.dontHaveAnAccount,
                         style: TextStyle(color: SynkColors.textSecondary),
                       ),
                       TextButton(
                         onPressed: () {
                           _loginController.onSignUp(context);
                         },
-                        child: const Text(
-                          'Sign Up',
+                        child: Text(
+                          context.l10n.signUp,
                           style: TextStyle(
                             color: SynkColors.orangeDark,
                             fontWeight: FontWeight.bold,

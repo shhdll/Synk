@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../core/constants/synk_colors.dart';
+import '../l10n/l10n.dart';
 import '../utils/custom_widgets/puzzle_piece_tile.dart';
 import 'login_view.dart';
 
@@ -149,10 +150,10 @@ class _ResetSuccessViewState extends State<ResetSuccessView>
                     _enter(
                       start: 0.15,
                       end: 0.75,
-                      child: const Column(
+                      child: Column(
                         children: [
                           Text(
-                            "You're back in.",
+                            context.l10n.youreBackIn,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 38,
@@ -166,7 +167,7 @@ class _ResetSuccessViewState extends State<ResetSuccessView>
                           Padding(
                             padding: EdgeInsets.symmetric(horizontal: 16),
                             child: Text(
-                              'Your new password is set. Log in to pick up where you left off.',
+                              context.l10n.yourNewPasswordIsSetLog,
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 15,
@@ -210,11 +211,11 @@ class _ResetSuccessViewState extends State<ResetSuccessView>
                               ),
                             ],
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                'Log In',
+                                context.l10n.logIn,
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 17,

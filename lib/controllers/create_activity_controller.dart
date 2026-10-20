@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../core/constants/activity_constants.dart';
+import '../l10n/l10n.dart';
 import '../models/activities_model.dart';
 import '../models/activity_model.dart';
 import '../models/activity_photo_uploader.dart';
@@ -199,7 +200,7 @@ class CreateActivityController extends ChangeNotifier {
       } catch (_) {
         // Picker unavailable, permission refused, or the platform channel
         // failed. Keep whatever photo was already chosen.
-        _photoError = "Couldn't open your photos. Please try again.";
+        _photoError = appL10n.couldntOpenYourPhotosPleaseTry;
         return;
       }
 
@@ -207,14 +208,14 @@ class CreateActivityController extends ChangeNotifier {
 
       final format = await _detectFormat(picked);
       if (format == null) {
-        _photoError = "That file isn't a JPEG or PNG image.";
+        _photoError = appL10n.thatFileIsntAJpegOr;
         return;
       }
 
       if (!_extensionMatches(picked.path, format)) {
         // e.g. JPEG bytes saved as ".png": the stored content type would be
         // wrong, so ask for a file whose name matches what it actually is.
-        _photoError = "This image's file type and its contents don't match. Try another photo.";
+        _photoError = appL10n.thisImagesFileTypeAndIts;
         return;
       }
 
@@ -282,12 +283,12 @@ class CreateActivityController extends ChangeNotifier {
 
   String? validateTitle(String? value) {
     final title = value?.trim() ?? '';
-    if (title.isEmpty) return 'Add a title';
+    if (title.isEmpty) return appL10n.addATitle;
     if (title.characters.length > ActivityConstants.titleMaxLength) {
-      return 'Keep it to ${ActivityConstants.titleMaxLength} letters';
+      return appL10n.keepItToLetters(ActivityConstants.titleMaxLength);
     }
     if (!RegExp(r'^[\p{L} ]+$', unicode: true).hasMatch(title)) {
-      return 'Use letters only';
+      return appL10n.useLettersOnly;
     }
     return null;
   }
@@ -295,7 +296,9 @@ class CreateActivityController extends ChangeNotifier {
   String? validateDescription(String? value) {
     final description = value?.trim() ?? '';
     if (description.length > ActivityConstants.descriptionMaxLength) {
-      return 'Keep it to ${ActivityConstants.descriptionMaxLength} characters';
+      return appL10n.keepItToCharacters(
+        ActivityConstants.descriptionMaxLength,
+      );
     }
     return null;
   }
@@ -319,17 +322,17 @@ class CreateActivityController extends ChangeNotifier {
 
   String? _fieldError(CreateField field) => switch (field) {
     CreateField.title => validateTitle(titleController.text),
-    CreateField.location => _locationName.isEmpty ? 'Choose a location' : null,
+    CreateField.location => _locationName.isEmpty ? appL10n.chooseALocation : null,
     CreateField.date => _date == null
-        ? 'Pick a date'
+        ? appL10n.pickADate
         : _date!.isAfter(ActivityConstants.latestAllowedDate(DateTime.now()))
-        ? 'Choose a date within the next 3 months'
+        ? appL10n.chooseADateWithinTheNext
         : null,
     CreateField.time =>
       _time == null
-          ? 'Pick a time'
+          ? appL10n.pickATime
           : startsAt != null && !startsAt!.isAfter(DateTime.now())
-          ? 'This time has already passed'
+          ? appL10n.thisTimeHasAlreadyPassed
           : null,
   };
 
@@ -371,7 +374,7 @@ class CreateActivityController extends ChangeNotifier {
     final blocker = submitBlocker;
     final start = startsAt;
     if (blocker != null || start == null) {
-      _errorMessage = blocker ?? 'Please complete every step before creating.';
+      _errorMessage = blocker ?? appL10n.pleaseCompleteEveryStepBeforeCreating;
       notifyListeners();
       return const CreateActivityResult();
     }
@@ -398,7 +401,7 @@ class CreateActivityController extends ChangeNotifier {
       );
     } catch (error) {
       debugPrint('SYNK: create activity failed: $error');
-      _errorMessage = "We couldn't create your activity. Please try again.";
+      _errorMessage = appL10n.weCouldntCreateYourActivityPlease;
       _isSubmitting = false;
       _setLoading(false);
       return const CreateActivityResult();
@@ -450,7 +453,7 @@ class CreateActivityController extends ChangeNotifier {
     return CreateActivityResult(
       activity: created,
       photoWarning:
-          "Your activity was created, but the photo couldn't be added to it.",
+          appL10n.activityCreatedPhotoNotAdded,
       orphanWarning:
           'Uploaded photo for activity ${created.id} was not linked and was not removed.',
     );

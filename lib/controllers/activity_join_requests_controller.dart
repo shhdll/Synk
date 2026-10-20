@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../l10n/l10n.dart';
 import '../models/activity_participation_model.dart';
 
 class ActivityJoinRequestsController extends ChangeNotifier {
@@ -46,7 +47,7 @@ class ActivityJoinRequestsController extends ChangeNotifier {
         ..addAll(requests);
     } catch (_) {
       _errorMessage =
-          'Unable to load join requests. Please try again.';
+          appL10n.unableToLoadJoinRequestsPlease;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -106,20 +107,20 @@ class ActivityJoinRequestsController extends ChangeNotifier {
 
         if (status == 'waitlisted') {
           _successMessage =
-              'Request approved. The user was added to the waitlist.';
+              appL10n.requestApprovedTheUserWasAdded;
         } else if (accept) {
           _successMessage =
-              'Request approved successfully.';
+              appL10n.requestApprovedSuccessfully;
         } else {
           _successMessage =
-              'Request rejected successfully.';
+              appL10n.requestRejectedSuccessfully;
         }
       } else {
         _errorMessage = response.message;
       }
     } catch (_) {
       _errorMessage =
-          'Unable to review this request. Please try again.';
+          appL10n.unableToReviewTheRequestPlease;
     } finally {
       _reviewingRequestIds.remove(participationId);
       notifyListeners();

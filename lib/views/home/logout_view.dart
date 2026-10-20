@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../controllers/logout_controller.dart';
 import '../../core/constants/synk_colors.dart';
+import '../../core/constants/synk_icons.dart';
+import '../../l10n/l10n.dart';
 import '../welcome_view.dart';
 
 class LogoutView extends StatefulWidget {
@@ -36,7 +38,9 @@ class _LogoutViewState extends State<LogoutView> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text(_controller.errorMessage ?? 'Unable to log out.'),
+          content: Text(
+            _controller.errorMessage ?? context.l10n.unableToLogOut,
+          ),
         ),
       );
   }
@@ -49,7 +53,7 @@ class _LogoutViewState extends State<LogoutView> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(4, 8, 20, 8),
+              padding: const EdgeInsetsDirectional.fromSTEB(4, 8, 20, 8),
               child: Row(
                 children: [
                   IconButton(
@@ -60,8 +64,8 @@ class _LogoutViewState extends State<LogoutView> {
                     ),
                   ),
                   const SizedBox(width: 4),
-                  const Text(
-                    'Log Out',
+                  Text(
+                    context.l10n.logOut,
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w900,
@@ -107,13 +111,13 @@ class _LogoutViewState extends State<LogoutView> {
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
-                                  Icons.logout_rounded,
+                                  SynkIcons.logout,
                                   color: SynkColors.orangeDark,
                                 ),
                               ),
                               const SizedBox(height: 16),
-                              const Text(
-                                'Log out of Synk?',
+                              Text(
+                                context.l10n.logOutOfSynk,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 18,
@@ -123,8 +127,7 @@ class _LogoutViewState extends State<LogoutView> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                "You'll need to sign in again to access your "
-                                'profile, activities, and matches.',
+                                context.l10n.youllNeedToSignInAgain,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 14,
@@ -168,11 +171,11 @@ class _LogoutViewState extends State<LogoutView> {
                                     ),
                                   )
                                 : const Icon(
-                                    Icons.logout_rounded,
+                                    SynkIcons.logout,
                                     color: Colors.white,
                                   ),
-                            label: const Text(
-                              'Log Out',
+                            label: Text(
+                              context.l10n.logOut,
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
@@ -199,8 +202,8 @@ class _LogoutViewState extends State<LogoutView> {
                             borderRadius: BorderRadius.circular(16),
                           ),
                         ),
-                        child: const Text(
-                          'Cancel',
+                        child: Text(
+                          context.l10n.cancel,
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,

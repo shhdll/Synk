@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/constants/auth_constants.dart';
+import '../l10n/l10n.dart';
 import '../models/auth_model.dart';
 
 /// Outcome of a password update attempt on the New Password screen.
@@ -34,10 +35,10 @@ class ResetPasswordController extends ChangeNotifier {
   String? validateEmail(String? value) {
     final email = value?.trim() ?? '';
     if (email.isEmpty) {
-      return 'Please enter your email';
+      return appL10n.pleaseEnterYourEmail;
     }
     if (!AuthConstants.emailRegex.hasMatch(email)) {
-      return 'Please enter a valid email address';
+      return appL10n.pleaseEnterAValidEmailAddress;
     }
     return null;
   }
@@ -49,10 +50,10 @@ class ResetPasswordController extends ChangeNotifier {
   String? validateConfirmPassword(String? value, String password) {
     final confirm = value ?? '';
     if (confirm.isEmpty) {
-      return 'Please confirm your password';
+      return appL10n.pleaseConfirmYourPassword;
     }
     if (confirm != password) {
-      return 'Passwords do not match';
+      return appL10n.passwordsDoNotMatch;
     }
     return null;
   }
@@ -83,8 +84,7 @@ class ResetPasswordController extends ChangeNotifier {
       _errorMessage = _messageForSendError(e);
       return false;
     } catch (_) {
-      _errorMessage =
-          'Couldn\'t send the link. Check your connection and try again.';
+      _errorMessage = appL10n.couldntSendTheLinkCheckYour;
       return false;
     } finally {
       _setLoading(false);
@@ -121,9 +121,9 @@ class ResetPasswordController extends ChangeNotifier {
   String _messageForSendError(AuthException e) {
     if (e.code == 'over_email_send_rate_limit' ||
         e.message.toLowerCase().contains('rate limit')) {
-      return 'Please wait a moment before requesting another link.';
+      return appL10n.pleaseWaitAMomentBeforeRequesting;
     }
-    return 'Couldn\'t send the link. Check your connection and try again.';
+    return appL10n.couldntSendTheLinkCheckYour;
   }
 
   // New Password: update the password on the recovery session
@@ -140,15 +140,15 @@ class ResetPasswordController extends ChangeNotifier {
       // opened on a different device.
       return UpdatePasswordResult.sessionMissing;
     } on AuthWeakPasswordException {
-      _errorMessage =
-          'Password is too weak. Please use at least '
-          '${AuthConstants.minPasswordLength} characters.';
+      _errorMessage = appL10n.passwordTooWeakMinLength(
+        AuthConstants.minPasswordLength,
+      );
       return UpdatePasswordResult.failure;
     } on AuthException catch (e) {
       _errorMessage = _messageForUpdateError(e);
       return UpdatePasswordResult.failure;
     } catch (_) {
-      _errorMessage = 'Couldn\'t update your password. Please try again.';
+      _errorMessage = appL10n.couldntUpdateYourPasswordPleaseTry;
       return UpdatePasswordResult.failure;
     } finally {
       _setLoading(false);
@@ -158,12 +158,12 @@ class ResetPasswordController extends ChangeNotifier {
   String _messageForUpdateError(AuthException e) {
     final msg = e.message.toLowerCase();
     if (e.code == 'same_password' || msg.contains('different from the old')) {
-      return 'That\'s your current password. Pick a new one.';
+      return appL10n.thatsYourCurrentPasswordPickA;
     }
     if (e.code == 'session_not_found' || msg.contains('session')) {
-      return 'This link is no longer valid. Please request a new one.';
+      return appL10n.thisLinkIsNoLongerValid;
     }
-    return 'Couldn\'t update your password. Please try again.';
+    return appL10n.couldntUpdateYourPasswordPleaseTry;
   }
 
   // Ends the recovery session so the user must log in with the new password.

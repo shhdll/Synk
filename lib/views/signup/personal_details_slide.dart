@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../controllers/signup_controller.dart';
 import '../../core/constants/synk_colors.dart';
+import '../../l10n/l10n.dart';
 import '../widgets/synk_date_picker.dart';
 
 class PersonalDetailsSlide extends StatelessWidget {
@@ -21,8 +22,8 @@ class PersonalDetailsSlide extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 16),
-                const Text(
-                  'Tell us about\nyourself.',
+                Text(
+                  context.l10n.tellUsAboutYourself,
                   style: TextStyle(
                     fontSize: 40,
                     fontWeight: FontWeight.w900,
@@ -32,8 +33,8 @@ class PersonalDetailsSlide extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                const Text(
-                  'This helps customize your community experience.',
+                Text(
+                  context.l10n.thisHelpsCustomizeYourCommunityExperience,
                   style: TextStyle(fontSize: 15, color: Color(0xFF6B7280)),
                 ),
                 const SizedBox(height: 32),
@@ -42,8 +43,8 @@ class PersonalDetailsSlide extends StatelessWidget {
                 _buildField(
                   controller: controller.nameController,
                   focusNode: controller.nameFocusNode,
-                  label: 'Name',
-                  hint: 'Full name',
+                  label: context.l10n.name,
+                  hint: context.l10n.fullName,
                   icon: Icons.person_outline,
                   errorText: controller.nameError,
                   onChanged: (_) => controller.clearNameError(),
@@ -54,8 +55,8 @@ class PersonalDetailsSlide extends StatelessWidget {
                 _buildField(
                   controller: controller.birthdayController,
                   focusNode: controller.birthdayFocusNode,
-                  label: 'Birthday',
-                  hint: 'DD/MM/YYYY',
+                  label: context.l10n.birthday,
+                  hint: context.l10n.birthdayHint,
                   icon: Icons.cake_outlined,
                   readOnly: true,
                   errorText: controller.birthdayError,
@@ -112,8 +113,8 @@ class PersonalDetailsSlide extends StatelessWidget {
                       initialDate: initialDate,
                       firstDate: firstDate,
                       lastDate: lastDate,
-                      title: 'Select birthday',
-                      confirmLabel: 'Set birthday',
+                      title: context.l10n.selectBirthday,
+                      confirmLabel: context.l10n.setBirthday,
                     );
 
                     if (selectedDate != null) {
@@ -134,10 +135,10 @@ class PersonalDetailsSlide extends StatelessWidget {
                 const SizedBox(height: 24),
 
                 // Gender
-                const Text.rich(
+                Text.rich(
                   TextSpan(
                     children: [
-                      TextSpan(text: 'Gender'),
+                      TextSpan(text: context.l10n.gender),
                       TextSpan(
                         text: ' *',
                         style: TextStyle(color: Color(0xFFE53935)),
@@ -183,7 +184,7 @@ class PersonalDetailsSlide extends StatelessWidget {
                             ],
                           ),
                           child: Text(
-                            gender,
+                            valueLabel(gender),
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontWeight: FontWeight.w700,
@@ -202,7 +203,7 @@ class PersonalDetailsSlide extends StatelessWidget {
                 if (controller.genderError != null) ...[
                   const SizedBox(height: 6),
                   Padding(
-                    padding: const EdgeInsets.only(left: 4),
+                    padding: const EdgeInsetsDirectional.only(start: 4),
                     child: Text(
                       controller.genderError!,
                       style: const TextStyle(
@@ -267,7 +268,7 @@ class PersonalDetailsSlide extends StatelessWidget {
             ),
             decoration: InputDecoration(
               prefixIcon: Padding(
-                padding: const EdgeInsets.only(left: 14, right: 8),
+                padding: const EdgeInsetsDirectional.only(start: 14, end: 8),
                 child: Icon(icon, size: 20, color: const Color(0xFF6B7280)),
               ),
               prefixIconConstraints: const BoxConstraints(
@@ -305,7 +306,7 @@ class PersonalDetailsSlide extends StatelessWidget {
         if (errorText != null) ...[
           const SizedBox(height: 5),
           Padding(
-            padding: const EdgeInsets.only(left: 12),
+            padding: const EdgeInsetsDirectional.only(start: 12),
             child: Text(
               errorText,
               style: const TextStyle(

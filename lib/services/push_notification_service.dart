@@ -7,6 +7,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/l10n.dart';
+
 @pragma('vm:entry-point')
 Future<void> waitlistPromotionBackgroundHandler(RemoteMessage message) async {
   try {
@@ -22,7 +24,7 @@ class PushNotificationService {
   static final PushNotificationService instance = PushNotificationService._();
 
   static const String _channelId = 'waitlist_promotions';
-  static const String _channelName = 'Waitlist promotions';
+  static String get _channelName => appL10n.waitlistPromotions;
 
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
@@ -52,10 +54,10 @@ class PushNotificationService {
         },
       );
 
-      const channel = AndroidNotificationChannel(
+      final channel = AndroidNotificationChannel(
         _channelId,
         _channelName,
-        description: 'Updates when a spot opens in a waitlisted activity.',
+        description: appL10n.updatesWhenASpotOpensIn,
         importance: Importance.high,
       );
       await _localNotifications
@@ -196,12 +198,12 @@ class PushNotificationService {
     if (activityId == null || activityId.isEmpty) return;
 
     try {
-      const details = NotificationDetails(
+      final details = NotificationDetails(
         android: AndroidNotificationDetails(
           _channelId,
           _channelName,
           channelDescription:
-              'Updates when a spot opens in a waitlisted activity.',
+              appL10n.updatesWhenASpotOpensIn,
           icon: 'ic_launcher_foreground',
           importance: Importance.high,
           priority: Priority.high,
@@ -210,8 +212,8 @@ class PushNotificationService {
       await _localNotifications.show(
         id: (message.data['event_id'] as String?)?.hashCode ??
             (DateTime.now().millisecondsSinceEpoch & 0x7fffffff),
-        title: message.notification?.title ?? "You're In! \u{1F389}",
-        body: message.notification?.body ?? 'A spot opened up in your activity.',
+        title: message.notification?.title ?? appL10n.youreIn,
+        body: message.notification?.body ?? appL10n.aSpotOpenedUpInYour,
         notificationDetails: details,
         payload: activityId,
       );

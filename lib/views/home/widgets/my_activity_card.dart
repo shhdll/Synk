@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/constants/synk_colors.dart';
+import '../../../l10n/l10n.dart';
 import '../../../models/activity_model.dart';
 import '../../../models/avatar_uploader.dart';
 import '../../widgets/anonymous_avatar.dart';
@@ -9,15 +10,21 @@ import 'activity_thumbnail.dart';
 import 'discovery_activity_card.dart';
 
 enum MyActivityRole {
-  hosting('Hosting', Icons.star_rounded, SynkColors.orangeDark),
-  joined('Joined', Icons.check_circle_rounded, SynkColors.teal),
-  pending('Requested', Icons.schedule_rounded, Color(0xFFD9822B)),
-  waitlisted('Waitlisted', Icons.hourglass_top_rounded, Color(0xFF8A6D3B));
+  hosting(Icons.star_rounded, SynkColors.orangeDark),
+  joined(Icons.check_circle_rounded, SynkColors.teal),
+  pending(Icons.schedule_rounded, Color(0xFFD9822B)),
+  waitlisted(Icons.hourglass_top_rounded, Color(0xFF8A6D3B));
 
-  const MyActivityRole(this.label, this.icon, this.color);
-  final String label;
+  const MyActivityRole(this.icon, this.color);
   final IconData icon;
   final Color color;
+
+  String get label => switch (this) {
+    hosting => appL10n.hosting,
+    joined => appL10n.joined,
+    pending => appL10n.requested,
+    waitlisted => appL10n.waitlisted,
+  };
 
   static MyActivityRole of(Activity activity, String? userId) {
     if (activity.isHostedBy(userId)) return hosting;
@@ -88,7 +95,7 @@ class MyActivityCard extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   activity.title.trim().isEmpty
-                                      ? 'Untitled activity'
+                                      ? context.l10n.untitledActivity
                                       : activity.title,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -196,7 +203,7 @@ class MyActivityCard extends StatelessWidget {
         ],
         Flexible(
           child: Text(
-            '$going/${activity.maxParticipants} going',
+            appL10n.joinedOfMaxGoing(going, activity.maxParticipants),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
@@ -229,7 +236,7 @@ class _CodeStrip extends StatelessWidget {
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
             ..showSnackBar(
-              const SnackBar(content: Text('Activity code copied')),
+              SnackBar(content: Text(context.l10n.activityCodeCopied)),
             );
         },
         child: Padding(
@@ -242,8 +249,8 @@ class _CodeStrip extends StatelessWidget {
                 color: SynkColors.orangeDark,
               ),
               const SizedBox(width: 6),
-              const Text(
-                'Code',
+              Text(
+                context.l10n.code,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,

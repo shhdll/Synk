@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../core/constants/synk_colors.dart';
+import '../../l10n/l10n.dart';
 import '../../models/place_search_model.dart';
 
 
@@ -145,8 +146,8 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
               ),
             ),
             const SizedBox(height: 18),
-            const Text(
-              'Search for a place',
+            Text(
+              context.l10n.searchForAPlace,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w900,
@@ -178,7 +179,7 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
                   color: SynkColors.textPrimary,
                 ),
                 decoration: InputDecoration(
-                  hintText: 'Padel club, café, gym…',
+                  hintText: context.l10n.locationSearchHint,
                   hintStyle: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
@@ -209,7 +210,7 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
                       : (_query.text.isNotEmpty
                             ? IconButton(
                                 onPressed: _clearQuery,
-                                tooltip: 'Clear search',
+                                tooltip: context.l10n.clearSearch,
                                 icon: const Icon(
                                   Icons.close_rounded,
                                   size: 18,
@@ -256,8 +257,8 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
                   : _results.isEmpty
                   ? _EmptySearchState(
                       text: _query.text.trim().isEmpty
-                          ? 'Start typing to search Riyadh venues.'
-                          : (_isSearching ? '' : 'No matches found.'),
+                          ? context.l10n.startTypingToSearchRiyadhVenues
+                          : (_isSearching ? '' : context.l10n.noMatchesFound),
                     )
                   : ListView.separated(
                       itemCount: _results.length,

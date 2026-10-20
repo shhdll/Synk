@@ -19,7 +19,7 @@ class EditableRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 12, 12),
+      padding: const EdgeInsetsDirectional.fromSTEB(20, 12, 12, 12),
       child: Row(
         children: [
           Expanded(
