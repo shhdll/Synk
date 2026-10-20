@@ -23,10 +23,11 @@ class CreateActivityOutcome {
 // The Create Activity wizard shell.
 
 class CreateActivityView extends StatefulWidget {
-  const CreateActivityView({super.key, this.store});
+  const CreateActivityView({super.key, this.store, this.activity});
 
  
   final ActivityStore? store;
+  final Activity? activity;
 
   @override
   State<CreateActivityView> createState() => _CreateActivityViewState();
@@ -41,12 +42,13 @@ class _CreateActivityViewState extends State<CreateActivityView> {
     'Review',
   ];
 
-  final CreateActivityController _controller = CreateActivityController();
+  late final CreateActivityController _controller;
   final PageController _pageController = PageController();
 
   @override
   void initState() {
     super.initState();
+    _controller = CreateActivityController(activity: widget.activity);
     _controller.addListener(_onControllerChanged);
   }
 
@@ -149,7 +151,9 @@ class _CreateActivityViewState extends State<CreateActivityView> {
     if (!result.created) {
       _showMessage(
         _controller.errorMessage ??
-            "We couldn't create your activity. Please try again.",
+            (_controller.isEditing
+                ? "We couldn't save your changes. Please try again."
+                : "We couldn't create your activity. Please try again."),
       );
       return;
     }
@@ -162,13 +166,15 @@ class _CreateActivityViewState extends State<CreateActivityView> {
       if (result.photoWarning != null) result.photoWarning!,
       if (result.orphanWarning != null) result.orphanWarning!,
     ];
+    final String successMessage = _controller.isEditing
+        ? 'Your activity details have been updated.'
+        : 'Your activity is live and ready for people to join.';
     final String message = warnings.isEmpty
-        ? 'Your activity is live and ready for people to join.'
-        : 'Your activity is live and ready for people to join.\n\n'
-              '${warnings.join('\n')}';
+        ? successMessage
+        : '$successMessage\n\n${warnings.join('\n')}';
 
     final SynkDialogAction? choice = await SynkDialog.success(
-      title: 'Activity created!',
+      title: _controller.isEditing ? 'Changes saved!' : 'Activity created!',
       message: message,
       primaryLabel: 'View activity',
       secondaryLabel: 'Done',
@@ -341,7 +347,9 @@ class _CreateActivityViewState extends State<CreateActivityView> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
                           Text(
-                            isLastStep ? 'Create activity' : 'Continue',
+                            isLastStep
+                                ? (_controller.isEditing ? 'Save changes' : 'Create activity')
+                                : 'Continue',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,

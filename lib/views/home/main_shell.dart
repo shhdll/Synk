@@ -55,6 +55,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     // Defines which hosted activities belong to the signed-in user.
     _activityStore.currentUserId =
         Supabase.instance.client.auth.currentUser?.id;
+    PushNotificationService.instance.setActivityUpdatedHandler(
+      _refreshActivity,
+    );
 
     _tab = widget.initialTab;
     _activityStore.addListener(_openMapForFocus);
@@ -80,9 +83,37 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      unawaited(_loadActivities());
+      unawaited(_discoveryController.loadFeed(isSilent: true));
       _loadPendingRequestCount();
       unawaited(PushNotificationService.instance.registerForCurrentUser());
     }
+  }
+
+  void _refreshActivity(String activityId) {
+    unawaited(() async {
+      try {
+        final activity = await _activitiesModel.fetchById(activityId);
+        if (!mounted || activity == null) return;
+        final previous = _activityStore.byId(activityId);
+        _activityStore.upsert(
+          previous == null
+              ? activity
+              : activity.copyWith(
+                  hostName: previous.hostName,
+                  hostUsername: previous.hostUsername,
+                  hostAvatarUrl: previous.hostAvatarUrl,
+                  hostGender: previous.hostGender,
+                  participantsCount: previous.participantsCount,
+                  activityCode: previous.activityCode,
+                  participationId: previous.participationId,
+                  participationStatus: previous.participationStatus,
+                ),
+        );
+      } catch (_) {
+        // Keep the current activity visible when a refresh fails.
+      }
+    }());
   }
 
   Future<void> _loadActivities() async {
@@ -144,6 +175,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   @override
   void dispose() {
     _requestPoll?.cancel();
+    PushNotificationService.instance.setActivityUpdatedHandler(null);
     WidgetsBinding.instance.removeObserver(this);
     _activityStore.removeListener(_openMapForFocus);
     _activityStore.dispose();

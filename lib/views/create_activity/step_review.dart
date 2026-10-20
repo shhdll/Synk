@@ -34,6 +34,12 @@ class StepReview extends StatelessWidget {
                     fit: BoxFit.cover,
                     errorBuilder: (_, _, _) => _IconHero(title: title),
                   )
+                : c.existingPhotoUrl != null
+                ? Image.network(
+                    c.existingPhotoUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => _IconHero(title: title),
+                  )
                 : _IconHero(title: title),
           ),
         ),

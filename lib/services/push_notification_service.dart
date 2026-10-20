@@ -23,6 +23,8 @@ class PushNotificationService {
 
   static const String _channelId = 'waitlist_promotions';
   static const String _channelName = 'Waitlist promotions';
+  static const String _activityUpdatesChannelId = 'activity_updates';
+  static const String _activityUpdatesChannelName = 'Activity updates';
 
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
@@ -32,6 +34,7 @@ class PushNotificationService {
   String? _registeredToken;
   String? _pendingActivityId;
   void Function(String activityId)? _onActivityTap;
+  void Function(String activityId)? _onActivityUpdated;
   bool _initialized = false;
 
   bool get isInitialized => _initialized;
@@ -64,9 +67,27 @@ class PushNotificationService {
           >()
           ?.createNotificationChannel(channel);
 
-      FirebaseMessaging.onMessage.listen(
-        (message) => unawaited(_showForegroundNotification(message)),
+      const activityUpdatesChannel = AndroidNotificationChannel(
+        _activityUpdatesChannelId,
+        _activityUpdatesChannelName,
+        description: 'Updates to activities you have joined.',
+        importance: Importance.high,
       );
+      await _localNotifications
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.createNotificationChannel(activityUpdatesChannel);
+
+      FirebaseMessaging.onMessage.listen((message) {
+        unawaited(_showForegroundNotification(message));
+        if (message.data['type'] == 'activity_updated') {
+          final activityId = message.data['activity_id'] as String?;
+          if (activityId != null && activityId.isNotEmpty) {
+            _onActivityUpdated?.call(activityId);
+          }
+        }
+      });
       FirebaseMessaging.onMessageOpenedApp.listen(
         (message) => _dispatchActivityTap(message.data['activity_id']),
       );
@@ -97,6 +118,10 @@ class PushNotificationService {
       _pendingActivityId = null;
       handler(pending);
     }
+  }
+
+  void setActivityUpdatedHandler(void Function(String activityId)? handler) {
+    _onActivityUpdated = handler;
   }
 
   Future<void> registerForCurrentUser() async {
@@ -191,17 +216,28 @@ class PushNotificationService {
   }
 
   Future<void> _showForegroundNotification(RemoteMessage message) async {
-    if (message.data['type'] != 'waitlist_promotion') return;
+    final type = message.data['type'] as String?;
+    if (type != 'waitlist_promotion' && type != 'activity_updated') return;
     final activityId = message.data['activity_id'] as String?;
     if (activityId == null || activityId.isEmpty) return;
 
+    final activityUpdated = type == 'activity_updated';
+    final channelId = activityUpdated
+        ? _activityUpdatesChannelId
+        : _channelId;
+    final channelName = activityUpdated
+        ? _activityUpdatesChannelName
+        : _channelName;
+    final channelDescription = activityUpdated
+        ? 'Updates to activities you have joined.'
+        : 'Updates when a spot opens in a waitlisted activity.';
+
     try {
-      const details = NotificationDetails(
+      final details = NotificationDetails(
         android: AndroidNotificationDetails(
-          _channelId,
-          _channelName,
-          channelDescription:
-              'Updates when a spot opens in a waitlisted activity.',
+          channelId,
+          channelName,
+          channelDescription: channelDescription,
           icon: 'ic_launcher_foreground',
           importance: Importance.high,
           priority: Priority.high,
@@ -210,8 +246,12 @@ class PushNotificationService {
       await _localNotifications.show(
         id: (message.data['event_id'] as String?)?.hashCode ??
             (DateTime.now().millisecondsSinceEpoch & 0x7fffffff),
-        title: message.notification?.title ?? "You're In! \u{1F389}",
-        body: message.notification?.body ?? 'A spot opened up in your activity.',
+        title: message.notification?.title ??
+            (activityUpdated ? 'Activity updated' : "You're In! \u{1F389}"),
+        body: message.notification?.body ??
+            (activityUpdated
+                ? 'An activity you joined has new details.'
+                : 'A spot opened up in your activity.'),
         notificationDetails: details,
         payload: activityId,
       );
