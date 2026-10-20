@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/l10n.dart';
 import '../models/auth_model.dart';
 import '../utils/auth_errors.dart';
 import '../views/onboarding_view.dart';
@@ -70,7 +71,7 @@ class LoginController extends ChangeNotifier {
       final email = await resolveEmail();
       if (email == null) {
         _errorType = LoginErrorType.noAccount;
-        _errorMessage = 'No account found with this username';
+        _errorMessage = appL10n.noAccountFoundWithThisUsername;
         return false;
       }
       _accountEmail = email;
@@ -88,7 +89,7 @@ class LoginController extends ChangeNotifier {
       _errorType = LoginErrorType.other;
       _errorMessage = isNetworkError(e)
           ? kNetworkErrorMessage
-          : 'Unable to log in. Please try again.';
+          : appL10n.unableToLogInPleaseTry;
       return false;
     } finally {
       _setLoading(false);
@@ -100,13 +101,13 @@ class LoginController extends ChangeNotifier {
     if (e.code == 'email_not_confirmed' ||
         message.contains('email not confirmed')) {
       _errorType = LoginErrorType.emailNotConfirmed;
-      _errorMessage = 'Please verify your email first.';
+      _errorMessage = appL10n.pleaseVerifyYourEmailFirst;
     } else if (e.code == 'invalid_credentials' ||
         message.contains('invalid login credentials')) {
       _errorType = LoginErrorType.wrongCredentials;
       _errorMessage = byUsername
-          ? 'Incorrect username or password'
-          : 'Incorrect email or password';
+          ? appL10n.incorrectUsernameOrPassword
+          : appL10n.incorrectEmailOrPassword;
     } else if (isNetworkError(e)) {
       _errorType = LoginErrorType.other;
       _errorMessage = kNetworkErrorMessage;
@@ -116,7 +117,7 @@ class LoginController extends ChangeNotifier {
     } else {
       debugPrint('Login auth error: ${e.code} ${e.message}');
       _errorType = LoginErrorType.other;
-      _errorMessage = 'Unable to log in. Please try again.';
+      _errorMessage = appL10n.unableToLogInPleaseTry;
     }
   }
 

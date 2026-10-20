@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../controllers/activity_join_requests_controller.dart';
 import '../../core/constants/synk_colors.dart';
+import '../../l10n/l10n.dart';
 import '../../models/activities_model.dart';
 import '../../models/activity_filters.dart';
 import '../../models/activity_model.dart';
@@ -62,7 +63,7 @@ class _ActivityJoinRequestsViewState extends State<ActivityJoinRequestsView> {
     if (!mounted) return;
 
     if (activity == null) {
-      SynkFeedback.showError(context, 'Unable to open this activity.');
+      SynkFeedback.showError(context, context.l10n.unableToOpenThisActivity);
       return;
     }
     await showActivityDetailsSheet(
@@ -83,10 +84,10 @@ class _ActivityJoinRequestsViewState extends State<ActivityJoinRequestsView> {
     final localDate = dateTime.toLocal();
     final ago = DateTime.now().difference(localDate);
 
-    if (ago.inMinutes < 1) return 'Just now';
-    if (ago.inHours < 1) return '${ago.inMinutes}m ago';
-    if (ago.inDays < 1) return '${ago.inHours}h ago';
-    if (ago.inDays < 7) return '${ago.inDays}d ago';
+    if (ago.inMinutes < 1) return context.l10n.justNow;
+    if (ago.inHours < 1) return context.l10n.minutesAgo(ago.inMinutes);
+    if (ago.inDays < 1) return context.l10n.hoursAgo(ago.inHours);
+    if (ago.inDays < 7) return context.l10n.daysAgo(ago.inDays);
     return formatShortDate(localDate);
   }
 
@@ -132,7 +133,9 @@ class _ActivityJoinRequestsViewState extends State<ActivityJoinRequestsView> {
     if (successMessage != null) {
       await SynkFeedback.showSuccessDialog(
         context,
-        title: accept ? 'Request Approved!' : 'Request Rejected',
+        title: accept
+            ? context.l10n.requestApproved
+            : context.l10n.requestRejected,
         message: successMessage,
       );
 
@@ -142,7 +145,7 @@ class _ActivityJoinRequestsViewState extends State<ActivityJoinRequestsView> {
 
     SynkFeedback.showError(
       context,
-      errorMessage ?? 'Unable to review the request. Please try again.',
+      errorMessage ?? context.l10n.unableToReviewTheRequestPlease,
     );
   }
 
@@ -163,8 +166,8 @@ class _ActivityJoinRequestsViewState extends State<ActivityJoinRequestsView> {
             color: SynkColors.textPrimary,
           ),
         ),
-        title: const Text(
-          'Join Requests',
+        title: Text(
+          context.l10n.joinRequests,
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w800,
@@ -238,7 +241,7 @@ class _ActivityJoinRequestsViewState extends State<ActivityJoinRequestsView> {
               child: InkWell(
                 onTap: () => _openActivity(first),
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 14, 10, 14),
+                  padding: const EdgeInsetsDirectional.fromSTEB(14, 14, 10, 14),
                   child: Row(
                     children: [
                       if (activity != null)
@@ -281,7 +284,7 @@ class _ActivityJoinRequestsViewState extends State<ActivityJoinRequestsView> {
                                 if (activity != null)
                                   '${formatShortDate(activity.dateTime)} · '
                                       '${formatMinute(activity.dateTime.hour * 60 + activity.dateTime.minute)}',
-                                '$count ${count == 1 ? 'request' : 'requests'}',
+                                context.l10n.requestCount(count),
                               ].join(' · '),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -332,7 +335,7 @@ class _ActivityJoinRequestsViewState extends State<ActivityJoinRequestsView> {
     ].join(' · ');
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 6, 12, 6),
+      padding: const EdgeInsetsDirectional.fromSTEB(8, 6, 12, 6),
       child: Row(
         children: [
           Expanded(
@@ -406,7 +409,7 @@ class _ActivityJoinRequestsViewState extends State<ActivityJoinRequestsView> {
             )
           else ...[
             IconButton.filled(
-              tooltip: 'Reject',
+              tooltip: context.l10n.reject,
               onPressed: () => _reviewRequest(request: request, accept: false),
               style: IconButton.styleFrom(
                 backgroundColor: SynkColors.badge,
@@ -416,7 +419,7 @@ class _ActivityJoinRequestsViewState extends State<ActivityJoinRequestsView> {
             ),
             const SizedBox(width: 4),
             IconButton.filled(
-              tooltip: 'Accept',
+              tooltip: context.l10n.accept,
               onPressed: () => _reviewRequest(request: request, accept: true),
               style: IconButton.styleFrom(
                 backgroundColor: SynkColors.teal,
@@ -454,7 +457,7 @@ class _ActivityJoinRequestsViewState extends State<ActivityJoinRequestsView> {
               style: FilledButton.styleFrom(
                 backgroundColor: SynkColors.orangeDark,
               ),
-              child: const Text('Try Again'),
+              child: Text(context.l10n.tryAgain),
             ),
           ],
         ),
@@ -468,7 +471,7 @@ class _ActivityJoinRequestsViewState extends State<ActivityJoinRequestsView> {
       onRefresh: _controller.loadRequests,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        children: const [
+        children: [
           SizedBox(height: 150),
           Icon(
             Icons.mark_email_read_outlined,
@@ -477,7 +480,7 @@ class _ActivityJoinRequestsViewState extends State<ActivityJoinRequestsView> {
           ),
           SizedBox(height: 16),
           Text(
-            'No pending requests',
+            context.l10n.noPendingRequests,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 19,
@@ -489,7 +492,7 @@ class _ActivityJoinRequestsViewState extends State<ActivityJoinRequestsView> {
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 40),
             child: Text(
-              'Requests for your private activities will appear here.',
+              context.l10n.requestsForYourPrivateActivitiesWill,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,

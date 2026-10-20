@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../controllers/edit_interests_controller.dart';
 import '../../core/constants/interest_emojis.dart';
 import '../../core/constants/synk_colors.dart';
+import '../../l10n/l10n.dart';
 import '../../utils/custom_widgets/synk_feedback.dart';
 
 class EditInterestsView extends StatefulWidget {
@@ -53,7 +54,7 @@ class _EditInterestsViewState extends State<EditInterestsView> {
       await _controller.save();
     } catch (_) {
       if (!mounted) return;
-      SynkFeedback.showError(context, 'Unable to save. Please try again.');
+      SynkFeedback.showError(context, context.l10n.unableToSavePleaseTryAgain);
       return;
     }
 
@@ -91,7 +92,7 @@ class _EditInterestsViewState extends State<EditInterestsView> {
               child: Column(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(4, 8, 20, 8),
+                    padding: const EdgeInsetsDirectional.fromSTEB(4, 8, 20, 8),
                     child: Row(
                       children: [
                         IconButton(
@@ -102,8 +103,8 @@ class _EditInterestsViewState extends State<EditInterestsView> {
                           ),
                         ),
                         const SizedBox(width: 4),
-                        const Text(
-                          'Edit Interests',
+                        Text(
+                          context.l10n.editInterests,
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w900,
@@ -118,8 +119,8 @@ class _EditInterestsViewState extends State<EditInterestsView> {
                     child: ListView(
                       padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
                       children: [
-                        const Text(
-                          'Your interests',
+                        Text(
+                          context.l10n.yourInterests,
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
@@ -128,8 +129,8 @@ class _EditInterestsViewState extends State<EditInterestsView> {
                         ),
                         const SizedBox(height: 10),
                         if (selected.isEmpty)
-                          const Text(
-                            'Tap an interest below to add it.',
+                          Text(
+                            context.l10n.tapAnInterestBelowToAdd,
                             style: TextStyle(
                               fontSize: 13,
                               fontStyle: FontStyle.italic,
@@ -152,8 +153,8 @@ class _EditInterestsViewState extends State<EditInterestsView> {
                                 .toList(),
                           ),
                         const SizedBox(height: 28),
-                        const Text(
-                          'Add more',
+                        Text(
+                          context.l10n.addMore,
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
@@ -162,8 +163,8 @@ class _EditInterestsViewState extends State<EditInterestsView> {
                         ),
                         const SizedBox(height: 10),
                         if (available.isEmpty)
-                          const Text(
-                            "You've added every interest.",
+                          Text(
+                            context.l10n.youveAddedEveryInterest,
                             style: TextStyle(
                               fontSize: 13,
                               fontStyle: FontStyle.italic,
@@ -238,8 +239,8 @@ class _EditInterestsViewState extends State<EditInterestsView> {
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 )
-              : const Text(
-                  'Save',
+              : Text(
+                  context.l10n.save,
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
                 ),
         ),
@@ -279,7 +280,7 @@ class _SelectedChip extends StatelessWidget {
                 const SizedBox(width: 6),
               ],
               Text(
-                interest,
+                valueLabel(interest),
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
@@ -289,8 +290,8 @@ class _SelectedChip extends StatelessWidget {
             ],
           ),
         ),
-        Positioned(
-          right: -6,
+        PositionedDirectional(
+          end: -6,
           top: -6,
           child: GestureDetector(
             onTap: onRemove,
@@ -352,7 +353,7 @@ class _AvailableChip extends StatelessWidget {
               const SizedBox(width: 6),
             ],
             Text(
-              interest,
+              valueLabel(interest),
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,

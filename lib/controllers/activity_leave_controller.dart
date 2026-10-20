@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../l10n/l10n.dart';
 import '../models/activity_participation_model.dart';
 
 class ActivityLeaveController extends ChangeNotifier {
@@ -55,7 +56,7 @@ class ActivityLeaveController extends ChangeNotifier {
       activityId: activityId,
       request: () => _participationModel.leaveActivity(activityId),
       successResults: _leaveSuccessResults,
-      fallbackError: 'Unable to leave the activity. Please try again.',
+      fallbackError: appL10n.unableToLeaveTheActivityPlease,
     );
   }
 
@@ -71,7 +72,7 @@ class ActivityLeaveController extends ChangeNotifier {
         newHostUserId: newHostUserId,
       ),
       successResults: _transferSuccessResults,
-      fallbackError: 'Unable to transfer hosting. Please try again.',
+      fallbackError: appL10n.unableToTransferHostingPleaseTry,
     );
   }
 

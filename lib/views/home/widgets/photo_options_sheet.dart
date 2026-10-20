@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/synk_colors.dart';
+import '../../../l10n/l10n.dart';
 
 // Asks whether to change, adjust or remove the profile photo. Pops
 // 'change', 'adjust', 'remove', or null (dismissed without choosing).
@@ -38,8 +39,8 @@ class PhotoOptionsSheet extends StatelessWidget {
               ),
             ),
           ),
-          const Text(
-            'Profile photo',
+          Text(
+            context.l10n.profilePhoto,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w800,
@@ -49,20 +50,20 @@ class PhotoOptionsSheet extends StatelessWidget {
           const SizedBox(height: 14),
           _OptionTile(
             icon: Icons.photo_camera_outlined,
-            label: hasPhoto ? 'Change photo' : 'Add photo',
+            label: hasPhoto ? context.l10n.changePhoto : context.l10n.addPhoto,
             onTap: () => Navigator.of(context).pop('change'),
           ),
           if (hasPhoto) ...[
             const SizedBox(height: 10),
             _OptionTile(
               icon: Icons.crop_rounded,
-              label: 'Adjust photo',
+              label: context.l10n.adjustPhoto,
               onTap: () => Navigator.of(context).pop('adjust'),
             ),
             const SizedBox(height: 10),
             _OptionTile(
               icon: Icons.delete_outline_rounded,
-              label: 'Remove photo',
+              label: context.l10n.removePhoto,
               iconColor: const Color(0xFFE53935),
               textColor: const Color(0xFFE53935),
               onTap: () => Navigator.of(context).pop('remove'),

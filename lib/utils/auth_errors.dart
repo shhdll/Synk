@@ -2,11 +2,12 @@ import 'dart:async';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-const String kNetworkErrorMessage =
-    'No internet connection. Check your connection and try again.';
-const String kRateLimitMessage =
-    'Too many attempts. Please wait a few minutes and try again.';
-const String kGenericErrorMessage = 'Something went wrong. Please try again.';
+import '../l10n/l10n.dart';
+
+String get kNetworkErrorMessage =>
+    appL10n.noInternetConnectionCheckYourConnection;
+String get kRateLimitMessage => appL10n.tooManyAttemptsPleaseWaitA;
+String get kGenericErrorMessage => appL10n.somethingWentWrongPleaseTryAgain;
 
 // In ilike, _ and % are wildcards, so "a_b" would also match "axb".
 String escapeLike(String value) => value

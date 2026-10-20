@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/synk_colors.dart';
+import '../../../l10n/l10n.dart';
 import 'activity_thumbnail.dart';
 
 class SynkFilterChip extends StatelessWidget {
@@ -18,7 +19,7 @@ class SynkFilterChip extends StatelessWidget {
     required String category,
     required this.selected,
     required this.onTap,
-  }) : label = category,
+  }) : label = valueLabel(category),
        icon = ActivityVisual.forText(category).icon;
 
   final String label;

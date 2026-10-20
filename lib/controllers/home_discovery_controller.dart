@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../core/constants/activity_categories.dart';
+import '../l10n/l10n.dart';
 import '../models/activities_model.dart';
 import '../models/activity_filters.dart';
 import '../models/activity_model.dart';
@@ -117,7 +118,7 @@ class HomeDiscoveryController extends ChangeNotifier {
       _allActivities = activities;
       _applyFilters();
     } catch (e) {
-      _errorMessage = 'Unable to load activities. Pull down to refresh.';
+      _errorMessage = appL10n.unableToLoadActivitiesPullDown;
     } finally {
       _isLoading = false;
       notifyListeners();

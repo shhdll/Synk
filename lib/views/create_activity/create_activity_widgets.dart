@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../core/constants/synk_colors.dart';
+import '../../l10n/l10n.dart';
 
 
 const Color kFieldErrorColor = Color(0xFFE53935);
@@ -49,8 +50,8 @@ class CreateGroupLabel extends StatelessWidget {
                 color: const Color(0x1F6B7280),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Text(
-                'Optional',
+              child: Text(
+                context.l10n.optional,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,

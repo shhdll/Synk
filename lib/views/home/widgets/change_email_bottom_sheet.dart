@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/constants/auth_constants.dart';
 import '../../../core/constants/synk_colors.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../models/auth_model.dart';
 
 /// Modal bottom sheet allowing users to request a change of their email address,
@@ -89,13 +90,13 @@ class _ChangeEmailBottomSheetState extends State<ChangeEmailBottomSheet> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Row(
+          content: Row(
             children: [
               Icon(Icons.mark_email_read_rounded, color: Colors.white, size: 20),
               SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Confirmation link sent! Please check both your current and new email inboxes to confirm the change.',
+                  context.l10n.confirmationLinkSentPleaseCheckBoth,
                   style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
                 ),
               ),
@@ -113,7 +114,7 @@ class _ChangeEmailBottomSheetState extends State<ChangeEmailBottomSheet> {
       });
     } catch (_) {
       setState(() {
-        _errorMessage = 'Unable to update email. Please try again.';
+        _errorMessage = context.l10n.unableToUpdateEmailPleaseTry;
       });
     } finally {
       if (mounted) {
@@ -142,13 +143,13 @@ class _ChangeEmailBottomSheetState extends State<ChangeEmailBottomSheet> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Row(
+          content: Row(
             children: [
               Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
               SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Confirmation links resent! Check your inboxes to confirm.',
+                  context.l10n.confirmationLinksResentCheckYourInboxes,
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
@@ -166,7 +167,7 @@ class _ChangeEmailBottomSheetState extends State<ChangeEmailBottomSheet> {
       });
     } catch (_) {
       setState(() {
-        _errorMessage = 'Failed to resend confirmation email.';
+        _errorMessage = context.l10n.failedToResendConfirmationEmail;
       });
     } finally {
       if (mounted) {
@@ -196,13 +197,13 @@ class _ChangeEmailBottomSheetState extends State<ChangeEmailBottomSheet> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Row(
+          content: Row(
             children: [
               Icon(Icons.check_circle_outline_rounded, color: Colors.white, size: 20),
               SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Pending email change cancelled.',
+                  context.l10n.pendingEmailChangeCancelled,
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
@@ -216,7 +217,7 @@ class _ChangeEmailBottomSheetState extends State<ChangeEmailBottomSheet> {
       );
     } catch (_) {
       setState(() {
-        _errorMessage = 'Failed to cancel email change request.';
+        _errorMessage = context.l10n.failedToCancelEmailChangeRequest;
       });
     } finally {
       if (mounted) {
@@ -281,7 +282,7 @@ class _ChangeEmailBottomSheetState extends State<ChangeEmailBottomSheet> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          hasPending ? 'Pending Email Change' : 'Change Email',
+                          hasPending ? context.l10n.pendingEmailChange : context.l10n.changeEmail,
                           style: const TextStyle(
                             fontSize: 19,
                             fontWeight: FontWeight.w800,
@@ -292,8 +293,8 @@ class _ChangeEmailBottomSheetState extends State<ChangeEmailBottomSheet> {
                         const SizedBox(height: 2),
                         Text(
                           hasPending
-                              ? 'Confirmation is currently in progress'
-                              : 'Update your login and contact email',
+                              ? context.l10n.confirmationIsCurrentlyInProgress
+                              : context.l10n.updateYourLoginAndContactEmail,
                           style: TextStyle(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w500,
@@ -325,8 +326,8 @@ class _ChangeEmailBottomSheetState extends State<ChangeEmailBottomSheet> {
                       color: SynkColors.textSecondary,
                     ),
                     const SizedBox(width: 10),
-                    const Text(
-                      'Current:',
+                    Text(
+                      context.l10n.currentEmailLabel,
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -418,8 +419,8 @@ class _ChangeEmailBottomSheetState extends State<ChangeEmailBottomSheet> {
                     color: SynkColors.orangeDark,
                   ),
                   const SizedBox(width: 8),
-                  const Text(
-                    'Awaiting Confirmation',
+                  Text(
+                    context.l10n.awaitingConfirmation,
                     style: TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w800,
@@ -429,25 +430,33 @@ class _ChangeEmailBottomSheetState extends State<ChangeEmailBottomSheet> {
                 ],
               ),
               const SizedBox(height: 8),
-              RichText(
-                text: TextSpan(
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: SynkColors.textPrimary.withValues(alpha: 0.9),
-                    height: 1.4,
-                  ),
-                  children: [
-                    const TextSpan(text: 'A change link was sent to '),
+              Builder(
+                builder: (context) {
+                  // Split the sentence around the address so it can be bold.
+                  const marker = '\u0000';
+                  final parts = context.l10n
+                      .changeLinkSentTo(marker)
+                      .split(marker);
+                  return Text.rich(
                     TextSpan(
-                      text: widget.pendingEmail,
-                      style: const TextStyle(fontWeight: FontWeight.w800),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: SynkColors.textPrimary.withValues(alpha: 0.9),
+                        height: 1.4,
+                      ),
+                      children: [
+                        TextSpan(text: parts.first),
+                        TextSpan(
+                          // Isolated so the address reads left to right
+                          // inside an Arabic sentence.
+                          text: '\u2068${widget.pendingEmail}\u2069',
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                        if (parts.length > 1) TextSpan(text: parts.last),
+                      ],
                     ),
-                    const TextSpan(
-                      text:
-                          '. Both your old and new email addresses must confirm the change before it updates.',
-                    ),
-                  ],
-                ),
+                  );
+                },
               ),
             ],
           ),
@@ -476,13 +485,13 @@ class _ChangeEmailBottomSheetState extends State<ChangeEmailBottomSheet> {
                       color: Colors.white,
                     ),
                   )
-                : const Row(
+                : Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.refresh_rounded, size: 18),
                       SizedBox(width: 8),
                       Text(
-                        'Resend Confirmation Links',
+                        context.l10n.resendConfirmationLinks,
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
@@ -508,8 +517,8 @@ class _ChangeEmailBottomSheetState extends State<ChangeEmailBottomSheet> {
                 borderRadius: BorderRadius.circular(16),
               ),
             ),
-            child: const Text(
-              'Cancel Email Change',
+            child: Text(
+              context.l10n.cancelEmailChange,
               style: TextStyle(
                 fontSize: 14.5,
                 fontWeight: FontWeight.w700,
@@ -529,8 +538,8 @@ class _ChangeEmailBottomSheetState extends State<ChangeEmailBottomSheet> {
           style: TextButton.styleFrom(
             foregroundColor: SynkColors.textSecondary,
           ),
-          child: const Text(
-            'Use a different email address',
+          child: Text(
+            context.l10n.useADifferentEmailAddress,
             style: TextStyle(
               fontSize: 13.5,
               fontWeight: FontWeight.w600,
@@ -555,13 +564,13 @@ class _ChangeEmailBottomSheetState extends State<ChangeEmailBottomSheet> {
             validator: (value) {
               final trimmed = value?.trim() ?? '';
               if (trimmed.isEmpty) {
-                return 'Please enter a new email address.';
+                return context.l10n.pleaseEnterANewEmailAddress;
               }
               if (!AuthConstants.emailRegex.hasMatch(trimmed)) {
-                return 'Please enter a valid email address.';
+                return context.l10n.profileEmailInvalid;
               }
               if (trimmed.toLowerCase() == widget.currentEmail.toLowerCase()) {
-                return 'New email must be different from current email.';
+                return context.l10n.newEmailMustBeDifferentFrom;
               }
               return null;
             },
@@ -571,7 +580,7 @@ class _ChangeEmailBottomSheetState extends State<ChangeEmailBottomSheet> {
               color: SynkColors.textPrimary,
             ),
             decoration: InputDecoration(
-              hintText: 'Enter new email address',
+              hintText: context.l10n.enterNewEmailAddress,
               hintStyle: TextStyle(
                 color: SynkColors.textSecondary.withValues(alpha: 0.7),
                 fontSize: 14,
@@ -618,7 +627,7 @@ class _ChangeEmailBottomSheetState extends State<ChangeEmailBottomSheet> {
 
           // Helper note
           Text(
-            'Confirmation emails will be sent to both addresses. The change will take effect once confirmed.',
+            context.l10n.confirmationEmailsWillBeSentTo,
             style: TextStyle(
               fontSize: 12,
               height: 1.4,
@@ -644,8 +653,8 @@ class _ChangeEmailBottomSheetState extends State<ChangeEmailBottomSheet> {
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    child: const Text(
-                      'Cancel',
+                    child: Text(
+                      context.l10n.cancel,
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -678,8 +687,8 @@ class _ChangeEmailBottomSheetState extends State<ChangeEmailBottomSheet> {
                               color: Colors.white,
                             ),
                           )
-                        : const Text(
-                            'Send Verification',
+                        : Text(
+                            context.l10n.sendVerification,
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w800,

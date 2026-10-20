@@ -4,6 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../controllers/activity_leave_controller.dart';
 import '../../../core/constants/synk_colors.dart';
+import '../../../core/constants/synk_icons.dart';
+import '../../../l10n/l10n.dart';
 import '../../../models/activities_model.dart';
 import '../../../models/activity_model.dart';
 import '../../../models/activity_participation_model.dart';
@@ -12,6 +14,7 @@ import '../../../models/user_profile_model.dart';
 import '../../../utils/custom_widgets/synk_dialog.dart';
 import '../../../utils/custom_widgets/synk_feedback.dart';
 import '../../../utils/maps_launcher.dart';
+import '../../../utils/share_activity.dart';
 import '../../widgets/anonymous_avatar.dart';
 import '../../widgets/crown_icon.dart';
 import 'activity_thumbnail.dart';
@@ -246,9 +249,8 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
         if (result.result == 'time_conflict') {
           await SynkFeedback.showErrorDialog(
             context,
-            title: 'Unable to Join',
-            message:
-                'This activity conflicts with one you’ve already joined or created.',
+            title: context.l10n.unableToJoin,
+            message: context.l10n.thisActivityConflictsWithOneYouve,
           );
           return;
         }
@@ -275,13 +277,13 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
       if (!mounted) return;
 
       final title = switch (result.result) {
-        'joined' => 'Joined!',
-        'already_joined' => 'Already Joined',
-        'waitlisted' => 'Added to Waitlist!',
-        'already_waitlisted' => 'Already Waitlisted',
-        'pending' => 'Request Sent!',
-        'already_pending' => 'Request Already Sent',
-        _ => 'Done!',
+        'joined' => context.l10n.joinedTitle,
+        'already_joined' => context.l10n.alreadyJoined,
+        'waitlisted' => context.l10n.addedToWaitlist,
+        'already_waitlisted' => context.l10n.alreadyWaitlisted,
+        'pending' => context.l10n.requestSent,
+        'already_pending' => context.l10n.requestAlreadySent,
+        _ => context.l10n.doneTitle,
       };
 
       await SynkFeedback.showSuccessDialog(
@@ -292,7 +294,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     } catch (_) {
       if (mounted) {
         setState(
-          () => _joinError = 'Unable to join the activity. Please try again.',
+          () => _joinError = context.l10n.unableToJoinTheActivityPlease,
         );
       }
     } finally {
@@ -302,29 +304,13 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
 
   String get _formattedDateTime {
     final date = _currentActivity.dateTime;
-    const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-
-    final weekday = weekdays[date.weekday - 1];
-    final month = months[date.month - 1];
-    final hour = date.hour % 12 == 0 ? 12 : date.hour % 12;
-    final minute = date.minute.toString().padLeft(2, '0');
-    final period = date.hour >= 12 ? 'PM' : 'AM';
-
-    return '$weekday, $month ${date.day}, ${date.year} · $hour:$minute $period';
+    final day = context.l10n.longDate(
+      weekdayShort(date),
+      monthShort(date.month),
+      date.day,
+      date.year,
+    );
+    return '$day · ${formatTime(date.hour, date.minute)}';
   }
 
   @override
@@ -373,8 +359,15 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                           ],
                           const SizedBox(height: 22),
                           _buildParticipantsSection(),
-                          if (_isViewerHost && !_currentActivity.isPast) ...[
+                          if (_shareableCode != null) ...[
                             const SizedBox(height: 22),
+                            _buildCodeRow(_shareableCode!),
+                          ],
+                          if (_isViewerHost &&
+                              !_currentActivity.isPast &&
+                              (widget.onDelete != null ||
+                                  widget.onEdit != null)) ...[
+                            const SizedBox(height: 10),
                             _buildHostTools(),
                           ],
                           const SizedBox(height: 10),
@@ -393,15 +386,21 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     );
   }
 
-  Widget _buildHostTools() {
-    final code = _currentActivity.activityCode;
+  // The host and joined participants can copy or share the code of an
+  // upcoming activity. Feed activities don't carry it, so fall back to the
+  // viewer's own copy in the store.
+  String? get _shareableCode {
+    if (_currentActivity.isPast) return null;
+    if (!_isViewerHost && _participationStatus != 'joined') return null;
+    final code =
+        _currentActivity.activityCode ??
+        widget.activityStore.byId(_currentActivity.id)?.activityCode;
+    return (code == null || code.isEmpty) ? null : code;
+  }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (code != null && code.isNotEmpty)
-          Container(
-            padding: const EdgeInsets.fromLTRB(14, 6, 6, 6),
+  Widget _buildCodeRow(String code) {
+    return Container(
+            padding: const EdgeInsetsDirectional.fromSTEB(14, 6, 6, 6),
             decoration: BoxDecoration(
               color: SynkColors.orangeDark.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(16),
@@ -417,8 +416,8 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                   color: SynkColors.orangeDark,
                 ),
                 const SizedBox(width: 9),
-                const Text(
-                  'Activity code',
+                Text(
+                  context.l10n.activityCode,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -436,14 +435,14 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Copy code',
+                  tooltip: context.l10n.copyCode,
                   onPressed: () async {
                     await Clipboard.setData(ClipboardData(text: code));
                     if (!mounted) return;
                     ScaffoldMessenger.of(context)
                       ..hideCurrentSnackBar()
                       ..showSnackBar(
-                        const SnackBar(content: Text('Activity code copied')),
+                        SnackBar(content: Text(context.l10n.activityCodeCopied)),
                       );
                   },
                   icon: const Icon(
@@ -452,11 +451,27 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                     color: SynkColors.orangeDark,
                   ),
                 ),
+                Builder(
+                  builder: (buttonContext) => IconButton(
+                    tooltip: context.l10n.shareCode,
+                    onPressed: () =>
+                        shareActivityCode(buttonContext, _currentActivity, code),
+                    icon: const Icon(
+                      Icons.share_rounded,
+                      size: 18,
+                      color: SynkColors.orangeDark,
+                    ),
+                  ),
+                ),
               ],
             ),
-          ),
-        if (widget.onDelete != null || widget.onEdit != null) ...[
-          const SizedBox(height: 10),
+          );
+  }
+
+  Widget _buildHostTools() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
           Row(
             children: [
               if (widget.onEdit != null)
@@ -472,7 +487,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
                     icon: const Icon(Icons.edit_outlined, size: 20),
-                    label: const Text('Edit activity', style: TextStyle(fontWeight: FontWeight.w700)),
+                    label: Text(context.l10n.editActivity, style: const TextStyle(fontWeight: FontWeight.w700)),
                   ),
                 ),
               if (widget.onEdit != null && widget.onDelete != null)
@@ -490,12 +505,11 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
                     icon: const Icon(Icons.delete_outline_rounded, size: 20),
-                    label: const Text('Delete activity', style: TextStyle(fontWeight: FontWeight.w700)),
+                    label: Text(context.l10n.deleteActivity, style: const TextStyle(fontWeight: FontWeight.w700)),
                   ),
                 ),
             ],
           ),
-        ],
       ],
     );
   }
@@ -512,17 +526,17 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
       ) = switch (_participationStatus) {
         'waitlisted' => (
           Icons.hourglass_top_rounded,
-          "You're on the waitlist",
+          context.l10n.youreOnTheWaitlist,
           const Color(0xFF8A6D3B),
         ),
         'pending' => (
           Icons.schedule_rounded,
-          'Waiting for host approval',
+          context.l10n.waitingForHostApproval,
           const Color(0xFFD9822B),
         ),
         _ => (
           Icons.check_circle_rounded,
-          "You've joined this activity",
+          context.l10n.youveJoinedThisActivity,
           _joinedColor,
         ),
       };
@@ -600,7 +614,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                           : Icons.person_add_alt_1_rounded,
                       size: 20,
                     ),
-              label: Text(isFull ? 'Join waitlist' : 'Join activity'),
+              label: Text(isFull ? context.l10n.joinWaitlist : context.l10n.joinActivity),
             ),
           ),
           if (_joinError != null) ...[
@@ -716,8 +730,8 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
           SizedBox(
             width: double.infinity,
             child: _buildBarAction(
-              icon: Icons.logout_rounded,
-              label: 'Leave Activity',
+              icon: SynkIcons.logout,
+              label: context.l10n.leaveActivity,
               color: SynkColors.orangeDark,
               onPressed: _isLeaving
                   ? null
@@ -744,34 +758,33 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
   _leaveCopy(String? status) {
     return switch (status) {
       'waitlisted' => (
-        icon: Icons.logout_rounded,
-        title: 'Leave waitlist?',
+        icon: SynkIcons.logout,
+        title: context.l10n.leaveWaitlistTitle,
         message:
-            'Are you sure you want to leave the waitlist for this activity?',
-        stay: 'Stay on Waitlist',
-        action: 'Leave Waitlist',
-        successTitle: 'You Left the Waitlist',
-        successMessage: 'You have been removed from the waitlist.',
+            context.l10n.confirmLeaveWaitlist,
+        stay: context.l10n.stayOnWaitlist,
+        action: context.l10n.leaveWaitlist,
+        successTitle: context.l10n.youLeftTheWaitlist,
+        successMessage: context.l10n.youHaveBeenRemovedFromThe,
       ),
       'pending' => (
         icon: Icons.close_rounded,
-        title: 'Cancel request?',
+        title: context.l10n.cancelRequestTitle,
         message:
-            'Are you sure you want to cancel your request to join this '
-            'activity?',
-        stay: 'Keep Request',
-        action: 'Cancel Request',
-        successTitle: 'Request Cancelled',
-        successMessage: 'Your join request has been cancelled.',
+            context.l10n.confirmCancelRequest,
+        stay: context.l10n.keepRequest,
+        action: context.l10n.cancelRequest,
+        successTitle: context.l10n.requestCancelled,
+        successMessage: context.l10n.yourJoinRequestHasBeenCancelled,
       ),
       _ => (
-        icon: Icons.logout_rounded,
-        title: 'Leave activity?',
-        message: 'Are you sure you want to leave this activity?',
-        stay: 'Stay',
-        action: 'Leave Activity',
-        successTitle: 'You Left the Activity',
-        successMessage: 'You have successfully left this activity.',
+        icon: SynkIcons.logout,
+        title: context.l10n.leaveActivityTitle,
+        message: context.l10n.confirmLeaveActivity,
+        stay: context.l10n.stay,
+        action: context.l10n.leaveActivity,
+        successTitle: context.l10n.youLeftTheActivity,
+        successMessage: context.l10n.youHaveSuccessfullyLeftThisActivity,
       ),
     };
   }
@@ -843,7 +856,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
         } else if (failure == 'host') {
           _currentActivity = _hostedActivity() ?? _currentActivity;
           _participationStatus = null;
-          _leaveError = 'You are now the host of this activity.';
+          _leaveError = context.l10n.youAreNowTheHostOf;
         }
       });
       return;
@@ -903,12 +916,10 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
 
     final action = await SynkDialog.destructive(
       icon: Icons.swap_horiz_rounded,
-      title: 'Transfer hosting and leave?',
-      message:
-          '${candidate.name} will become the host of this activity. '
-          'You will no longer be able to manage it.',
-      primaryLabel: 'Stay',
-      secondaryLabel: 'Transfer & Leave',
+      title: context.l10n.transferHostingAndLeave,
+      message: context.l10n.transferHostMessage(candidate.name),
+      primaryLabel: context.l10n.stay,
+      secondaryLabel: context.l10n.transferAndLeave,
     ).show(context, barrierDismissible: false);
 
     if (action != SynkDialogAction.secondary || !mounted) return;
@@ -942,8 +953,8 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
 
     await SynkFeedback.showSuccessDialog(
       context,
-      title: 'You Left the Activity',
-      message: '${candidate.name} is now the host.',
+      title: context.l10n.youLeftTheActivity,
+      message: context.l10n.newHostIs(candidate.name),
     );
 
     if (mounted) Navigator.of(context).pop();
@@ -1078,9 +1089,9 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
 
         // Category Tag at bottom of cover
         if (_currentActivity.categoryLabel.isNotEmpty)
-          Positioned(
+          PositionedDirectional(
             bottom: 12,
-            left: 20,
+            start: 20,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
@@ -1105,7 +1116,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                     const SizedBox(width: 6),
                   ],
                   Text(
-                    _currentActivity.categoryLabel,
+                    valueLabel(_currentActivity.categoryLabel),
                     style: const TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,
@@ -1199,8 +1210,8 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Date & Time',
+                    Text(
+                      context.l10n.dateAndTime,
                       style: TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w600,
@@ -1251,8 +1262,8 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Location',
+                    Text(
+                      context.l10n.location,
                       style: TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w600,
@@ -1324,7 +1335,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
           size: 20,
           color: SynkColors.orangeDark,
         ),
-        label: const Text('View on map'),
+        label: Text(context.l10n.viewOnMap),
         style: TextButton.styleFrom(
           foregroundColor: SynkColors.textPrimary,
           backgroundColor: Colors.white,
@@ -1350,7 +1361,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
           }
           if (!opened) {
             messenger.showSnackBar(
-              const SnackBar(content: Text("Couldn't open Google Maps.")),
+              SnackBar(content: Text(appL10n.couldntOpenGoogleMaps)),
             );
           }
         },
@@ -1360,7 +1371,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
           shape: _mapButtonShape,
         ),
         child: Tooltip(
-          message: 'Open in Google Maps',
+          message: context.l10n.openInGoogleMaps,
           child: Image.asset(
             'assets/google_maps_logo.png',
             height: 24,
@@ -1375,8 +1386,8 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'About This Activity',
+        Text(
+          context.l10n.aboutThisActivity,
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w800,
@@ -1415,8 +1426,8 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Participants',
+            Text(
+              context.l10n.participants,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
@@ -1424,7 +1435,10 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
               ),
             ),
             Text(
-              '$_joinedCount / ${_currentActivity.maxParticipants} spots',
+              context.l10n.joinedOfMaxSpots(
+                _joinedCount,
+                _currentActivity.maxParticipants,
+              ),
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
@@ -1450,12 +1464,12 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
         else ...[
           _buildParticipantsList(),
           if (_hideMembers && _anonymousCount > 0)
-            const Padding(
+            Padding(
               padding: EdgeInsets.fromLTRB(4, 8, 4, 0),
               child: SizedBox(
                 width: double.infinity,
                 child: Text(
-                  "You'll see who's going once the host accepts you.",
+                  context.l10n.youllSeeWhosGoingOnceThe,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 12,
@@ -1472,7 +1486,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
 
   Widget _buildParticipantsList() {
     // Collect attendees: starting with host
-    final hostName = _currentActivity.hostName ?? 'Host';
+    final hostName = _currentActivity.hostName ?? context.l10n.host;
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -1517,7 +1531,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                 ),
               ),
               _buildParticipantRow(
-                name: (p['full_name'] as String?) ?? 'Community Member',
+                name: (p['full_name'] as String?) ?? context.l10n.communityMember,
                 username: p['username'] as String?,
                 userId: p['user_id'] as String?,
                 avatarUrl: p['avatar_url'] as String?,
@@ -1531,13 +1545,13 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
   }
 
   Widget _buildAnonymousRow() {
-    return const Row(
+    return Row(
       children: [
         AnonymousAvatar(size: 38),
         SizedBox(width: 12),
         // w800 so grey reads the same weight as the black names.
         Text(
-          'Anonymous',
+          context.l10n.anonymous,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
@@ -1614,8 +1628,8 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                 color: _joinedColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Text(
-                'You',
+              child: Text(
+                context.l10n.you,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
@@ -1625,18 +1639,18 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
             ),
           if (isHost)
             Container(
-              padding: const EdgeInsets.fromLTRB(6, 3, 8, 3),
+              padding: const EdgeInsetsDirectional.fromSTEB(6, 3, 8, 3),
               decoration: BoxDecoration(
                 color: SynkColors.orangeDark.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   CrownIcon(size: 14, color: SynkColors.orangeDark),
                   SizedBox(width: 4),
                   Text(
-                    'Host',
+                    context.l10n.host,
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,

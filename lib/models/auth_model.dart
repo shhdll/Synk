@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/constants/auth_constants.dart';
+import '../l10n/l10n.dart';
 import '../services/push_notification_service.dart';
 import '../utils/auth_errors.dart';
 
@@ -28,8 +29,8 @@ class AuthModel {
   }) async {
     final email = await emailForUsername(username);
     if (email == null) {
-      throw const AuthException(
-        'No account found with this username.',
+      throw AuthException(
+        appL10n.noAccountFoundWithThisUsername,
         code: 'username_not_found',
       );
     }

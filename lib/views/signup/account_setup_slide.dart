@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../controllers/signup_controller.dart';
 import '../../controllers/onboarding_controller.dart';
 import '../../core/constants/synk_colors.dart';
+import '../../l10n/l10n.dart';
 import '../../screens/auth/email_verification_screen.dart';
 import '../home/main_shell.dart';
 
@@ -49,8 +50,8 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 8),
-                const Text(
-                  'Create your\naccount.',
+                Text(
+                  context.l10n.createYourAccount,
                   style: TextStyle(
                     fontSize: 34,
                     fontWeight: FontWeight.w900,
@@ -65,8 +66,8 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                 _buildField(
                   controller: signupController.usernameController,
                   focusNode: signupController.usernameFocusNode,
-                  label: 'Username',
-                  hint: 'Username',
+                  label: context.l10n.username,
+                  hint: context.l10n.username,
                   icon: Icons.alternate_email_rounded,
                   keyboardType: TextInputType.text,
                   errorText: signupController.usernameError,
@@ -78,8 +79,8 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                 _buildField(
                   controller: signupController.emailController,
                   focusNode: signupController.emailFocusNode,
-                  label: 'Email',
-                  hint: 'Email address',
+                  label: context.l10n.email,
+                  hint: context.l10n.emailAddress,
                   icon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                   errorText: signupController.emailError,
@@ -91,7 +92,7 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                 _buildField(
                   controller: signupController.passwordController,
                   focusNode: signupController.passwordFocusNode,
-                  label: 'Password',
+                  label: context.l10n.password,
                   hint: '••••••••',
                   icon: Icons.lock_outline_rounded,
                   obscureText: _obscurePassword,
@@ -117,8 +118,8 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                 _buildField(
                   controller: signupController.confirmPasswordController,
                   focusNode: signupController.confirmPasswordFocusNode,
-                  label: 'Confirm Password',
-                  hint: 'Re-type password',
+                  label: context.l10n.confirmPassword,
+                  hint: context.l10n.reTypePassword,
                   icon: Icons.lock_outline_rounded,
                   obscureText: _obscureConfirmPassword,
                   errorText: signupController.confirmPasswordError,
@@ -227,8 +228,8 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                               strokeWidth: 2.5,
                             ),
                           )
-                        : const Text(
-                            'Complete Registration',
+                        : Text(
+                            context.l10n.completeRegistration,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
@@ -249,21 +250,24 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
   Widget _buildPasswordRequirements(SignupController signupController) {
     final password = signupController.passwordController.text;
     final rules = [
-      _PasswordRequirement(text: '8+ characters', met: password.length >= 8),
       _PasswordRequirement(
-        text: 'Uppercase letter',
+        text: context.l10n.eightPlusCharacters,
+        met: password.length >= 8,
+      ),
+      _PasswordRequirement(
+        text: context.l10n.uppercaseLetter,
         met: RegExp(r'[A-Z]').hasMatch(password),
       ),
       _PasswordRequirement(
-        text: 'Lowercase letter',
+        text: context.l10n.lowercaseLetter,
         met: RegExp(r'[a-z]').hasMatch(password),
       ),
       _PasswordRequirement(
-        text: 'A number',
+        text: context.l10n.aNumber,
         met: RegExp(r'[0-9]').hasMatch(password),
       ),
       _PasswordRequirement(
-        text: 'Special character',
+        text: context.l10n.specialCharacter,
         met: RegExp(r'[@$!%*?&_\-#^~+=<>.,:;/\\]|[^a-zA-Z0-9]')
             .hasMatch(password),
       ),
@@ -271,7 +275,7 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
 
     // Two columns so the button fits without scrolling.
     return Padding(
-      padding: const EdgeInsets.only(left: 12, right: 8),
+      padding: const EdgeInsetsDirectional.only(start: 12, end: 8),
       child: LayoutBuilder(
         builder: (context, constraints) => Wrap(
           children: [
@@ -326,7 +330,7 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
             ),
             decoration: InputDecoration(
               prefixIcon: Padding(
-                padding: const EdgeInsets.only(left: 14, right: 8),
+                padding: const EdgeInsetsDirectional.only(start: 14, end: 8),
                 child: Icon(icon, size: 20, color: const Color(0xFF6B7280)),
               ),
               prefixIconConstraints: const BoxConstraints(

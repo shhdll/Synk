@@ -6,8 +6,11 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../controllers/home_discovery_controller.dart';
 import '../../controllers/map_controller.dart' as map_state;
 import '../../core/constants/synk_colors.dart';
+import '../../l10n/l10n.dart';
 import '../../models/activities_model.dart';
+import '../../models/activity_filters.dart';
 import '../../models/activity_model.dart';
+import '../../utils/custom_widgets/synk_feedback.dart';
 import 'widgets/activity_details_sheet.dart';
 import 'widgets/activity_map_marker.dart';
 import 'widgets/activity_thumbnail.dart';
@@ -39,6 +42,10 @@ class _MapViewState extends State<MapView> {
 
   GoogleMapController? _googleMap;
   String? _selectedId;
+
+  // The Map's own search and filters, separate from Home's.
+  final TextEditingController _search = TextEditingController();
+  ActivityFilters _filters = ActivityFilters.defaults;
 
   // Opened via "View on map"; shown even if the filters would hide it.
   Activity? _extra;
@@ -98,27 +105,84 @@ class _MapViewState extends State<MapView> {
     }
   }
 
+  GeoPoint? get _userPoint {
+    final here = _location.userLocation;
+    if (here == null) return _discovery.userLocation;
+    return (latitude: here.latitude, longitude: here.longitude);
+  }
+
+  // Activities that can be shown on the map.
+  static bool _mappable(Activity a) =>
+      a.isPublic && a.hasCoordinates && a.spotsOpen > 0;
+
+  // In the chosen sort order, which is also the swipe order of the cards.
+  List<Activity> _filtered(ActivityFilters filters) => filters.apply(
+    _discovery.allActivities.where(_mappable),
+    userLocation: _userPoint,
+    search: _search.text,
+  );
+
   List<Activity> get _activities {
-    final list = _discovery.filteredActivities
-        .where((a) => a.isPublic && a.hasCoordinates && a.spotsOpen > 0)
-        .toList();
+    final list = _filtered(_filters);
     final extra = _extra;
     if (extra != null && !list.any((a) => a.id == extra.id)) list.add(extra);
     return list;
   }
 
-  List<String> get _categories => _discovery.feedCategories;
+  List<String> get _categories {
+    final labels = _discovery.categoriesInFeed(
+      HomeDiscoveryController.knownCategories,
+    );
+    for (final selected in _filters.categories) {
+      if (!labels.contains(selected)) labels.add(selected);
+    }
+    return labels;
+  }
+
+  void _setFilters(ActivityFilters filters) {
+    setState(() => _filters = filters);
+    _clearSelection();
+  }
 
   // null = All
   void _setQuickCategory(String? category) {
-    if (category == null) {
-      if (_discovery.filters.categories.isNotEmpty) {
-        _discovery.clearCategories();
-      }
-    } else {
-      _discovery.toggleCategory(category);
+    _setFilters(
+      category == null
+          ? _filters.copyWith(categories: const {})
+          : _filters.toggleCategory(category),
+    );
+  }
+
+  void _openFilters() {
+    showMapFilterBottomSheet(
+      context: context,
+      controller: _discovery,
+      filters: _filters,
+      countFor: (draft) => _filtered(draft).length,
+      onApply: _setFilters,
+      onSortPicked: _showSorted,
+      hasLocation: _userPoint != null,
+    );
+  }
+
+  // Opens the cards on the first activity of the new order; swiping moves
+  // through the rest in that order.
+  void _showSorted(ActivityFilters filters) {
+    setState(() {
+      _filters = filters;
+      _extra = null;
+    });
+    final sorted = _activities;
+    if (sorted.isEmpty) {
+      _clearSelection();
+      SynkFeedback.showToast(
+        context,
+        title: context.l10n.noMatchesTryFewerFilters,
+        success: false,
+      );
+      return;
     }
-    _clearSelection();
+    _onPinTap(sorted.first);
   }
 
   Activity? _selectedActivity(List<Activity> activities) {
@@ -147,10 +211,14 @@ class _MapViewState extends State<MapView> {
         for (final activity in activities) {
           final visual = ActivityVisual.of(activity);
           final selected = activity.id == _selectedId;
-          final key = '${visual.icon.codePoint}:${visual.icon.fontFamily}:$selected';
+          final key =
+              '${visual.icon.codePoint}:${visual.icon.fontFamily}:$selected';
           var bitmap = _iconCache[key];
           if (bitmap == null) {
-            bitmap = await ActivityMapMarker.create(visual.icon, selected: selected);
+            bitmap = await ActivityMapMarker.create(
+              visual.icon,
+              selected: selected,
+            );
             _iconCache[key] = bitmap;
           }
           icons[activity.id] = bitmap;
@@ -174,7 +242,8 @@ class _MapViewState extends State<MapView> {
       return Marker(
         markerId: MarkerId(activity.id),
         position: LatLng(activity.latitude!, activity.longitude!),
-        icon: _activityIcons[activity.id] ??
+        icon:
+            _activityIcons[activity.id] ??
             BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
         anchor: const Offset(0.5, 0.95),
         zIndexInt: activity.id == _selectedId ? 1 : 0,
@@ -241,6 +310,7 @@ class _MapViewState extends State<MapView> {
     _googleMap?.dispose();
     _pageController?.dispose();
     _location.dispose();
+    _search.dispose();
     super.dispose();
   }
 
@@ -275,9 +345,11 @@ class _MapViewState extends State<MapView> {
                   if (focus != null) {
                     _onPinTap(focus);
                   } else if (current != null) {
-                    unawaited(controller.animateCamera(
-                      CameraUpdate.newLatLngZoom(current, 14),
-                    ));
+                    unawaited(
+                      controller.animateCamera(
+                        CameraUpdate.newLatLngZoom(current, 14),
+                      ),
+                    );
                   }
                   _scheduleMarkerRefresh();
                 },
@@ -306,19 +378,23 @@ class _MapViewState extends State<MapView> {
                       shadowColor: Colors.black26,
                       borderRadius: BorderRadius.circular(30),
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 4, 6, 4),
+                        padding: const EdgeInsetsDirectional.fromSTEB(
+                          16,
+                          4,
+                          6,
+                          4,
+                        ),
                         child: Row(
                           children: [
-                            const Icon(Icons.search_rounded,
-                                color: SynkColors.orangeDark),
+                            const Icon(
+                              Icons.search_rounded,
+                              color: SynkColors.orangeDark,
+                            ),
                             const SizedBox(width: 10),
                             Expanded(child: _searchField()),
                             FilterButton(
-                              count: _discovery.activeFilterCount,
-                              onTap: () => showHomeFilterBottomSheet(
-                                context: context,
-                                controller: _discovery,
-                              ),
+                              count: _filters.changedSectionCount,
+                              onTap: _openFilters,
                             ),
                           ],
                         ),
@@ -331,9 +407,9 @@ class _MapViewState extends State<MapView> {
                         scrollDirection: Axis.horizontal,
                         physics: const BouncingScrollPhysics(),
                         children: [
-                          _categoryChip('All', null),
+                          _categoryChip(context.l10n.all, null),
                           for (final category in _categories)
-                            _categoryChip(category, category),
+                            _categoryChip(valueLabel(category), category),
                         ],
                       ),
                     ),
@@ -353,15 +429,19 @@ class _MapViewState extends State<MapView> {
                       elevation: 3,
                       shape: const CircleBorder(),
                       child: IconButton(
-                        tooltip: 'My location',
+                        tooltip: context.l10n.myLocation,
                         onPressed: _location.isLocating ? null : _centerOnUser,
                         icon: _location.isLocating
                             ? const SizedBox.square(
                                 dimension: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
-                            : const Icon(Icons.my_location_rounded,
-                                color: SynkColors.textPrimary),
+                            : const Icon(
+                                Icons.my_location_rounded,
+                                color: SynkColors.textPrimary,
+                              ),
                       ),
                     ),
                   ],
@@ -389,12 +469,12 @@ class _MapViewState extends State<MapView> {
   }
 
   Widget _categoryChip(String label, String? category) {
-    final categories = _discovery.filters.categories;
+    final categories = _filters.categories;
     final selected = category == null
         ? categories.isEmpty
         : categories.contains(category);
     return Padding(
-      padding: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsetsDirectional.only(end: 8),
       child: Material(
         color: selected
             ? SynkColors.textPrimary
@@ -428,11 +508,16 @@ class _MapViewState extends State<MapView> {
     );
   }
 
+  void _onSearchChanged() {
+    setState(() {});
+    _clearSelection();
+  }
+
   Widget _searchField() {
-    final search = _discovery.searchController;
+    final search = _search;
     return TextField(
       controller: search,
-      onChanged: _discovery.onSearchChanged,
+      onChanged: (_) => _onSearchChanged(),
       textInputAction: TextInputAction.search,
       style: const TextStyle(
         fontSize: 15,
@@ -440,7 +525,7 @@ class _MapViewState extends State<MapView> {
         color: SynkColors.textPrimary,
       ),
       decoration: InputDecoration(
-        hintText: 'Search activities or places',
+        hintText: context.l10n.searchActivitiesOrPlaces,
         hintStyle: const TextStyle(
           fontSize: 15,
           color: SynkColors.textSecondary,
@@ -450,8 +535,11 @@ class _MapViewState extends State<MapView> {
         suffixIcon: search.text.isEmpty
             ? null
             : IconButton(
-                tooltip: 'Clear search',
-                onPressed: _discovery.clearSearch,
+                tooltip: context.l10n.clearSearch,
+                onPressed: () {
+                  _search.clear();
+                  _onSearchChanged();
+                },
                 icon: const Icon(
                   Icons.close_rounded,
                   size: 18,
@@ -478,31 +566,35 @@ class _MapViewState extends State<MapView> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          button(Icons.add_rounded, 'Zoom in', CameraUpdate.zoomIn()),
+          button(Icons.add_rounded, context.l10n.zoomIn, CameraUpdate.zoomIn()),
           Container(
             width: 24,
             height: 1,
             color: SynkColors.textSecondary.withValues(alpha: 0.2),
           ),
-          button(Icons.remove_rounded, 'Zoom out', CameraUpdate.zoomOut()),
+          button(
+            Icons.remove_rounded,
+            context.l10n.zoomOut,
+            CameraUpdate.zoomOut(),
+          ),
         ],
       ),
     );
   }
 
   Widget _messagePill(String message) => Material(
-        elevation: 2,
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-          child: Text(
-            message,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 12, color: SynkColors.textPrimary),
-          ),
-        ),
-      );
+    elevation: 2,
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(20),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      child: Text(
+        message,
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontSize: 12, color: SynkColors.textPrimary),
+      ),
+    ),
+  );
 
   Widget _previewCarousel(List<Activity> visible) {
     final byId = {for (final a in visible) a.id: a};
@@ -564,7 +656,7 @@ class _MapViewState extends State<MapView> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${activity.spotsOpen} ${activity.spotsOpen == 1 ? 'spot' : 'spots'} available',
+                      context.l10n.spotsLeft(activity.spotsOpen),
                       style: const TextStyle(
                         color: SynkColors.orangeDark,
                         fontSize: 12,
@@ -574,7 +666,10 @@ class _MapViewState extends State<MapView> {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded, color: SynkColors.textPrimary),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: SynkColors.textPrimary,
+              ),
             ],
           ),
         ),

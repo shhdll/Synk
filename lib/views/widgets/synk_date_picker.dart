@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/synk_colors.dart';
+import '../../l10n/l10n.dart';
 
 // Used for every date in the app.
 Future<DateTime?> showSynkDatePicker({
@@ -8,19 +9,19 @@ Future<DateTime?> showSynkDatePicker({
   required DateTime initialDate,
   required DateTime firstDate,
   required DateTime lastDate,
-  String title = 'Pick a date',
-  String confirmLabel = 'Set date',
+  String? title,
+  String? confirmLabel,
 }) {
   return showModalBottomSheet<DateTime>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => _DatePickerSheet(
+    builder: (context) => _DatePickerSheet(
       initialDate: initialDate,
       firstDate: firstDate,
       lastDate: lastDate,
-      title: title,
-      confirmLabel: confirmLabel,
+      title: title ?? context.l10n.pickADate,
+      confirmLabel: confirmLabel ?? context.l10n.setDate,
     ),
   );
 }
@@ -28,13 +29,16 @@ Future<DateTime?> showSynkDatePicker({
 Future<TimeOfDay?> showSynkTimePicker({
   required BuildContext context,
   required TimeOfDay initialTime,
-  String title = 'Pick a start time',
+  String? title,
 }) {
   return showModalBottomSheet<TimeOfDay>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => _TimePickerSheet(initialTime: initialTime, title: title),
+    builder: (context) => _TimePickerSheet(
+      initialTime: initialTime,
+      title: title ?? context.l10n.pickAStartTime,
+    ),
   );
 }
 
@@ -163,30 +167,18 @@ class _DatePickerSheet extends StatefulWidget {
 }
 
 class _DatePickerSheetState extends State<_DatePickerSheet> {
-  static const List<String> _weekdayLabels = <String>[
-    'M',
-    'T',
-    'W',
-    'T',
-    'F',
-    'S',
-    'S',
-  ];
-
-  static const List<String> _monthNames = <String>[
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
+  List<String> get _weekdayLabels {
+    final l = context.l10n;
+    return <String>[
+      l.weekdayLetterMon,
+      l.weekdayLetterTue,
+      l.weekdayLetterWed,
+      l.weekdayLetterThu,
+      l.weekdayLetterFri,
+      l.weekdayLetterSat,
+      l.weekdayLetterSun,
+    ];
+  }
 
   late final DateTime _first = _dateOnly(widget.firstDate);
   late final DateTime _last = _dateOnly(widget.lastDate);
@@ -292,7 +284,7 @@ class _DatePickerSheetState extends State<_DatePickerSheet> {
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
                       Text(
-                        '${_monthNames[_visibleMonth.month - 1]} '
+                        '${monthName(_visibleMonth.month)} '
                         '${_visibleMonth.year}',
                         style: const TextStyle(
                           fontSize: 15,
@@ -528,8 +520,6 @@ class _TimePickerSheet extends StatefulWidget {
 }
 
 class _TimePickerSheetState extends State<_TimePickerSheet> {
-  static const List<String> _periods = <String>['AM', 'PM'];
-
   late final FixedExtentScrollController _hourController;
   late final FixedExtentScrollController _minuteController;
   late final FixedExtentScrollController _periodController;
@@ -570,6 +560,17 @@ class _TimePickerSheetState extends State<_TimePickerSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final periodWheel = Expanded(
+      child: _wheel(
+        controller: _periodController,
+        itemCount: 2,
+        labelBuilder: (int index) =>
+            index == 0 ? context.l10n.timeAm : context.l10n.timePm,
+        onChanged: (int index) => setState(() => _periodIndex = index),
+      ),
+    );
+
     return SynkPickerSheet(
       title: widget.title,
       child: Column(
@@ -588,8 +589,12 @@ class _TimePickerSheetState extends State<_TimePickerSheet> {
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
+                // Hours and minutes keep the 7:30 order in Arabic too; only
+                // ص/م moves to the start, as in written Arabic times.
                 Row(
+                  textDirection: TextDirection.ltr,
                   children: <Widget>[
+                    if (isRtl) periodWheel,
                     Expanded(
                       child: _wheel(
                         controller: _hourController,
@@ -609,22 +614,14 @@ class _TimePickerSheetState extends State<_TimePickerSheet> {
                             setState(() => _minute = index),
                       ),
                     ),
-                    Expanded(
-                      child: _wheel(
-                        controller: _periodController,
-                        itemCount: 2,
-                        labelBuilder: (int index) => _periods[index],
-                        onChanged: (int index) =>
-                            setState(() => _periodIndex = index),
-                      ),
-                    ),
+                    if (!isRtl) periodWheel,
                   ],
                 ),
               ],
             ),
           ),
           const SizedBox(height: 14),
-          SynkSheetConfirmButton(label: 'Set time', onTap: _confirm),
+          SynkSheetConfirmButton(label: context.l10n.setTime, onTap: _confirm),
         ],
       ),
     );

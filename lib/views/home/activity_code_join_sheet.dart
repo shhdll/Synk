@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../controllers/activity_join_controller.dart';
 import '../../core/constants/synk_colors.dart';
+import '../../l10n/l10n.dart';
 import '../../models/activities_model.dart';
 import '../../models/activity_model.dart';
 import '../../models/activity_participation_model.dart';
@@ -23,9 +24,8 @@ Future<void> joinActivityWithCode(
   if (result.result == 'time_conflict') {
     await SynkFeedback.showErrorDialog(
       context,
-      title: 'Unable to Join',
-      message:
-          'This activity conflicts with one you’ve already joined or created.',
+      title: context.l10n.unableToJoin,
+      message: context.l10n.thisActivityConflictsWithOneYouve,
     );
     return;
   }
@@ -46,13 +46,13 @@ Future<void> joinActivityWithCode(
   if (!context.mounted) return;
 
   final title = switch (result.result) {
-    'joined' => 'Joined!',
-    'already_joined' => 'Already Joined',
-    'pending' => 'Request Sent!',
-    'already_pending' => 'Request Already Sent',
-    'waitlisted' => 'Added to Waitlist!',
-    'already_waitlisted' => 'Already Waitlisted',
-    _ => 'Done!',
+    'joined' => context.l10n.joinedTitle,
+    'already_joined' => context.l10n.alreadyJoined,
+    'pending' => context.l10n.requestSent,
+    'already_pending' => context.l10n.requestAlreadySent,
+    'waitlisted' => context.l10n.addedToWaitlist,
+    'already_waitlisted' => context.l10n.alreadyWaitlisted,
+    _ => context.l10n.doneTitle,
   };
 
   await SynkFeedback.showSuccessDialog(
@@ -167,12 +167,12 @@ class _ActivityCodeJoinSheetState extends State<ActivityCodeJoinSheet> {
                     ),
                   ),
                   const SizedBox(width: 14),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Join with a code',
+                          context.l10n.joinWithACode,
                           style: TextStyle(
                             fontSize: 21,
                             fontWeight: FontWeight.w800,
@@ -181,7 +181,7 @@ class _ActivityCodeJoinSheetState extends State<ActivityCodeJoinSheet> {
                         ),
                         SizedBox(height: 3),
                         Text(
-                          'Enter the 6-digit activity code.',
+                          context.l10n.enterThe6DigitActivityCode,
                           style: TextStyle(
                             fontSize: 14,
                             color: SynkColors.textSecondary,
@@ -293,8 +293,8 @@ class _ActivityCodeJoinSheetState extends State<ActivityCodeJoinSheet> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text(
-                          'Join Activity',
+                      : Text(
+                          context.l10n.joinActivityButton,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,

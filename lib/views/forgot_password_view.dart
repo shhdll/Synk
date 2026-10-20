@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../controllers/reset_password_controller.dart';
 import '../core/constants/synk_colors.dart';
+import '../l10n/l10n.dart';
 import '../utils/custom_widgets/puzzle_piece_tile.dart';
 import 'widgets/reset_link_info_row.dart';
 import 'widgets/synk_blob_background.dart';
@@ -69,7 +70,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
 
     if (!success) {
       _showSnackBar(
-        _controller.errorMessage ?? 'Unable to send the link.',
+        _controller.errorMessage ?? context.l10n.unableToSendTheLink,
         success: false,
       );
     }
@@ -81,8 +82,8 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
 
     _showSnackBar(
       success
-          ? 'A new link is on its way.'
-          : _controller.errorMessage ?? 'Unable to send the link.',
+          ? context.l10n.aNewLinkIsOnIts
+          : _controller.errorMessage ?? context.l10n.unableToSendTheLink,
       success: success,
     );
   }
@@ -155,7 +156,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
 
                       // Motif: missing → sending → sent.
                       Align(
-                        alignment: Alignment.centerLeft,
+                        alignment: AlignmentDirectional.centerStart,
                         child: PuzzlePieceTile(
                           state: sent
                               ? PieceState.sent
@@ -274,12 +275,12 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
   // ---------------------------------------------------------------------------
 
   Widget _buildFormIntro() {
-    return const Column(
+    return Column(
       key: ValueKey('form-intro'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Forgot your password?',
+          context.l10n.forgotYourPassword,
           style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.bold,
@@ -288,7 +289,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
         ),
         SizedBox(height: 8),
         Text(
-          "It happens. Enter your email and we'll send you a link to get back in.",
+          context.l10n.itHappensEnterYourEmailAnd,
           style: TextStyle(fontSize: 15, color: SynkColors.textSecondary),
         ),
       ],
@@ -318,7 +319,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
             style: const TextStyle(color: SynkColors.textPrimary),
             validator: _controller.validateEmail,
             decoration: InputDecoration(
-              hintText: 'Email address',
+              hintText: context.l10n.emailAddress,
               hintStyle: const TextStyle(color: SynkColors.textSecondary),
               filled: true,
               fillColor: Colors.white,
@@ -347,15 +348,15 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
 
         const SizedBox(height: 28),
 
-        _buildPrimaryButton(label: 'Send reset link', onPressed: _handleSend),
+        _buildPrimaryButton(label: context.l10n.sendResetLink, onPressed: _handleSend),
 
         const SizedBox(height: 16),
 
         Center(
           child: TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Back to Log In',
+            child: Text(
+              context.l10n.backToLogIn,
               style: TextStyle(
                 color: SynkColors.orangeDark,
                 fontWeight: FontWeight.bold,
@@ -370,7 +371,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Text(
-            "For your security, we'll send a link only if this email belongs to a Synk account.",
+            context.l10n.forYourSecurityWellSendA,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 12,
@@ -392,8 +393,8 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
       key: const ValueKey('sent-intro'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Check your inbox',
+        Text(
+          context.l10n.checkYourInbox,
           style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.bold,
@@ -401,8 +402,8 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
           ),
         ),
         const SizedBox(height: 8),
-        const Text(
-          'We sent a reset link to',
+        Text(
+          context.l10n.weSentAResetLinkTo,
           style: TextStyle(fontSize: 15, color: SynkColors.textSecondary),
         ),
         Text(
@@ -439,21 +440,21 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
               ),
             ],
           ),
-          child: const Column(
+          child: Column(
             children: [
               ResetLinkInfoRow(
                 icon: Icons.link_rounded,
-                text: 'The link can only be used once',
+                text: context.l10n.theLinkCanOnlyBeUsed,
               ),
               SizedBox(height: 16),
               ResetLinkInfoRow(
                 icon: Icons.phone_android_rounded,
-                text: 'Open it on this device so Synk can sign you in',
+                text: context.l10n.openItOnThisDeviceSo,
               ),
               SizedBox(height: 16),
               ResetLinkInfoRow(
                 icon: Icons.forward_to_inbox_rounded,
-                text: 'Not there? Check your spam folder',
+                text: context.l10n.notThereCheckYourSpamFolder,
               ),
             ],
           ),
@@ -462,7 +463,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
         const SizedBox(height: 28),
 
         _buildPrimaryButton(
-          label: 'Back to Log In',
+          label: context.l10n.backToLogIn,
           onPressed: () => Navigator.pop(context),
         ),
 
@@ -474,8 +475,10 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
             onPressed: canResend ? _handleResend : null,
             child: Text(
               canResend
-                  ? 'Resend link'
-                  : 'Resend link in 0:${seconds.toString().padLeft(2, '0')}',
+                  ? context.l10n.resendLink
+                  : context.l10n.resendLinkCountdown(
+                      seconds.toString().padLeft(2, '0'),
+                    ),
               style: TextStyle(
                 color: canResend
                     ? SynkColors.orangeDark
@@ -489,8 +492,8 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
         Center(
           child: TextButton(
             onPressed: _controller.editEmail,
-            child: const Text(
-              'Wrong email? Edit it',
+            child: Text(
+              context.l10n.wrongEmailEditIt,
               style: TextStyle(
                 fontSize: 13,
                 color: SynkColors.orangeDark,

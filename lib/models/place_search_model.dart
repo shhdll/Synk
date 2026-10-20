@@ -3,6 +3,8 @@ import 'dart:math';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/l10n.dart';
+
 // A place returned by search, or fully resolved after selection.
 //
 // [placeId] is always present — it's how a follow-up Details request is
@@ -140,8 +142,8 @@ class PlaceSearchModel {
     final num? lng = location?['longitude'] as num?;
 
     if (address == null || lat == null || lng == null) {
-      throw const PlaceSearchException(
-        'The selected place is missing its address or coordinates.',
+      throw PlaceSearchException(
+        appL10n.theSelectedPlaceIsMissingIts,
       );
     }
 
@@ -164,11 +166,11 @@ class PlaceSearchModel {
       );
     } on FunctionException catch (error) {
       throw PlaceSearchException(
-        'Place search failed (${error.status}). Please try again.',
+        appL10n.placeSearchFailed(error.status),
       );
     } catch (_) {
-      throw const PlaceSearchException(
-        'Could not reach place search. Check your connection and try again.',
+      throw PlaceSearchException(
+        appL10n.couldNotReachPlaceSearchCheck,
       );
     }
 
@@ -179,7 +181,7 @@ class PlaceSearchModel {
       if (decoded is Map<String, dynamic>) return decoded;
     }
 
-    throw const PlaceSearchException('Place search returned an unexpected response.');
+    throw PlaceSearchException(appL10n.placeSearchReturnedAnUnexpectedResponse);
   }
 
   PlaceSuggestion? _parseAutocompleteSuggestion(Map<String, dynamic> entry) {

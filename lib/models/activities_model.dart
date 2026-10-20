@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/l10n.dart';
 import 'activity_model.dart';
 
 // Reads and writes activity data stored in Supabase.
@@ -287,7 +288,7 @@ class ActivitiesModel {
             .map(
               (u) => {
                 'user_id': u['id'],
-                'full_name': u['full_name'] ?? 'Synk member',
+                'full_name': u['full_name'] ?? appL10n.synkMember,
                 'username': u['username'],
                 'avatar_url': u['avatar_url'],
                 'gender': u['gender'],
@@ -325,7 +326,7 @@ class ActivitiesModel {
     final uid = currentUserId;
 
     if (uid == null) {
-      throw StateError('Cannot create an activity while signed out.');
+      throw StateError(appL10n.cannotCreateAnActivityWhileSigned);
     }
 
     final payload = draft.toInsertMap()..['host_id'] = uid;
@@ -339,7 +340,7 @@ class ActivitiesModel {
   Future<Activity> update(Activity draft) async {
     final uid = currentUserId;
     if (uid == null) {
-      throw StateError('Cannot update an activity while signed out.');
+      throw StateError(appL10n.cannotUpdateActivitySignedOut);
     }
 
     final payload = draft.toInsertMap()..remove('host_id');
@@ -350,7 +351,7 @@ class ActivitiesModel {
         .eq('host_id', uid)
         .select();
     if (rows.isEmpty) {
-      throw StateError('The activity was not found or cannot be updated.');
+      throw StateError(appL10n.activityNotFoundOrCannotUpdate);
     }
     return Activity.fromMap(rows.first).copyWith(
       hostName: draft.hostName,
@@ -379,7 +380,7 @@ class ActivitiesModel {
     final uid = currentUserId;
 
     if (uid == null) {
-      throw StateError('Cannot delete an activity while signed out.');
+      throw StateError(appL10n.cannotDeleteAnActivityWhileSigned);
     }
 
     final deletedRows = await _supabase
@@ -391,7 +392,7 @@ class ActivitiesModel {
 
     // RLS or the host filter prevents deleting another user's activity.
     if (deletedRows.isEmpty) {
-      throw StateError('The activity was not found or cannot be deleted.');
+      throw StateError(appL10n.theActivityWasNotFoundOr);
     }
   }
 

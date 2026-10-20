@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/constants/auth_constants.dart';
 import '../../core/constants/synk_colors.dart';
+import '../../l10n/l10n.dart';
 import '../../views/home/main_shell.dart';
 import '../../views/login_view.dart';
 
@@ -131,7 +132,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
     if (_isChecking || _isCompleting) return;
     setState(() => _isChecking = true);
 
-    const notConfirmed = 'Not confirmed yet. Tap the link in the email first.';
+    final notConfirmed = context.l10n.notConfirmedYetTapTheLink;
     String message = notConfirmed;
     try {
       final auth = Supabase.instance.client.auth;
@@ -144,7 +145,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
           password: widget.password!,
         )).session;
       } else {
-        message = 'Already confirmed? Go back and sign in.';
+        message = context.l10n.alreadyConfirmedGoBackAndSign;
       }
 
       debugPrint(
@@ -161,7 +162,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
       if (e.code != 'email_not_confirmed') message = e.message;
     } catch (e) {
       debugPrint('EmailVerificationScreen: check failed: $e');
-      message = 'Could not check right now. Please try again.';
+      message = appL10n.couldNotCheckRightNowPlease;
     }
 
     if (!mounted) return;
@@ -260,7 +261,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Row(
+          content: Row(
             children: [
               Icon(
                 Icons.check_circle_outline_rounded,
@@ -270,7 +271,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
               SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Verification email resent! Please check your inbox.',
+                  context.l10n.verificationEmailResentPleaseCheckYour,
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
@@ -311,7 +312,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
           content: Text(
             e.message.isNotEmpty
                 ? e.message
-                : 'Failed to resend confirmation email.',
+                : context.l10n.failedToResendConfirmationEmail,
           ),
           backgroundColor: Colors.redAccent,
           behavior: SnackBarBehavior.floating,
@@ -324,9 +325,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text(
-            'An unexpected error occurred. Please try again.',
-          ),
+          content: Text(context.l10n.anUnexpectedErrorOccurredPleaseTry),
           backgroundColor: Colors.redAccent,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -434,8 +433,8 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
                     const SizedBox(height: 32),
 
                     // Headline
-                    const Text(
-                      'Check your inbox',
+                    Text(
+                      context.l10n.checkYourInbox,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 34,
@@ -452,7 +451,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: Text(
-                        'We sent a confirmation link to:',
+                        context.l10n.weSentAConfirmationLinkTo,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 15,
@@ -582,8 +581,12 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
                                     const SizedBox(width: 8),
                                     Text(
                                       _cooldownSeconds > 0
-                                          ? 'Resend in ${_cooldownSeconds}s'
-                                          : 'Resend verification email',
+                                          ? context.l10n.resendInSeconds(
+                                              _cooldownSeconds,
+                                            )
+                                          : context
+                                                .l10n
+                                                .resendVerificationEmail,
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w700,
@@ -626,8 +629,8 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
                                   size: 18,
                                 ),
                           const SizedBox(width: 6),
-                          const Text(
-                            "I've confirmed my email",
+                          Text(
+                            context.l10n.iveConfirmedMyEmail,
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
@@ -644,13 +647,13 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
                         foregroundColor: SynkColors.textSecondary,
                         padding: const EdgeInsets.symmetric(vertical: 10),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.arrow_back_rounded, size: 16),
                           SizedBox(width: 6),
                           Text(
-                            'Back to Sign In',
+                            context.l10n.backToSignIn,
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,

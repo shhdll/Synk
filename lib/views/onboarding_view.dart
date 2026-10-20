@@ -8,6 +8,7 @@ import '../core/constants/interest_emojis.dart';
 import '../core/constants/synk_colors.dart';
 
 import '../controllers/signup_controller.dart';
+import '../l10n/l10n.dart';
 import 'signup/personal_details_slide.dart';
 import 'signup/account_setup_slide.dart';
 import 'widgets/blob_layout.dart';
@@ -410,8 +411,8 @@ class _OnboardingViewState extends State<OnboardingView>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'What are you into?',
+        Text(
+          context.l10n.whatAreYouInto,
           style: TextStyle(
             fontSize: 36,
             fontWeight: FontWeight.w900,
@@ -421,8 +422,8 @@ class _OnboardingViewState extends State<OnboardingView>
           ),
         ),
         const SizedBox(height: 12),
-        const Text(
-          'Pick the activities you enjoy.',
+        Text(
+          context.l10n.pickTheActivitiesYouEnjoy,
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w500,
@@ -475,7 +476,7 @@ class _OnboardingViewState extends State<OnboardingView>
             Text(emoji, style: const TextStyle(fontSize: 14)),
             const SizedBox(width: 5),
             Text(
-              label,
+              valueLabel(label),
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
@@ -496,8 +497,8 @@ class _OnboardingViewState extends State<OnboardingView>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Where do you like to have fun?',
+        Text(
+          context.l10n.whereDoYouLikeToHave,
           style: TextStyle(
             fontSize: 36,
             fontWeight: FontWeight.w900,
@@ -507,8 +508,8 @@ class _OnboardingViewState extends State<OnboardingView>
           ),
         ),
         const SizedBox(height: 12),
-        const Text(
-          'Tell us what kind of activities you prefer.',
+        Text(
+          context.l10n.tellUsWhatKindOfActivities,
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w500,
@@ -519,7 +520,7 @@ class _OnboardingViewState extends State<OnboardingView>
         const SizedBox(height: 30),
         _buildChoiceCard(
           emoji: '🏠',
-          title: 'Indoor',
+          title: context.l10n.indoor,
           value: 'Indoor',
           selectedValue: _controller.activityType,
           onTap: () => _controller.setActivityType('Indoor'),
@@ -527,7 +528,7 @@ class _OnboardingViewState extends State<OnboardingView>
         const SizedBox(height: 10),
         _buildChoiceCard(
           emoji: '🌳',
-          title: 'Outdoor',
+          title: context.l10n.outdoor,
           value: 'Outdoor',
           selectedValue: _controller.activityType,
           onTap: () => _controller.setActivityType('Outdoor'),
@@ -535,7 +536,7 @@ class _OnboardingViewState extends State<OnboardingView>
         const SizedBox(height: 10),
         _buildChoiceCard(
           emoji: '🤙🏻',
-          title: 'I don’t mind',
+          title: context.l10n.iDontMind,
           value: 'I don’t mind',
           selectedValue: _controller.activityType,
           onTap: () => _controller.setActivityType('I don’t mind'),
@@ -552,8 +553,8 @@ class _OnboardingViewState extends State<OnboardingView>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'How far are you willing to go?',
+        Text(
+          context.l10n.howFarAreYouWillingTo,
           style: TextStyle(
             fontSize: 36,
             fontWeight: FontWeight.w900,
@@ -563,8 +564,8 @@ class _OnboardingViewState extends State<OnboardingView>
           ),
         ),
         const SizedBox(height: 12),
-        const Text(
-          'Choose how close you want your activities to be.',
+        Text(
+          context.l10n.chooseHowCloseYouWantYour,
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w500,
@@ -575,7 +576,7 @@ class _OnboardingViewState extends State<OnboardingView>
         const SizedBox(height: 30),
         _buildChoiceCard(
           emoji: '🏙️',
-          title: 'In the city',
+          title: context.l10n.inTheCity,
           value: 'In the city',
           selectedValue: _controller.locationPreference,
           onTap: () => _controller.setLocationPreference('In the city'),
@@ -583,7 +584,7 @@ class _OnboardingViewState extends State<OnboardingView>
         const SizedBox(height: 10),
         _buildChoiceCard(
           emoji: '🛣️',
-          title: 'Away from the city',
+          title: context.l10n.awayFromTheCity,
           value: 'Away from the city',
           selectedValue: _controller.locationPreference,
           onTap: () => _controller.setLocationPreference('Away from the city'),
@@ -591,7 +592,7 @@ class _OnboardingViewState extends State<OnboardingView>
         const SizedBox(height: 10),
         _buildChoiceCard(
           emoji: '🤙🏻',
-          title: 'I don’t mind',
+          title: context.l10n.iDontMind,
           value: 'I don’t mind',
           selectedValue: _controller.locationPreference,
           onTap: () => _controller.setLocationPreference('I don’t mind'),
@@ -734,7 +735,7 @@ class _OnboardingViewState extends State<OnboardingView>
             alignment: Alignment.center,
             children: [
               Align(
-                alignment: Alignment.centerLeft,
+                alignment: AlignmentDirectional.centerStart,
                 child: PressedCircleButton(
                   icon: Icons.arrow_back_rounded,
                   enabled: true,
@@ -751,7 +752,7 @@ class _OnboardingViewState extends State<OnboardingView>
                 ),
               ),
               Align(
-                alignment: Alignment.centerRight,
+                alignment: AlignmentDirectional.centerEnd,
                 child: Visibility(
                   visible: !isLastStep, // Hides the arrow on Slide 5 (Registration button submits instead)
                   maintainSize: true,
@@ -783,7 +784,9 @@ class _OnboardingViewState extends State<OnboardingView>
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(stepCount, (index) {
         return Padding(
-          padding: EdgeInsets.only(right: index == stepCount - 1 ? 0 : 7),
+          padding: EdgeInsetsDirectional.only(
+            end: index == stepCount - 1 ? 0 : 7,
+          ),
           child: _buildProgressItem(_controller.currentStep == index),
         );
       }),

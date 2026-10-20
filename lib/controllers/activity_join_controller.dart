@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../models/activity_participation_model.dart';
 
 class ActivityJoinController extends ChangeNotifier {
@@ -28,7 +29,7 @@ class ActivityJoinController extends ChangeNotifier {
     _result = null;
 
     if (!RegExp(r'^[0-9]{6}$').hasMatch(code)) {
-      _errorMessage = 'Enter a valid 6-digit activity code.';
+      _errorMessage = appL10n.enterAValid6DigitActivity;
       notifyListeners();
       return null;
     }
@@ -60,7 +61,7 @@ class ActivityJoinController extends ChangeNotifier {
 
       return response;
     } catch (_) {
-      _errorMessage = 'Unable to join the activity. Please try again.';
+      _errorMessage = appL10n.unableToJoinTheActivityPlease;
       return null;
     } finally {
       _setLoading(false);

@@ -7,6 +7,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/l10n.dart';
+
 @pragma('vm:entry-point')
 Future<void> waitlistPromotionBackgroundHandler(RemoteMessage message) async {
   try {
@@ -22,9 +24,9 @@ class PushNotificationService {
   static final PushNotificationService instance = PushNotificationService._();
 
   static const String _channelId = 'waitlist_promotions';
-  static const String _channelName = 'Waitlist promotions';
+  static String get _channelName => appL10n.waitlistPromotions;
   static const String _activityUpdatesChannelId = 'activity_updates';
-  static const String _activityUpdatesChannelName = 'Activity updates';
+  static String get _activityUpdatesChannelName => appL10n.activityUpdates;
 
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
@@ -55,10 +57,10 @@ class PushNotificationService {
         },
       );
 
-      const channel = AndroidNotificationChannel(
+      final channel = AndroidNotificationChannel(
         _channelId,
         _channelName,
-        description: 'Updates when a spot opens in a waitlisted activity.',
+        description: appL10n.updatesWhenASpotOpensIn,
         importance: Importance.high,
       );
       await _localNotifications
@@ -67,7 +69,7 @@ class PushNotificationService {
           >()
           ?.createNotificationChannel(channel);
 
-      const activityUpdatesChannel = AndroidNotificationChannel(
+      final activityUpdatesChannel = AndroidNotificationChannel(
         _activityUpdatesChannelId,
         _activityUpdatesChannelName,
         description: 'Updates to activities you have joined.',
@@ -229,8 +231,8 @@ class PushNotificationService {
         ? _activityUpdatesChannelName
         : _channelName;
     final channelDescription = activityUpdated
-        ? 'Updates to activities you have joined.'
-        : 'Updates when a spot opens in a waitlisted activity.';
+        ? appL10n.updatesToActivitiesYouHaveJoined
+        : appL10n.updatesWhenASpotOpensIn;
 
     try {
       final details = NotificationDetails(
@@ -246,12 +248,14 @@ class PushNotificationService {
       await _localNotifications.show(
         id: (message.data['event_id'] as String?)?.hashCode ??
             (DateTime.now().millisecondsSinceEpoch & 0x7fffffff),
-        title: message.notification?.title ??
-            (activityUpdated ? 'Activity updated' : "You're In! \u{1F389}"),
-        body: message.notification?.body ??
+        title:
+            message.notification?.title ??
+            (activityUpdated ? appL10n.activityUpdated : appL10n.youreIn),
+        body:
+            message.notification?.body ??
             (activityUpdated
-                ? 'An activity you joined has new details.'
-                : 'A spot opened up in your activity.'),
+                ? appL10n.anActivityYouJoinedHasNew
+                : appL10n.aSpotOpenedUpInYour),
         notificationDetails: details,
         payload: activityId,
       );

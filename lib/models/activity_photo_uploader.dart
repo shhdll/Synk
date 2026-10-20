@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/constants/activity_constants.dart';
+import '../l10n/l10n.dart';
 import '../utils/photo_cropper.dart';
 
 // Result of uploading an activity photo.
@@ -62,8 +63,8 @@ class ActivityPhotoUploader {
   }) async {
     final hostId = _supabase.auth.currentUser?.id;
     if (hostId == null) {
-      return const ActivityPhotoUploadResult(
-        warning: "Your photo wasn't saved because you're signed out.",
+      return ActivityPhotoUploadResult(
+        warning: appL10n.yourPhotoWasntSavedBecauseYoure,
       );
     }
 
@@ -93,8 +94,8 @@ class ActivityPhotoUploader {
     } catch (_) {
       // Bucket missing, no permission, or the network dropped. The activity
       // is already saved, so report it and carry on without a photo.
-      return const ActivityPhotoUploadResult(
-        warning: "Your activity was created, but the photo couldn't be saved.",
+      return ActivityPhotoUploadResult(
+        warning: appL10n.activityCreatedPhotoNotSaved,
       );
     }
   }

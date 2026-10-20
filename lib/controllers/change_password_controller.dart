@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/constants/auth_constants.dart';
+import '../l10n/l10n.dart';
 import '../models/auth_model.dart';
 
 /// Which field a change-password error belongs to, so the view can show it
@@ -24,7 +25,7 @@ class ChangePasswordController extends ChangeNotifier {
 
   String? validateCurrentPassword(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter your current password';
+      return appL10n.enterYourCurrentPassword;
     }
     return null;
   }
@@ -35,7 +36,7 @@ class ChangePasswordController extends ChangeNotifier {
       return error;
     }
     if (value == currentPassword) {
-      return 'New password must be different from your current one';
+      return appL10n.newPasswordMustBeDifferentFrom;
     }
     return null;
   }
@@ -43,10 +44,10 @@ class ChangePasswordController extends ChangeNotifier {
   String? validateConfirmPassword(String? value, String newPassword) {
     final confirm = value ?? '';
     if (confirm.isEmpty) {
-      return 'Please confirm your new password';
+      return appL10n.pleaseConfirmYourNewPassword;
     }
     if (confirm != newPassword) {
-      return 'Passwords do not match';
+      return appL10n.passwordsDoNotMatch;
     }
     return null;
   }
@@ -61,7 +62,7 @@ class ChangePasswordController extends ChangeNotifier {
     // validator so every caller gets the same protection.
     if (newPassword == currentPassword) {
       _setError(
-        'New password must be different from your current one',
+        appL10n.newPasswordMustBeDifferentFrom,
         ChangePasswordErrorField.newPassword,
       );
       return false;
@@ -76,7 +77,7 @@ class ChangePasswordController extends ChangeNotifier {
       } on AuthException catch (e) {
         if (e is AuthSessionMissingException) rethrow;
         _setError(
-          'Current password is incorrect',
+          appL10n.currentPasswordIsIncorrect,
           ChangePasswordErrorField.current,
         );
         return false;
@@ -86,32 +87,32 @@ class ChangePasswordController extends ChangeNotifier {
       return true;
     } on AuthWeakPasswordException {
       _setError(
-        'Password is too weak. Please choose a stronger one.',
+        appL10n.passwordIsTooWeakPleaseChoose,
         ChangePasswordErrorField.newPassword,
       );
       return false;
     } on AuthSessionMissingException {
       _setError(
-        'Your session has expired. Please log in again.',
+        appL10n.yourSessionHasExpiredPleaseLog,
         ChangePasswordErrorField.general,
       );
       return false;
     } on AuthException catch (e) {
       if (_isSamePasswordError(e)) {
         _setError(
-          'New password must be different from your current one',
+          appL10n.newPasswordMustBeDifferentFrom,
           ChangePasswordErrorField.newPassword,
         );
       } else {
         _setError(
-          'Couldn\'t update your password. Please try again.',
+          appL10n.couldntUpdateYourPasswordPleaseTry,
           ChangePasswordErrorField.general,
         );
       }
       return false;
     } catch (_) {
       _setError(
-        'Couldn\'t update your password. Check your connection and try again.',
+        appL10n.couldntUpdateYourPasswordCheckYour,
         ChangePasswordErrorField.general,
       );
       return false;

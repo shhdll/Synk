@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/synk_colors.dart';
+import '../../../l10n/l10n.dart';
 import '../../widgets/synk_date_picker.dart';
 
 // Bottom-sheet editor for age. Mirrors the signup flow: age is derived
@@ -54,8 +55,8 @@ class _AgeEditorSheetState extends State<AgeEditorSheet> {
           : (initialDate.isAfter(lastDate) ? lastDate : initialDate),
       firstDate: firstDate,
       lastDate: lastDate,
-      title: 'Select birthday',
-      confirmLabel: 'Set birthday',
+      title: context.l10n.selectBirthday,
+      confirmLabel: context.l10n.setBirthday,
     );
 
     if (selectedDate == null) return;
@@ -77,7 +78,7 @@ class _AgeEditorSheetState extends State<AgeEditorSheet> {
 
   void _save() {
     if (_selectedAge == null) {
-      setState(() => _error = 'Select your birthday');
+      setState(() => _error = context.l10n.selectYourBirthday);
       return;
     }
     Navigator.of(context).pop(_selectedAge);
@@ -110,8 +111,8 @@ class _AgeEditorSheetState extends State<AgeEditorSheet> {
                 ),
               ),
             ),
-            const Text(
-              'Edit age',
+            Text(
+              context.l10n.editAge,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
@@ -128,7 +129,7 @@ class _AgeEditorSheetState extends State<AgeEditorSheet> {
                 color: SynkColors.textPrimary,
               ),
               decoration: InputDecoration(
-                hintText: 'DD/MM/YYYY',
+                hintText: context.l10n.birthdayHint,
                 hintStyle: const TextStyle(color: SynkColors.textSecondary),
                 prefixIcon: const Icon(
                   Icons.cake_outlined,
@@ -169,8 +170,8 @@ class _AgeEditorSheetState extends State<AgeEditorSheet> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                child: const Text(
-                  'Save',
+                child: Text(
+                  context.l10n.save,
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w800,

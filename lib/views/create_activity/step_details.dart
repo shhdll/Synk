@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../controllers/create_activity_controller.dart';
 import '../../core/constants/activity_constants.dart';
 import '../../core/constants/synk_colors.dart';
+import '../../l10n/l10n.dart';
 import 'create_activity_widgets.dart';
 
 class StepDetails extends StatefulWidget {
@@ -45,7 +46,7 @@ class _StepDetailsState extends State<StepDetails> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
       children: <Widget>[
-        const CreateGroupLabel(text: 'Number of people'),
+        CreateGroupLabel(text: context.l10n.numberOfPeople),
         const SizedBox(height: 10),
         _PeopleCard(controller: _c),
         Padding(
@@ -59,8 +60,7 @@ class _StepDetailsState extends State<StepDetails> {
               ),
               const SizedBox(width: 6),
               Text(
-                'You + ${_c.spotsOpen} available '
-                '${_c.spotsOpen == 1 ? 'spot' : 'spots'}',
+                context.l10n.youPlusAvailable(_c.spotsOpen),
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
@@ -71,7 +71,7 @@ class _StepDetailsState extends State<StepDetails> {
           ),
         ),
         const SizedBox(height: 24),
-        const CreateGroupLabel(text: 'Description', optional: true),
+        CreateGroupLabel(text: context.l10n.description, optional: true),
         const SizedBox(height: 10),
         CreateCard(
           hasError: descriptionError != null,
@@ -90,8 +90,8 @@ class _StepDetailsState extends State<StepDetails> {
                   fontWeight: FontWeight.w500,
                   color: SynkColors.textPrimary,
                 ),
-                decoration: const InputDecoration(
-                  hintText: 'Beginners welcome, bring water',
+                decoration: InputDecoration(
+                  hintText: context.l10n.activityDescriptionHint,
                   hintStyle: TextStyle(
                     fontSize: 15,
                     height: 1.4,
@@ -117,7 +117,7 @@ class _StepDetailsState extends State<StepDetails> {
         ),
         FieldError(descriptionError),
         const SizedBox(height: 24),
-        const CreateGroupLabel(text: 'Photo', optional: true),
+        CreateGroupLabel(text: context.l10n.photo, optional: true),
         const SizedBox(height: 10),
         _PhotoSection(
           photo: _c.photo,
@@ -130,7 +130,7 @@ class _StepDetailsState extends State<StepDetails> {
         ),
         FieldError(_c.photoError),
         const SizedBox(height: 24),
-        const CreateGroupLabel(text: 'Visibility'),
+        CreateGroupLabel(text: context.l10n.visibility),
         const SizedBox(height: 10),
         IntrinsicHeight(
           child: Row(
@@ -139,8 +139,8 @@ class _StepDetailsState extends State<StepDetails> {
               Expanded(
                 child: _VisibilityCard(
                   icon: Icons.public_rounded,
-                  title: 'Public',
-                  subtitle: 'Anyone can find and join',
+                  title: context.l10n.public,
+                  subtitle: context.l10n.anyoneCanFindAndJoin,
                   selected: _c.isPublic,
                   onTap: () => _c.setPublic(true),
                 ),
@@ -149,8 +149,8 @@ class _StepDetailsState extends State<StepDetails> {
               Expanded(
                 child: _VisibilityCard(
                   icon: Icons.lock_outline_rounded,
-                  title: 'Private',
-                  subtitle: 'Join by code, you approve',
+                  title: context.l10n.private,
+                  subtitle: context.l10n.joinByCodeYouApprove,
                   selected: !_c.isPublic,
                   onTap: () => _c.setPublic(false),
                 ),
@@ -171,7 +171,7 @@ class _PeopleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CreateCard(
-      padding: const EdgeInsets.fromLTRB(16, 10, 10, 10),
+      padding: const EdgeInsetsDirectional.fromSTEB(16, 10, 10, 10),
       child: Row(
         children: <Widget>[
           const Icon(
@@ -180,9 +180,9 @@ class _PeopleCard extends StatelessWidget {
             color: SynkColors.orangeDark,
           ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Text(
-              'Including you',
+              context.l10n.includingYou,
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
@@ -326,9 +326,9 @@ class _PhotoSection extends StatelessWidget {
                         ),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Add a photo',
+                    appL10n.addAPhoto,
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -370,7 +370,7 @@ class _PhotoSection extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Photo added',
+              appL10n.photoAdded,
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
@@ -379,7 +379,7 @@ class _PhotoSection extends StatelessWidget {
             ),
           ),
           IconButton(
-            tooltip: 'Change photo',
+            tooltip: appL10n.changePhoto,
             onPressed: isPicking ? null : onPick,
             icon: isPicking
                 ? const SizedBox.square(
@@ -396,7 +396,7 @@ class _PhotoSection extends StatelessWidget {
                   ),
           ),
           IconButton(
-            tooltip: 'Remove photo',
+            tooltip: appL10n.removePhoto,
             onPressed: onRemove,
             icon: const Icon(
               Icons.delete_outline_rounded,
@@ -498,7 +498,7 @@ class _PhotoSection extends StatelessWidget {
                                       Icons.photo_camera_outlined,
                                       size: 18,
                                     ),
-                              label: const Text('Replace Photo'),
+                              label: Text(context.l10n.replacePhoto),
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: SynkColors.orangeDark,
                                 side: BorderSide(
@@ -542,8 +542,8 @@ class _PhotoSection extends StatelessWidget {
                             color: SynkColors.orangeDark,
                           ),
                         const SizedBox(height: 8),
-                        const Text(
-                          'Upload Activity Photo',
+                        Text(
+                          context.l10n.uploadActivityPhoto,
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,

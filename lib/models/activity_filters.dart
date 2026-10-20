@@ -3,21 +3,30 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 
 import '../core/constants/activity_categories.dart';
+import '../l10n/l10n.dart';
 import 'activity_model.dart';
+
+export '../l10n/l10n.dart' show formatShortDate;
 
 typedef GeoPoint = ({double latitude, double longitude});
 
 // Opposite pairs, one per row in the sheet.
 enum SortOption {
-  soonest('Soonest'),
-  latest('Latest'),
-  nearest('Nearest'),
-  farthest('Farthest'),
-  almostFull('Almost full'),
-  mostSpots('Most spots');
+  soonest,
+  latest,
+  nearest,
+  farthest,
+  almostFull,
+  mostSpots;
 
-  const SortOption(this.label);
-  final String label;
+  String get label => switch (this) {
+    soonest => appL10n.soonest,
+    latest => appL10n.latest,
+    nearest => appL10n.nearest,
+    farthest => appL10n.farthest,
+    almostFull => appL10n.almostFull,
+    mostSpots => appL10n.mostSpots,
+  };
 
   bool get needsLocation => this == nearest || this == farthest;
 
@@ -25,49 +34,69 @@ enum SortOption {
 }
 
 enum DateOption {
-  any('Any'),
-  today('Today'),
-  tomorrow('Tomorrow'),
-  custom('Pick a date');
+  any,
+  today,
+  tomorrow,
+  custom;
 
-  const DateOption(this.label);
-  final String label;
+  String get label => switch (this) {
+    any => appL10n.any,
+    today => appL10n.today,
+    tomorrow => appL10n.tomorrow,
+    custom => appL10n.pickADate,
+  };
 }
 
 // [startHour, endHour)
 enum DaySlot {
-  morning('Morning', '6 AM–12 PM', 6, 12),
-  evening('Evening', '5–9 PM', 17, 21),
-  night('Night', '9 PM–12 AM', 21, 24);
+  morning(6, 12),
+  evening(17, 21),
+  night(21, 24);
 
-  const DaySlot(this.label, this.hours, this.startHour, this.endHour);
-  final String label;
-  final String hours;
+  const DaySlot(this.startHour, this.endHour);
   final int startHour;
   final int endHour;
+
+  String get label => switch (this) {
+    morning => appL10n.morning,
+    evening => appL10n.evening,
+    night => appL10n.night,
+  };
+
+  String get hours => switch (this) {
+    morning => appL10n.slotMorningHours,
+    evening => appL10n.slotEveningHours,
+    night => appL10n.slotNightHours,
+  };
 
   bool contains(DateTime time) => time.hour >= startHour && time.hour < endHour;
 }
 
 enum DistanceOption {
-  any('Any', null),
-  within5('5 km', 5),
-  within10('10 km', 10),
-  within25('25 km', 25);
+  any(null),
+  within5(5),
+  within10(10),
+  within25(25);
 
-  const DistanceOption(this.label, this.maxKm);
-  final String label;
+  const DistanceOption(this.maxKm);
   final double? maxKm;
+
+  String get label =>
+      maxKm == null ? appL10n.any : appL10n.distanceKm(maxKm!.round());
 }
 
 enum SpotsOption {
-  any('Any'),
-  oneLeft('1 left'),
-  hasSpots('Has spots'),
-  full('Full');
+  any,
+  oneLeft,
+  hasSpots,
+  full;
 
-  const SpotsOption(this.label);
-  final String label;
+  String get label => switch (this) {
+    any => appL10n.any,
+    oneLeft => appL10n.oneLeft,
+    hasSpots => appL10n.hasSpots,
+    full => appL10n.full,
+  };
 
   bool get isSingleCount => this == oneLeft || this == full;
 }
@@ -76,7 +105,7 @@ enum SpotsOption {
 @immutable
 class ActivityFilters {
   const ActivityFilters({
-    this.sort = SortOption.soonest,
+    this.sort,
     this.date = DateOption.any,
     this.customDate,
     this.daySlot,
@@ -88,7 +117,8 @@ class ActivityFilters {
 
   static const ActivityFilters defaults = ActivityFilters();
 
-  final SortOption sort;
+  // null until the user picks one; the list is then shown soonest first.
+  final SortOption? sort;
   final DateOption date;
   final DateTime? customDate;
   // Either a slot or a start time, never both.
@@ -153,7 +183,7 @@ class ActivityFilters {
 
   int get changedSectionCount {
     var count = 0;
-    if (sort != defaults.sort) count++;
+    if (sort != null) count++;
     if (date != defaults.date) count++;
     if (hasTime) count++;
     if (categories.isNotEmpty) count++;
@@ -208,7 +238,7 @@ class ActivityFilters {
 
   String? get timeLabel {
     if (daySlot != null) return daySlot!.label;
-    if (fromMinute != null) return 'From ${formatMinute(fromMinute!)}';
+    if (fromMinute != null) return appL10n.fromTime(formatMinute(fromMinute!));
     return null;
   }
 
@@ -290,7 +320,7 @@ class ActivityFilters {
       });
     }
 
-    switch (sort) {
+    switch (sort ?? SortOption.soonest) {
       case SortOption.soonest:
         result.sort(bySoonest);
       case SortOption.latest:
@@ -354,20 +384,7 @@ class ActivityFilters {
   }
 }
 
-const _weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const _months = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-];
+String formatMinute(int minuteOfDay) =>
+    formatTime(minuteOfDay ~/ 60, minuteOfDay % 60);
 
-String formatShortDate(DateTime date) =>
-    '${_weekdays[date.weekday - 1]}, ${_months[date.month - 1]} ${date.day}';
-
-String formatMinute(int minuteOfDay) {
-  final hour = minuteOfDay ~/ 60;
-  final minute = (minuteOfDay % 60).toString().padLeft(2, '0');
-  final h12 = hour % 12 == 0 ? 12 : hour % 12;
-  return '$h12:$minute ${hour < 12 ? 'AM' : 'PM'}';
-}
-
-String shortWeekday(DateTime date) => _weekdays[date.weekday - 1];
+String shortWeekday(DateTime date) => weekdayShort(date);

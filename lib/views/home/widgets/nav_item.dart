@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/synk_colors.dart';
 
-// A single icon+label tab in the bottom navigation bar.
+// A single icon tab in the bottom navigation bar. The label isn't shown,
+// but screen readers and a long press still get it.
 class NavItem extends StatelessWidget {
   const NavItem({
     super.key,
@@ -22,31 +23,26 @@ class NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = selected ? SynkColors.orangeDark : SynkColors.textSecondary;
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Badge(
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      excludeSemantics: true,
+      child: Tooltip(
+        message: label,
+        child: GestureDetector(
+          onTap: onTap,
+          behavior: HitTestBehavior.opaque,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 9),
+            child: Badge(
               isLabelVisible: badgeCount > 0,
               label: Text(badgeCount > 9 ? '9+' : '$badgeCount'),
               backgroundColor: SynkColors.badge,
               textColor: Colors.white,
-              child: Icon(icon, size: 24, color: color),
+              child: Icon(icon, size: 32, color: color),
             ),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: color,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

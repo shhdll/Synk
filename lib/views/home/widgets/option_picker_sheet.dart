@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/synk_colors.dart';
+import '../../../l10n/l10n.dart';
 
 class PickerOption {
   const PickerOption({required this.emoji, required this.label});
@@ -101,7 +102,7 @@ class _OptionPickerSheetState extends State<OptionPickerSheet> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            option.label,
+                            valueLabel(option.label),
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
@@ -140,8 +141,8 @@ class _OptionPickerSheetState extends State<OptionPickerSheet> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                      child: const Text(
-                        'Cancel',
+                      child: Text(
+                        context.l10n.cancel,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
@@ -167,8 +168,8 @@ class _OptionPickerSheetState extends State<OptionPickerSheet> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                      child: const Text(
-                        'Save',
+                      child: Text(
+                        context.l10n.save,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w800,

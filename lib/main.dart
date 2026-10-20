@@ -5,6 +5,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'controllers/language_controller.dart';
+import 'l10n/l10n.dart';
 import 'models/auth_deep_link_handler.dart';
 import 'models/auth_model.dart';
 import 'services/push_notification_service.dart';
@@ -22,6 +24,8 @@ Future<void> main() async {
     url: dotenv.env['SUPABASE_URL']!,
     publishableKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
+
+  await LanguageController.instance.load();
 
   await PushNotificationService.instance.initialize();
 
@@ -87,6 +91,20 @@ class _MyAppState extends State<MyApp> {
     // (picked up by the listener above).
     _deepLinkHandler = AuthDeepLinkHandler(onResult: _onAuthLinkResult)
       ..start();
+
+    LanguageController.instance.addListener(_onLanguageChanged);
+  }
+
+  // Rebuilds every screen, including text built outside a widget (such as
+  // labels from models), so nothing is left in the old language.
+  void _onLanguageChanged() {
+    setState(() {});
+    void rebuild(Element element) {
+      element.markNeedsBuild();
+      element.visitChildren(rebuild);
+    }
+
+    (context as Element).visitChildren(rebuild);
   }
 
   String? _pendingNotificationActivityId;
@@ -121,12 +139,11 @@ class _MyAppState extends State<MyApp> {
     }
 
     final message = switch ((type, outcome)) {
-      (_, AuthLinkOutcome.failed) =>
-        'This link has expired or was already used. Please request a new one.',
+      (_, AuthLinkOutcome.failed) => appL10n.thisLinkHasExpiredOrWas,
       (OtpType.emailChange, AuthLinkOutcome.emailChangePartial) =>
-        'Confirmed. Now open the link sent to your other email address.',
+        appL10n.confirmedNowOpenTheLinkSent,
       (OtpType.emailChange, AuthLinkOutcome.verified) =>
-        'Your email address was updated.',
+        appL10n.yourEmailAddressWasUpdated,
       _ => null,
     };
     if (message == null) return;
@@ -147,6 +164,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void dispose() {
+    LanguageController.instance.removeListener(_onLanguageChanged);
     _authSubscription?.cancel();
     _deepLinkHandler.dispose();
     super.dispose();
@@ -198,9 +216,14 @@ class _MyAppState extends State<MyApp> {
       scaffoldMessengerKey: _messengerKey,
       debugShowCheckedModeBanner: false,
       title: 'Synk',
+      locale: LanguageController.instance.locale,
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFFF9F5C)),
         fontFamily: GoogleFonts.inter().fontFamily,
+        // Inter has no Arabic letters.
+        fontFamilyFallback: [GoogleFonts.ibmPlexSansArabic().fontFamily!],
       ),
       home: StreamBuilder<AuthState>(
         stream: _authModel.authStateChanges,

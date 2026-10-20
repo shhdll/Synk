@@ -6,11 +6,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../controllers/profile_controller.dart';
 import '../../core/constants/interest_emojis.dart';
 import '../../core/constants/synk_colors.dart';
+import '../../core/constants/synk_icons.dart';
+import '../../l10n/l10n.dart';
 import '../../models/activity_model.dart';
 import '../../models/avatar_uploader.dart';
 import 'edit_interests_view.dart';
 import 'edit_profile_view.dart';
 import 'logout_view.dart';
+import 'settings_view.dart';
 import 'widgets/app_header.dart';
 import 'widgets/field_editor_sheet.dart';
 import 'widgets/option_picker_sheet.dart';
@@ -85,9 +88,9 @@ class _ProfileViewState extends State<ProfileView> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => FieldEditorSheet(
-        title: 'Bio',
+        title: context.l10n.bio,
         controller: controller,
-        hint: 'Add a short bio so people get to know you.',
+        hint: context.l10n.addAShortBioSoPeople,
         formKey: formKey,
         maxLines: 4,
         maxLength: 160,
@@ -102,9 +105,7 @@ class _ProfileViewState extends State<ProfileView> {
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
             ..showSnackBar(
-              const SnackBar(
-                content: Text('Unable to save bio. Please try again.'),
-              ),
+              SnackBar(content: Text(context.l10n.unableToSaveBioPleaseTry)),
             );
         }
       }
@@ -117,9 +118,9 @@ class _ProfileViewState extends State<ProfileView> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => OptionPickerSheet(
-        title: 'Activity type',
+        title: context.l10n.activityType,
         initialValue: current,
-        options: const [
+        options: [
           PickerOption(emoji: '🏠', label: 'Indoor'),
           PickerOption(emoji: '🌳', label: 'Outdoor'),
           PickerOption(emoji: '🤙🏻', label: 'I don’t mind'),
@@ -136,7 +137,7 @@ class _ProfileViewState extends State<ProfileView> {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
           ..showSnackBar(
-            const SnackBar(content: Text('Unable to save. Please try again.')),
+            SnackBar(content: Text(context.l10n.unableToSavePleaseTryAgain)),
           );
       }
     }
@@ -148,9 +149,9 @@ class _ProfileViewState extends State<ProfileView> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => OptionPickerSheet(
-        title: 'Preferred location',
+        title: context.l10n.preferredLocation,
         initialValue: current,
-        options: const [
+        options: [
           PickerOption(emoji: '🏙️', label: 'In the city'),
           PickerOption(emoji: '🛣️', label: 'Away from the city'),
           PickerOption(emoji: '🤙🏻', label: 'I don’t mind'),
@@ -167,7 +168,7 @@ class _ProfileViewState extends State<ProfileView> {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
           ..showSnackBar(
-            const SnackBar(content: Text('Unable to save. Please try again.')),
+            SnackBar(content: Text(context.l10n.unableToSavePleaseTryAgain)),
           );
       }
     }
@@ -213,7 +214,10 @@ class _ProfileViewState extends State<ProfileView> {
     final handle = (username != null && username.isNotEmpty)
         ? '@$username'
         : _controller.email;
-    final subtitle = [?handle, if (age != null) '$age yrs'].join(' · ');
+    final subtitle = [
+      ?handle,
+      if (age != null) context.l10n.ageYears(age),
+    ].join(' · ');
 
     return Scaffold(
       backgroundColor: SynkColors.background,
@@ -221,7 +225,29 @@ class _ProfileViewState extends State<ProfileView> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
           children: [
-            const AppHeader(),
+            Row(
+              children: [
+                const Expanded(child: AppHeader()),
+                Material(
+                  color: Colors.white,
+                  shape: const CircleBorder(),
+                  elevation: 1,
+                  shadowColor: Colors.black12,
+                  child: IconButton(
+                    tooltip: context.l10n.settings,
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const SettingsView(),
+                      ),
+                    ),
+                    icon: const Icon(
+                      Icons.settings_rounded,
+                      color: SynkColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 20),
             Container(
               clipBehavior: Clip.antiAlias,
@@ -241,7 +267,7 @@ class _ProfileViewState extends State<ProfileView> {
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                     child: Stack(
                       clipBehavior: Clip.none,
-                      alignment: Alignment.bottomLeft,
+                      alignment: AlignmentDirectional.bottomStart,
                       children: [
                         Container(
                           height: 120,
@@ -263,8 +289,8 @@ class _ProfileViewState extends State<ProfileView> {
                             borderRadius: BorderRadius.all(Radius.circular(20)),
                           ),
                         ),
-                        Positioned(
-                          left: 4,
+                        PositionedDirectional(
+                          start: 4,
                           bottom: -40,
                           child: Container(
                             width: 84,
@@ -291,7 +317,7 @@ class _ProfileViewState extends State<ProfileView> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
                     child: Align(
-                      alignment: Alignment.centerRight,
+                      alignment: AlignmentDirectional.centerEnd,
                       child: _EditInfoButton(onTap: _openEditProfile),
                     ),
                   ),
@@ -304,7 +330,7 @@ class _ProfileViewState extends State<ProfileView> {
                         Text(
                           (fullName?.isNotEmpty ?? false)
                               ? fullName!
-                              : 'Synk member',
+                              : context.l10n.synkMember,
                           style: const TextStyle(
                             fontSize: 19,
                             fontWeight: FontWeight.w800,
@@ -329,7 +355,7 @@ class _ProfileViewState extends State<ProfileView> {
                               child: _StatItem(
                                 icon: Icons.people_alt_rounded,
                                 value: '$friendsCount',
-                                label: 'Friends',
+                                label: context.l10n.friends,
                               ),
                             ),
                             const _StatDivider(),
@@ -337,7 +363,7 @@ class _ProfileViewState extends State<ProfileView> {
                               child: _StatItem(
                                 icon: Icons.local_activity_rounded,
                                 value: '$activitiesCount',
-                                label: 'Activities',
+                                label: context.l10n.activities,
                               ),
                             ),
                             const _StatDivider(),
@@ -345,7 +371,7 @@ class _ProfileViewState extends State<ProfileView> {
                               child: _StatItem(
                                 icon: Icons.star_rounded,
                                 value: ratingText,
-                                label: 'Rating',
+                                label: context.l10n.rating,
                               ),
                             ),
                           ],
@@ -367,7 +393,9 @@ class _ProfileViewState extends State<ProfileView> {
                           child: SizedBox(
                             width: double.infinity,
                             child: Text(
-                              (bio?.isNotEmpty ?? false) ? bio! : 'Add a short bio so people get to know you.',
+                              (bio?.isNotEmpty ?? false)
+                                  ? bio!
+                                  : context.l10n.addAShortBioSoPeople,
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
@@ -390,7 +418,7 @@ class _ProfileViewState extends State<ProfileView> {
             ),
             const SizedBox(height: 24),
             _ExpandableSection(
-              title: 'Interests',
+              title: context.l10n.interests,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -425,7 +453,7 @@ class _ProfileViewState extends State<ProfileView> {
                                     const SizedBox(width: 6),
                                   ],
                                   Text(
-                                    interest,
+                                    valueLabel(interest),
                                     style: const TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w700,
@@ -439,8 +467,8 @@ class _ProfileViewState extends State<ProfileView> {
                           .toList(),
                     )
                   else
-                    const Text(
-                      "Add interests so people get to know what you're into.",
+                    Text(
+                      context.l10n.addInterestsSoPeopleGetTo,
                       style: TextStyle(
                         fontSize: 13,
                         fontStyle: FontStyle.italic,
@@ -449,7 +477,7 @@ class _ProfileViewState extends State<ProfileView> {
                     ),
                   const SizedBox(height: 12),
                   Align(
-                    alignment: Alignment.centerRight,
+                    alignment: AlignmentDirectional.centerEnd,
                     child: _EditInfoButton(
                       onTap: () => _openEditInterests(interests),
                     ),
@@ -459,24 +487,24 @@ class _ProfileViewState extends State<ProfileView> {
             ),
             const SizedBox(height: 16),
             _ExpandableSection(
-              title: 'Preferences',
+              title: context.l10n.preferences,
               child: Column(
                 children: [
                   ProfileInfoRow(
                     icon: Icons.local_activity_rounded,
-                    label: 'Activity type',
+                    label: context.l10n.activityType,
                     value: (activityType?.isNotEmpty ?? false)
-                        ? activityType!
-                        : 'Not set',
+                        ? valueLabel(activityType!)
+                        : context.l10n.notSet,
                     onEdit: () => _editActivityType(activityType),
                   ),
                   const Divider(height: 20),
                   ProfileInfoRow(
                     icon: Icons.place_rounded,
-                    label: 'Preferred location',
+                    label: context.l10n.preferredLocation,
                     value: (locationPreference?.isNotEmpty ?? false)
-                        ? locationPreference!
-                        : 'Not set',
+                        ? valueLabel(locationPreference!)
+                        : context.l10n.notSet,
                     onEdit: () => _editLocationPreference(locationPreference),
                   ),
                 ],
@@ -494,9 +522,9 @@ class _ProfileViewState extends State<ProfileView> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                icon: const Icon(Icons.logout_rounded),
-                label: const Text(
-                  'Log Out',
+                icon: const Icon(SynkIcons.logout),
+                label: Text(
+                  context.l10n.logOut,
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 ),
               ),

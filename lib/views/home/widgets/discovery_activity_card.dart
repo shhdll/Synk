@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/synk_colors.dart';
+import '../../../l10n/l10n.dart';
 import '../../../models/activity_model.dart';
 import '../../../models/avatar_uploader.dart';
 import 'activity_status_chip.dart';
@@ -18,36 +19,15 @@ class DiscoveryActivityCard extends StatelessWidget {
   final Activity activity;
   final VoidCallback onTap;
 
-  static const _months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  static const _weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
   static String formatWhen(DateTime date, {DateTime? now}) {
     final today = DateUtils.dateOnly(now ?? DateTime.now());
     final day = DateUtils.dateOnly(date);
     final dayDiff = day.difference(today).inDays;
+    final time = formatTime(date.hour, date.minute);
 
-    final hour = date.hour % 12 == 0 ? 12 : date.hour % 12;
-    final minute = date.minute.toString().padLeft(2, '0');
-    final period = date.hour >= 12 ? 'PM' : 'AM';
-    final time = '$hour:$minute $period';
-
-    if (dayDiff == 0) return 'Today, $time';
-    if (dayDiff == 1) return 'Tomorrow, $time';
-    return '${_weekdays[date.weekday - 1]}, ${_months[date.month - 1]} '
-        '${date.day} · $time';
+    if (dayDiff == 0) return appL10n.todayAtTime(time);
+    if (dayDiff == 1) return appL10n.tomorrowAtTime(time);
+    return '${formatShortDate(date)} · $time';
   }
 
   @override
@@ -101,7 +81,9 @@ class DiscoveryActivityCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          activity.title.trim().isEmpty ? 'Untitled activity' : activity.title,
+          activity.title.trim().isEmpty
+              ? appL10n.untitledActivity
+              : activity.title,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(
@@ -136,7 +118,7 @@ class DiscoveryActivityCard extends StatelessWidget {
         ? '@$handle'
         : (activity.hostName?.trim().isNotEmpty ?? false)
         ? activity.hostName!.trim()
-        : 'Synk member';
+        : appL10n.synkMember;
     final avatarUrl = activity.hostAvatarUrl?.trim();
 
     return Row(

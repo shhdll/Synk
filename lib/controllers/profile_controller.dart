@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/l10n.dart';
 import '../models/auth_model.dart';
 import '../models/avatar_uploader.dart';
 import '../models/user_profile_model.dart';
@@ -60,10 +61,10 @@ class ProfileController extends ChangeNotifier {
 
     final usernameRegex = RegExp(r'^[a-zA-Z0-9._]{3,30}$');
     if (cleanUsername.isEmpty) {
-      return 'Username cannot be empty';
+      return appL10n.usernameCannotBeEmpty;
     }
     if (!usernameRegex.hasMatch(cleanUsername)) {
-      return 'Username must be 3–30 characters and can only include letters, numbers, dots, and underscores.';
+      return appL10n.usernameMustBe330Characters;
     }
 
     if (cleanUsername == username?.toLowerCase()) {
@@ -72,7 +73,7 @@ class ProfileController extends ChangeNotifier {
 
     final isTaken = await _profileModel.isUsernameTaken(cleanUsername);
     if (isTaken) {
-      return 'This username is already taken';
+      return appL10n.thisUsernameIsAlreadyTaken;
     }
 
     await _profileModel.updateProfile({'username': cleanUsername});

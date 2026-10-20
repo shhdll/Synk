@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:synk/l10n/app_localizations.dart';
 import 'package:synk/screens/auth/email_verification_screen.dart';
 
 void main() {
@@ -9,7 +10,11 @@ void main() {
     const testEmail = 'alex.doe@example.com';
 
     await tester.pumpWidget(
-      const MaterialApp(home: EmailVerificationScreen(email: testEmail)),
+      const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: EmailVerificationScreen(email: testEmail),
+      ),
     );
 
     // Initial pump

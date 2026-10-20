@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../l10n/l10n.dart';
 import '../models/auth_model.dart';
 
 class LogoutController extends ChangeNotifier {
@@ -23,7 +24,7 @@ class LogoutController extends ChangeNotifier {
       await _authModel.signOut();
       return true;
     } catch (_) {
-      _errorMessage = 'Unable to log out. Please try again.';
+      _errorMessage = appL10n.unableToLogOutPleaseTry;
       return false;
     } finally {
       _setLoggingOut(false);

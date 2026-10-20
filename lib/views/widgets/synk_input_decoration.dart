@@ -16,7 +16,7 @@ InputDecoration synkInputDecoration({
     filled: true,
     fillColor: Colors.white.withValues(alpha: 0.95),
     prefixIcon: Padding(
-      padding: const EdgeInsets.only(left: 14, right: 8),
+      padding: const EdgeInsetsDirectional.only(start: 14, end: 8),
       child: Icon(icon, size: 20, color: _iconGrey),
     ),
     prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),

@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../controllers/edit_profile_controller.dart';
 import '../../core/constants/synk_colors.dart';
+import '../../l10n/l10n.dart';
 import '../../models/avatar_uploader.dart';
 import '../../utils/custom_widgets/synk_feedback.dart';
 import 'change_password_view.dart';
@@ -87,7 +88,7 @@ class _EditProfileViewState extends State<EditProfileView> {
     _usernameController.text = _controller.username;
     _bioController.text = _controller.bio;
     _birthdayController.text = _controller.age != null
-        ? '${_controller.age} yrs'
+        ? context.l10n.ageYears(_controller.age!)
         : '';
     _emailController.text = _controller.email;
     _originalBirthdayText = _birthdayController.text;
@@ -167,8 +168,8 @@ class _EditProfileViewState extends State<EditProfileView> {
           : (initialDate.isAfter(lastDate) ? lastDate : initialDate),
       firstDate: firstDate,
       lastDate: lastDate,
-      title: 'Select birthday',
-      confirmLabel: 'Set birthday',
+      title: context.l10n.selectBirthday,
+      confirmLabel: context.l10n.setBirthday,
     );
 
     if (selectedDate != null) {
@@ -269,7 +270,7 @@ class _EditProfileViewState extends State<EditProfileView> {
     // ---------------------------------------------------------
 
     if (name.isEmpty) {
-      _showMessage('Please enter your name.');
+      _showMessage(appL10n.pleaseEnterYourName);
       return;
     }
 
@@ -279,7 +280,7 @@ class _EditProfileViewState extends State<EditProfileView> {
 
     if (_controller.age != null) {
       if (_controller.age! < 16 || _controller.age! > 65) {
-        _showMessage('Adult must be between 16 and 65 years old.');
+        _showMessage(appL10n.adultMustBeBetween16And);
         return;
       }
     }
@@ -291,12 +292,12 @@ class _EditProfileViewState extends State<EditProfileView> {
     final emailRegex = RegExp(r'^[\w\-.]+@([\w-]+\.)+[\w-]{2,4}$');
 
     if (email.isEmpty) {
-      _showMessage('Please enter your email.');
+      _showMessage(appL10n.profileEmailRequired);
       return;
     }
 
     if (!emailRegex.hasMatch(email)) {
-      _showMessage('Please enter a valid email address.');
+      _showMessage(appL10n.profileEmailInvalid);
       return;
     }
 
@@ -336,9 +337,8 @@ class _EditProfileViewState extends State<EditProfileView> {
       await SynkFeedback.showSaved(
         context,
         message: emailChanged
-            ? '${SynkFeedback.savedMessage} Check your new email '
-                  'to confirm the address change.'
-            : SynkFeedback.savedMessage,
+            ? context.l10n.yourChangesHaveBeenSavedCheck
+            : null,
       );
 
       if (!mounted) {
@@ -357,7 +357,7 @@ class _EditProfileViewState extends State<EditProfileView> {
         return;
       }
 
-      _showMessage('Unable to save your changes. Please try again.');
+      _showMessage(context.l10n.unableToSaveYourChangesPlease);
     }
   }
 
@@ -502,8 +502,8 @@ class _EditProfileViewState extends State<EditProfileView> {
           ),
         ),
 
-        title: const Text(
-          'Edit Profile',
+        title: Text(
+          context.l10n.editProfile,
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w900,
@@ -570,8 +570,8 @@ class _EditProfileViewState extends State<EditProfileView> {
                                 : null,
                           ),
 
-                          Positioned(
-                            right: -2,
+                          PositionedDirectional(
+                            end: -2,
                             bottom: -2,
                             child: Container(
                               padding: const EdgeInsets.all(8),
@@ -597,9 +597,9 @@ class _EditProfileViewState extends State<EditProfileView> {
 
                   const SizedBox(height: 10),
 
-                  const Center(
+                  Center(
                     child: Text(
-                      'Tap to change photo',
+                      context.l10n.tapToChangePhoto,
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -613,13 +613,13 @@ class _EditProfileViewState extends State<EditProfileView> {
                   // -------------------------------------------------------------
                   // Name
                   // -------------------------------------------------------------
-                  _buildFieldLabel('Name'),
+                  _buildFieldLabel(context.l10n.name),
 
                   const SizedBox(height: 8),
 
                   _buildTextField(
                     controller: _nameController,
-                    hintText: 'Your name',
+                    hintText: context.l10n.yourName,
                     textInputAction: TextInputAction.next,
                     onChanged: _onNameChanged,
                   ),
@@ -629,13 +629,13 @@ class _EditProfileViewState extends State<EditProfileView> {
                   // -------------------------------------------------------------
                   // Username
                   // -------------------------------------------------------------
-                  _buildFieldLabel('Username'),
+                  _buildFieldLabel(context.l10n.username),
 
                   const SizedBox(height: 8),
 
                   _buildTextField(
                     controller: _usernameController,
-                    hintText: 'Username',
+                    hintText: context.l10n.username,
                     prefixIcon: const Icon(
                       Icons.alternate_email_rounded,
                       size: 18,
@@ -651,13 +651,13 @@ class _EditProfileViewState extends State<EditProfileView> {
                   // -------------------------------------------------------------
                   // Bio
                   // -------------------------------------------------------------
-                  _buildFieldLabel('Bio'),
+                  _buildFieldLabel(context.l10n.bio),
 
                   const SizedBox(height: 8),
 
                   _buildTextField(
                     controller: _bioController,
-                    hintText: 'Tell people a bit about yourself...',
+                    hintText: context.l10n.tellPeopleABitAboutYourself,
                     maxLines: 4,
                     maxLength: 160,
                     textInputAction: TextInputAction.newline,
@@ -669,13 +669,13 @@ class _EditProfileViewState extends State<EditProfileView> {
                   // -------------------------------------------------------------
                   // Birthday
                   // -------------------------------------------------------------
-                  _buildFieldLabel('Birthday'),
+                  _buildFieldLabel(context.l10n.birthday),
 
                   const SizedBox(height: 8),
 
                   _buildTextField(
                     controller: _birthdayController,
-                    hintText: 'DD/MM/YYYY',
+                    hintText: context.l10n.birthdayHint,
                     readOnly: true,
                     onTap: _pickBirthday,
                     prefixIcon: const Icon(
@@ -689,13 +689,13 @@ class _EditProfileViewState extends State<EditProfileView> {
                   // -------------------------------------------------------------
                   // Email
                   // -------------------------------------------------------------
-                  _buildFieldLabel('Email'),
+                  _buildFieldLabel(context.l10n.email),
 
                   const SizedBox(height: 8),
 
                   _buildTextField(
                     controller: _emailController,
-                    hintText: 'Email address',
+                    hintText: context.l10n.emailAddress,
                     readOnly: true,
                     onTap: isSaving ? null : _openChangeEmailSheet,
                     prefixIcon: const Icon(
@@ -734,7 +734,9 @@ class _EditProfileViewState extends State<EditProfileView> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'Awaiting confirmation on ${_controller.newEmail}. Tap to resend or cancel.',
+                                context.l10n.awaitingConfirmationOn(
+                                  _controller.newEmail ?? '',
+                                ),
                                 style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -753,8 +755,8 @@ class _EditProfileViewState extends State<EditProfileView> {
                     ),
                   ] else ...[
                     const SizedBox(height: 8),
-                    const Text(
-                      'Tap to change your email address.',
+                    Text(
+                      context.l10n.tapToChangeYourEmailAddress,
                       style: TextStyle(
                         fontSize: 12,
                         height: 1.4,
@@ -768,13 +770,13 @@ class _EditProfileViewState extends State<EditProfileView> {
                   // -------------------------------------------------------------
                   // Password
                   // -------------------------------------------------------------
-                  _buildFieldLabel('Password'),
+                  _buildFieldLabel(context.l10n.password),
 
                   const SizedBox(height: 8),
 
                   _buildTextField(
                     controller: _passwordController,
-                    hintText: 'Change password',
+                    hintText: context.l10n.changePassword,
                     readOnly: true,
                     onTap: isSaving ? null : _openChangePassword,
                     prefixIcon: const Icon(
@@ -835,8 +837,8 @@ class _EditProfileViewState extends State<EditProfileView> {
                             ),
                           ),
                         )
-                      : const Text(
-                          'Save changes',
+                      : Text(
+                          context.l10n.saveChanges,
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
@@ -905,7 +907,10 @@ class _EditProfileViewState extends State<EditProfileView> {
           decoration: InputDecoration(
             prefixIcon: prefixIcon != null
                 ? Padding(
-                    padding: const EdgeInsets.only(left: 14, right: 8),
+                    padding: const EdgeInsetsDirectional.only(
+                      start: 14,
+                      end: 8,
+                    ),
                     child: prefixIcon,
                   )
                 : null,
@@ -958,7 +963,7 @@ class _EditProfileViewState extends State<EditProfileView> {
         if (hasError) ...[
           const SizedBox(height: 5),
           Padding(
-            padding: const EdgeInsets.only(left: 12),
+            padding: const EdgeInsetsDirectional.only(start: 12),
             child: Text(
               errorText,
               style: const TextStyle(

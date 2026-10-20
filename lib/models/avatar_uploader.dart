@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/l10n.dart';
 import '../utils/photo_cropper.dart';
 import 'user_profile_model.dart';
 
@@ -76,7 +77,7 @@ class AvatarUploader {
     return AvatarUpdateResult(
       picked: true,
       warning: avatarUrl == null
-          ? "Saved on this device (cloud photo storage isn't set up yet)."
+          ? appL10n.savedOnThisDeviceCloudPhoto
           : null,
     );
   }

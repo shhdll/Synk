@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/constants/synk_colors.dart';
+import '../../l10n/l10n.dart';
 import '../../models/activities_model.dart';
 import '../../models/activity_model.dart';
 import 'widgets/activity_details_sheet.dart';
@@ -49,7 +50,7 @@ class _ActivityNotificationRouteState extends State<ActivityNotificationRoute> {
 
       if (!mounted) return;
       if (activity == null) {
-        setState(() => _error = 'This activity is no longer available.');
+        setState(() => _error = context.l10n.thisActivityIsNoLongerAvailable);
         return;
       }
 
@@ -62,7 +63,7 @@ class _ActivityNotificationRouteState extends State<ActivityNotificationRoute> {
       if (mounted) Navigator.of(context).pop();
     } catch (_) {
       if (mounted) {
-        setState(() => _error = 'Unable to open this activity.');
+        setState(() => _error = context.l10n.unableToOpenThisActivity);
       }
     }
   }

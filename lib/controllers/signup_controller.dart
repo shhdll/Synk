@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/constants/auth_constants.dart';
+import '../l10n/l10n.dart';
 import '../utils/auth_errors.dart';
 
 class SignupController extends ChangeNotifier {
@@ -182,10 +183,10 @@ class SignupController extends ChangeNotifier {
   }
 
   String? _nameValidationError(String name) {
-    if (name.isEmpty) return 'Full name is required';
-    if (name.length > 50) return 'Name can be at most 50 characters';
+    if (name.isEmpty) return appL10n.fullNameIsRequired;
+    if (name.length > 50) return appL10n.nameCanBeAtMost50;
     if (!RegExp(r'^[\p{L}\p{M} ]+$', unicode: true).hasMatch(name)) {
-      return 'Name can only contain letters and spaces';
+      return appL10n.nameCanOnlyContainLettersAnd;
     }
     return null;
   }
@@ -193,13 +194,13 @@ class SignupController extends ChangeNotifier {
   void validateBirthday() {
     final text = birthdayController.text.trim();
     if (text.isEmpty) {
-      birthdayError = 'Birthday is required';
+      birthdayError = appL10n.birthdayIsRequired;
     } else {
       final age = _calculateAge(text);
       if (age == null) {
-        birthdayError = 'Please enter a valid birthday';
+        birthdayError = appL10n.pleaseEnterAValidBirthday;
       } else if (age < 16 || age > 65) {
-        birthdayError = 'Age must be between 16 and 65 years';
+        birthdayError = appL10n.ageMustBeBetween16And;
       } else {
         birthdayError = null;
       }
@@ -210,10 +211,10 @@ class SignupController extends ChangeNotifier {
   void validateEmail() {
     final email = emailController.text.trim();
     if (email.isEmpty) {
-      emailError = 'Email address is required';
+      emailError = appL10n.emailAddressIsRequired;
     } else if (!AuthConstants.emailRegex.hasMatch(email)) {
-      emailError = 'Please enter a valid email address';
-    } else if (emailError != 'An account with this email already exists') {
+      emailError = appL10n.pleaseEnterAValidEmailAddress;
+    } else if (emailError != appL10n.anAccountWithThisEmailAlready) {
       emailError = null;
     }
     notifyListeners();
@@ -229,9 +230,9 @@ class SignupController extends ChangeNotifier {
   void validateConfirmPassword() {
     final confirmation = confirmPasswordController.text;
     confirmPasswordError = confirmation.isEmpty
-        ? 'Please confirm your password'
+        ? appL10n.pleaseConfirmYourPassword
         : confirmation != passwordController.text
-        ? 'Passwords do not match'
+        ? appL10n.passwordsDoNotMatch
         : null;
     notifyListeners();
   }
@@ -292,23 +293,23 @@ class SignupController extends ChangeNotifier {
     final birthdayText = birthdayController.text.trim();
 
     if (birthdayText.isEmpty) {
-      birthdayError = 'Birthday is required';
+      birthdayError = appL10n.birthdayIsRequired;
       isValid = false;
     } else {
       final age = _calculateAge(birthdayText);
 
       if (age == null) {
-        birthdayError = 'Please enter a valid birthday';
+        birthdayError = appL10n.pleaseEnterAValidBirthday;
         isValid = false;
       } else if (age < 16 || age > 65) {
-        birthdayError = 'Age must be between 16 and 65 years';
+        birthdayError = appL10n.ageMustBeBetween16And;
         isValid = false;
       }
     }
 
     // Validate gender
     if (selectedGender == null) {
-      genderError = 'Please select your gender';
+      genderError = appL10n.pleaseSelectYourGender;
       isValid = false;
     }
 
@@ -335,10 +336,10 @@ class SignupController extends ChangeNotifier {
 
     // Validate email
     if (email.isEmpty) {
-      emailError = 'Email address is required';
+      emailError = appL10n.emailAddressIsRequired;
       isValid = false;
     } else if (!AuthConstants.emailRegex.hasMatch(email)) {
-      emailError = 'Please enter a valid email address';
+      emailError = appL10n.pleaseEnterAValidEmailAddress;
       isValid = false;
     }
 
@@ -351,10 +352,10 @@ class SignupController extends ChangeNotifier {
 
     // Validate confirm password
     if (confirmPassword.isEmpty) {
-      confirmPasswordError = 'Please confirm your password';
+      confirmPasswordError = appL10n.pleaseConfirmYourPassword;
       isValid = false;
     } else if (password != confirmPassword) {
-      confirmPasswordError = 'Passwords do not match';
+      confirmPasswordError = appL10n.passwordsDoNotMatch;
       isValid = false;
     }
 
@@ -385,7 +386,7 @@ class SignupController extends ChangeNotifier {
       if (usernameController.text.trim().toLowerCase() != username) return;
 
       if (existingUser != null) {
-        usernameError = 'This username is already taken';
+        usernameError = appL10n.thisUsernameIsAlreadyTaken;
       } else {
         usernameError = null;
       }
@@ -401,13 +402,13 @@ class SignupController extends ChangeNotifier {
     final email = emailController.text.trim().toLowerCase();
 
     if (email.isEmpty) {
-      emailError = 'Email address is required';
+      emailError = appL10n.emailAddressIsRequired;
       notifyListeners();
       return;
     }
 
     if (!AuthConstants.emailRegex.hasMatch(email)) {
-      emailError = 'Please enter a valid email address';
+      emailError = appL10n.pleaseEnterAValidEmailAddress;
       notifyListeners();
       return;
     }
@@ -423,8 +424,8 @@ class SignupController extends ChangeNotifier {
       if (emailController.text.trim().toLowerCase() != email) return;
 
       if (existingUser != null) {
-        emailError = 'An account with this email already exists';
-      } else if (emailError == 'An account with this email already exists') {
+        emailError = appL10n.anAccountWithThisEmailAlready;
+      } else if (emailError == appL10n.anAccountWithThisEmailAlready) {
         emailError = null;
       }
     } catch (_) {
@@ -470,11 +471,11 @@ class SignupController extends ChangeNotifier {
 
       bool hasConflict = false;
       if (existingUser != null) {
-        usernameError = 'This username is already taken';
+        usernameError = appL10n.thisUsernameIsAlreadyTaken;
         hasConflict = true;
       }
       if (existingEmail != null) {
-        emailError = 'An account with this email already exists';
+        emailError = appL10n.anAccountWithThisEmailAlready;
         hasConflict = true;
       }
 
@@ -507,7 +508,7 @@ class SignupController extends ChangeNotifier {
           user != null && (user.identities == null || user.identities!.isEmpty);
 
       if (isExistingUser) {
-        emailError = 'An account with this email already exists';
+        emailError = appL10n.anAccountWithThisEmailAlready;
         isLoading = false;
         notifyListeners();
         return null;
@@ -547,8 +548,9 @@ class SignupController extends ChangeNotifier {
 
       return response;
     } on AuthWeakPasswordException {
-      passwordError =
-          'Password is too weak. Please use at least ${AuthConstants.minPasswordLength} characters with a mix of letters, numbers, and symbols.';
+      passwordError = appL10n.passwordTooWeakMix(
+        AuthConstants.minPasswordLength,
+      );
     } on AuthException catch (e) {
       final msg = e.message.toLowerCase();
 
@@ -559,12 +561,12 @@ class SignupController extends ChangeNotifier {
       } else if (msg.contains('database error')) {
         // Usually the username was taken between the check and sign up.
         debugPrint('Signup database error: ${e.message}');
-        generalError = "We couldn't create your account. Please try again.";
+        generalError = appL10n.weCouldntCreateYourAccountPlease;
       } else if (msg.contains('already registered') ||
           msg.contains('user already exists') ||
           msg.contains('already exists') ||
           msg.contains('already in use')) {
-        emailError = 'An account with this email already exists';
+        emailError = appL10n.anAccountWithThisEmailAlready;
       } else if (msg.contains('email')) {
         emailError = e.message;
       } else if (msg.contains('password')) {

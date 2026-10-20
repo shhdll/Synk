@@ -1,0 +1,886 @@
+{
+  "@@locale": "en",
+  "shareCode": "Share code",
+  "share": "Share",
+  "shareMessage": "Want to join us for {title}?\n📅 {date}\n📍 {place}\n\nEnter the code in Synk: {code}",
+  "@shareMessage": {
+    "placeholders": {
+      "title": {},
+      "date": {},
+      "place": {},
+      "code": {}
+    }
+  },
+  "couldntOpenTheShareMenu": "Couldn't open the share menu.",
+  "language": "Language",
+  "appLanguage": "App language",
+  "languageEnglish": "English",
+  "languageArabic": "العربية",
+  "save": "Save",
+  "saveChanges": "Save changes",
+  "cancel": "Cancel",
+  "done": "Done",
+  "doneTitle": "Done!",
+  "continueButton": "Continue",
+  "close": "Close",
+  "retry": "Retry",
+  "tryAgain": "Try again",
+  "refresh": "Refresh",
+  "reset": "Reset",
+  "skip": "Skip",
+  "gotIt": "Got it",
+  "choose": "Choose",
+  "optional": "Optional",
+  "notSet": "Not set",
+  "you": "You",
+  "saved": "Saved",
+  "yourChangesHaveBeenSaved": "Your changes have been saved.",
+  "discardChanges": "Discard changes?",
+  "unsavedChangesWillBeLost": "Unsaved changes will be lost",
+  "keepEditing": "Keep editing",
+  "discardAndLeave": "Discard and leave",
+  "synkMember": "Synk member",
+  "synkUser": "Synk user",
+  "communityMember": "Community Member",
+  "anonymous": "Anonymous",
+  "untitledActivity": "Untitled activity",
+  "home": "Home",
+  "map": "Map",
+  "activities": "Activities",
+  "profile": "Profile",
+  "create": "Create",
+  "findYourMissingPiece": "Find your\nmissing piece.",
+  "readyToSynk": "Ready to Synk?",
+  "joinThousandsAlreadyDoingWhatThey": "Join thousands already doing what they love, together!",
+  "welcomeBack": "Welcome Back",
+  "logInToConnectAndJoin": "Log in to connect and join activities around you.",
+  "username": "Username",
+  "email": "Email",
+  "emailAddress": "Email address",
+  "password": "Password",
+  "pleaseEnterYourUsername": "Please enter your username",
+  "pleaseEnterAValidEmail": "Please enter a valid email",
+  "pleaseEnterYourPassword": "Please enter your password",
+  "forgotPassword": "Forgot Password?",
+  "logIn": "Log In",
+  "dontHaveAnAccount": "Don't have an account?",
+  "signUp": "Sign Up",
+  "unableToLogIn": "Unable to log in.",
+  "unableToLogInPleaseTry": "Unable to log in. Please try again.",
+  "noAccountFoundWithThisUsername": "No account found with this username",
+  "pleaseVerifyYourEmailFirst": "Please verify your email first.",
+  "incorrectUsernameOrPassword": "Incorrect username or password",
+  "incorrectEmailOrPassword": "Incorrect email or password",
+  "tellUsAboutYourself": "Tell us about\nyourself.",
+  "thisHelpsCustomizeYourCommunityExperience": "This helps customize your community experience.",
+  "fullName": "Full name",
+  "birthday": "Birthday",
+  "gender": "Gender",
+  "female": "Female",
+  "male": "Male",
+  "createYourAccount": "Create your\naccount.",
+  "completeRegistration": "Complete Registration",
+  "eightPlusCharacters": "8+ characters",
+  "uppercaseLetter": "Uppercase letter",
+  "lowercaseLetter": "Lowercase letter",
+  "aNumber": "A number",
+  "specialCharacter": "Special character",
+  "fullNameIsRequired": "Full name is required",
+  "nameCanBeAtMost50": "Name can be at most 50 characters",
+  "nameCanOnlyContainLettersAnd": "Name can only contain letters and spaces",
+  "birthdayIsRequired": "Birthday is required",
+  "pleaseEnterAValidBirthday": "Please enter a valid birthday",
+  "ageMustBeBetween16And": "Age must be between 16 and 65 years",
+  "emailAddressIsRequired": "Email address is required",
+  "anAccountWithThisEmailAlready": "An account with this email already exists",
+  "pleaseSelectYourGender": "Please select your gender",
+  "passwordTooWeakMix": "Password is too weak. Please use at least {n} characters with a mix of letters, numbers, and symbols.",
+  "@passwordTooWeakMix": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "weCouldntCreateYourAccountPlease": "We couldn't create your account. Please try again.",
+  "passwordIsRequired": "Password is required",
+  "passwordMustBeAtLeast8": "Password must be at least 8 characters",
+  "passwordNeedsUppercase": "Password must contain at least 1 uppercase letter",
+  "passwordNeedsLowercase": "Password must contain at least 1 lowercase letter",
+  "passwordNeedsNumber": "Password must contain at least 1 number",
+  "passwordNeedsSpecial": "Password must contain at least 1 special character (e.g., @$!%*?&)",
+  "usernameIsRequired": "Username is required",
+  "usernameMustBeAtLeast3": "Username must be at least 3 characters",
+  "usernameCanBeAtMost30": "Username can be at most 30 characters",
+  "usernameCanOnlyContainLettersNumbers": "Username can only contain letters, numbers, underscores, and dots",
+  "whatAreYouInto": "What are you into?",
+  "pickTheActivitiesYouEnjoy": "Pick the activities you enjoy.",
+  "whereDoYouLikeToHave": "Where do you like to have fun?",
+  "tellUsWhatKindOfActivities": "Tell us what kind of activities you prefer.",
+  "howFarAreYouWillingTo": "How far are you willing to go?",
+  "chooseHowCloseYouWantYour": "Choose how close you want your activities to be.",
+  "indoor": "Indoor",
+  "outdoor": "Outdoor",
+  "iDontMind": "I don't mind",
+  "inTheCity": "In the city",
+  "awayFromTheCity": "Away from the city",
+  "checkYourInbox": "Check your inbox",
+  "weSentAConfirmationLinkTo": "We sent a confirmation link to:",
+  "resendInSeconds": "Resend in {s}s",
+  "@resendInSeconds": {
+    "placeholders": {
+      "s": {}
+    }
+  },
+  "resendVerificationEmail": "Resend verification email",
+  "iveConfirmedMyEmail": "I've confirmed my email",
+  "backToSignIn": "Back to Sign In",
+  "notConfirmedYetTapTheLink": "Not confirmed yet. Tap the link in the email first.",
+  "alreadyConfirmedGoBackAndSign": "Already confirmed? Go back and sign in.",
+  "couldNotCheckRightNowPlease": "Could not check right now. Please try again.",
+  "verificationEmailResentPleaseCheckYour": "Verification email resent! Please check your inbox.",
+  "failedToResendConfirmationEmail": "Failed to resend confirmation email.",
+  "anUnexpectedErrorOccurredPleaseTry": "An unexpected error occurred. Please try again.",
+  "forgotYourPassword": "Forgot your password?",
+  "itHappensEnterYourEmailAnd": "It happens. Enter your email and we'll send you a link to get back in.",
+  "sendResetLink": "Send reset link",
+  "backToLogIn": "Back to Log In",
+  "forYourSecurityWellSendA": "For your security, we'll send a link only if this email belongs to a Synk account.",
+  "weSentAResetLinkTo": "We sent a reset link to",
+  "theLinkCanOnlyBeUsed": "The link can only be used once",
+  "openItOnThisDeviceSo": "Open it on this device so Synk can sign you in",
+  "notThereCheckYourSpamFolder": "Not there? Check your spam folder",
+  "resendLink": "Resend link",
+  "resendLinkCountdown": "Resend link in 0:{ss}",
+  "@resendLinkCountdown": {
+    "placeholders": {
+      "ss": {}
+    }
+  },
+  "wrongEmailEditIt": "Wrong email? Edit it",
+  "unableToSendTheLink": "Unable to send the link.",
+  "aNewLinkIsOnIts": "A new link is on its way.",
+  "pleaseEnterYourEmail": "Please enter your email",
+  "pleaseEnterAValidEmailAddress": "Please enter a valid email address",
+  "pleaseConfirmYourPassword": "Please confirm your password",
+  "couldntSendTheLinkCheckYour": "Couldn't send the link. Check your connection and try again.",
+  "pleaseWaitAMomentBeforeRequesting": "Please wait a moment before requesting another link.",
+  "passwordTooWeakMinLength": "Password is too weak. Please use at least {n} characters.",
+  "@passwordTooWeakMinLength": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "thatsYourCurrentPasswordPickA": "That's your current password. Pick a new one.",
+  "thisLinkIsNoLongerValid": "This link is no longer valid. Please request a new one.",
+  "createANewPassword": "Create a new password",
+  "newPassword": "New password",
+  "confirmPassword": "Confirm Password",
+  "reTypePassword": "Re-type password",
+  "updatePassword": "Update password",
+  "unableToUpdateYourPassword": "Unable to update your password.",
+  "passwordNotChanged": "Password not changed.",
+  "thisLinkHasExpired": "This link has expired",
+  "resetLinksCanOnlyBeUsed": "Reset links can only be used once and expire after a short time. Request a fresh one and we'll get you back in.",
+  "requestANewLink": "Request a new link",
+  "youreBackIn": "You're back in.",
+  "yourNewPasswordIsSetLog": "Your new password is set. Log in to pick up where you left off.",
+  "thisLinkHasExpiredOrWas": "This link has expired or was already used. Please request a new one.",
+  "confirmedNowOpenTheLinkSent": "Confirmed. Now open the link sent to your other email address.",
+  "yourEmailAddressWasUpdated": "Your email address was updated.",
+  "welcomeName": "Welcome, {name}",
+  "@welcomeName": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "welcomeToSynk": "Welcome to Synk",
+  "heyName": "Hey {name}",
+  "@heyName": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "heyThere": "Hey there",
+  "letsFindYourPeople": "Let's find your people",
+  "readyForSomethingNew": "Ready for something new?",
+  "searchActivitiesOrLocations": "Search activities or locations...",
+  "upcomingPlans": "Upcoming plans",
+  "clearFilters": "Clear filters",
+  "noPlansMatchQuery": "No plans match \"{q}\"",
+  "@noPlansMatchQuery": {
+    "placeholders": {
+      "q": {}
+    }
+  },
+  "noPlansMatchYourFilters": "No plans match your filters",
+  "noCategoryPlans": "No {category} plans {when}",
+  "@noCategoryPlans": {
+    "placeholders": {
+      "category": {},
+      "when": {}
+    }
+  },
+  "weCouldntReachSynk": "We couldn't reach Synk",
+  "itsQuietHereForNow": "It's quiet here for now",
+  "checkYourConnectionAndTryAgain": "Check your connection and try again.",
+  "newPlansPopUpAllThe": "New plans pop up all the time. Tap + to start one.",
+  "createOne": "Create one",
+  "haveACode": "Have a code?",
+  "haveAnActivityCodeJoinWith": "Have an activity code? Join with it",
+  "unableToLoadActivitiesPullDown": "Unable to load activities. Pull down to refresh.",
+  "filters": "Filters",
+  "filtersActive": "Filters, {n} active",
+  "@filtersActive": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "sortBy": "Sort by",
+  "soonest": "Soonest",
+  "latest": "Latest",
+  "nearest": "Nearest",
+  "farthest": "Farthest",
+  "almostFull": "Almost full",
+  "mostSpots": "Most spots",
+  "any": "Any",
+  "today": "Today",
+  "tomorrow": "Tomorrow",
+  "morning": "Morning",
+  "evening": "Evening",
+  "night": "Night",
+  "slotMorningHours": "6 AM–12 PM",
+  "slotEveningHours": "5–9 PM",
+  "slotNightHours": "9 PM–12 AM",
+  "within": "Within",
+  "fiveKm": "5 km",
+  "locating": "Locating…",
+  "allowLocation": "Allow location",
+  "startingFrom": "Starting from",
+  "fromTime": "From {time}",
+  "@fromTime": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "pickATime": "Pick a time",
+  "category": "Category",
+  "spots": "Spots",
+  "oneLeft": "1 left",
+  "hasSpots": "Has spots",
+  "full": "Full",
+  "noMatchesTryFewerFilters": "No matches, try fewer filters",
+  "showOneActivity": "Show 1 activity",
+  "showActivities": "Show {n} activities",
+  "@showActivities": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "todayAtTime": "Today, {time}",
+  "@todayAtTime": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "tomorrowAtTime": "Tomorrow, {time}",
+  "@tomorrowAtTime": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "available": "Available",
+  "oneMoreNeeded": "One More Needed",
+  "joinedOfMaxGoing": "{joined}/{max} going",
+  "@joinedOfMaxGoing": {
+    "placeholders": {
+      "joined": {},
+      "max": {}
+    }
+  },
+  "waitlisted": "Waitlisted",
+  "code": "Code",
+  "dateAndTime": "Date & Time",
+  "viewOnMap": "View on map",
+  "openInGoogleMaps": "Open in Google Maps",
+  "couldntOpenGoogleMaps": "Couldn't open Google Maps.",
+  "aboutThisActivity": "About This Activity",
+  "participants": "Participants",
+  "joinedOfMaxSpots": "{joined} / {max} spots",
+  "@joinedOfMaxSpots": {
+    "placeholders": {
+      "joined": {},
+      "max": {}
+    }
+  },
+  "youllSeeWhosGoingOnceThe": "You'll see who's going once the host accepts you.",
+  "host": "Host",
+  "activityCode": "Activity code",
+  "copyCode": "Copy code",
+  "activityCodeCopied": "Activity code copied",
+  "deleteActivity": "Delete activity",
+  "youreOnTheWaitlist": "You're on the waitlist",
+  "waitingForHostApproval": "Waiting for host approval",
+  "youveJoinedThisActivity": "You've joined this activity",
+  "joinWaitlist": "Join waitlist",
+  "joinActivity": "Join activity",
+  "leaveActivity": "Leave Activity",
+  "leaveActivityTitle": "Leave activity?",
+  "confirmLeaveActivity": "Are you sure you want to leave this activity?",
+  "stay": "Stay",
+  "youLeftTheActivity": "You Left the Activity",
+  "youHaveSuccessfullyLeftThisActivity": "You have successfully left this activity.",
+  "leaveWaitlistTitle": "Leave waitlist?",
+  "confirmLeaveWaitlist": "Are you sure you want to leave the waitlist for this activity?",
+  "stayOnWaitlist": "Stay on Waitlist",
+  "leaveWaitlist": "Leave Waitlist",
+  "youLeftTheWaitlist": "You Left the Waitlist",
+  "youHaveBeenRemovedFromThe": "You have been removed from the waitlist.",
+  "cancelRequestTitle": "Cancel request?",
+  "confirmCancelRequest": "Are you sure you want to cancel your request to join this activity?",
+  "keepRequest": "Keep Request",
+  "cancelRequest": "Cancel Request",
+  "requestCancelled": "Request Cancelled",
+  "yourJoinRequestHasBeenCancelled": "Your join request has been cancelled.",
+  "youAreNowTheHostOf": "You are now the host of this activity.",
+  "transferHostingAndLeave": "Transfer hosting and leave?",
+  "transferHostMessage": "{name} will become the host of this activity. You will no longer be able to manage it.",
+  "@transferHostMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "transferAndLeave": "Transfer & Leave",
+  "newHostIs": "{name} is now the host.",
+  "@newHostIs": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "chooseANewHost": "Choose a new host",
+  "thePersonYouChooseGetsFull": "The person you choose gets full host permissions, including managing join requests and deleting the activity. You will leave the activity.",
+  "unableToLoadParticipantsPleaseTry": "Unable to load participants. Please try again.",
+  "noOneCanTakeOverYet": "No one can take over yet. Only joined participants can become the host. You can delete the activity instead.",
+  "thisActivityIsNoLongerAvailable": "This activity is no longer available.",
+  "unableToOpenThisActivity": "Unable to open this activity.",
+  "all": "All",
+  "hosting": "Hosting",
+  "joined": "Joined",
+  "requested": "Requested",
+  "upcoming": "Upcoming",
+  "past": "Past",
+  "noPastActivities": "No past activities",
+  "activitiesYouveBeenPartOfWill": "Activities you've been part of will show up here.",
+  "noUpcomingActivities": "No upcoming activities",
+  "joinOneFromHomeOrTap": "Join one from Home, or tap + to plan your own.",
+  "joinRequests": "Join Requests",
+  "deleteActivityTitle": "Delete activity?",
+  "thisActionCannotBeUndoneThe": "This action cannot be undone. The activity will be removed for everyone.",
+  "keepActivity": "Keep Activity",
+  "deleteActivityButton": "Delete Activity",
+  "activityDeleted": "Activity Deleted",
+  "theActivityHasBeenDeletedSuccessfully": "The activity has been deleted successfully.",
+  "unableToDeleteTheActivityPlease": "Unable to delete the activity. Please try again.",
+  "joinWithACode": "Join with a code",
+  "enterThe6DigitActivityCode": "Enter the 6-digit activity code.",
+  "joinActivityButton": "Join Activity",
+  "enterAValid6DigitActivity": "Enter a valid 6-digit activity code.",
+  "unableToJoinTheActivityPlease": "Unable to join the activity. Please try again.",
+  "unableToJoin": "Unable to Join",
+  "thisActivityConflictsWithOneYouve": "This activity conflicts with one you've already joined or created.",
+  "joinedTitle": "Joined!",
+  "alreadyJoined": "Already Joined",
+  "requestSent": "Request Sent!",
+  "requestAlreadySent": "Request Already Sent",
+  "addedToWaitlist": "Added to Waitlist!",
+  "alreadyWaitlisted": "Already Waitlisted",
+  "justNow": "Just now",
+  "minutesAgo": "{n}m ago",
+  "@minutesAgo": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "hoursAgo": "{n}h ago",
+  "@hoursAgo": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "daysAgo": "{n}d ago",
+  "@daysAgo": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "requestCount": "{n, plural, =1{1 request} other{{n} requests}}",
+  "@requestCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "requestApproved": "Request Approved!",
+  "requestRejected": "Request Rejected",
+  "requestApprovedTheUserWasAdded": "Request approved. The user was added to the waitlist.",
+  "requestApprovedSuccessfully": "Request approved successfully.",
+  "requestRejectedSuccessfully": "Request rejected successfully.",
+  "unableToReviewTheRequestPlease": "Unable to review the request. Please try again.",
+  "unableToLoadJoinRequestsPlease": "Unable to load join requests. Please try again.",
+  "reject": "Reject",
+  "accept": "Accept",
+  "noPendingRequests": "No pending requests",
+  "requestsForYourPrivateActivitiesWill": "Requests for your private activities will appear here.",
+  "newActivity": "New Activity",
+  "createActivity": "Create activity",
+  "whatWhereAndWhen": "What, where & when",
+  "details": "Details",
+  "review": "Review",
+  "discardActivity": "Discard activity?",
+  "yourActivityIsLiveAndReady": "Your activity is live and ready for people to join.",
+  "activityCreated": "Activity created!",
+  "viewActivity": "View activity",
+  "activityTitle": "Activity title",
+  "location": "Location",
+  "date": "Date",
+  "time": "Time",
+  "activityTitleHint": "Morning padel",
+  "tapToChange": "Tap to change",
+  "chooseATime": "Choose a time",
+  "pickAStartTime": "Pick a start time",
+  "setDate": "Set date",
+  "setTime": "Set time",
+  "searchForAPlace": "Search for a place",
+  "locationSearchHint": "Padel club, café, gym…",
+  "clearSearch": "Clear search",
+  "startTypingToSearchRiyadhVenues": "Start typing to search Riyadh venues.",
+  "noMatchesFound": "No matches found.",
+  "numberOfPeople": "Number of people",
+  "youPlusAvailable": "{n, plural, =1{You + 1 available spot} other{You + {n} available spots}}",
+  "@youPlusAvailable": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "includingYou": "Including you",
+  "description": "Description",
+  "activityDescriptionHint": "Beginners welcome, bring water",
+  "photo": "Photo",
+  "addAPhoto": "Add a photo",
+  "photoAdded": "Photo added",
+  "changePhoto": "Change photo",
+  "removePhoto": "Remove photo",
+  "visibility": "Visibility",
+  "public": "Public",
+  "anyoneCanFindAndJoin": "Anyone can find and join",
+  "private": "Private",
+  "joinByCodeYouApprove": "Join by code, you approve",
+  "whenLabel": "When",
+  "whereLabel": "Where",
+  "people": "People",
+  "peopleSummary": "{n} including you · {spots, plural, =1{1 spot open} other{{spots} spots open}}",
+  "@peopleSummary": {
+    "placeholders": {
+      "n": {},
+      "spots": {
+        "type": "int"
+      }
+    }
+  },
+  "addATitle": "Add a title",
+  "keepItToLetters": "Keep it to {n} letters",
+  "@keepItToLetters": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "useLettersOnly": "Use letters only",
+  "keepItToCharacters": "Keep it to {n} characters",
+  "@keepItToCharacters": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "chooseALocation": "Choose a location",
+  "pickADate": "Pick a date",
+  "chooseADateWithinTheNext": "Choose a date within the next 3 months",
+  "thisTimeHasAlreadyPassed": "This time has already passed",
+  "pleaseCompleteEveryStepBeforeCreating": "Please complete every step before creating.",
+  "weCouldntCreateYourActivityPlease": "We couldn't create your activity. Please try again.",
+  "activityCreatedPhotoNotAdded": "Your activity was created, but the photo couldn't be added to it.",
+  "activityCreatedPhotoNotSaved": "Your activity was created, but the photo couldn't be saved.",
+  "couldntOpenYourPhotosPleaseTry": "Couldn't open your photos. Please try again.",
+  "thatFileIsntAJpegOr": "That file isn't a JPEG or PNG image.",
+  "thisImagesFileTypeAndIts": "This image's file type and its contents don't match. Try another photo.",
+  "theSelectedPlaceIsMissingIts": "The selected place is missing its address or coordinates.",
+  "placeSearchFailed": "Place search failed ({code}). Please try again.",
+  "@placeSearchFailed": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "couldNotReachPlaceSearchCheck": "Could not reach place search. Check your connection and try again.",
+  "placeSearchReturnedAnUnexpectedResponse": "Place search returned an unexpected response.",
+  "cannotCreateAnActivityWhileSigned": "Cannot create an activity while signed out.",
+  "cannotDeleteAnActivityWhileSigned": "Cannot delete an activity while signed out.",
+  "theActivityWasNotFoundOr": "The activity was not found or cannot be deleted.",
+  "myLocation": "My location",
+  "searchActivitiesOrPlaces": "Search activities or places",
+  "zoomIn": "Zoom in",
+  "zoomOut": "Zoom out",
+  "spotsLeft": "{n, plural, =1{1 spot available} other{{n} spots available}}",
+  "@spotsLeft": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "pleaseEnableLocationServicesToFind": "Please enable location services to find nearby activities.",
+  "locationPermissionWasDenied": "Location permission was denied.",
+  "locationPermissionIsPermanentlyDeniedPlease": "Location permission is permanently denied. Please enable it in your device settings.",
+  "unableToRetrieveYourLocationShowing": "Unable to retrieve your location. Showing Riyadh instead.",
+  "addAShortBioSoPeople": "Add a short bio so people get to know you.",
+  "unableToSaveBioPleaseTry": "Unable to save bio. Please try again.",
+  "activityType": "Activity type",
+  "preferredLocation": "Preferred location",
+  "ageYears": "{age} yrs",
+  "@ageYears": {
+    "placeholders": {
+      "age": {}
+    }
+  },
+  "friends": "Friends",
+  "rating": "Rating",
+  "interests": "Interests",
+  "preferences": "Preferences",
+  "about": "About",
+  "addInterestsSoPeopleGetTo": "Add interests so people get to know what you're into.",
+  "editProfile": "Edit Profile",
+  "tapToChangePhoto": "Tap to change photo",
+  "name": "Name",
+  "yourName": "Your name",
+  "bio": "Bio",
+  "tellPeopleABitAboutYourself": "Tell people a bit about yourself...",
+  "birthdayHint": "DD/MM/YYYY",
+  "selectBirthday": "Select birthday",
+  "setBirthday": "Set birthday",
+  "selectYourBirthday": "Select your birthday",
+  "editAge": "Edit age",
+  "awaitingConfirmationOn": "Awaiting confirmation on {email}. Tap to resend or cancel.",
+  "@awaitingConfirmationOn": {
+    "placeholders": {
+      "email": {}
+    }
+  },
+  "tapToChangeYourEmailAddress": "Tap to change your email address.",
+  "changePassword": "Change password",
+  "pleaseEnterYourName": "Please enter your name.",
+  "adultMustBeBetween16And": "Adult must be between 16 and 65 years old.",
+  "profileEmailRequired": "Please enter your email.",
+  "yourChangesHaveBeenSavedCheck": "Your changes have been saved. Check your new email to confirm the address change.",
+  "unableToSaveYourChangesPlease": "Unable to save your changes. Please try again.",
+  "profileUsernameRequired": "Please enter your username.",
+  "usernameMustBe330Characters": "Username must be 3–30 characters and can only include letters, numbers, dots, and underscores.",
+  "thisUsernameIsAlreadyTaken": "This username is already taken.",
+  "usernameCannotBeEmpty": "Username cannot be empty",
+  "profileEmailInvalid": "Please enter a valid email address.",
+  "profilePhoto": "Profile photo",
+  "addPhoto": "Add photo",
+  "adjustPhoto": "Adjust photo",
+  "moveAndScale": "Move and Scale",
+  "unableToUpdateYourPhotoPlease": "Unable to update your photo. Please try again.",
+  "couldntLoadYourPhotoPleaseTry": "Couldn't load your photo. Please try again.",
+  "unableToAdjustYourPhotoPlease": "Unable to adjust your photo. Please try again.",
+  "unableToRemoveYourPhotoPlease": "Unable to remove your photo. Please try again.",
+  "yourPhotoWasntSavedBecauseYoure": "Your photo wasn't saved because you're signed out.",
+  "savedOnThisDeviceCloudPhoto": "Saved on this device (cloud photo storage isn't set up yet).",
+  "editInterests": "Edit Interests",
+  "yourInterests": "Your interests",
+  "tapAnInterestBelowToAdd": "Tap an interest below to add it.",
+  "addMore": "Add more",
+  "youveAddedEveryInterest": "You've added every interest.",
+  "unableToSavePleaseTryAgain": "Unable to save. Please try again.",
+  "changePasswordTitle": "Change Password",
+  "currentPassword": "Current password",
+  "enterYourCurrentPassword": "Enter your current password",
+  "enterANewPassword": "Enter a new password",
+  "confirmNewPassword": "Confirm new password",
+  "reEnterTheNewPassword": "Re-enter the new password",
+  "useAtLeast8CharactersWith": "Use at least 8 characters with uppercase, lowercase, a number, and a special character.",
+  "newPasswordMustBeDifferentFrom": "New password must be different from your current one",
+  "pleaseConfirmYourNewPassword": "Please confirm your new password",
+  "passwordsDoNotMatch": "Passwords do not match",
+  "currentPasswordIsIncorrect": "Current password is incorrect",
+  "passwordIsTooWeakPleaseChoose": "Password is too weak. Please choose a stronger one.",
+  "yourSessionHasExpiredPleaseLog": "Your session has expired. Please log in again.",
+  "couldntUpdateYourPasswordPleaseTry": "Couldn't update your password. Please try again.",
+  "couldntUpdateYourPasswordCheckYour": "Couldn't update your password. Check your connection and try again.",
+  "changeEmail": "Change Email",
+  "pendingEmailChange": "Pending Email Change",
+  "confirmationIsCurrentlyInProgress": "Confirmation is currently in progress",
+  "updateYourLoginAndContactEmail": "Update your login and contact email",
+  "currentEmailLabel": "Current:",
+  "awaitingConfirmation": "Awaiting Confirmation",
+  "changeLinkSentTo": "A change link was sent to {email}. Both your old and new email addresses must confirm the change before it updates.",
+  "@changeLinkSentTo": {
+    "placeholders": {
+      "email": {}
+    }
+  },
+  "resendConfirmationLinks": "Resend Confirmation Links",
+  "cancelEmailChange": "Cancel Email Change",
+  "useADifferentEmailAddress": "Use a different email address",
+  "pleaseEnterANewEmailAddress": "Please enter a new email address.",
+  "newEmailMustBeDifferentFrom": "New email must be different from current email.",
+  "enterNewEmailAddress": "Enter new email address",
+  "confirmationEmailsWillBeSentTo": "Confirmation emails will be sent to both addresses. The change will take effect once confirmed.",
+  "sendVerification": "Send Verification",
+  "confirmationLinkSentPleaseCheckBoth": "Confirmation link sent! Please check both your current and new email inboxes to confirm the change.",
+  "unableToUpdateEmailPleaseTry": "Unable to update email. Please try again.",
+  "confirmationLinksResentCheckYourInboxes": "Confirmation links resent! Check your inboxes to confirm.",
+  "pendingEmailChangeCancelled": "Pending email change cancelled.",
+  "failedToCancelEmailChangeRequest": "Failed to cancel email change request.",
+  "logOut": "Log Out",
+  "logOutOfSynk": "Log out of Synk?",
+  "youllNeedToSignInAgain": "You'll need to sign in again to access your profile, activities, and matches.",
+  "unableToLogOut": "Unable to log out.",
+  "unableToLogOutPleaseTry": "Unable to log out. Please try again.",
+  "noInternetConnectionCheckYourConnection": "No internet connection. Check your connection and try again.",
+  "tooManyAttemptsPleaseWaitA": "Too many attempts. Please wait a few minutes and try again.",
+  "somethingWentWrongPleaseTryAgain": "Something went wrong. Please try again.",
+  "somethingWentWrong": "Something went wrong.",
+  "unableToTransferHostingPleaseTry": "Unable to transfer hosting. Please try again.",
+  "unableToLeaveTheActivityPlease": "Unable to leave the activity. Please try again.",
+  "waitlistPromotions": "Waitlist promotions",
+  "updatesWhenASpotOpensIn": "Updates when a spot opens in a waitlisted activity.",
+  "youreIn": "You're In! 🎉",
+  "aSpotOpenedUpInYour": "A spot opened up in your activity.",
+  "interestOpenToAnything": "Open to Anything",
+  "interestPadel": "Padel",
+  "interestTennis": "Tennis",
+  "interestBadminton": "Badminton",
+  "interestTableTennis": "Table Tennis",
+  "interestFootball": "Football",
+  "interestBasketball": "Basketball",
+  "interestVolleyball": "Volleyball",
+  "interestGolf": "Golf",
+  "interestBowling": "Bowling",
+  "interestKarting": "Karting",
+  "interestMartialArts": "Martial Arts",
+  "interestPaintball": "Paintball",
+  "interestCycling": "Cycling",
+  "interestRunning": "Running",
+  "interestHiking": "Hiking",
+  "interestClimbing": "Climbing",
+  "interestCamping": "Camping",
+  "interestDesertTrips": "Desert Trips",
+  "interestRoadTrips": "Road Trips",
+  "interestBeach": "Beach",
+  "interestPicnic": "Picnic",
+  "interestPicnics": "Picnics",
+  "interestTravel": "Travel",
+  "interestFitness": "Fitness",
+  "interestYoga": "Yoga",
+  "interestSwimming": "Swimming",
+  "interestDiving": "Diving",
+  "interestSkating": "Skating",
+  "interestDance": "Dance",
+  "interestCoffee": "Coffee",
+  "interestCooking": "Cooking",
+  "interestFood": "Food",
+  "interestShopping": "Shopping",
+  "interestBoardGames": "Board Games",
+  "interestCardGames": "Card Games",
+  "interestChess": "Chess",
+  "interestEscapeRoom": "Escape Room",
+  "interestTrivia": "Trivia",
+  "interestGaming": "Gaming",
+  "interestMovies": "Movies",
+  "interestComedy": "Comedy",
+  "interestKaraoke": "Karaoke",
+  "interestMusic": "Music",
+  "interestArt": "Art",
+  "interestPottery": "Pottery",
+  "interestMuseums": "Museums",
+  "interestBooks": "Books",
+  "interestPhotography": "Photography",
+  "interestLearning": "Learning",
+  "interestVolunteering": "Volunteering",
+  "interestPets": "Pets",
+  "interestOther": "Other",
+  "weekdayMon": "Mon",
+  "weekdayTue": "Tue",
+  "weekdayWed": "Wed",
+  "weekdayThu": "Thu",
+  "weekdayFri": "Fri",
+  "weekdaySat": "Sat",
+  "weekdaySun": "Sun",
+  "monthJanuary": "January",
+  "monthFebruary": "February",
+  "monthMarch": "March",
+  "monthApril": "April",
+  "monthMay": "May",
+  "monthJune": "June",
+  "monthJuly": "July",
+  "monthAugust": "August",
+  "monthSeptember": "September",
+  "monthOctober": "October",
+  "monthNovember": "November",
+  "monthDecember": "December",
+  "timeAm": "AM",
+  "timePm": "PM",
+  "monthShortJan": "Jan",
+  "@monthShortJan": {
+    "description": "Short month name. Arabic uses the full name."
+  },
+  "monthShortFeb": "Feb",
+  "monthShortMar": "Mar",
+  "monthShortApr": "Apr",
+  "monthShortMay": "May",
+  "monthShortJun": "Jun",
+  "monthShortJul": "Jul",
+  "monthShortAug": "Aug",
+  "monthShortSep": "Sep",
+  "monthShortOct": "Oct",
+  "monthShortNov": "Nov",
+  "monthShortDec": "Dec",
+  "shortDate": "{weekday}, {month} {day}",
+  "@shortDate": {
+    "description": "For example Tue, Oct 21",
+    "placeholders": {
+      "weekday": {},
+      "month": {},
+      "day": {}
+    }
+  },
+  "timeOfDay": "{time} {period}",
+  "@timeOfDay": {
+    "description": "For example 7:30 PM",
+    "placeholders": {
+      "time": {},
+      "period": {}
+    }
+  },
+  "distanceKm": "{n} km",
+  "@distanceKm": {
+    "description": "Distance filter, for example 10 km",
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "weekdayLetterMon": "M",
+  "@weekdayLetterMon": {
+    "description": "One-letter day heading in the calendar"
+  },
+  "weekdayLetterTue": "T",
+  "weekdayLetterWed": "W",
+  "weekdayLetterThu": "T",
+  "weekdayLetterFri": "F",
+  "weekdayLetterSat": "S",
+  "weekdayLetterSun": "S",
+  "longDate": "{weekday}, {month} {day}, {year}",
+  "@longDate": {
+    "description": "Full date with the year, for example Tue, Oct 21, 2026",
+    "placeholders": {
+      "weekday": {},
+      "month": {},
+      "day": {},
+      "year": {}
+    }
+  },
+  "timeChipPick": "Pick",
+  "@timeChipPick": {
+    "description": "First line of the time filter chip (Pick / a time)"
+  },
+  "timeChipATime": "a time",
+  "@timeChipATime": {
+    "description": "Second line of the time filter chip (Pick / a time)"
+  },
+  "timeChipFrom": "From",
+  "@timeChipFrom": {
+    "description": "First line of the time filter chip once a time is set (From / 7:30 PM)"
+  },
+  "planCount": "{n, plural, =1{1 plan} other{{n} plans}}",
+  "@planCount": {
+    "description": "Screen reader label for a day in the day strip",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "noPlans": "no plans",
+  "@noPlans": {
+    "description": "Screen reader label for a day with no plans"
+  },
+  "onDate": "on {date}",
+  "@onDate": {
+    "description": "Used in: No Padel plans on Tue, Oct 21",
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "serverNoActivityWithCode": "No activity was found with this code.",
+  "serverYouAreTheHost": "You are the host of this activity.",
+  "serverAlreadyJoined": "You have already joined this activity.",
+  "serverRequestWaiting": "Your request is waiting for host approval.",
+  "serverRequestRejected": "Your request was rejected by the host.",
+  "serverRequestSent": "Your request was sent to the host.",
+  "serverFullAddedToWaitlist": "The activity is full. You were added to the waitlist.",
+  "serverRequestNotFound": "The join request was not found.",
+  "serverOnlyHostCanReview": "Only the activity host can review this request.",
+  "serverPublicNoApproval": "Public activities do not require host approval.",
+  "serverAlreadyReviewed": "This request has already been reviewed.",
+  "serverUserHasConflict": "The user is already hosting an activity at this time or has joined another activity on this date.",
+  "serverActivityNotFound": "This activity was not found.",
+  "serverActivityPrivate": "This activity is private. Ask the host for its code.",
+  "serverHostCannotLeave": "Hosts cannot leave their own activity.",
+  "serverActivityStarted": "This activity has already started.",
+  "serverNotParticipating": "You are no longer part of this activity.",
+  "serverOnlyHostCanTransfer": "Only the host can transfer this activity.",
+  "serverChooseAnotherHost": "Choose another participant to become the host.",
+  "serverParticipantLeft": "The selected participant is no longer in this activity.",
+  "serverLeftAndTransferred": "You left the activity and transferred hosting.",
+  "settings": "Settings",
+  "@settings": {
+    "description": "Title of the Settings page and the gear button on Profile"
+  },
+  "weCouldntSaveYourChanges": "We couldn't save your changes. Please try again.",
+  "@weCouldntSaveYourChanges": {
+    "description": "Editing an activity failed"
+  },
+  "changesSaved": "Changes saved!",
+  "@changesSaved": {
+    "description": "Title after editing an activity"
+  },
+  "changesSavedBanner": "Changes saved",
+  "@changesSavedBanner": {
+    "description": "Banner after editing an activity"
+  },
+  "yourActivityDetailsHaveBeenUpdated": "Your activity details have been updated.",
+  "editActivity": "Edit activity",
+  "replacePhoto": "Replace Photo",
+  "uploadActivityPhoto": "Upload Activity Photo",
+  "photoCouldntBeDetached": "The photo couldn't be detached from the activity.",
+  "photoDetachedFileNotRemoved": "The photo was detached, but its stored file couldn't be removed.",
+  "cannotUpdateActivitySignedOut": "Cannot update an activity while signed out.",
+  "activityNotFoundOrCannotUpdate": "The activity was not found or cannot be updated.",
+  "activityUpdates": "Activity updates",
+  "@activityUpdates": {
+    "description": "Notification channel name in Android settings"
+  },
+  "updatesToActivitiesYouHaveJoined": "Updates to activities you have joined.",
+  "@updatesToActivitiesYouHaveJoined": {
+    "description": "Notification channel description in Android settings"
+  },
+  "activityUpdated": "Activity updated",
+  "@activityUpdated": {
+    "description": "Notification title when a joined activity changes"
+  },
+  "anActivityYouJoinedHasNew": "An activity you joined has new details.",
+  "@anActivityYouJoinedHasNew": {
+    "description": "Notification text when a joined activity changes"
+  }
+}

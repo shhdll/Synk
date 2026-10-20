@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/synk_colors.dart';
+import '../../l10n/l10n.dart';
 
 class AddActivityView extends StatelessWidget {
   const AddActivityView({super.key});
@@ -13,7 +14,7 @@ class AddActivityView extends StatelessWidget {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 20, 8),
+              padding: const EdgeInsetsDirectional.fromSTEB(12, 8, 20, 8),
               child: Row(
                 children: [
                   IconButton(
@@ -24,8 +25,8 @@ class AddActivityView extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 4),
-                  const Text(
-                    'New Activity',
+                  Text(
+                    context.l10n.newActivity,
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w900,

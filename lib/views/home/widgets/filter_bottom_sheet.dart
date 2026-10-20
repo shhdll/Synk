@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../controllers/home_discovery_controller.dart';
 import '../../../core/constants/synk_colors.dart';
+import '../../../l10n/l10n.dart';
 import '../../../models/activity_filters.dart';
 import '../../widgets/synk_date_picker.dart';
 import 'synk_filter_chip.dart';
@@ -21,30 +22,88 @@ Future<void> showHomeFilterBottomSheet({
   );
 }
 
+// The Map keeps its own filters. Picking a sort applies it right away and
+// closes the sheet, so the map can show the cards in that order.
+Future<void> showMapFilterBottomSheet({
+  required BuildContext context,
+  required HomeDiscoveryController controller,
+  required ActivityFilters filters,
+  required int Function(ActivityFilters) countFor,
+  required ValueChanged<ActivityFilters> onApply,
+  required ValueChanged<ActivityFilters> onSortPicked,
+  required bool hasLocation,
+}) {
+  return showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    barrierColor: SynkColors.ink.withValues(alpha: 0.45),
+    builder: (context) => FilterBottomSheet(
+      controller: controller,
+      filters: filters,
+      countFor: countFor,
+      onApply: onApply,
+      onSortPicked: onSortPicked,
+      hasLocation: hasLocation,
+    ),
+  );
+}
+
 const _handleColor = Color(0xFFD8CDBB);
 
 TextStyle _inter(double size, FontWeight weight, Color color) =>
     GoogleFonts.inter(fontSize: size, fontWeight: weight, color: color);
 
 class FilterBottomSheet extends StatefulWidget {
-  const FilterBottomSheet({super.key, required this.controller});
+  const FilterBottomSheet({
+    super.key,
+    required this.controller,
+    this.filters,
+    this.countFor,
+    this.onApply,
+    this.onSortPicked,
+    this.hasLocation,
+  });
 
+  // Location and categories come from here. Without the options below, the
+  // sheet edits this controller's (Home's) filters.
   final HomeDiscoveryController controller;
+  final ActivityFilters? filters;
+  final int Function(ActivityFilters)? countFor;
+  final ValueChanged<ActivityFilters>? onApply;
+
+  // When set, tapping a sort applies the filters and closes the sheet.
+  final ValueChanged<ActivityFilters>? onSortPicked;
+
+  // The Map finds the user itself, so it says whether it knows where they
+  // are. Otherwise the controller's location is used.
+  final bool? hasLocation;
 
   @override
   State<FilterBottomSheet> createState() => _FilterBottomSheetState();
 }
 
 class _FilterBottomSheetState extends State<FilterBottomSheet> {
-  late ActivityFilters _draft = widget.controller.filters;
+  late ActivityFilters _draft = widget.filters ?? widget.controller.filters;
 
   HomeDiscoveryController get _c => widget.controller;
 
   void _update(ActivityFilters next) => setState(() => _draft = next);
 
   void _apply() {
-    _c.applyFilters(_draft);
+    (widget.onApply ?? _c.applyFilters)(_draft);
     Navigator.of(context).pop();
+  }
+
+  void _pickSort(SortOption option) {
+    final next = _draft.copyWith(sort: option);
+    final onSortPicked = widget.onSortPicked;
+    if (onSortPicked == null) {
+      _update(next);
+      return;
+    }
+    Navigator.of(context).pop();
+    onSortPicked(next);
   }
 
   Future<void> _onPickDate() async {
@@ -72,7 +131,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     final picked = await showSynkTimePicker(
       context: context,
       initialTime: const TimeOfDay(hour: 18, minute: 0),
-      title: 'Starting from',
+      title: context.l10n.startingFrom,
     );
     if (picked != null && mounted) {
       _update(_draft.withTime(fromMinute: picked.hour * 60 + picked.minute));
@@ -86,8 +145,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     return ListenableBuilder(
       listenable: _c,
       builder: (context, _) {
-        final count = _c.countFor(_draft);
-        final hasLocation = _c.userLocation != null;
+        final count = (widget.countFor ?? _c.countFor)(_draft);
+        final hasLocation = widget.hasLocation ?? _c.userLocation != null;
 
         return Container(
           constraints: BoxConstraints(maxHeight: media.size.height * 0.85),
@@ -139,12 +198,12 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
         alignment: Alignment.center,
         children: [
           Align(
-            alignment: Alignment.centerLeft,
+            alignment: AlignmentDirectional.centerStart,
             child: Material(
               color: Colors.white,
               shape: const CircleBorder(),
               child: IconButton(
-                tooltip: 'Close',
+                tooltip: context.l10n.close,
                 onPressed: () => Navigator.of(context).pop(),
                 constraints: const BoxConstraints.tightFor(
                   width: 40,
@@ -160,7 +219,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             ),
           ),
           Text(
-            'Filters',
+            context.l10n.filters,
             style: GoogleFonts.inter(
               fontSize: 22,
               fontWeight: FontWeight.w800,
@@ -168,7 +227,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             ),
           ),
           Align(
-            alignment: Alignment.centerRight,
+            alignment: AlignmentDirectional.centerEnd,
             child: TextButton(
               onPressed: () => _update(ActivityFilters.defaults),
               style: TextButton.styleFrom(
@@ -176,7 +235,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                 padding: const EdgeInsets.symmetric(horizontal: 8),
               ),
               child: Text(
-                'Reset',
+                context.l10n.reset,
                 style: _inter(14, FontWeight.w700, SynkColors.tealText),
               ),
             ),
@@ -188,7 +247,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
 
   Widget _buildSort(bool hasLocation) {
     return _Section(
-      label: 'Sort by',
+      label: context.l10n.sortBy,
       columns: 2,
       children: [
         for (final option in SortOption.values)
@@ -199,7 +258,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                 (option.needsLocation && !hasLocation) ||
                     (option.bySpots && _draft.spots.isSingleCount)
                 ? null
-                : () => _update(_draft.copyWith(sort: option)),
+                : () => _pickSort(option),
           ),
       ],
     );
@@ -217,13 +276,15 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     );
 
     return _Section(
-      label: 'Date',
+      label: context.l10n.date,
       columns: 3,
       children: [
         day(DateOption.today),
         day(DateOption.tomorrow),
         SynkFilterChip(
-          label: custom == null ? 'Pick a date' : formatShortDate(custom),
+          label: custom == null
+              ? context.l10n.pickADate
+              : formatShortDate(custom),
           icon: Icons.calendar_month_rounded,
           selected: custom != null,
           onTap: _onPickDate,
@@ -236,7 +297,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     final from = _draft.fromMinute;
 
     return _Section(
-      label: 'Time',
+      label: context.l10n.time,
       columns: 4,
       children: [
         for (final slot in DaySlot.values)
@@ -251,8 +312,12 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             ),
           ),
         _TwoLineChip(
-          title: from == null ? 'Pick' : 'From',
-          subtitle: from == null ? 'a time' : formatMinute(from),
+          title: from == null
+              ? context.l10n.timeChipPick
+              : context.l10n.timeChipFrom,
+          subtitle: from == null
+              ? context.l10n.timeChipATime
+              : formatMinute(from),
           icon: Icons.schedule_rounded,
           selected: from != null,
           onTap: _onPickTime,
@@ -262,13 +327,18 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   }
 
   List<Widget> _buildCategories() {
-    final categories = _c.feedCategories;
+    final categories = _c.categoriesInFeed(
+      HomeDiscoveryController.knownCategories,
+    );
+    for (final selected in _draft.categories) {
+      if (!categories.contains(selected)) categories.add(selected);
+    }
     if (categories.isEmpty) return const [];
 
     return [
       const SizedBox(height: 14),
       _Section(
-        label: 'Category',
+        label: context.l10n.category,
         columns: 3,
         children: [
           for (final category in categories)
@@ -283,22 +353,22 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   }
 
   Widget _buildDistance(bool hasLocation) {
-    final options = DistanceOption.values.where(
-      (o) => o != DistanceOption.any,
-    );
+    final options = DistanceOption.values.where((o) => o != DistanceOption.any);
 
     return _Section(
-      label: 'Within',
+      label: context.l10n.within,
       columns: 3,
       trailing: hasLocation
           ? null
           : _c.isLocating
           ? Text(
-              'Locating…',
+              context.l10n.locating,
               style: _inter(13, FontWeight.w600, SynkColors.labelGrey),
             )
           : _LinkButton(
-              label: _c.locationBlocked ? 'Allow location' : 'Try again',
+              label: _c.locationBlocked
+                  ? context.l10n.allowLocation
+                  : context.l10n.tryAgain,
               onTap: () => _c.refreshLocation(request: true),
             ),
       children: [
@@ -324,20 +394,20 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     final options = SpotsOption.values.where((o) => o != SpotsOption.any);
 
     return _Section(
-      label: 'Spots',
+      label: context.l10n.spots,
       columns: 3,
       children: [
         for (final option in options)
           SynkFilterChip(
             label: option.label,
             selected: _draft.spots == option,
-            onTap: option.isSingleCount && _draft.sort.bySpots
+            onTap: option.isSingleCount && (_draft.sort?.bySpots ?? false)
                 ? null
                 : () => _update(
-              _draft.copyWith(
-                spots: _draft.spots == option ? SpotsOption.any : option,
-              ),
-            ),
+                    _draft.copyWith(
+                      spots: _draft.spots == option ? SpotsOption.any : option,
+                    ),
+                  ),
           ),
       ],
     );
@@ -345,9 +415,9 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
 
   Widget _buildShowButton(int count) {
     final label = switch (count) {
-      0 => 'No matches, try fewer filters',
-      1 => 'Show 1 activity',
-      _ => 'Show $count activities',
+      0 => context.l10n.noMatchesTryFewerFilters,
+      1 => context.l10n.showOneActivity,
+      _ => context.l10n.showActivities(count),
     };
 
     return SizedBox(
@@ -409,9 +479,7 @@ class _Section extends StatelessWidget {
       for (var j = i; j < i + columns; j++) {
         if (j > i) cells.add(const SizedBox(width: 8));
         cells.add(
-          Expanded(
-            child: j < children.length ? children[j] : const SizedBox(),
-          ),
+          Expanded(child: j < children.length ? children[j] : const SizedBox()),
         );
       }
       if (rows.isNotEmpty) rows.add(const SizedBox(height: 8));
@@ -483,7 +551,10 @@ class _TwoLineChip extends StatelessWidget {
                         Icon(icon, size: 14, color: foreground),
                         const SizedBox(width: 4),
                       ],
-                      Text(title, style: _inter(13, FontWeight.w600, foreground)),
+                      Text(
+                        title,
+                        style: _inter(13, FontWeight.w600, foreground),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 2),
@@ -492,7 +563,9 @@ class _TwoLineChip extends StatelessWidget {
                     style: _inter(
                       11,
                       FontWeight.w400,
-                      selected ? SynkColors.onSelected : SynkColors.textSecondary,
+                      selected
+                          ? SynkColors.onSelected
+                          : SynkColors.textSecondary,
                     ),
                   ),
                 ],

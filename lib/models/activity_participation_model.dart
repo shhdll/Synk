@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/l10n.dart';
+
 // Represents the result returned after joining or reviewing a request.
 class ActivityJoinResult {
   const ActivityJoinResult({
@@ -18,7 +20,7 @@ class ActivityJoinResult {
 
   factory ActivityJoinResult.fromJson(Map<String, dynamic> json) {
     final rawResult = json['result'] as String? ?? 'unknown';
-    final message = json['message'] as String? ?? 'Something went wrong.';
+    final message = json['message'] as String? ?? appL10n.somethingWentWrong;
 
     String normalizedResult = rawResult;
 
@@ -36,7 +38,7 @@ class ActivityJoinResult {
 
     return ActivityJoinResult(
       result: normalizedResult,
-      message: message,
+      message: serverMessage(message),
       activityId: json['activity_id'] as String?,
       activityTitle: json['activity_title'] as String?,
       status: json['status'] as String?,
@@ -74,7 +76,7 @@ class PendingActivityRequest {
       activityId: json['activity_id'] as String,
       activityTitle: json['activity_title'] as String,
       requesterId: json['requester_id'] as String,
-      requesterName: json['requester_name'] as String? ?? 'Synk user',
+      requesterName: json['requester_name'] as String? ?? appL10n.synkUser,
       requesterUsername: json['requester_username'] as String?,
       requesterAvatarUrl: json['requester_avatar_url'] as String?,
       requesterGender: json['requester_gender'] as String?,

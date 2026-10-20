@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/constants/interest_emojis.dart';
 import '../../../core/constants/synk_colors.dart';
+import '../../../l10n/l10n.dart';
 import '../../../models/activities_model.dart';
 import '../../../models/avatar_uploader.dart';
 
@@ -100,7 +101,7 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
 
     final subtitle = [
       if (username != null && username.isNotEmpty) '@$username',
-      if (age != null) '$age yrs',
+      if (age != null) context.l10n.ageYears(age),
     ].join(' · ');
 
     final fallback = AvatarUploader.defaultImageForGender(gender);
@@ -174,7 +175,7 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
                     child: _Stat(
                       icon: Icons.local_activity_rounded,
                       value: _completedCount?.toString() ?? '—',
-                      label: 'Activities',
+                      label: context.l10n.activities,
                     ),
                   ),
                   Container(
@@ -186,7 +187,7 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
                     child: _Stat(
                       icon: Icons.star_rounded,
                       value: rating is num ? rating.toStringAsFixed(1) : '—',
-                      label: 'Rating',
+                      label: context.l10n.rating,
                     ),
                   ),
                 ],
@@ -205,7 +206,7 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
               if (bio != null) ...[
                 const SizedBox(height: 20),
                 _Card(
-                  title: 'About',
+                  title: context.l10n.about,
                   child: Text(
                     bio,
                     style: const TextStyle(
@@ -219,7 +220,7 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
               if (interests.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 _Card(
-                  title: 'Interests',
+                  title: context.l10n.interests,
                   child: Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -239,7 +240,10 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
                             ),
                           ),
                           child: Text(
-                            [?kInterestEmojis[interest], interest].join(' '),
+                            [
+                              ?kInterestEmojis[interest],
+                              valueLabel(interest),
+                            ].join(' '),
                             style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,

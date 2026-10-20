@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 
 import '../../controllers/activity_delete_controller.dart';
 import '../../core/constants/synk_colors.dart';
+import '../../l10n/l10n.dart';
 import '../../models/activities_model.dart';
 import '../../models/activity_model.dart';
 import '../../utils/custom_widgets/synk_dialog.dart';
@@ -18,13 +18,17 @@ import 'widgets/synk_filter_chip.dart';
 import '../create_activity/create_activity_view.dart';
 
 enum _RoleFilter {
-  all('All'),
-  hosting('Hosting'),
-  joined('Joined'),
-  requested('Requested');
+  all,
+  hosting,
+  joined,
+  requested;
 
-  const _RoleFilter(this.label);
-  final String label;
+  String get label => switch (this) {
+    all => appL10n.all,
+    hosting => appL10n.hosting,
+    joined => appL10n.joined,
+    requested => appL10n.requested,
+  };
 
   bool matches(MyActivityRole role) => switch (this) {
     all => true,
@@ -142,20 +146,21 @@ class _ActivitiesViewState extends State<ActivitiesView> {
     _store.upsert(outcome.activity);
     SynkFeedback.showSuccessDialog(
       context,
-      title: 'Changes saved',
-      message: 'Your activity details have been updated.',
+      title: context.l10n.changesSavedBanner,
+      message: context.l10n.yourActivityDetailsHaveBeenUpdated,
     );
   }
 
-  bool _onUserScroll(UserScrollNotification notification) {
-    if (notification.metrics.axis != Axis.vertical) return false;
-    final atTop = notification.metrics.pixels <= 0;
-    final expand = atTop || notification.direction == ScrollDirection.forward;
-    final collapse = notification.direction == ScrollDirection.reverse;
-    if (expand && !_codeBubbleExpanded) {
-      setState(() => _codeBubbleExpanded = true);
-    } else if (collapse && !atTop && _codeBubbleExpanded) {
-      setState(() => _codeBubbleExpanded = false);
+  // Minimise the code bubble as soon as the list scrolls down; show the
+  // label again only back at the top.
+  bool _onUserScroll(ScrollNotification notification) {
+    if (notification.depth != 0 ||
+        notification.metrics.axis != Axis.vertical) {
+      return false;
+    }
+    final expand = notification.metrics.pixels <= 0;
+    if (expand != _codeBubbleExpanded) {
+      setState(() => _codeBubbleExpanded = expand);
     }
     return false;
   }
@@ -163,10 +168,10 @@ class _ActivitiesViewState extends State<ActivitiesView> {
   Future<void> _confirmDelete(Activity activity) async {
     final action = await SynkDialog.destructive(
       icon: Icons.delete_outline_rounded,
-      title: 'Delete activity?',
-      message: 'This action cannot be undone. The activity will be removed for everyone.',
-      primaryLabel: 'Keep Activity',
-      secondaryLabel: 'Delete Activity',
+      title: context.l10n.deleteActivityTitle,
+      message: context.l10n.thisActionCannotBeUndoneThe,
+      primaryLabel: context.l10n.keepActivity,
+      secondaryLabel: context.l10n.deleteActivityButton,
     ).show(context, barrierDismissible: false);
 
     // The destructive action is the secondary button.
@@ -180,7 +185,7 @@ class _ActivitiesViewState extends State<ActivitiesView> {
       SynkFeedback.showError(
         context,
         _deleteController.errorMessage ??
-            'Unable to delete the activity. Please try again.',
+            context.l10n.unableToDeleteTheActivityPlease,
       );
       return;
     }
@@ -190,8 +195,8 @@ class _ActivitiesViewState extends State<ActivitiesView> {
 
     await SynkFeedback.showSuccessDialog(
       context,
-      title: 'Activity Deleted',
-      message: 'The activity has been deleted successfully.',
+      title: context.l10n.activityDeleted,
+      message: context.l10n.theActivityHasBeenDeletedSuccessfully,
     );
   }
 
@@ -206,7 +211,7 @@ class _ActivitiesViewState extends State<ActivitiesView> {
           const Positioned.fill(child: SynkBlobBackground()),
           SafeArea(
             bottom: false,
-            child: NotificationListener<UserScrollNotification>(
+            child: NotificationListener<ScrollNotification>(
               onNotification: _onUserScroll,
               child: RefreshIndicator(
                 color: SynkColors.orangeDark,
@@ -219,8 +224,8 @@ class _ActivitiesViewState extends State<ActivitiesView> {
               ),
             ),
           ),
-          Positioned(
-            right: 16,
+          PositionedDirectional(
+            end: 16,
             // Above the raised + button.
             bottom: bottomInset + 44,
             child: CodeBubble(
@@ -255,10 +260,10 @@ class _ActivitiesViewState extends State<ActivitiesView> {
       padding: EdgeInsets.fromLTRB(16, 16, 16, bottomInset + 120),
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
-        const Padding(
+        Padding(
           padding: EdgeInsets.symmetric(horizontal: 4),
           child: Text(
-            'Activities',
+            context.l10n.activities,
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.w900,
@@ -305,16 +310,16 @@ class _ActivitiesViewState extends State<ActivitiesView> {
           Padding(
             padding: const EdgeInsets.only(top: 60),
             child: _showPast
-                ? const EmptyState(
+                ? EmptyState(
                     icon: Icons.history_rounded,
-                    title: 'No past activities',
+                    title: context.l10n.noPastActivities,
                     message:
-                        "Activities you've been part of will show up here.",
+                        context.l10n.activitiesYouveBeenPartOfWill,
                   )
-                : const EmptyState(
+                : EmptyState(
                     icon: Icons.event_available_rounded,
-                    title: 'No upcoming activities',
-                    message: 'Join one from Home, or tap + to plan your own.',
+                    title: context.l10n.noUpcomingActivities,
+                    message: context.l10n.joinOneFromHomeOrTap,
                   ),
           )
         else
@@ -375,7 +380,7 @@ class _Segmented extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(children: [segment('Upcoming', false), segment('Past', true)]),
+      child: Row(children: [segment(context.l10n.upcoming, false), segment(context.l10n.past, true)]),
     );
   }
 }
@@ -395,7 +400,7 @@ class _JoinRequestsRow extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+          padding: const EdgeInsetsDirectional.fromSTEB(12, 10, 8, 10),
           child: Row(
             children: [
               Container(
@@ -412,9 +417,9 @@ class _JoinRequestsRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Join Requests',
+                  context.l10n.joinRequests,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,

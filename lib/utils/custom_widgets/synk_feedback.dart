@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../../core/constants/synk_colors.dart';
+import '../../l10n/l10n.dart';
 import 'synk_dialog.dart';
 
 // Shared feedback for edit screens, so every page that saves something
@@ -10,31 +11,23 @@ import 'synk_dialog.dart';
 class SynkFeedback {
   SynkFeedback._();
 
-  static const String savedMessage = 'Your changes have been saved.';
-
   // Asks before leaving a screen with unsaved changes.
   // Resolves to true when the user chose to discard and leave.
   static Future<bool> confirmDiscardChanges(BuildContext context) async {
     final SynkDialogAction? action = await SynkDialog.destructive(
       icon: Icons.edit_off_rounded,
-      title: 'Discard changes?',
-      message: "Your changes haven't been saved. If you leave now, you'll lose them.",
-      primaryLabel: 'Keep editing',
-      secondaryLabel: 'Discard and leave',
+      title: context.l10n.discardChanges,
+      message: context.l10n.unsavedChangesWillBeLost,
+      primaryLabel: context.l10n.keepEditing,
+      secondaryLabel: context.l10n.discardAndLeave,
     ).show(context, barrierDismissible: false);
 
     return action == SynkDialogAction.secondary;
   }
 
-  static Future<void> showSaved(
-    BuildContext context, {
-    String message = savedMessage,
-  }) async {
-    showToast(
-      context,
-      title: 'Saved',
-      message: message == savedMessage ? null : message,
-    );
+  // Shows "Saved", with an extra line only when there is more to say.
+  static Future<void> showSaved(BuildContext context, {String? message}) async {
+    showToast(context, title: context.l10n.saved, message: message);
   }
 
   // Confirms a finished action with a banner that hides itself, so the
@@ -83,7 +76,7 @@ class SynkFeedback {
     BuildContext context, {
     required String title,
     required String message,
-    String buttonLabel = 'Got it',
+    String? buttonLabel,
   }) async {
     await showDialog<void>(
       context: context,
@@ -95,7 +88,7 @@ class SynkFeedback {
           child: _SuccessDialog(
             title: title,
             message: message,
-            buttonLabel: buttonLabel,
+            buttonLabel: buttonLabel ?? context.l10n.gotIt,
             icon: Icons.event_busy_rounded,
             iconBackground: const Color(0x24FF7A36),
             iconColor: SynkColors.orangeDark,
@@ -186,7 +179,7 @@ class _ToastState extends State<_Toast> with SingleTickerProviderStateMixin {
               borderRadius: BorderRadius.circular(18),
               shadowColor: Colors.transparent,
               child: Container(
-                padding: const EdgeInsets.fromLTRB(14, 12, 16, 12),
+                padding: const EdgeInsetsDirectional.fromSTEB(14, 12, 16, 12),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(18),
                   boxShadow: [

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/synk_colors.dart';
+import '../../../l10n/l10n.dart';
 
 // Shared bottom-sheet editor for a single text field (name, bio, email, ...)
 // on the Edit Profile screen.
@@ -122,8 +123,8 @@ class FieldEditorSheet extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  child: const Text(
-                    'Save',
+                  child: Text(
+                    context.l10n.save,
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w800,

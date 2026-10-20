@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../controllers/change_password_controller.dart';
 import '../../core/constants/synk_colors.dart';
+import '../../l10n/l10n.dart';
 import '../../utils/custom_widgets/synk_feedback.dart';
 
 class ChangePasswordView extends StatefulWidget {
@@ -147,8 +148,8 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                   color: SynkColors.textPrimary,
                 ),
               ),
-              title: const Text(
-                'Change Password',
+              title: Text(
+                context.l10n.changePasswordTitle,
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w900,
@@ -167,11 +168,11 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                           ScrollViewKeyboardDismissBehavior.onDrag,
                       padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
                       children: [
-                        _buildFieldLabel('Current password'),
+                        _buildFieldLabel(context.l10n.currentPassword),
                         const SizedBox(height: 8),
                         _buildPasswordField(
                           controller: _currentController,
-                          hintText: 'Enter your current password',
+                          hintText: context.l10n.enterYourCurrentPassword,
                           obscure: _obscureCurrent,
                           onToggle: () => setState(
                             () => _obscureCurrent = !_obscureCurrent,
@@ -187,11 +188,11 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
 
                         const SizedBox(height: 22),
 
-                        _buildFieldLabel('New password'),
+                        _buildFieldLabel(context.l10n.newPassword),
                         const SizedBox(height: 8),
                         _buildPasswordField(
                           controller: _newController,
-                          hintText: 'Enter a new password',
+                          hintText: context.l10n.enterANewPassword,
                           obscure: _obscureNew,
                           onToggle: () =>
                               setState(() => _obscureNew = !_obscureNew),
@@ -206,11 +207,11 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
 
                         const SizedBox(height: 22),
 
-                        _buildFieldLabel('Confirm new password'),
+                        _buildFieldLabel(context.l10n.confirmNewPassword),
                         const SizedBox(height: 8),
                         _buildPasswordField(
                           controller: _confirmController,
-                          hintText: 'Re-enter the new password',
+                          hintText: context.l10n.reEnterTheNewPassword,
                           obscure: _obscureConfirm,
                           onToggle: () => setState(
                             () => _obscureConfirm = !_obscureConfirm,
@@ -227,9 +228,8 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
 
                         const SizedBox(height: 12),
 
-                        const Text(
-                          'Use at least 8 characters with uppercase, lowercase, '
-                          'a number, and a special character.',
+                        Text(
+                          context.l10n.useAtLeast8CharactersWith,
                           style: TextStyle(
                             fontSize: 12,
                             height: 1.4,
@@ -278,8 +278,8 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                                   ),
                                 ),
                               )
-                            : const Text(
-                                'Update password',
+                            : Text(
+                                context.l10n.updatePassword,
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w800,
@@ -341,7 +341,7 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
           ),
           decoration: InputDecoration(
             prefixIcon: const Padding(
-              padding: EdgeInsets.only(left: 14, right: 8),
+              padding: EdgeInsetsDirectional.only(start: 14, end: 8),
               child: Icon(
                 Icons.lock_outline_rounded,
                 size: 18,
@@ -398,7 +398,7 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
         if (hasError) ...[
           const SizedBox(height: 5),
           Padding(
-            padding: const EdgeInsets.only(left: 12),
+            padding: const EdgeInsetsDirectional.only(start: 12),
             child: Text(
               errorText,
               style: const TextStyle(
