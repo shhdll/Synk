@@ -335,6 +335,32 @@ class ActivitiesModel {
     return Activity.fromMap(row);
   }
 
+  // Updates editable fields on an activity owned by the signed-in user.
+  Future<Activity> update(Activity draft) async {
+    final uid = currentUserId;
+    if (uid == null) {
+      throw StateError('Cannot update an activity while signed out.');
+    }
+
+    final payload = draft.toInsertMap()..remove('host_id');
+    final rows = await _supabase
+        .from(_table)
+        .update(payload)
+        .eq('id', draft.id)
+        .eq('host_id', uid)
+        .select();
+    if (rows.isEmpty) {
+      throw StateError('The activity was not found or cannot be updated.');
+    }
+    return Activity.fromMap(rows.first).copyWith(
+      hostName: draft.hostName,
+      hostUsername: draft.hostUsername,
+      hostAvatarUrl: draft.hostAvatarUrl,
+      hostGender: draft.hostGender,
+      participantsCount: draft.participantsCount,
+    );
+  }
+
   // Updates or removes the activity photo URL.
   Future<Activity> updatePhotoUrl(String activityId, String? photoUrl) async {
     final row = await _supabase

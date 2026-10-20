@@ -58,6 +58,7 @@ class ActivityPhotoUploader {
   static Future<ActivityPhotoUploadResult> upload({
     required String activityId,
     required XFile file,
+    bool cacheBust = false,
   }) async {
     final hostId = _supabase.auth.currentUser?.id;
     if (hostId == null) {
@@ -81,9 +82,12 @@ class ActivityPhotoUploader {
             fileOptions: const FileOptions(upsert: true),
           );
 
-      final url = _supabase.storage
+      final publicUrl = _supabase.storage
           .from(ActivityConstants.photoBucket)
           .getPublicUrl(path);
+      final url = cacheBust
+          ? '$publicUrl?v=${DateTime.now().microsecondsSinceEpoch}'
+          : publicUrl;
 
       return ActivityPhotoUploadResult(url: url);
     } catch (_) {

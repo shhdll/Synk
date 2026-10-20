@@ -15,6 +15,7 @@ type PromotionEvent = {
   activity_id: string;
   activity_title: string;
   status: string;
+  event_type?: "waitlist_promotion" | "activity_updated";
 };
 
 type FcmCredentials = {
@@ -126,53 +127,72 @@ async function sendToToken(
   event: PromotionEvent,
   credentials: FcmCredentials,
   accessToken: string,
-): Promise<{ sent: boolean; unregistered: boolean }> {
-  const response = await fetch(
-    `https://fcm.googleapis.com/v1/projects/${credentials.project_id}/messages:send`,
-    {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${accessToken}`,
-        "Content-Type": "application/json; charset=UTF-8",
-      },
-      body: JSON.stringify({
-        message: {
-          token,
-          notification: {
-            title: "You're In! \u{1F389}",
-            body: `A spot opened up! You've been moved from the waiting list and successfully joined ${event.activity_title}.`,
-          },
-          data: {
-            type: "waitlist_promotion",
-            event_id: event.id,
-            activity_id: event.activity_id,
-          },
-          android: {
-            priority: "HIGH",
-            notification: {
-              channel_id: "waitlist_promotions",
-              tag: `waitlist_${event.id}`,
-              sound: "default",
+): Promise<{
+  sent: boolean;
+  unregistered: boolean;
+  httpStatus?: number;
+  failureCode?: string;
+}> {
+  try {
+    const response = await fetch(
+      `https://fcm.googleapis.com/v1/projects/${credentials.project_id}/messages:send`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json; charset=UTF-8",
+        },
+        body: JSON.stringify({
+          message: {
+            token,
+            notification: event.event_type === "activity_updated"
+              ? {
+                title: "Activity updated",
+                body: `${event.activity_title} has new details. Tap to review the changes.`,
+              }
+              : {
+                title: "You're In! \u{1F389}",
+                body: `A spot opened up! You've been moved from the waiting list and successfully joined ${event.activity_title}.`,
+              },
+            data: {
+              type: event.event_type ?? "waitlist_promotion",
+              event_id: event.id,
+              activity_id: event.activity_id,
+            },
+            android: {
+              priority: "HIGH",
+              notification: {
+                channel_id: event.event_type === "activity_updated"
+                  ? "activity_updates"
+                  : "waitlist_promotions",
+                tag: `${event.event_type ?? "waitlist_promotion"}_${event.id}`,
+                sound: "default",
+              },
             },
           },
-        },
-      }),
-    },
-  );
+        }),
+      },
+    );
 
-  if (response.ok) return { sent: true, unregistered: false };
+    if (response.ok) return { sent: true, unregistered: false };
 
-  const failure = await response.json().catch(() => ({}));
-  const error = failure && typeof failure === "object"
-    ? (failure as Record<string, unknown>).error as
-      | Record<string, unknown>
-      | undefined
-    : undefined;
-  return {
-    sent: false,
-    unregistered: response.status === 404 ||
-      (error !== undefined && isUnregisteredToken(error)),
-  };
+    const failure = await response.json().catch(() => ({}));
+    const error = failure && typeof failure === "object"
+      ? (failure as Record<string, unknown>).error as
+        | Record<string, unknown>
+        | undefined
+      : undefined;
+    return {
+      sent: false,
+      unregistered: response.status === 404 ||
+        (error !== undefined && isUnregisteredToken(error)),
+      httpStatus: response.status,
+      failureCode: typeof error?.status === "string" ? error.status : undefined,
+    };
+  } catch {
+    // Avoid logging request details, which include the device token.
+    return { sent: false, unregistered: false, failureCode: "network_error" };
+  }
 }
 
 Deno.serve(async (request: Request) => {
@@ -191,9 +211,13 @@ Deno.serve(async (request: Request) => {
   }
 
   let eventId: string;
+  let eventType: "waitlist_promotion" | "activity_updated";
   try {
     const body = await request.json();
     eventId = typeof body.event_id === "string" ? body.event_id : "";
+    eventType = body.event_type === "activity_updated"
+      ? "activity_updated"
+      : "waitlist_promotion";
   } catch {
     return jsonResponse({ error: "invalid_json" }, 400);
   }
@@ -201,8 +225,11 @@ Deno.serve(async (request: Request) => {
     return jsonResponse({ error: "invalid_event_id" }, 400);
   }
 
+  const outboxTable = eventType === "activity_updated"
+    ? "activity_update_notification_outbox"
+    : "waitlist_promotion_notification_outbox";
   const { data: event, error: claimError } = await admin
-    .from("waitlist_promotion_notification_outbox")
+    .from(outboxTable)
     .update({ status: "processing" })
     .eq("id", eventId)
     .eq("status", "pending")
@@ -218,7 +245,7 @@ Deno.serve(async (request: Request) => {
     return jsonResponse({ ok: true, duplicate: true });
   }
 
-  const typedEvent = event as PromotionEvent;
+  const typedEvent = { ...(event as PromotionEvent), event_type: eventType };
   const { data: tokens, error: tokenError } = await admin
     .from("push_device_tokens")
     .select("fcm_token")
@@ -226,14 +253,14 @@ Deno.serve(async (request: Request) => {
 
   if (tokenError) {
     console.error("Could not load promotion recipient tokens:", tokenError.message);
-    await admin.from("waitlist_promotion_notification_outbox")
+    await admin.from(outboxTable)
       .update({ status: "failed", processed_at: new Date().toISOString() })
       .eq("id", eventId);
     return jsonResponse({ error: "recipient_lookup_failed" }, 500);
   }
 
   if (!tokens?.length) {
-    await admin.from("waitlist_promotion_notification_outbox")
+    await admin.from(outboxTable)
       .update({ status: "no_tokens", processed_at: new Date().toISOString() })
       .eq("id", eventId);
     return jsonResponse({ ok: true, sent: 0 });
@@ -246,7 +273,7 @@ Deno.serve(async (request: Request) => {
       throw new Error("Incomplete Firebase service account.");
     }
   } catch {
-    await admin.from("waitlist_promotion_notification_outbox")
+    await admin.from(outboxTable)
       .update({ status: "failed", processed_at: new Date().toISOString() })
       .eq("id", eventId);
     console.error("Firebase service account configuration is invalid.");
@@ -258,6 +285,15 @@ Deno.serve(async (request: Request) => {
     const outcomes = await Promise.all(tokens.map(({ fcm_token }) =>
       sendToToken(fcm_token, typedEvent, credentials, accessToken)
     ));
+    outcomes.forEach((outcome) => {
+      if (!outcome.sent) {
+        console.error("FCM rejected notification delivery", {
+          eventId,
+          httpStatus: outcome.httpStatus,
+          code: outcome.failureCode ?? "unknown_fcm_error",
+        });
+      }
+    });
     const invalidTokens = tokens
       .filter((_, index) => outcomes[index].unregistered)
       .map(({ fcm_token }) => fcm_token);
@@ -269,7 +305,7 @@ Deno.serve(async (request: Request) => {
     }
 
     const sent = outcomes.filter((outcome) => outcome.sent).length;
-    await admin.from("waitlist_promotion_notification_outbox")
+    await admin.from(outboxTable)
       .update({
         status: sent > 0 ? "sent" : "failed",
         processed_at: new Date().toISOString(),
@@ -280,7 +316,7 @@ Deno.serve(async (request: Request) => {
   } catch (error) {
     // Do not include FCM tokens or credential material in logs or responses.
     console.error("FCM delivery failed for promotion event:", eventId, error);
-    await admin.from("waitlist_promotion_notification_outbox")
+    await admin.from(outboxTable)
       .update({ status: "failed", processed_at: new Date().toISOString() })
       .eq("id", eventId);
     return jsonResponse({ error: "notification_delivery_failed" }, 500);
