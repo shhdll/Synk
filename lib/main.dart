@@ -11,6 +11,7 @@ import 'models/auth_deep_link_handler.dart';
 import 'models/auth_model.dart';
 import 'models/activity_model.dart';
 import 'services/push_notification_service.dart';
+import 'services/startup_safe_session_storage.dart';
 import 'views/home/activity_notification_route.dart';
 import 'views/home/activity_join_requests_view.dart';
 import 'views/home/main_shell.dart';
@@ -19,22 +20,110 @@ import 'views/welcome_view.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  await dotenv.load(fileName: ".env");
-
-  await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL']!,
-    publishableKey: dotenv.env['SUPABASE_ANON_KEY']!,
-  );
-
-  await LanguageController.instance.load();
-
-  await PushNotificationService.instance.initialize();
-
-  runApp(const MyApp());
+  runApp(const StartupGate());
 }
 
 final supabase = Supabase.instance.client;
+
+class StartupGate extends StatefulWidget {
+  const StartupGate({super.key});
+
+  @override
+  State<StartupGate> createState() => _StartupGateState();
+}
+
+class _StartupGateState extends State<StartupGate> {
+  late final Future<void> _startup = _initialize();
+  String _stage = 'Loading app configuration';
+
+  void _setStage(String stage) {
+    debugPrint('Synk startup: $stage');
+    if (_stage != stage) setState(() => _stage = stage);
+  }
+
+  Future<void> _initialize() async {
+    try {
+      _setStage('Loading app configuration');
+      await dotenv.load(fileName: '.env').timeout(const Duration(seconds: 15));
+
+      final url = dotenv.env['SUPABASE_URL'];
+      final key = dotenv.env['SUPABASE_ANON_KEY'];
+      if (url == null || url.isEmpty || key == null || key.isEmpty) {
+        throw StateError('Supabase settings are missing from .env');
+      }
+
+      _setStage('Initializing account services');
+      await Supabase.initialize(
+        url: url,
+        publishableKey: key,
+        authOptions: FlutterAuthClientOptions(
+          // AuthDeepLinkHandler below owns app links for this app.
+          detectSessionInUri: false,
+          localStorage: StartupSafeSessionStorage(
+            persistSessionKey:
+                'sb-${Uri.parse(url).host.split('.').first}-auth-token',
+          ),
+        ),
+      ).timeout(const Duration(seconds: 30));
+
+      _setStage('Loading saved preferences');
+      await LanguageController.instance.load().timeout(
+        const Duration(seconds: 10),
+      );
+    } catch (error, stackTrace) {
+      debugPrint('Synk startup failed during "$_stage": $error');
+      debugPrintStack(stackTrace: stackTrace);
+      rethrow;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<void>(
+      future: _startup,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done &&
+            !snapshot.hasError) {
+          return const MyApp();
+        }
+
+        final failed = snapshot.hasError;
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          home: Scaffold(
+            backgroundColor: const Color(0xFFF6F1E6),
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (failed)
+                      const Icon(Icons.error_outline, size: 40)
+                    else
+                      const CircularProgressIndicator(),
+                    const SizedBox(height: 20),
+                    Text(
+                      failed ? 'Synk could not finish starting.' : _stage,
+                      textAlign: TextAlign.center,
+                    ),
+                    if (failed) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        'It stopped while: $_stage',
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -71,6 +160,7 @@ class _MyAppState extends State<MyApp> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _drainPendingActivityNotification();
       _drainPendingJoinRequestsNotification();
+      unawaited(PushNotificationService.instance.initialize());
     });
 
     // After the user opens the reset email link, supabase_flutter exchanges
