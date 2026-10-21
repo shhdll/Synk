@@ -15,8 +15,10 @@ Sign-up, magic link and email change links are confirmed on the page itself
 (Supabase `/auth/v1/verify`, using `config.js`), so it can show the real
 result. For sign-up the session is passed to the app as
 `io.supabase.synk://login-callback?refresh_token=…` so it signs straight in.
-Password reset links are only forwarded: the app confirms them so the user can
-set a new password there.
+Password reset links are forwarded to the app as before, and the page also
+shows a new password form so the link works on a phone without Synk. The token
+is only used when the form is submitted (`/auth/v1/verify`, then
+`PUT /auth/v1/user`), so "Continue to Synk" can still pass it to the app.
 
 `config.js` holds the project URL and the public anon key (the same values the
 app ships with).

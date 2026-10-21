@@ -5,8 +5,11 @@
 // Sign-up, magic link and email change are confirmed right here, so the page
 // can tell the user the real outcome. For sign-up the resulting session is
 // handed to the app (io.supabase.synk://login-callback?refresh_token=...) so
-// it signs straight in. Password reset is not confirmed here: the app needs
-// the token itself to let the user set a new password.
+// it signs straight in.
+//
+// Password reset shows a new password form, so the link also works on a
+// phone without Synk. The token is only used when the form is submitted, so
+// "Continue to Synk" can still pass it to the app unused.
 //
 // Opening the app, per device:
 // - Android: automatically, through an intent:// link. Android offers Synk
@@ -38,6 +41,7 @@
       "One more step",
       "Open the link we sent to your other email to finish the change.",
     ],
+    recovery: ["Password updated", "Log in to Synk with your new password."],
   };
 
   function el(id) {
@@ -117,15 +121,17 @@
     );
   }
 
-  function verifyOnPage(type, tokenHash) {
+  function authRequest(method, path, body, accessToken) {
     var config = window.SYNK_SUPABASE;
-    return fetch(config.url + "/auth/v1/verify", {
-      method: "POST",
-      headers: {
-        apikey: config.anonKey,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ type: type, token_hash: tokenHash }),
+    var headers = {
+      apikey: config.anonKey,
+      "Content-Type": "application/json",
+    };
+    if (accessToken) headers.Authorization = "Bearer " + accessToken;
+    return fetch(config.url + "/auth/v1" + path, {
+      method: method,
+      headers: headers,
+      body: body ? JSON.stringify(body) : undefined,
     }).then(function (response) {
       return response.json().then(
         function (body) {
@@ -135,6 +141,111 @@
           return { ok: response.ok, status: response.status, body: {} };
         }
       );
+    });
+  }
+
+  function verifyOnPage(type, tokenHash) {
+    return authRequest("POST", "/verify", { type: type, token_hash: tokenHash });
+  }
+
+  // Same rules as AuthConstants.validatePassword in the app.
+  function passwordProblem(password, confirmation) {
+    if (!password) return "Password is required";
+    if (password.length < 8) return "Password must be at least 8 characters";
+    if (!/[A-Z]/.test(password)) {
+      return "Password must contain at least 1 uppercase letter";
+    }
+    if (!/[a-z]/.test(password)) {
+      return "Password must contain at least 1 lowercase letter";
+    }
+    if (!/[0-9]/.test(password)) return "Password must contain at least 1 number";
+    if (!/[^a-zA-Z0-9]/.test(password)) {
+      return "Password must contain at least 1 special character (e.g., @$!%*?&)";
+    }
+    if (!confirmation) return "Please confirm your new password";
+    if (password !== confirmation) return "Passwords do not match";
+    return null;
+  }
+
+  function showPasswordForm(tokenHash, params) {
+    var form = el("reset-form");
+    var button = el("save-password");
+    var error = el("form-error");
+    // Kept after the token is used, so a rejected password can be retried.
+    var session = null;
+
+    el("message").textContent = "Choose a new password for your account.";
+    el("message").hidden = false;
+    form.hidden = false;
+    el("app-note").hidden = false;
+    el("open-app").classList.add("secondary");
+
+    function showError(message) {
+      error.textContent = message || "";
+      error.hidden = !message;
+    }
+
+    function setSaving(saving) {
+      button.disabled = saving;
+      button.textContent = saving ? "Saving…" : "Update password";
+    }
+
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      var password = el("new-password").value;
+      var problem = passwordProblem(password, el("confirm-password").value);
+      if (problem) return showError(problem);
+
+      showError("");
+      setSaving(true);
+
+      var ready = session
+        ? Promise.resolve(session)
+        : verifyOnPage("recovery", tokenHash).then(function (result) {
+            if (!result.ok) {
+              throw { expired: result.status >= 400 && result.status < 500 };
+            }
+            session = result.body;
+            return session;
+          });
+
+      ready
+        .then(function (current) {
+          return authRequest(
+            "PUT",
+            "/user",
+            { password: password },
+            current.access_token
+          );
+        })
+        .then(function (result) {
+          if (result.status === 401 || result.status === 403) {
+            throw { expired: true };
+          }
+          if (!result.ok) {
+            throw { message: result.body.msg || result.body.message };
+          }
+
+          // End the session the link opened on this page; the user logs in
+          // on their own phone.
+          authRequest("POST", "/logout?scope=local", null, session.access_token)
+            .catch(function () {});
+
+          window.history.replaceState(null, "", confirmedUrl("recovery"));
+          form.hidden = true;
+          el("app-note").hidden = true;
+          el("open-app").classList.remove("secondary");
+          showConfirmed("recovery", params);
+        })
+        .catch(function (failure) {
+          setSaving(false);
+          if (failure && failure.expired) return showExpired();
+          // A thrown Error is a network failure, not a message from Supabase.
+          showError(
+            (failure && !(failure instanceof Error) && failure.message) ||
+              "Couldn't update your password. Check your connection and try again."
+          );
+        });
     });
   }
 
@@ -181,7 +292,11 @@
     }
 
     if (!options.verifyOnPage || !window.SYNK_SUPABASE) {
-      return forwardToApp(options, params);
+      forwardToApp(options, params);
+      if (options.passwordForm && window.SYNK_SUPABASE) {
+        showPasswordForm(params.get("token"), params);
+      }
+      return;
     }
 
     var type = linkType(options, params);
