@@ -1135,6 +1135,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Start typing to search Riyadh venues.';
 
   @override
+  String get useThisLocation => 'Use this location';
+
+  @override
+  String get findingAddress => 'Finding address…';
+
+  @override
+  String get pinnedLocation => 'Pinned location';
+
+  @override
   String get noMatchesFound => 'No matches found.';
 
   @override
@@ -1236,6 +1245,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get thisTimeHasAlreadyPassed => 'This time has already passed';
+
+  @override
+  String get youAlreadyHaveAnActivityAtThisTime =>
+      'This time overlaps with another one of your activities. Choose a different date or time.';
+
+  @override
+  String conflictJoinJoined(String title) {
+    return 'This overlaps with $title, which you\'ve already joined. Leave it first to join this one.';
+  }
+
+  @override
+  String conflictJoinHosting(String title) {
+    return 'This overlaps with $title, which you\'re hosting. Change its time or delete it to join this one.';
+  }
+
+  @override
+  String conflictCreateJoined(String title) {
+    return 'This time overlaps with $title, which you\'ve joined. Pick another time or leave that activity.';
+  }
+
+  @override
+  String conflictCreateHosting(String title) {
+    return 'This time overlaps with $title, which you\'re hosting. Pick another time.';
+  }
+
+  @override
+  String get conflictJoinUnknown =>
+      'This activity overlaps with another one you\'ve joined or are hosting.';
+
+  @override
+  String get serverParticipantHasConflict =>
+      'This participant already has another activity at this time. Choose someone else.';
 
   @override
   String get pleaseCompleteEveryStepBeforeCreating =>
@@ -1374,6 +1415,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tapToChangePhoto => 'Tap to change photo';
+
+  @override
+  String get profileHeader => 'Header';
+
+  @override
+  String get synkColors => 'Synk colors';
+
+  @override
+  String get moreColors => 'More colors';
+
+  @override
+  String get headerPhoto => 'Photo';
+
+  @override
+  String get couldntUploadYourHeaderPhoto =>
+      'Couldn\'t upload your header photo. Please try again.';
 
   @override
   String get name => 'Name';
@@ -2020,7 +2077,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverUserHasConflict =>
-      'The user is already hosting an activity at this time or has joined another activity on this date.';
+      'This person already has another activity at this time, so they can\'t be accepted.';
 
   @override
   String get serverActivityNotFound => 'This activity was not found.';

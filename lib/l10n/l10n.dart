@@ -118,6 +118,14 @@ String serverMessage(String message) {
     'The user is already hosting an activity at this time or has joined '
         'another activity on this date.' =>
       l.serverUserHasConflict,
+    'You already have an activity scheduled during this time. Please choose '
+        'a different date or time.' =>
+      l.youAlreadyHaveAnActivityAtThisTime,
+    'The user has another confirmed activity scheduled during this time.' =>
+      l.serverUserHasConflict,
+    'The selected participant has another activity scheduled during this '
+        'time.' =>
+      l.serverParticipantHasConflict,
     'This activity was not found.' => l.serverActivityNotFound,
     'This activity is private. Ask the host for its code.' =>
       l.serverActivityPrivate,

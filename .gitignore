@@ -53,3 +53,4 @@ app.*.map.json
 /android/app/google-services.json
 # Supabase local development files
 supabase/.temp/
+.vercel

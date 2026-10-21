@@ -368,6 +368,13 @@ class _MyAppState extends State<MyApp> {
         // Inter has no Arabic letters.
         fontFamilyFallback: [GoogleFonts.ibmPlexSansArabic().fontFamily!],
       ),
+      // Tapping outside a text field closes the keyboard. iPhone has no
+      // other way to close it for multi-line fields.
+      builder: (context, child) => GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: child,
+      ),
       home: StreamBuilder<AuthState>(
         stream: _authModel.authStateChanges,
         builder: (context, snapshot) {

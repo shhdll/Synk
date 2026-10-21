@@ -6,6 +6,8 @@ import '../../../core/constants/synk_colors.dart';
 import '../../../l10n/l10n.dart';
 import '../../../models/activities_model.dart';
 import '../../../models/avatar_uploader.dart';
+import '../../widgets/avatar_preview.dart';
+import '../../widgets/profile_header_banner.dart';
 
 Future<void> showUserProfileSheet({
   required BuildContext context,
@@ -132,22 +134,52 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              const SizedBox(height: 20),
-              ClipOval(
-                child: Image(
-                  image: photo,
-                  width: 92,
-                  height: 92,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => Image(
-                    image: fallback,
-                    width: 92,
-                    height: 92,
-                    fit: BoxFit.cover,
+              const SizedBox(height: 16),
+              // Their header, with the photo hanging off its bottom edge.
+              Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.bottomCenter,
+                children: [
+                  // Plain while loading, so the default color doesn't flash.
+                  _loading
+                      ? Container(
+                          height: 100,
+                          decoration: BoxDecoration(
+                            color: SynkColors.beige.withValues(alpha: 0.35),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        )
+                      : ProfileHeaderBanner.forProfile(_profile, height: 100),
+                  Positioned(
+                    bottom: -50,
+                    child: GestureDetector(
+                      onTap: () => showAvatarPreview(context, photo),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: SynkColors.background,
+                          shape: BoxShape.circle,
+                        ),
+                        child: ClipOval(
+                          child: Image(
+                            image: photo,
+                            width: 92,
+                            height: 92,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => Image(
+                              image: fallback,
+                              width: 92,
+                              height: 92,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 62),
               Text(
                 name,
                 textAlign: TextAlign.center,
@@ -292,10 +324,7 @@ class _Stat extends StatelessWidget {
         const SizedBox(height: 2),
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: SynkColors.textSecondary,
-          ),
+          style: const TextStyle(fontSize: 12, color: SynkColors.textSecondary),
         ),
       ],
     );

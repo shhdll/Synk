@@ -8,9 +8,10 @@ import '../../core/constants/activity_constants.dart';
 import '../../core/constants/synk_colors.dart';
 import '../../l10n/l10n.dart';
 import '../../models/place_search_model.dart';
-import '../../utils/custom_widgets/synk_feedback.dart';
+import '../home/widgets/activity_details_sheet.dart';
 import '../home/widgets/activity_thumbnail.dart';
 import '../home/widgets/synk_filter_chip.dart';
+import '../widgets/schedule_conflict_text.dart';
 import '../widgets/synk_date_picker.dart';
 import 'create_activity_widgets.dart';
 import 'location_search_sheet.dart';
@@ -55,8 +56,20 @@ class _StepBasicsState extends State<StepBasics> {
     final PlaceSuggestion? place = await showModalBottomSheet<PlaceSuggestion?>(
       context: context,
       isScrollControlled: true,
+      // Keeps the sheet's title below the status bar.
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
-      builder: (BuildContext sheetContext) => const LocationSearchSheet(),
+      builder: (BuildContext sheetContext) => LocationSearchSheet(
+        initialPlace: _c.locationName.isEmpty
+            ? null
+            : PlaceSuggestion(
+                placeId: '',
+                name: _c.locationName,
+                address: _c.locationAddress,
+                latitude: _c.latitude,
+                longitude: _c.longitude,
+              ),
+      ),
     );
 
     if (!mounted) return;
@@ -87,6 +100,7 @@ class _StepBasicsState extends State<StepBasics> {
       initialDate: currentDate.isAfter(lastDate) ? lastDate : currentDate,
       firstDate: _today,
       lastDate: lastDate,
+      markToday: false,
     );
     if (picked != null) {
       await _selectDate(picked);
@@ -103,7 +117,7 @@ class _StepBasicsState extends State<StepBasics> {
     );
     if (picked != null) {
       _c.setTime(picked);
-      await _showScheduleConflictIfNeeded();
+      await _c.checkSelectedScheduleConflict();
     } else {
       _c.touch(CreateField.time);
     }
@@ -111,16 +125,28 @@ class _StepBasicsState extends State<StepBasics> {
 
   Future<void> _selectDate(DateTime date) async {
     _c.setDate(date);
-    await _showScheduleConflictIfNeeded();
+    // A conflict shows under the Time field.
+    await _c.checkSelectedScheduleConflict();
   }
 
-  Future<void> _showScheduleConflictIfNeeded() async {
-    final message = await _c.checkSelectedScheduleConflict();
-    if (!mounted || message == null) return;
-    await SynkFeedback.showErrorDialog(
-      context,
-      title: _c.isEditing ? context.l10n.editActivity : context.l10n.createActivity,
-      message: message,
+  // Names the activity in the way and opens it on tap. The draft stays.
+  Widget? _buildConflictLink() {
+    final conflict = _c.conflictingActivity;
+    final store = _c.store;
+    if (conflict == null || store == null) return null;
+    return ScheduleConflictText(
+      title: conflict.title,
+      message: conflict.isHostedBy(store.currentUserId)
+          ? context.l10n.conflictCreateHosting
+          : context.l10n.conflictCreateJoined,
+      onTitleTap: () {
+        FocusManager.instance.primaryFocus?.unfocus();
+        showActivityDetailsSheet(
+          context: context,
+          activity: conflict,
+          activityStore: store,
+        );
+      },
     );
   }
 
@@ -147,7 +173,10 @@ class _StepBasicsState extends State<StepBasics> {
         CreateGroupLabel(text: context.l10n.time, isRequired: true),
         const SizedBox(height: 10),
         _buildTime(),
-        FieldError(_c.errorFor(CreateField.time)),
+        FieldError(
+          _c.errorFor(CreateField.time),
+          content: _buildConflictLink(),
+        ),
       ],
     );
   }

@@ -103,9 +103,11 @@ class CreateCard extends StatelessWidget {
 }
 
 class FieldError extends StatelessWidget {
-  const FieldError(this.text, {super.key});
+  const FieldError(this.text, {super.key, this.content});
 
   final String? text;
+  // Replaces the plain text, e.g. to add a link. Shown only when [text] is.
+  final Widget? content;
 
   @override
   Widget build(BuildContext context) {
@@ -122,13 +124,13 @@ class FieldError extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Expanded(
-            child: Text(
-              message,
+            child: DefaultTextStyle.merge(
               style: const TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w600,
                 color: kFieldErrorColor,
               ),
+              child: content ?? Text(message),
             ),
           ),
         ],

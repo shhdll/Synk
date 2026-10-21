@@ -263,7 +263,11 @@ class AvatarUploader {
         final objects = await Supabase.instance.client.storage
             .from('avatars')
             .list(path: userId);
-        final paths = objects.map((o) => '$userId/${o.name}').toList();
+        // The header photo lives in the same folder; leave it alone.
+        final paths = objects
+            .where((o) => !o.name.startsWith('header.'))
+            .map((o) => '$userId/${o.name}')
+            .toList();
         if (paths.isNotEmpty) {
           await Supabase.instance.client.storage.from('avatars').remove(paths);
         }

@@ -10,7 +10,9 @@ import '../../models/avatar_uploader.dart';
 import '../../utils/custom_widgets/synk_feedback.dart';
 import 'change_password_view.dart';
 import 'widgets/change_email_bottom_sheet.dart';
+import 'widgets/header_options_sheet.dart';
 import 'widgets/photo_options_sheet.dart';
+import '../widgets/profile_header_banner.dart';
 import '../widgets/synk_date_picker.dart';
 import '../../utils/text_direction.dart';
 
@@ -437,6 +439,35 @@ class _EditProfileViewState extends State<EditProfileView> {
     }
   }
 
+  Future<void> _openHeaderOptions() async {
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => HeaderOptionsSheet(
+        selectedStyle: _controller.headerStyle,
+        hasPhoto: _controller.headerImage != null,
+      ),
+    );
+
+    if (action == null || !mounted) {
+      return;
+    }
+
+    String? message;
+    if (action.startsWith('style:')) {
+      await _controller.selectHeaderStyle(action.substring(6));
+    } else if (action == 'change') {
+      message = await _controller.changeHeaderPhoto();
+    } else if (action == 'adjust') {
+      message = await _controller.adjustHeaderPhoto();
+    } else if (action == 'remove') {
+      await _controller.removeHeaderPhoto();
+    }
+
+    if (message != null) _showMessage(message);
+  }
+
   // ---------------------------------------------------------------------------
   // Password
   // ---------------------------------------------------------------------------
@@ -553,6 +584,44 @@ class _EditProfileViewState extends State<EditProfileView> {
                   padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
                   children: [
                     // -------------------------------------------------------------
+                    // Header
+                    // -------------------------------------------------------------
+                    GestureDetector(
+                      onTap: isUploadingPhoto ? null : _openHeaderOptions,
+                      child: Stack(
+                        children: [
+                          ProfileHeaderBanner(
+                            styleId: _controller.headerStyle,
+                            image: _controller.headerImage,
+                            height: 96,
+                          ),
+                          PositionedDirectional(
+                            end: 10,
+                            bottom: 10,
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: SynkColors.orangeDark,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 2,
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.edit_rounded,
+                                size: 16,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // -------------------------------------------------------------
                     // Profile photo
                     // -------------------------------------------------------------
 
@@ -620,19 +689,6 @@ class _EditProfileViewState extends State<EditProfileView> {
                       ),
                     ),
 
-                    const SizedBox(height: 10),
-
-                    Center(
-                      child: Text(
-                        context.l10n.tapToChangePhoto,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: SynkColors.textSecondary,
-                        ),
-                      ),
-                    ),
-
                     const SizedBox(height: 30),
 
                     // -------------------------------------------------------------
@@ -683,7 +739,8 @@ class _EditProfileViewState extends State<EditProfileView> {
                     _buildTextField(
                       controller: _bioController,
                       hintText: context.l10n.tellPeopleABitAboutYourself,
-                      maxLines: 4,
+                      minLines: 3,
+                      maxLines: null,
                       maxLength: 160,
                       textInputAction: TextInputAction.newline,
                       onChanged: _onBioChanged,
@@ -895,7 +952,9 @@ class _EditProfileViewState extends State<EditProfileView> {
     ValueChanged<String>? onChanged,
     TextInputType? keyboardType,
     TextInputAction? textInputAction,
-    int maxLines = 1,
+    // Null grows with the text.
+    int? maxLines = 1,
+    int? minLines,
     int? maxLength,
     String? errorText,
     Widget? prefixIcon,
@@ -917,6 +976,7 @@ class _EditProfileViewState extends State<EditProfileView> {
           keyboardType: keyboardType,
           textInputAction: textInputAction,
           maxLines: maxLines,
+          minLines: minLines,
           maxLength: maxLength,
           style: const TextStyle(
             fontSize: 15,

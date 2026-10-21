@@ -6,8 +6,13 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../core/constants/synk_colors.dart';
 
 /// Draws a native Google Maps marker with Synk's orange gradient and a white icon.
+/// A [count] above 1 adds a badge for activities sharing the same spot.
 class ActivityMapMarker {
-  static Future<BitmapDescriptor> create(IconData icon, {bool selected = false}) async {
+  static Future<BitmapDescriptor> create(
+    IconData icon, {
+    bool selected = false,
+    int count = 1,
+  }) async {
     const logicalWidth = 72.0;
     const logicalHeight = 92.0;
     const scale = 3.0;
@@ -69,6 +74,31 @@ class ActivityMapMarker {
       textDirection: TextDirection.ltr,
     )..layout();
     painter.paint(canvas, Offset(36 - painter.width / 2, 35 - painter.height / 2));
+
+    if (count > 1) {
+      const badgeCenter = Offset(56, 16);
+      canvas.drawCircle(badgeCenter, 14, Paint()..color = Colors.white);
+      canvas.drawCircle(
+        badgeCenter,
+        11.5,
+        Paint()..color = SynkColors.textPrimary,
+      );
+      final badge = TextPainter(
+        text: TextSpan(
+          text: count > 9 ? '9+' : '$count',
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      badge.paint(
+        canvas,
+        badgeCenter - Offset(badge.width / 2, badge.height / 2),
+      );
+    }
 
     final picture = recorder.endRecording();
     final image = await picture.toImage(

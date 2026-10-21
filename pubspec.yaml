@@ -32,6 +32,7 @@ dependencies:
   intl: any
   share_plus: ^13.3.1
   shared_preferences: ^2.5.6
+  geocoding: ^5.0.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
