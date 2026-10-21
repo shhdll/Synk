@@ -111,9 +111,9 @@ class _MapViewState extends State<MapView> {
     return (latitude: here.latitude, longitude: here.longitude);
   }
 
-  // Activities that can be shown on the map.
-  static bool _mappable(Activity a) =>
-      a.isPublic && a.hasCoordinates && a.spotsOpen > 0;
+  // Activities that can be shown on the map. Full ones stay, so people can
+  // still find them and join the waitlist.
+  static bool _mappable(Activity a) => a.isPublic && a.hasCoordinates;
 
   // In the chosen sort order, which is also the swipe order of the cards.
   List<Activity> _filtered(ActivityFilters filters) => filters.apply(
@@ -206,22 +206,23 @@ class _MapViewState extends State<MapView> {
     try {
       while (_needsMarkerRefresh && mounted) {
         _needsMarkerRefresh = false;
-        final activities = _activities;
+        final spots = _spots(_activities);
         final icons = <String, BitmapDescriptor>{};
-        for (final activity in activities) {
-          final visual = ActivityVisual.of(activity);
-          final selected = activity.id == _selectedId;
+        for (final MapEntry(key: spot, value: group) in spots.entries) {
+          final visual = ActivityVisual.of(group.first);
+          final selected = group.any((a) => a.id == _selectedId);
           final key =
-              '${visual.icon.codePoint}:${visual.icon.fontFamily}:$selected';
+              '${visual.icon.codePoint}:${visual.icon.fontFamily}:$selected:${group.length}';
           var bitmap = _iconCache[key];
           if (bitmap == null) {
             bitmap = await ActivityMapMarker.create(
               visual.icon,
               selected: selected,
+              count: group.length,
             );
             _iconCache[key] = bitmap;
           }
-          icons[activity.id] = bitmap;
+          icons[spot] = bitmap;
         }
         if (!mounted) return;
         setState(() {
@@ -237,23 +238,44 @@ class _MapViewState extends State<MapView> {
     }
   }
 
+  // Activities within about 10 m of each other share one pin.
+  static String _spotKey(Activity a) =>
+      '${a.latitude!.toStringAsFixed(4)},${a.longitude!.toStringAsFixed(4)}';
+
+  // Keeps the activities' order inside each spot.
+  static Map<String, List<Activity>> _spots(List<Activity> activities) {
+    final spots = <String, List<Activity>>{};
+    for (final activity in activities) {
+      spots.putIfAbsent(_spotKey(activity), () => []).add(activity);
+    }
+    return spots;
+  }
+
   Set<Marker> _markers(List<Activity> activities) {
-    return activities.map((activity) {
+    return _spots(activities).entries.map((entry) {
+      final group = entry.value;
+      final first = group.first;
       return Marker(
-        markerId: MarkerId(activity.id),
-        position: LatLng(activity.latitude!, activity.longitude!),
+        markerId: MarkerId('spot:${entry.key}'),
+        position: LatLng(first.latitude!, first.longitude!),
         icon:
-            _activityIcons[activity.id] ??
+            _activityIcons[entry.key] ??
             BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
         anchor: const Offset(0.5, 0.95),
-        zIndexInt: activity.id == _selectedId ? 1 : 0,
-        onTap: () => _onPinTap(activity),
+        zIndexInt: group.any((a) => a.id == _selectedId) ? 1 : 0,
+        onTap: () => _onPinTap(first, spot: group),
       );
     }).toSet();
   }
 
-  void _onPinTap(Activity activity) {
-    _swipeOrder = [for (final a in _activities) a.id];
+  // With [spot], the activities sharing that pin come first in the cards.
+  void _onPinTap(Activity activity, {List<Activity>? spot}) {
+    final first = [for (final a in spot ?? const <Activity>[]) a.id];
+    _swipeOrder = [
+      ...first,
+      for (final a in _activities)
+        if (!first.contains(a.id)) a.id,
+    ];
 
     _pageController?.dispose();
     _pageController = PageController(
@@ -656,7 +678,9 @@ class _MapViewState extends State<MapView> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      context.l10n.spotsLeft(activity.spotsOpen),
+                      activity.spotsOpen > 0
+                          ? context.l10n.spotsLeft(activity.spotsOpen)
+                          : context.l10n.full,
                       style: const TextStyle(
                         color: SynkColors.orangeDark,
                         fontSize: 12,

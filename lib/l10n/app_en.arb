@@ -459,6 +459,9 @@
   "locationSearchHint": "Padel club, café, gym…",
   "clearSearch": "Clear search",
   "startTypingToSearchRiyadhVenues": "Start typing to search Riyadh venues.",
+  "useThisLocation": "Use this location",
+  "findingAddress": "Finding address…",
+  "pinnedLocation": "Pinned location",
   "noMatchesFound": "No matches found.",
   "numberOfPeople": "Number of people",
   "youPlusAvailable": "{n, plural, =1{You + 1 available spot} other{You + {n} available spots}}",
@@ -510,6 +513,33 @@
   "pickADate": "Pick a date",
   "chooseADateWithinTheNext": "Choose a date within the next 3 months",
   "thisTimeHasAlreadyPassed": "This time has already passed",
+  "youAlreadyHaveAnActivityAtThisTime": "This time overlaps with another one of your activities. Choose a different date or time.",
+  "conflictJoinJoined": "This overlaps with {title}, which you've already joined. Leave it first to join this one.",
+  "@conflictJoinJoined": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "conflictJoinHosting": "This overlaps with {title}, which you're hosting. Change its time or delete it to join this one.",
+  "@conflictJoinHosting": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "conflictCreateJoined": "This time overlaps with {title}, which you've joined. Pick another time or leave that activity.",
+  "@conflictCreateJoined": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "conflictCreateHosting": "This time overlaps with {title}, which you're hosting. Pick another time.",
+  "@conflictCreateHosting": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "conflictJoinUnknown": "This activity overlaps with another one you've joined or are hosting.",
+  "serverParticipantHasConflict": "This participant already has another activity at this time. Choose someone else.",
   "pleaseCompleteEveryStepBeforeCreating": "Please complete every step before creating.",
   "weCouldntCreateYourActivityPlease": "We couldn't create your activity. Please try again.",
   "activityCreatedPhotoNotAdded": "Your activity was created, but the photo couldn't be added to it.",
@@ -563,6 +593,11 @@
   "addInterestsSoPeopleGetTo": "Add interests so people get to know what you're into.",
   "editProfile": "Edit Profile",
   "tapToChangePhoto": "Tap to change photo",
+  "profileHeader": "Header",
+  "synkColors": "Synk colors",
+  "moreColors": "More colors",
+  "headerPhoto": "Photo",
+  "couldntUploadYourHeaderPhoto": "Couldn't upload your header photo. Please try again.",
   "name": "Name",
   "yourName": "Your name",
   "bio": "Bio",
@@ -839,7 +874,7 @@
   "serverOnlyHostCanReview": "Only the activity host can review this request.",
   "serverPublicNoApproval": "Public activities do not require host approval.",
   "serverAlreadyReviewed": "This request has already been reviewed.",
-  "serverUserHasConflict": "The user is already hosting an activity at this time or has joined another activity on this date.",
+  "serverUserHasConflict": "This person already has another activity at this time, so they can't be accepted.",
   "serverActivityNotFound": "This activity was not found.",
   "serverActivityPrivate": "This activity is private. Ask the host for its code.",
   "serverHostCannotLeave": "Hosts cannot leave their own activity.",

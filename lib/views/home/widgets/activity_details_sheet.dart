@@ -17,6 +17,7 @@ import '../../../utils/maps_launcher.dart';
 import '../../../utils/share_activity.dart';
 import '../../widgets/anonymous_avatar.dart';
 import '../../widgets/crown_icon.dart';
+import '../../widgets/schedule_conflict_text.dart';
 import 'activity_thumbnail.dart';
 import 'activity_status_chip.dart';
 import 'overlapping_activity_notice.dart';
@@ -273,11 +274,39 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
 
       if (status == null) {
         if (result.result == 'time_conflict') {
+          final store = widget.activityStore;
+          final conflict = store.conflictingActivity(
+            widget.activity.dateTime,
+            widget.activity.endsAt,
+            excludeId: widget.activity.id,
+          );
+          var openConflict = false;
           await SynkFeedback.showErrorDialog(
             context,
             title: context.l10n.unableToJoin,
-            message: result.message,
+            message: context.l10n.conflictJoinUnknown,
+            messageBuilder: conflict == null
+                ? null
+                : (dialogContext) => ScheduleConflictText(
+                    title: conflict.title,
+                    message: conflict.isHostedBy(store.currentUserId)
+                        ? context.l10n.conflictJoinHosting
+                        : context.l10n.conflictJoinJoined,
+                    onTitleTap: () {
+                      openConflict = true;
+                      Navigator.of(dialogContext).pop();
+                    },
+                  ),
           );
+          // Opens the other activity on top, so closing it comes back here
+          // (e.g. to the map) and the user can try joining again.
+          if (openConflict && conflict != null && mounted) {
+            await showActivityDetailsSheet(
+              context: context,
+              activity: store.byId(conflict.id) ?? conflict,
+              activityStore: store,
+            );
+          }
           return;
         }
 
@@ -663,8 +692,12 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
       content = Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          statusPill,
-          const SizedBox(height: 10),
+          // Leave already says the viewer has joined; the pill is only
+          // kept for statuses Leave doesn't explain.
+          if (_participationStatus != 'joined') ...[
+            statusPill,
+            const SizedBox(height: 10),
+          ],
           _buildLeaveButton(),
           if (_leaveError != null) _buildBarError(_leaveError!),
         ],

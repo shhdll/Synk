@@ -84,8 +84,9 @@ class _StepDetailsState extends State<StepDetails> {
                 // Follows the text's language; rebuilt on every change.
                 textDirection: textDirectionOf(_c.descriptionController.text),
                 maxLength: ActivityConstants.descriptionMaxLength,
+                // Grows and shrinks with the text instead of scrolling.
                 minLines: 2,
-                maxLines: 3,
+                maxLines: null,
                 textCapitalization: TextCapitalization.sentences,
                 style: const TextStyle(
                   fontSize: 15,

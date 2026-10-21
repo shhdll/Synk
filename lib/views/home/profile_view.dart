@@ -20,6 +20,8 @@ import 'widgets/option_picker_sheet.dart';
 import 'widgets/profile_info_row.dart';
 import 'widgets/section_label.dart';
 import '../../utils/text_direction.dart';
+import '../widgets/avatar_preview.dart';
+import '../widgets/profile_header_banner.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key, this.activityStore});
@@ -276,43 +278,29 @@ class _ProfileViewState extends State<ProfileView> {
                       clipBehavior: Clip.none,
                       alignment: Alignment.bottomLeft,
                       children: [
-                        Container(
-                          height: 120,
-                          width: double.infinity,
-                          decoration: const BoxDecoration(
-                            // Warm, blurred lava-glow gradient for the header.
-                            gradient: LinearGradient(
-                              colors: [
-                                Color(0xFFB6350F),
-                                Color(0xFFFF8A1E),
-                                Color(0xFFFFE3B0),
-                                Color(0xFFFF7A1A),
-                                Color(0xFFB6350F),
-                              ],
-                              stops: [0.0, 0.3, 0.55, 0.78, 1.0],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.all(Radius.circular(20)),
-                          ),
-                        ),
+                        // The user's chosen color or photo.
+                        ProfileHeaderBanner.forProfile(profile),
                         Positioned(
                           left: 4,
                           bottom: -40,
-                          child: Container(
-                            width: 84,
-                            height: 84,
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                            ),
+                          child: GestureDetector(
+                            onTap: () =>
+                                showAvatarPreview(context, displayImage),
                             child: Container(
-                              decoration: BoxDecoration(
+                              width: 84,
+                              height: 84,
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
                                 shape: BoxShape.circle,
-                                image: DecorationImage(
-                                  image: displayImage,
-                                  fit: BoxFit.cover,
+                              ),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  image: DecorationImage(
+                                    image: displayImage,
+                                    fit: BoxFit.cover,
+                                  ),
                                 ),
                               ),
                             ),

@@ -184,7 +184,8 @@ class MyActivityCard extends StatelessWidget {
       children: [
         if (faces.isNotEmpty) ...[
           SizedBox(
-            width: 22.0 + (faces.length - 1) * 16,
+            // Each face is 26 wide, overlapping the previous one by 10.
+            width: 26.0 + (faces.length - 1) * 16,
             height: 26,
             child: Stack(
               children: [

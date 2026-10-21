@@ -296,6 +296,23 @@ class ActivityStore extends ChangeNotifier {
 
   List<Activity> get participating => List.unmodifiable(_participating);
 
+  // The hosted or joined activity that overlaps [start, end), if any. Same
+  // rule as public.activity_schedule_conflicts; null when it isn't loaded.
+  Activity? conflictingActivity(
+    DateTime start,
+    DateTime end, {
+    String? excludeId,
+  }) {
+    final now = DateTime.now();
+    for (final activity in [..._mine, ...joined]) {
+      if (activity.id == excludeId || !activity.endsAt.isAfter(now)) continue;
+      if (activity.dateTime.isBefore(end) && start.isBefore(activity.endsAt)) {
+        return activity;
+      }
+    }
+    return null;
+  }
+
   // Returns only activities with an accepted participation.
   List<Activity> get joined =>
       List.unmodifiable(_participating.where((activity) => activity.isJoined));

@@ -8,6 +8,8 @@ import '../../models/activities_model.dart';
 import '../../models/activity_model.dart';
 import '../../models/activity_participation_model.dart';
 import '../../utils/custom_widgets/synk_feedback.dart';
+import '../widgets/schedule_conflict_text.dart';
+import 'widgets/activity_details_sheet.dart';
 import 'widgets/overlapping_activity_notice.dart';
 
 // Shared by Home and Activities.
@@ -23,11 +25,54 @@ Future<void> joinActivityWithCode(
   if (!context.mounted || result == null) return;
 
   if (result.result == 'time_conflict') {
+    // Find which of the user's activities is in the way, to link to it.
+    Activity? conflict;
+    final targetId = result.activityId;
+    if (targetId != null) {
+      try {
+        final target = await (activitiesModel ?? ActivitiesModel()).fetchById(
+          targetId,
+        );
+        if (target != null) {
+          conflict = activityStore.conflictingActivity(
+            target.dateTime,
+            target.endsAt,
+            excludeId: target.id,
+          );
+        }
+      } catch (_) {
+        // Falls back to the message without a link.
+      }
+    }
+    if (!context.mounted) return;
+
+    var openConflict = false;
+    final found = conflict;
     await SynkFeedback.showErrorDialog(
       context,
       title: context.l10n.unableToJoin,
-      message: context.l10n.thisActivityConflictsWithOneYouve,
+      message: context.l10n.conflictJoinUnknown,
+      messageBuilder: found == null
+          ? null
+          : (dialogContext) => ScheduleConflictText(
+              title: found.title,
+              message: found.isHostedBy(activityStore.currentUserId)
+                  ? context.l10n.conflictJoinHosting
+                  : context.l10n.conflictJoinJoined,
+              onTitleTap: () {
+                openConflict = true;
+                Navigator.of(dialogContext).pop();
+              },
+            ),
     );
+    // Opens the other activity where the user already is.
+    if (openConflict && found != null && context.mounted) {
+      await showActivityDetailsSheet(
+        context: context,
+        activity: activityStore.byId(found.id) ?? found,
+        activityStore: activityStore,
+      );
+    }
     return;
   }
 

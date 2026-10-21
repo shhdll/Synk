@@ -1,0 +1,4 @@
+# The Vercel project serves landing/ (Root Directory = landing), so CLI
+# deploys only need that folder, not the Flutter build output.
+/*
+!/landing

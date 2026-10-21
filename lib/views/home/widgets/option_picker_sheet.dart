@@ -40,8 +40,16 @@ class _OptionPickerSheetState extends State<OptionPickerSheet> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
+      // The sheet's own color runs under the navigation bar, so no grey
+      // strip shows below it.
+      bottom: false,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+        padding: EdgeInsets.fromLTRB(
+          24,
+          20,
+          24,
+          24 + MediaQuery.viewPaddingOf(context).bottom,
+        ),
         decoration: const BoxDecoration(
           color: SynkColors.background,
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),

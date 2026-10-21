@@ -72,22 +72,25 @@ class SynkFeedback {
   }
 
   // Shows a blocking error popup using the same card and button style.
+  // [messageBuilder] replaces the plain [message], e.g. to add a link.
   static Future<void> showErrorDialog(
     BuildContext context, {
     required String title,
     required String message,
     String? buttonLabel,
+    Widget Function(BuildContext dialogContext)? messageBuilder,
   }) async {
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
       barrierColor: const Color(0x6B1E1C24),
-      builder: (_) {
+      builder: (dialogContext) {
         return BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
           child: _SuccessDialog(
             title: title,
             message: message,
+            messageWidget: messageBuilder?.call(dialogContext),
             buttonLabel: buttonLabel ?? context.l10n.gotIt,
             icon: Icons.event_busy_rounded,
             iconBackground: const Color(0x24FF7A36),
@@ -251,6 +254,7 @@ class _SuccessDialog extends StatelessWidget {
   const _SuccessDialog({
     required this.title,
     required this.message,
+    this.messageWidget,
     required this.buttonLabel,
     required this.icon,
     required this.iconBackground,
@@ -259,6 +263,7 @@ class _SuccessDialog extends StatelessWidget {
 
   final String title;
   final String message;
+  final Widget? messageWidget;
   final String buttonLabel;
   final IconData icon;
   final Color iconBackground;
@@ -325,14 +330,14 @@ class _SuccessDialog extends StatelessWidget {
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: Text(
-                message,
+              child: DefaultTextStyle.merge(
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 15,
                   height: 1.45,
                   color: SynkColors.textSecondary,
                 ),
+                child: messageWidget ?? Text(message),
               ),
             ),
             const SizedBox(height: 22),

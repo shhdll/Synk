@@ -46,7 +46,10 @@ class _CreateActivityViewState extends State<CreateActivityView> {
   @override
   void initState() {
     super.initState();
-    _controller = CreateActivityController(activity: widget.activity);
+    _controller = CreateActivityController(
+      activity: widget.activity,
+      store: widget.store,
+    );
     _controller.addListener(_onControllerChanged);
     unawaited(_controller.refreshConfirmedParticipantCount());
   }
@@ -148,15 +151,9 @@ class _CreateActivityViewState extends State<CreateActivityView> {
     if (!mounted) return;
 
     if (!result.created) {
+      // Back to the first step, where the error shows under Time.
       if (_controller.hasScheduleConflict) {
-        await SynkFeedback.showErrorDialog(
-          context,
-          title: _controller.isEditing
-              ? context.l10n.editActivity
-              : context.l10n.createActivity,
-          message: _controller.errorMessage ??
-              context.l10n.thisActivityConflictsWithOneYouve,
-        );
+        _controller.goToStep(0);
         return;
       }
       if (_controller.hasCapacityConflict) {

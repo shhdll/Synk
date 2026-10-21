@@ -36,9 +36,12 @@ class CreateActivityResult {
 }
 
 class CreateActivityController extends ChangeNotifier {
-  CreateActivityController({ActivitiesModel? activitiesModel, Activity? activity})
-    : _activitiesModel = activitiesModel ?? ActivitiesModel(),
-      _editingActivity = activity {
+  CreateActivityController({
+    ActivitiesModel? activitiesModel,
+    Activity? activity,
+    this.store,
+  }) : _activitiesModel = activitiesModel ?? ActivitiesModel(),
+       _editingActivity = activity {
     if (activity != null) {
       titleController.text = activity.title;
       descriptionController.text = activity.description;
@@ -89,6 +92,10 @@ class CreateActivityController extends ChangeNotifier {
   String? _errorMessage;
   bool _scheduleConflict = false;
   String? _scheduleConflictMessage;
+  Activity? _conflictingActivity;
+
+  // The user's own activities, used to name a schedule conflict.
+  final ActivityStore? store;
   int _scheduleCheckVersion = 0;
   int _confirmedParticipantCount = 1;
   bool _isLoadingConfirmedParticipantCount = false;
@@ -119,6 +126,10 @@ class CreateActivityController extends ChangeNotifier {
   bool get hasScheduleConflict => _scheduleConflict;
   bool get hasCapacityConflict => _capacityConflict;
   String? get scheduleConflictMessage => _scheduleConflictMessage;
+
+  // The hosted or joined activity in the way, when it can be found.
+  Activity? get conflictingActivity =>
+      _scheduleConflict ? _conflictingActivity : null;
   String? get photoError => _photoError;
   bool get isLoadingConfirmedParticipantCount =>
       _isLoadingConfirmedParticipantCount;
@@ -233,6 +244,26 @@ class CreateActivityController extends ChangeNotifier {
     }
   }
 
+  // Shown under the Time field.
+  void _markScheduleConflict() {
+    _findConflictingActivity();
+    _scheduleConflict = true;
+    _scheduleConflictMessage = appL10n.youAlreadyHaveAnActivityAtThisTime;
+    _errorMessage = _scheduleConflictMessage;
+    _touched.add(CreateField.time);
+  }
+
+  void _findConflictingActivity() {
+    final start = startsAt;
+    _conflictingActivity = start == null
+        ? null
+        : store?.conflictingActivity(
+            start,
+            start.add(const Duration(hours: 2)),
+            excludeId: _editingActivity?.id,
+          );
+  }
+
   Future<String?> checkSelectedScheduleConflict() async {
     final start = startsAt;
     if (start == null || !start.isAfter(DateTime.now())) return null;
@@ -245,11 +276,14 @@ class CreateActivityController extends ChangeNotifier {
       );
       if (version != _scheduleCheckVersion || startsAt != start) return null;
       _scheduleConflict = message != null;
-      _scheduleConflictMessage = message;
-      _errorMessage = message;
+      if (_scheduleConflict) _findConflictingActivity();
+      _scheduleConflictMessage = _scheduleConflict
+          ? appL10n.youAlreadyHaveAnActivityAtThisTime
+          : null;
+      _errorMessage = _scheduleConflictMessage;
       if (_scheduleConflict) _touched.add(CreateField.time);
       notifyListeners();
-      return message;
+      return _scheduleConflictMessage;
     } catch (_) {
       // The server repeats this validation when saving. A temporary preflight
       // failure must not block the form or be mistaken for a schedule conflict.
@@ -552,8 +586,7 @@ class CreateActivityController extends ChangeNotifier {
         excludedActivityId: _editingActivity?.id,
       );
       if (scheduleConflict != null) {
-        _errorMessage = scheduleConflict;
-        _scheduleConflict = true;
+        _markScheduleConflict();
         _isSubmitting = false;
         _setLoading(false);
         return const CreateActivityResult();
@@ -590,11 +623,12 @@ class CreateActivityController extends ChangeNotifier {
       _capacityConflict = normalizedError.contains(
         'capacity cannot be lower than the current number of participants',
       );
-      _scheduleConflict = normalizedError.contains(
+      final scheduleConflict = normalizedError.contains(
         'already have an activity scheduled',
       );
-      _errorMessage = _scheduleConflict
-          ? 'You already have an activity scheduled during this time. Please choose a different date or time.'
+      if (scheduleConflict) _markScheduleConflict();
+      _errorMessage = scheduleConflict
+          ? _scheduleConflictMessage
           : _capacityConflict
           ? 'Capacity cannot be lower than the current number of participants.'
           : isEditing

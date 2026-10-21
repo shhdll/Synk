@@ -11,6 +11,7 @@ Future<DateTime?> showSynkDatePicker({
   required DateTime lastDate,
   String? title,
   String? confirmLabel,
+  bool markToday = true,
 }) {
   return showModalBottomSheet<DateTime>(
     context: context,
@@ -22,6 +23,7 @@ Future<DateTime?> showSynkDatePicker({
       lastDate: lastDate,
       title: title ?? context.l10n.pickADate,
       confirmLabel: confirmLabel ?? context.l10n.setDate,
+      markToday: markToday,
     ),
   );
 }
@@ -180,6 +182,7 @@ class _DatePickerSheet extends StatefulWidget {
     required this.title,
     required this.confirmLabel,
     this.allowRange = false,
+    this.markToday = true,
   });
 
   final DateTime initialDate;
@@ -189,6 +192,8 @@ class _DatePickerSheet extends StatefulWidget {
   final String confirmLabel;
   // Pops a DateTimeRange instead of a DateTime.
   final bool allowRange;
+  // Outlines today's date.
+  final bool markToday;
 
   @override
   State<_DatePickerSheet> createState() => _DatePickerSheetState();
@@ -489,7 +494,9 @@ class _DatePickerSheetState extends State<_DatePickerSheet> {
     // No outline on today in range mode, so the calendar opens with nothing
     // marked.
     final bool isToday =
-        !widget.allowRange && cellDate == _dateOnly(DateTime.now());
+        widget.markToday &&
+        !widget.allowRange &&
+        cellDate == _dateOnly(DateTime.now());
 
     return Padding(
       padding: const EdgeInsets.all(3),

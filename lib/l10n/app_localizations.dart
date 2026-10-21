@@ -2126,6 +2126,24 @@ abstract class AppLocalizations {
   /// **'Start typing to search Riyadh venues.'**
   String get startTypingToSearchRiyadhVenues;
 
+  /// No description provided for @useThisLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this location'**
+  String get useThisLocation;
+
+  /// No description provided for @findingAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Finding address…'**
+  String get findingAddress;
+
+  /// No description provided for @pinnedLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned location'**
+  String get pinnedLocation;
+
   /// No description provided for @noMatchesFound.
   ///
   /// In en, this message translates to:
@@ -2299,6 +2317,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This time has already passed'**
   String get thisTimeHasAlreadyPassed;
+
+  /// No description provided for @youAlreadyHaveAnActivityAtThisTime.
+  ///
+  /// In en, this message translates to:
+  /// **'This time overlaps with another one of your activities. Choose a different date or time.'**
+  String get youAlreadyHaveAnActivityAtThisTime;
+
+  /// No description provided for @conflictJoinJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'This overlaps with {title}, which you\'ve already joined. Leave it first to join this one.'**
+  String conflictJoinJoined(String title);
+
+  /// No description provided for @conflictJoinHosting.
+  ///
+  /// In en, this message translates to:
+  /// **'This overlaps with {title}, which you\'re hosting. Change its time or delete it to join this one.'**
+  String conflictJoinHosting(String title);
+
+  /// No description provided for @conflictCreateJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'This time overlaps with {title}, which you\'ve joined. Pick another time or leave that activity.'**
+  String conflictCreateJoined(String title);
+
+  /// No description provided for @conflictCreateHosting.
+  ///
+  /// In en, this message translates to:
+  /// **'This time overlaps with {title}, which you\'re hosting. Pick another time.'**
+  String conflictCreateHosting(String title);
+
+  /// No description provided for @conflictJoinUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'This activity overlaps with another one you\'ve joined or are hosting.'**
+  String get conflictJoinUnknown;
+
+  /// No description provided for @serverParticipantHasConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'This participant already has another activity at this time. Choose someone else.'**
+  String get serverParticipantHasConflict;
 
   /// No description provided for @pleaseCompleteEveryStepBeforeCreating.
   ///
@@ -2515,6 +2575,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tap to change photo'**
   String get tapToChangePhoto;
+
+  /// No description provided for @profileHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Header'**
+  String get profileHeader;
+
+  /// No description provided for @synkColors.
+  ///
+  /// In en, this message translates to:
+  /// **'Synk colors'**
+  String get synkColors;
+
+  /// No description provided for @moreColors.
+  ///
+  /// In en, this message translates to:
+  /// **'More colors'**
+  String get moreColors;
+
+  /// No description provided for @headerPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo'**
+  String get headerPhoto;
+
+  /// No description provided for @couldntUploadYourHeaderPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t upload your header photo. Please try again.'**
+  String get couldntUploadYourHeaderPhoto;
 
   /// No description provided for @name.
   ///
@@ -3695,7 +3785,7 @@ abstract class AppLocalizations {
   /// No description provided for @serverUserHasConflict.
   ///
   /// In en, this message translates to:
-  /// **'The user is already hosting an activity at this time or has joined another activity on this date.'**
+  /// **'This person already has another activity at this time, so they can\'t be accepted.'**
   String get serverUserHasConflict;
 
   /// No description provided for @serverActivityNotFound.

@@ -14,7 +14,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get overlappingActivityNotice =>
-      'إذا تم قبولك في نشاط، ستتم إزالتك تلقائيا من قائمة الانتظار المتداخلة الأخرى أو إلغاء طلبك المعلق.';
+      'إذا تم قبولك في نشاط، ستتم إزالتك تلقائيا من قائمة الانتظار المتداخلة الأخرى أو إلغاء طلبك المعلق';
 
   @override
   String get shareCode => 'مشاركة الرمز';
@@ -1105,6 +1105,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get startTypingToSearchRiyadhVenues => 'اكتب للبحث عن أماكن في الرياض';
 
   @override
+  String get useThisLocation => 'استخدم هذا الموقع';
+
+  @override
+  String get findingAddress => 'جار تحديد العنوان…';
+
+  @override
+  String get pinnedLocation => 'موقع محدد';
+
+  @override
   String get noMatchesFound => 'لا توجد نتائج';
 
   @override
@@ -1173,12 +1182,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String keepItToLetters(Object n) {
-    return 'لا يتجاوز $n حرفًا أو رمزًا';
+    return 'لا يتجاوز $n حرفا أو رمزا';
   }
 
   @override
   String get useLettersOnly =>
-      'يجب أن يتكون اسم النشاط من حروف وأرقام ومسافات ورمز & وفواصل وعلامة اقتباس فقط.';
+      'يجب أن يتكون اسم النشاط من حروف وأرقام ومسافات ورمز & وفواصل وعلامة اقتباس فقط';
 
   @override
   String get useEnglishLettersOnly => 'حروف إنجليزية فقط';
@@ -1199,6 +1208,38 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get thisTimeHasAlreadyPassed => 'هذا الوقت مضى';
+
+  @override
+  String get youAlreadyHaveAnActivityAtThisTime =>
+      'يتعارض هذا الوقت مع نشاط آخر من أنشطتك، اختر تاريخا أو وقتا مختلفا';
+
+  @override
+  String conflictJoinJoined(String title) {
+    return 'يتعارض هذا النشاط مع $title الذي انضممت إليه، غادره أولا لتنضم إلى هذا النشاط';
+  }
+
+  @override
+  String conflictJoinHosting(String title) {
+    return 'يتعارض هذا النشاط مع $title الذي تستضيفه، غير موعده أو احذفه لتنضم إلى هذا النشاط';
+  }
+
+  @override
+  String conflictCreateJoined(String title) {
+    return 'يتعارض هذا الوقت مع $title الذي انضممت إليه، اختر وقتا آخر أو غادر ذلك النشاط';
+  }
+
+  @override
+  String conflictCreateHosting(String title) {
+    return 'يتعارض هذا الوقت مع $title الذي تستضيفه، اختر وقتا آخر';
+  }
+
+  @override
+  String get conflictJoinUnknown =>
+      'يتعارض هذا النشاط مع نشاط آخر انضممت إليه أو تستضيفه';
+
+  @override
+  String get serverParticipantHasConflict =>
+      'لدى هذا المشارك نشاط آخر في نفس الوقت، اختر شخصا آخر';
 
   @override
   String get pleaseCompleteEveryStepBeforeCreating =>
@@ -1324,6 +1365,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tapToChangePhoto => 'اضغط لتغيير الصورة';
+
+  @override
+  String get profileHeader => 'الغلاف';
+
+  @override
+  String get synkColors => 'ألوان Synk';
+
+  @override
+  String get moreColors => 'ألوان أخرى';
+
+  @override
+  String get headerPhoto => 'صورة';
+
+  @override
+  String get couldntUploadYourHeaderPhoto => 'تعذر رفع صورة الغلاف، حاول مجددا';
 
   @override
   String get name => 'الاسم';
@@ -1953,7 +2009,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get serverAlreadyReviewed => 'تمت مراجعة هذا الطلب مسبقا';
 
   @override
-  String get serverUserHasConflict => 'لدى المستخدم نشاط آخر في نفس الموعد';
+  String get serverUserHasConflict =>
+      'لدى هذا الشخص نشاط آخر في نفس الوقت، لذلك لا يمكن قبوله';
 
   @override
   String get serverActivityNotFound => 'النشاط غير موجود';
