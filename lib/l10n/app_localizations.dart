@@ -1265,7 +1265,7 @@ abstract class AppLocalizations {
   /// No description provided for @slotEveningHours.
   ///
   /// In en, this message translates to:
-  /// **'5–9 PM'**
+  /// **'12–9 PM'**
   String get slotEveningHours;
 
   /// No description provided for @slotNightHours.
@@ -3499,6 +3499,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{weekday}, {month} {day}'**
   String shortDate(Object weekday, Object month, Object day);
+
+  /// For example Oct 21
+  ///
+  /// In en, this message translates to:
+  /// **'{month} {day}'**
+  String monthDay(Object month, Object day);
 
   /// For example 7:30 PM
   ///

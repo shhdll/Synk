@@ -248,7 +248,7 @@
   "evening": "Evening",
   "night": "Night",
   "slotMorningHours": "6 AM–12 PM",
-  "slotEveningHours": "5–9 PM",
+  "slotEveningHours": "12–9 PM",
   "slotNightHours": "9 PM–12 AM",
   "within": "Within",
   "fiveKm": "5 km",
@@ -745,6 +745,14 @@
     "description": "For example Tue, Oct 21",
     "placeholders": {
       "weekday": {},
+      "month": {},
+      "day": {}
+    }
+  },
+  "monthDay": "{month} {day}",
+  "@monthDay": {
+    "description": "For example Oct 21",
+    "placeholders": {
       "month": {},
       "day": {}
     }

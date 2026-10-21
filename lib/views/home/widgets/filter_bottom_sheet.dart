@@ -112,14 +112,20 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
       return;
     }
     final today = DateUtils.dateOnly(DateTime.now());
-    final picked = await showSynkDatePicker(
+    final picked = await showSynkDateRangePicker(
       context: context,
       initialDate: today,
       firstDate: today,
       lastDate: today.add(const Duration(days: 365)),
     );
     if (picked != null && mounted) {
-      _update(_draft.withDate(DateOption.custom, customDate: picked));
+      _update(
+        _draft.withDate(
+          DateOption.custom,
+          customDate: picked.start,
+          customEndDate: picked.end == picked.start ? null : picked.end,
+        ),
+      );
     }
   }
 
@@ -282,9 +288,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
         day(DateOption.today),
         day(DateOption.tomorrow),
         SynkFilterChip(
-          label: custom == null
-              ? context.l10n.pickADate
-              : formatShortDate(custom),
+          label: custom == null ? context.l10n.pickADate : _draft.dateLabel!,
           icon: Icons.calendar_month_rounded,
           selected: custom != null,
           onTap: _onPickDate,

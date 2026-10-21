@@ -196,6 +196,10 @@ String monthName(int month) {
 String formatShortDate(DateTime date) =>
     appL10n.shortDate(weekdayShort(date), monthShort(date.month), date.day);
 
+// "Oct 21" / "21 أكتوبر", without the weekday.
+String formatMonthDay(DateTime date) =>
+    appL10n.monthDay(monthShort(date.month), date.day);
+
 // AM/PM, or ص/م in Arabic.
 String periodLabel(int hour) => hour < 12 ? appL10n.timeAm : appL10n.timePm;
 

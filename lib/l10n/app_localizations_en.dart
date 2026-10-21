@@ -647,7 +647,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get slotMorningHours => '6 AM–12 PM';
 
   @override
-  String get slotEveningHours => '5–9 PM';
+  String get slotEveningHours => '12–9 PM';
 
   @override
   String get slotNightHours => '9 PM–12 AM';
@@ -1901,6 +1901,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String shortDate(Object weekday, Object month, Object day) {
     return '$weekday, $month $day';
+  }
+
+  @override
+  String monthDay(Object month, Object day) {
+    return '$month $day';
   }
 
   @override
