@@ -99,6 +99,8 @@ String serverMessage(String message) {
     'You are already hosting an activity at this time or have joined '
         'another activity on this date.' =>
       l.thisActivityConflictsWithOneYouve,
+    'You are already hosting or have joined an activity at this start time.' =>
+      l.thisActivityConflictsWithOneYouve,
     'You joined the activity successfully.' => l.youveJoinedThisActivity,
     'Your request was sent to the host.' => l.serverRequestSent,
     'The activity is full. You were added to the waitlist.' =>

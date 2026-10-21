@@ -9,8 +9,10 @@ import 'controllers/language_controller.dart';
 import 'l10n/l10n.dart';
 import 'models/auth_deep_link_handler.dart';
 import 'models/auth_model.dart';
+import 'models/activity_model.dart';
 import 'services/push_notification_service.dart';
 import 'views/home/activity_notification_route.dart';
+import 'views/home/activity_join_requests_view.dart';
 import 'views/home/main_shell.dart';
 import 'views/new_password_view.dart';
 import 'views/welcome_view.dart';
@@ -63,8 +65,12 @@ class _MyAppState extends State<MyApp> {
     PushNotificationService.instance.setActivityTapHandler(
       _openNotificationActivity,
     );
+    PushNotificationService.instance.setJoinRequestsTapHandler(
+      _openJoinRequests,
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _drainPendingActivityNotification();
+      _drainPendingJoinRequestsNotification();
     });
 
     // After the user opens the reset email link, supabase_flutter exchanges
@@ -108,6 +114,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   String? _pendingNotificationActivityId;
+  bool _pendingJoinRequestsNotification = false;
 
   void _openNotificationActivity(String activityId) {
     final navigator = _navigatorKey.currentState;
@@ -128,6 +135,31 @@ class _MyAppState extends State<MyApp> {
     if (activityId == null || _navigatorKey.currentState == null) return;
     _pendingNotificationActivityId = null;
     _openNotificationActivity(activityId);
+  }
+
+  void _openJoinRequests() {
+    final navigator = _navigatorKey.currentState;
+    if (navigator == null) {
+      _pendingJoinRequestsNotification = true;
+      return;
+    }
+
+    final activityStore = ActivityStore()
+      ..currentUserId = Supabase.instance.client.auth.currentUser?.id;
+    navigator.push(
+      MaterialPageRoute<void>(
+        builder: (_) => ActivityJoinRequestsView(activityStore: activityStore),
+      ),
+    );
+  }
+
+  void _drainPendingJoinRequestsNotification() {
+    if (!_pendingJoinRequestsNotification ||
+        _navigatorKey.currentState == null) {
+      return;
+    }
+    _pendingJoinRequestsNotification = false;
+    _openJoinRequests();
   }
 
   void _onAuthLinkResult(OtpType type, AuthLinkOutcome outcome) {

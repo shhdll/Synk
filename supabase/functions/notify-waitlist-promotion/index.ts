@@ -15,7 +15,7 @@ type PromotionEvent = {
   activity_id: string;
   activity_title: string;
   status: string;
-  event_type?: "waitlist_promotion" | "activity_updated";
+  event_type?: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received";
 };
 
 type FcmCredentials = {
@@ -145,7 +145,27 @@ async function sendToToken(
         body: JSON.stringify({
           message: {
             token,
-            notification: event.event_type === "activity_updated"
+            notification: event.event_type === "join_request_accepted"
+              ? {
+                title: "Request accepted",
+                body: `Your request to join ${event.activity_title} was accepted. You're in!`,
+              }
+              : event.event_type === "join_request_rejected"
+              ? {
+                title: "Request declined",
+                body: `Your request to join ${event.activity_title} was declined by the host.`,
+              }
+              : event.event_type === "join_request_received"
+              ? {
+                title: "New join request",
+                body: `Someone requested to join ${event.activity_title}. Review their request.`,
+              }
+              : event.event_type === "activity_deleted"
+              ? {
+                title: "Activity canceled",
+                body: `${event.activity_title} was deleted by the host.`,
+              }
+              : event.event_type === "activity_updated"
               ? {
                 title: "Activity updated",
                 body: `${event.activity_title} has new details. Tap to review the changes.`,
@@ -162,7 +182,11 @@ async function sendToToken(
             android: {
               priority: "HIGH",
               notification: {
-                channel_id: event.event_type === "activity_updated"
+                channel_id: event.event_type === "activity_updated" ||
+                    event.event_type === "activity_deleted" ||
+                    event.event_type === "join_request_accepted" ||
+                    event.event_type === "join_request_rejected" ||
+                    event.event_type === "join_request_received"
                   ? "activity_updates"
                   : "waitlist_promotions",
                 tag: `${event.event_type ?? "waitlist_promotion"}_${event.id}`,
@@ -211,12 +235,16 @@ Deno.serve(async (request: Request) => {
   }
 
   let eventId: string;
-  let eventType: "waitlist_promotion" | "activity_updated";
+  let eventType: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received";
   try {
     const body = await request.json();
     eventId = typeof body.event_id === "string" ? body.event_id : "";
-    eventType = body.event_type === "activity_updated"
-      ? "activity_updated"
+    eventType = body.event_type === "activity_updated" ||
+        body.event_type === "activity_deleted" ||
+        body.event_type === "join_request_accepted" ||
+        body.event_type === "join_request_rejected" ||
+        body.event_type === "join_request_received"
+      ? body.event_type
       : "waitlist_promotion";
   } catch {
     return jsonResponse({ error: "invalid_json" }, 400);
@@ -227,6 +255,14 @@ Deno.serve(async (request: Request) => {
 
   const outboxTable = eventType === "activity_updated"
     ? "activity_update_notification_outbox"
+    : eventType === "activity_deleted"
+    ? "activity_deleted_notification_outbox"
+    : eventType === "join_request_accepted"
+    ? "join_request_accepted_notification_outbox"
+    : eventType === "join_request_rejected"
+    ? "join_request_rejected_notification_outbox"
+    : eventType === "join_request_received"
+    ? "join_request_received_notification_outbox"
     : "waitlist_promotion_notification_outbox";
   const { data: event, error: claimError } = await admin
     .from(outboxTable)

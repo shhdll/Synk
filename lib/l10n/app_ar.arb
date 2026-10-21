@@ -290,7 +290,7 @@
   "enterAValid6DigitActivity": "أدخل رمز صحيح من 6 أرقام",
   "unableToJoinTheActivityPlease": "تعذر الانضمام، حاول مرة أخرى",
   "unableToJoin": "تعذر الانضمام",
-  "thisActivityConflictsWithOneYouve": "يتعارض موعد هذا النشاط مع نشاط آخر لديك",
+  "thisActivityConflictsWithOneYouve": "هناك نشاط آخر تستضيفه أو انضممت إليه يبدأ في الوقت نفسه. احذف النشاط الذي تستضيفه أو غادر النشاط الذي انضممت إليه، ثم حاول مجددًا.",
   "joinedTitle": "تم الانضمام!",
   "alreadyJoined": "منضم مسبقا",
   "requestSent": "تم إرسال الطلب!",

@@ -389,7 +389,7 @@
   "enterAValid6DigitActivity": "Enter a valid 6-digit activity code.",
   "unableToJoinTheActivityPlease": "Unable to join the activity. Please try again.",
   "unableToJoin": "Unable to Join",
-  "thisActivityConflictsWithOneYouve": "This activity conflicts with one you've already joined or created.",
+  "thisActivityConflictsWithOneYouve": "Another activity you host or have joined starts at the same time. Delete the one you host or leave the one you joined, then try again.",
   "joinedTitle": "Joined!",
   "alreadyJoined": "Already Joined",
   "requestSent": "Request Sent!",
