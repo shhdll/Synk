@@ -202,6 +202,10 @@
   "heyThere": "Hey there",
   "letsFindYourPeople": "Let's find your people",
   "readyForSomethingNew": "Ready for something new?",
+  "readyForSomethingNewFemale": "Ready for something new?",
+  "@readyForSomethingNewFemale": {
+    "description": "Same as readyForSomethingNew, for women; Arabic changes the adjective"
+  },
   "searchActivitiesOrLocations": "Search activities or locations...",
   "upcomingPlans": "Upcoming plans",
   "clearFilters": "Clear filters",
@@ -479,13 +483,10 @@
   "whenLabel": "When",
   "whereLabel": "Where",
   "people": "People",
-  "peopleSummary": "{n} including you · {spots, plural, =1{1 spot open} other{{spots} spots open}}",
+  "peopleSummary": "{n} including you",
   "@peopleSummary": {
     "placeholders": {
-      "n": {},
-      "spots": {
-        "type": "int"
-      }
+      "n": {}
     }
   },
   "addATitle": "Add a title",
@@ -496,6 +497,7 @@
     }
   },
   "useLettersOnly": "Use letters only",
+  "useEnglishLettersOnly": "Use English letters only",
   "keepItToCharacters": "Keep it to {n} characters",
   "@keepItToCharacters": {
     "placeholders": {

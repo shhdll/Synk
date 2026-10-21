@@ -4,33 +4,28 @@ import 'package:synk/l10n/app_localizations.dart';
 import 'package:synk/views/home/widgets/change_email_bottom_sheet.dart';
 
 void main() {
-  testWidgets('ChangeEmailBottomSheet renders current email and input in edit mode',
+  testWidgets('ChangeEmailBottomSheet shows the new email form',
       (WidgetTester tester) async {
-    const currentEmail = 'user@example.com';
-
     await tester.pumpWidget(
       const MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
-          body: ChangeEmailBottomSheet(
-            currentEmail: currentEmail,
-          ),
+          body: ChangeEmailBottomSheet(currentEmail: 'user@example.com'),
         ),
       ),
     );
 
     await tester.pump();
 
-    expect(find.text('Change Email'), findsOneWidget);
-    expect(find.text(currentEmail), findsOneWidget);
-    expect(find.text('Send Verification'), findsOneWidget);
-    expect(find.text('Cancel'), findsOneWidget);
+    expect(find.text('Change email'), findsOneWidget);
+    expect(find.byType(TextFormField), findsOneWidget);
+    expect(find.text("We'll send a link to confirm it."), findsOneWidget);
+    expect(find.text('Send link'), findsOneWidget);
   });
 
-  testWidgets('ChangeEmailBottomSheet renders pending UI when pendingEmail is set',
+  testWidgets('ChangeEmailBottomSheet shows the pending change',
       (WidgetTester tester) async {
-    const currentEmail = 'user@example.com';
     const pendingEmail = 'newuser@example.com';
 
     await tester.pumpWidget(
@@ -39,7 +34,7 @@ void main() {
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: ChangeEmailBottomSheet(
-            currentEmail: currentEmail,
+            currentEmail: 'user@example.com',
             pendingEmail: pendingEmail,
           ),
         ),
@@ -48,9 +43,13 @@ void main() {
 
     await tester.pump();
 
-    expect(find.text('Pending Email Change'), findsOneWidget);
-    expect(find.text(currentEmail), findsOneWidget);
-    expect(find.text('Resend Confirmation Links'), findsOneWidget);
-    expect(find.text('Cancel Email Change'), findsOneWidget);
+    expect(find.text('Confirm your new email'), findsOneWidget);
+    expect(
+      find.textContaining(pendingEmail, findRichText: true),
+      findsOneWidget,
+    );
+    expect(find.text('Resend link'), findsOneWidget);
+    expect(find.text('Use a different email'), findsOneWidget);
+    expect(find.text('Cancel change'), findsOneWidget);
   });
 }

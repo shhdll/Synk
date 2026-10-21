@@ -404,7 +404,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get forYourSecurityWellSendA =>
-      'نرسل الرابط فقط إذا كان البريد مسجلًا في Synk';
+      'نرسل الرابط فقط إذا كان البريد مسجل في Synk';
 
   @override
   String get weSentAResetLinkTo => 'أرسلنا رابط الاستعادة إلى';
@@ -535,6 +535,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get readyForSomethingNew => 'جاهز لشيء جديد؟';
+
+  @override
+  String get readyForSomethingNewFemale => 'جاهزة لشيء جديد؟';
 
   @override
   String get searchActivitiesOrLocations => 'ابحث عن نشاط أو مكان...';
@@ -703,7 +706,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get available => 'متاح';
 
   @override
-  String get oneMoreNeeded => 'ينقص شخص واحد';
+  String get oneMoreNeeded => 'ناقص شخص واحد';
 
   @override
   String joinedOfMaxGoing(Object joined, Object max) {
@@ -1065,7 +1068,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get time => 'الوقت';
 
   @override
-  String get activityTitleHint => 'بادل صباحي';
+  String get activityTitleHint => 'Morning padel';
 
   @override
   String get tapToChange => 'اضغط للتغيير';
@@ -1154,8 +1157,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get people => 'الأشخاص';
 
   @override
-  String peopleSummary(Object n, int spots) {
-    return '$n بما فيهم أنت · $spots متاح';
+  String peopleSummary(Object n) {
+    return '$n بما فيهم أنت';
   }
 
   @override
@@ -1168,6 +1171,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get useLettersOnly => 'حروف فقط';
+
+  @override
+  String get useEnglishLettersOnly => 'حروف إنجليزية فقط';
 
   @override
   String keepItToCharacters(Object n) {
@@ -1482,7 +1488,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get changeEmail => 'تغيير البريد';
 
   @override
-  String get confirmYourNewEmail => 'أكّد بريدك الجديد';
+  String get confirmYourNewEmail => 'أكد بريدك الجديد';
 
   @override
   String openTheLinkWeSentTo(Object email) {
@@ -1506,7 +1512,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get enterNewEmailAddress => 'البريد الجديد';
 
   @override
-  String get weWillSendALinkToConfirm => 'سنرسل رابطًا لتأكيده';
+  String get weWillSendALinkToConfirm => 'سنرسل رابط لتأكيده';
 
   @override
   String get sendLink => 'إرسال الرابط';

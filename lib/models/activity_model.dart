@@ -125,13 +125,17 @@ class Activity {
     return Activity(
       id: map['id'] as String,
       hostId: map['host_id'] as String?,
-      hostName: map['host_name'] as String? ??
+      hostName:
+          map['host_name'] as String? ??
           (map['host'] is Map ? (map['host']['full_name'] as String?) : null),
-      hostUsername: map['host_username'] as String? ??
+      hostUsername:
+          map['host_username'] as String? ??
           (map['host'] is Map ? (map['host']['username'] as String?) : null),
-      hostAvatarUrl: map['host_avatar_url'] as String? ??
+      hostAvatarUrl:
+          map['host_avatar_url'] as String? ??
           (map['host'] is Map ? (map['host']['avatar_url'] as String?) : null),
-      hostGender: map['host_gender'] as String? ??
+      hostGender:
+          map['host_gender'] as String? ??
           (map['host'] is Map ? (map['host']['gender'] as String?) : null),
       participantsCount: map['participants_count'] as int?,
       title: map['title'] as String? ?? '',
@@ -251,6 +255,23 @@ class ActivityStore extends ChangeNotifier {
   Activity? takeMapFocus() {
     final focus = _mapFocus;
     _mapFocus = null;
+    return focus;
+  }
+
+  // Set after creating an activity; the shell switches to Activities and
+  // that page opens it.
+  Activity? _detailsFocus;
+
+  Activity? get detailsFocus => _detailsFocus;
+
+  void showInActivities(Activity activity) {
+    _detailsFocus = activity;
+    notifyListeners();
+  }
+
+  Activity? takeDetailsFocus() {
+    final focus = _detailsFocus;
+    _detailsFocus = null;
     return focus;
   }
 

@@ -19,6 +19,7 @@ import 'widgets/field_editor_sheet.dart';
 import 'widgets/option_picker_sheet.dart';
 import 'widgets/profile_info_row.dart';
 import 'widgets/section_label.dart';
+import '../../utils/text_direction.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key, this.activityStore});
@@ -269,9 +270,11 @@ class _ProfileViewState extends State<ProfileView> {
                   // avatar hanging off its bottom edge.
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    // Photo on the left and Edit on the right in both
+                    // languages, matching the English layout.
                     child: Stack(
                       clipBehavior: Clip.none,
-                      alignment: AlignmentDirectional.bottomStart,
+                      alignment: Alignment.bottomLeft,
                       children: [
                         Container(
                           height: 120,
@@ -293,8 +296,8 @@ class _ProfileViewState extends State<ProfileView> {
                             borderRadius: BorderRadius.all(Radius.circular(20)),
                           ),
                         ),
-                        PositionedDirectional(
-                          start: 4,
+                        Positioned(
+                          left: 4,
                           bottom: -40,
                           child: Container(
                             width: 84,
@@ -321,7 +324,7 @@ class _ProfileViewState extends State<ProfileView> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
                     child: Align(
-                      alignment: AlignmentDirectional.centerEnd,
+                      alignment: Alignment.centerRight,
                       child: _EditInfoButton(onTap: _openEditProfile),
                     ),
                   ),
@@ -331,27 +334,40 @@ class _ProfileViewState extends State<ProfileView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          (fullName?.isNotEmpty ?? false)
-                              ? fullName!
-                              : context.l10n.synkMember,
-                          style: const TextStyle(
-                            fontSize: 19,
-                            fontWeight: FontWeight.w800,
-                            color: SynkColors.textPrimary,
-                          ),
-                        ),
-                        if (subtitle.isNotEmpty) ...[
-                          const SizedBox(height: 3),
-                          Text(
-                            subtitle,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: SynkColors.textSecondary,
+                        // Left-aligned under the photo in both languages, and
+                        // left to right so "@user · 21" doesn't get reordered.
+                        Directionality(
+                          textDirection: TextDirection.ltr,
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  (fullName?.isNotEmpty ?? false)
+                                      ? fullName!
+                                      : context.l10n.synkMember,
+                                  style: const TextStyle(
+                                    fontSize: 19,
+                                    fontWeight: FontWeight.w800,
+                                    color: SynkColors.textPrimary,
+                                  ),
+                                ),
+                                if (subtitle.isNotEmpty) ...[
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    subtitle,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: SynkColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                           ),
-                        ],
+                        ),
                         const SizedBox(height: 18),
                         Row(
                           children: [
@@ -400,6 +416,8 @@ class _ProfileViewState extends State<ProfileView> {
                               (bio?.isNotEmpty ?? false)
                                   ? bio!
                                   : context.l10n.addAShortBioSoPeople,
+                              // Follows the bio's own language, not the app's.
+                              textDirection: textDirectionOf(bio ?? ''),
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,

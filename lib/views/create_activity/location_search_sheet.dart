@@ -6,7 +6,6 @@ import '../../core/constants/synk_colors.dart';
 import '../../l10n/l10n.dart';
 import '../../models/place_search_model.dart';
 
-
 class LocationSearchSheet extends StatefulWidget {
   const LocationSearchSheet({super.key});
 
@@ -30,7 +29,7 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
   @override
   void initState() {
     super.initState();
-   
+
     _query.addListener(_onQueryTextChanged);
   }
 
@@ -81,7 +80,7 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
         sessionToken: _sessionToken,
       );
       if (!mounted) return;
-      
+
       if (_query.text.trim() != trimmed) return;
       setState(() {
         _results = results;
@@ -358,7 +357,6 @@ class _PlaceResultRow extends StatelessWidget {
     );
   }
 }
-
 
 class _EmptySearchState extends StatelessWidget {
   const _EmptySearchState({required this.text});

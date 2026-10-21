@@ -8,6 +8,7 @@ import '../l10n/l10n.dart';
 import '../models/activities_model.dart';
 import '../models/activity_model.dart';
 import '../models/activity_photo_uploader.dart';
+import '../utils/text_direction.dart';
 
 // Image formats accepted for an activity photo.
 enum PhotoFormat { jpeg, png }
@@ -322,6 +323,8 @@ class CreateActivityController extends ChangeNotifier {
   String? validateTitle(String? value) {
     final title = value?.trim() ?? '';
     if (title.isEmpty) return appL10n.addATitle;
+    // The field drops Arabic as it's typed; this catches older titles.
+    if (hasArabic(title)) return appL10n.useEnglishLettersOnly;
     if (title.characters.length > ActivityConstants.titleMaxLength) {
       return appL10n.keepItToLetters(ActivityConstants.titleMaxLength);
     }

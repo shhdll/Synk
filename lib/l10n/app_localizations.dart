@@ -1082,6 +1082,12 @@ abstract class AppLocalizations {
   /// **'Ready for something new?'**
   String get readyForSomethingNew;
 
+  /// Same as readyForSomethingNew, for women; Arabic changes the adjective
+  ///
+  /// In en, this message translates to:
+  /// **'Ready for something new?'**
+  String get readyForSomethingNewFemale;
+
   /// No description provided for @searchActivitiesOrLocations.
   ///
   /// In en, this message translates to:
@@ -2225,8 +2231,8 @@ abstract class AppLocalizations {
   /// No description provided for @peopleSummary.
   ///
   /// In en, this message translates to:
-  /// **'{n} including you · {spots, plural, =1{1 spot open} other{{spots} spots open}}'**
-  String peopleSummary(Object n, int spots);
+  /// **'{n} including you'**
+  String peopleSummary(Object n);
 
   /// No description provided for @addATitle.
   ///
@@ -2245,6 +2251,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use letters only'**
   String get useLettersOnly;
+
+  /// No description provided for @useEnglishLettersOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Use English letters only'**
+  String get useEnglishLettersOnly;
 
   /// No description provided for @keepItToCharacters.
   ///

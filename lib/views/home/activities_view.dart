@@ -69,14 +69,30 @@ class _ActivitiesViewState extends State<ActivitiesView> {
     _deleteController = ActivityDeleteController();
     _changes = Listenable.merge([_store, _deleteController]);
     _store.addListener(_loadMissingPeople);
+    _store.addListener(_takeDetailsFocus);
     _loadMissingPeople();
   }
 
   @override
   void dispose() {
     _store.removeListener(_loadMissingPeople);
+    _store.removeListener(_takeDetailsFocus);
     _deleteController.dispose();
     super.dispose();
+  }
+
+  // Opens an activity the shell asked for, e.g. one just created.
+  void _takeDetailsFocus() {
+    final focus = _store.takeDetailsFocus();
+    if (focus == null) return;
+    setState(() {
+      _showPast = false;
+      _filter = _RoleFilter.all;
+    });
+    // After the tab switch has been drawn.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _openActivity(_store.byId(focus.id) ?? focus);
+    });
   }
 
   void _loadMissingPeople() {
@@ -109,8 +125,7 @@ class _ActivitiesViewState extends State<ActivitiesView> {
       _store
         ..setMine(results[0])
         ..setParticipating(results[1]);
-    } catch (_) {
-    }
+    } catch (_) {}
   }
 
   void _openJoinRequests() {
@@ -136,10 +151,7 @@ class _ActivitiesViewState extends State<ActivitiesView> {
   Future<void> _editActivity(Activity activity) async {
     final outcome = await Navigator.of(context).push<CreateActivityOutcome>(
       MaterialPageRoute(
-        builder: (_) => CreateActivityView(
-          store: _store,
-          activity: activity,
-        ),
+        builder: (_) => CreateActivityView(store: _store, activity: activity),
       ),
     );
     if (!mounted || outcome == null) return;
@@ -154,8 +166,7 @@ class _ActivitiesViewState extends State<ActivitiesView> {
   // Minimise the code bubble as soon as the list scrolls down; show the
   // label again only back at the top.
   bool _onUserScroll(ScrollNotification notification) {
-    if (notification.depth != 0 ||
-        notification.metrics.axis != Axis.vertical) {
+    if (notification.depth != 0 || notification.metrics.axis != Axis.vertical) {
       return false;
     }
     final expand = notification.metrics.pixels <= 0;
@@ -256,84 +267,105 @@ class _ActivitiesViewState extends State<ActivitiesView> {
     final hostsPrivate = _store.mine.any((a) => !a.isPublic);
     final showRequests = hostsPrivate || _store.pendingRequestCount > 0;
 
-    return ListView(
-      padding: EdgeInsets.fromLTRB(16, 16, 16, bottomInset + 120),
-      physics: const AlwaysScrollableScrollPhysics(),
-      children: [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 4),
-          child: Text(
-            context.l10n.activities,
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.8,
-              color: SynkColors.textPrimary,
-            ),
+    final header = <Widget>[
+      Padding(
+        padding: EdgeInsets.symmetric(horizontal: 4),
+        child: Text(
+          context.l10n.activities,
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.8,
+            color: SynkColors.textPrimary,
           ),
         ),
-        const SizedBox(height: 16),
-        if (showRequests) ...[
-          _JoinRequestsRow(
-            count: _store.pendingRequestCount,
-            onTap: _openJoinRequests,
-          ),
-          const SizedBox(height: 14),
-        ],
-        _Segmented(
-          showPast: _showPast,
-          onChanged: (past) => setState(() {
-            _showPast = past;
-            _filter = _RoleFilter.all;
-          }),
+      ),
+      const SizedBox(height: 16),
+      if (showRequests) ...[
+        _JoinRequestsRow(
+          count: _store.pendingRequestCount,
+          onTap: _openJoinRequests,
         ),
-        if (filters.length > 2) ...[
-          const SizedBox(height: 12),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                for (final f in filters) ...[
-                  SynkFilterChip(
-                    label: '${f.label}  ${countOf(f)}',
-                    selected: f == filter,
-                    onTap: () => setState(() => _filter = f),
-                  ),
-                  const SizedBox(width: 8),
-                ],
+        const SizedBox(height: 14),
+      ],
+      _Segmented(
+        showPast: _showPast,
+        onChanged: (past) => setState(() {
+          _showPast = past;
+          _filter = _RoleFilter.all;
+        }),
+      ),
+      if (filters.length > 2) ...[
+        const SizedBox(height: 12),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (final f in filters) ...[
+                SynkFilterChip(
+                  label: '${f.label}  ${countOf(f)}',
+                  selected: f == filter,
+                  onTap: () => setState(() => _filter = f),
+                ),
+                const SizedBox(width: 8),
               ],
-            ),
+            ],
           ),
-        ],
-        const SizedBox(height: 16),
+        ),
+      ],
+      const SizedBox(height: 16),
+    ];
+
+    // Room for the floating bottom bar.
+    final bottomPadding = bottomInset + 120;
+
+    return CustomScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          sliver: SliverList(delegate: SliverChildListDelegate(header)),
+        ),
         if (shown.isEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 60),
-            child: _showPast
-                ? EmptyState(
-                    icon: Icons.history_rounded,
-                    title: context.l10n.noPastActivities,
-                    message:
-                        context.l10n.activitiesYouveBeenPartOfWill,
-                  )
-                : EmptyState(
-                    icon: Icons.event_available_rounded,
-                    title: context.l10n.noUpcomingActivities,
-                    message: context.l10n.joinOneFromHomeOrTap,
-                  ),
+          // Centered in the space left under the header.
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Padding(
+              padding: EdgeInsets.only(bottom: bottomPadding),
+              child: Center(
+                child: _showPast
+                    ? EmptyState(
+                        icon: Icons.history_rounded,
+                        title: context.l10n.noPastActivities,
+                        message: context.l10n.activitiesYouveBeenPartOfWill,
+                      )
+                    : EmptyState(
+                        icon: Icons.event_available_rounded,
+                        title: context.l10n.noUpcomingActivities,
+                        message: context.l10n.joinOneFromHomeOrTap,
+                      ),
+              ),
+            ),
           )
         else
-          for (final activity in shown) ...[
-            MyActivityCard(
-              activity: activity,
-              role: roles[activity.id]!,
-              participants: _people[activity.id],
-              anonymous: roles[activity.id] == MyActivityRole.pending,
-              onTap: () => _openActivity(activity),
-              showCode: !activity.isPast,
+          SliverPadding(
+            padding: EdgeInsets.fromLTRB(16, 0, 16, bottomPadding),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                for (final activity in shown) ...[
+                  MyActivityCard(
+                    activity: activity,
+                    role: roles[activity.id]!,
+                    participants: _people[activity.id],
+                    anonymous: roles[activity.id] == MyActivityRole.pending,
+                    onTap: () => _openActivity(activity),
+                    showCode: !activity.isPast,
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ]),
             ),
-            const SizedBox(height: 12),
-          ],
+          ),
       ],
     );
   }
@@ -380,7 +412,12 @@ class _Segmented extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(children: [segment(context.l10n.upcoming, false), segment(context.l10n.past, true)]),
+      child: Row(
+        children: [
+          segment(context.l10n.upcoming, false),
+          segment(context.l10n.past, true),
+        ],
+      ),
     );
   }
 }

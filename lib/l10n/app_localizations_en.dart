@@ -547,6 +547,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get readyForSomethingNew => 'Ready for something new?';
 
   @override
+  String get readyForSomethingNewFemale => 'Ready for something new?';
+
+  @override
   String get searchActivitiesOrLocations => 'Search activities or locations...';
 
   @override
@@ -1190,14 +1193,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get people => 'People';
 
   @override
-  String peopleSummary(Object n, int spots) {
-    String _temp0 = intl.Intl.pluralLogic(
-      spots,
-      locale: localeName,
-      other: '$spots spots open',
-      one: '1 spot open',
-    );
-    return '$n including you · $_temp0';
+  String peopleSummary(Object n) {
+    return '$n including you';
   }
 
   @override
@@ -1210,6 +1207,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get useLettersOnly => 'Use letters only';
+
+  @override
+  String get useEnglishLettersOnly => 'Use English letters only';
 
   @override
   String keepItToCharacters(Object n) {

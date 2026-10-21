@@ -9,16 +9,12 @@ import '../../controllers/create_activity_controller.dart';
 import '../../core/constants/synk_colors.dart';
 import '../../models/activity_model.dart';
 import '../../utils/custom_widgets/synk_dialog.dart';
-
+import '../../utils/custom_widgets/synk_feedback.dart';
 
 class CreateActivityOutcome {
-  const CreateActivityOutcome({
-    required this.activity,
-    required this.openDetails,
-  });
+  const CreateActivityOutcome({required this.activity});
 
   final Activity activity;
-  final bool openDetails;
 }
 
 // The Create Activity wizard shell.
@@ -26,7 +22,6 @@ class CreateActivityOutcome {
 class CreateActivityView extends StatefulWidget {
   const CreateActivityView({super.key, this.store, this.activity});
 
- 
   final ActivityStore? store;
   final Activity? activity;
 
@@ -162,35 +157,25 @@ class _CreateActivityViewState extends State<CreateActivityView> {
     final Activity activity = result.activity!;
     widget.store?.upsert(activity);
 
- 
     final List<String> warnings = <String>[
       if (result.photoWarning != null) result.photoWarning!,
       if (result.orphanWarning != null) result.orphanWarning!,
     ];
-    final String successMessage = _controller.isEditing
-        ? context.l10n.yourActivityDetailsHaveBeenUpdated
-        : context.l10n.yourActivityIsLiveAndReady;
-    final String message = warnings.isEmpty
-        ? successMessage
-        : '$successMessage\n\n${warnings.join('\n')}';
-
-    final SynkDialogAction? choice = await SynkDialog.success(
-      title: _controller.isEditing
-          ? context.l10n.changesSaved
-          : context.l10n.activityCreated,
-      message: message,
-      primaryLabel: context.l10n.viewActivity,
-      secondaryLabel: context.l10n.done,
-    ).show(context, barrierDismissible: false);
-
-    if (!mounted) return;
-
-    Navigator.of(context).pop(
-      CreateActivityOutcome(
-        activity: activity,
-        openDetails: choice == SynkDialogAction.primary,
-      ),
-    );
+    // A short success banner, then the caller opens the activity itself.
+    // It slides down from the top so the activity sheet doesn't cover it.
+    // Editing gets its own message from My Activities, so only photo
+    // problems are shown for it here.
+    if (!_controller.isEditing || warnings.isNotEmpty) {
+      SynkFeedback.showToast(
+        context,
+        title: _controller.isEditing
+            ? context.l10n.changesSaved
+            : context.l10n.activityCreated,
+        message: warnings.isEmpty ? null : warnings.join('\n'),
+        success: warnings.isEmpty,
+      );
+    }
+    Navigator.of(context).pop(CreateActivityOutcome(activity: activity));
   }
 
   void _showMessage(String text) {
@@ -218,7 +203,6 @@ class _CreateActivityViewState extends State<CreateActivityView> {
     final bool busy = _controller.isSubmitting;
 
     return PopScope(
-   
       canPop: false,
       onPopInvokedWithResult: (bool didPop, Object? result) {
         if (didPop) return;
@@ -281,8 +265,9 @@ class _CreateActivityViewState extends State<CreateActivityView> {
               final bool filled = index <= step;
               return Expanded(
                 child: Padding(
-                  padding: EdgeInsets.only(
-                    right: index == _stepCount - 1 ? 0 : 8,
+                  // Directional, so the gaps stay even in Arabic too.
+                  padding: EdgeInsetsDirectional.only(
+                    end: index == _stepCount - 1 ? 0 : 8,
                   ),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 280),

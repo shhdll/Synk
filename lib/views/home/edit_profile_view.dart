@@ -12,6 +12,7 @@ import 'change_password_view.dart';
 import 'widgets/change_email_bottom_sheet.dart';
 import 'widgets/photo_options_sheet.dart';
 import '../widgets/synk_date_picker.dart';
+import '../../utils/text_direction.dart';
 
 class EditProfileView extends StatefulWidget {
   const EditProfileView({super.key});
@@ -131,6 +132,8 @@ class _EditProfileViewState extends State<EditProfileView> {
 
   void _onBioChanged(String value) {
     _controller.setBio(value);
+    // Rebuild so the field switches direction for Arabic or English.
+    setState(() {});
   }
 
   Future<void> _pickBirthday() async {
@@ -684,6 +687,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                       maxLength: 160,
                       textInputAction: TextInputAction.newline,
                       onChanged: _onBioChanged,
+                      textDirection: textDirectionOf(_bioController.text),
                     ),
 
                     const SizedBox(height: 22),
@@ -898,6 +902,7 @@ class _EditProfileViewState extends State<EditProfileView> {
     Widget? suffixIcon,
     bool readOnly = false,
     VoidCallback? onTap,
+    TextDirection? textDirection,
   }) {
     final hasError = errorText != null;
     return Column(
@@ -905,6 +910,7 @@ class _EditProfileViewState extends State<EditProfileView> {
       children: [
         TextField(
           controller: controller,
+          textDirection: textDirection,
           onChanged: onChanged,
           readOnly: readOnly,
           onTap: onTap,

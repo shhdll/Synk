@@ -9,6 +9,7 @@ import '../../core/constants/activity_constants.dart';
 import '../../core/constants/synk_colors.dart';
 import '../../l10n/l10n.dart';
 import 'create_activity_widgets.dart';
+import '../../utils/text_direction.dart';
 
 class StepDetails extends StatefulWidget {
   const StepDetails({super.key, required this.controller});
@@ -80,6 +81,8 @@ class _StepDetailsState extends State<StepDetails> {
             children: <Widget>[
               TextField(
                 controller: _c.descriptionController,
+                // Follows the text's language; rebuilt on every change.
+                textDirection: textDirectionOf(_c.descriptionController.text),
                 maxLength: ActivityConstants.descriptionMaxLength,
                 minLines: 2,
                 maxLines: 3,
@@ -502,7 +505,9 @@ class _PhotoSection extends StatelessWidget {
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: SynkColors.orangeDark,
                                 side: BorderSide(
-                                  color: SynkColors.orange.withValues(alpha: 0.55),
+                                  color: SynkColors.orange.withValues(
+                                    alpha: 0.55,
+                                  ),
                                 ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
@@ -575,7 +580,10 @@ class _PhotoSection extends StatelessWidget {
 }
 
 class _DashedRoundedBorderPainter extends CustomPainter {
-  const _DashedRoundedBorderPainter({required this.color, required this.radius});
+  const _DashedRoundedBorderPainter({
+    required this.color,
+    required this.radius,
+  });
 
   final Color color;
   final double radius;

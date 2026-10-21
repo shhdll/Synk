@@ -81,6 +81,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     if (_activityStore.mapFocus != null && _tab != HomeTab.map) {
       setState(() => _tab = HomeTab.map);
     }
+    if (_activityStore.detailsFocus != null && _tab != HomeTab.activities) {
+      setState(() => _tab = HomeTab.activities);
+    }
   }
 
   @override
@@ -189,7 +192,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   }
 
   Future<void> _openAddActivity() async {
-    await Navigator.of(context).push(
+    final outcome = await Navigator.of(context).push<CreateActivityOutcome>(
       MaterialPageRoute(
         builder: (context) {
           return CreateActivityView(store: _activityStore);
@@ -197,6 +200,11 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
         fullscreenDialog: true,
       ),
     );
+
+    // Show the new activity straight away in My Activities.
+    if (outcome != null && mounted) {
+      _activityStore.showInActivities(outcome.activity);
+    }
 
     // Refresh activities after returning from Create Activity.
     await Future.wait([

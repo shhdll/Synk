@@ -55,6 +55,8 @@ class _HomeViewState extends State<HomeView> {
       widget.discoveryController;
 
   String _firstName = 'there';
+  // Arabic uses a feminine form of some phrases.
+  bool _isFemale = false;
   bool _codeBubbleExpanded = true;
 
   // Tracks leave and host-transfer changes so the feed reloads once each.
@@ -110,12 +112,15 @@ class _HomeViewState extends State<HomeView> {
   Future<void> _loadFirstName() async {
     final profile = await _profileModel.fetchProfile();
     final fullName = (profile['full_name'] as String?)?.trim();
+    final gender = (profile['gender'] as String?)?.trim().toLowerCase();
 
-    if (mounted && (fullName?.isNotEmpty ?? false)) {
-      setState(() {
+    if (!mounted) return;
+    setState(() {
+      if (fullName?.isNotEmpty ?? false) {
         _firstName = fullName!.split(' ').first;
-      });
-    }
+      }
+      _isFemale = gender == 'female';
+    });
   }
 
   Future<void> _openActivityCodeSheet() {
@@ -255,6 +260,8 @@ class _HomeViewState extends State<HomeView> {
         : (hasName ? context.l10n.heyName(_firstName) : context.l10n.heyThere);
     final headline = widget.isNewUser
         ? context.l10n.letsFindYourPeople
+        : _isFemale
+        ? context.l10n.readyForSomethingNewFemale
         : context.l10n.readyForSomethingNew;
 
     return Row(
