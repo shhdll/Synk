@@ -151,6 +151,21 @@ class ActivityFilters {
     );
   }
 
+  // Unlike copyWith, this can clear the sort back to null.
+  ActivityFilters withSort(SortOption? sort) {
+    return ActivityFilters(
+      sort: sort,
+      date: date,
+      customDate: customDate,
+      customEndDate: customEndDate,
+      daySlot: daySlot,
+      fromMinute: fromMinute,
+      categories: categories,
+      distance: distance,
+      spots: spots,
+    );
+  }
+
   ActivityFilters withDate(
     DateOption date, {
     DateTime? customDate,

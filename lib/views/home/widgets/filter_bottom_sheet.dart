@@ -88,6 +88,16 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
 
   HomeDiscoveryController get _c => widget.controller;
 
+  // Home's list is already soonest first with no sort picked, so the sheet
+  // shows Soonest as chosen there. The Map has no default order.
+  bool get _soonestByDefault => widget.filters == null;
+
+  bool _isSortSelected(SortOption option) =>
+      _draft.sort == option ||
+      (_soonestByDefault &&
+          _draft.sort == null &&
+          option == SortOption.soonest);
+
   void _update(ActivityFilters next) => setState(() => _draft = next);
 
   void _apply() {
@@ -96,7 +106,11 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   }
 
   void _pickSort(SortOption option) {
-    final next = _draft.copyWith(sort: option);
+    // On Home, Soonest is the default, so picking it doesn't count as a
+    // changed filter.
+    final next = _soonestByDefault && option == SortOption.soonest
+        ? _draft.withSort(null)
+        : _draft.copyWith(sort: option);
     final onSortPicked = widget.onSortPicked;
     if (onSortPicked == null) {
       _update(next);
@@ -259,7 +273,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
         for (final option in SortOption.values)
           SynkFilterChip(
             label: option.label,
-            selected: _draft.sort == option,
+            selected: _isSortSelected(option),
             onTap:
                 (option.needsLocation && !hasLocation) ||
                     (option.bySpots && _draft.spots.isSingleCount)
