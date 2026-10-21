@@ -412,7 +412,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get forYourSecurityWellSendA =>
-      'For your security, we\'ll send a link only if this email belongs to a Synk account.';
+      'We only send a link if this email has a Synk account.';
 
   @override
   String get weSentAResetLinkTo => 'We sent a reset link to';
@@ -1508,10 +1508,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reEnterTheNewPassword => 'Re-enter the new password';
-
-  @override
-  String get useAtLeast8CharactersWith =>
-      'Use at least 8 characters with uppercase, lowercase, a number, and a special character.';
 
   @override
   String get newPasswordMustBeDifferentFrom =>

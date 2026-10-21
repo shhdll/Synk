@@ -404,7 +404,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get forYourSecurityWellSendA =>
-      'لحمايتك، نرسل الرابط فقط إذا كان البريد مسجل في Synk';
+      'نرسل الرابط فقط إذا كان البريد مسجلًا في Synk';
 
   @override
   String get weSentAResetLinkTo => 'أرسلنا رابط الاستعادة إلى';
@@ -1448,10 +1448,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get reEnterTheNewPassword => 'أعد إدخال كلمة المرور الجديدة';
-
-  @override
-  String get useAtLeast8CharactersWith =>
-      'استخدم 8 أحرف على الأقل تشمل حرف كبير وصغير ورقم ورمز خاص';
 
   @override
   String get newPasswordMustBeDifferentFrom =>

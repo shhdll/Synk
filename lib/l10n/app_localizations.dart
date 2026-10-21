@@ -851,7 +851,7 @@ abstract class AppLocalizations {
   /// No description provided for @forYourSecurityWellSendA.
   ///
   /// In en, this message translates to:
-  /// **'For your security, we\'ll send a link only if this email belongs to a Synk account.'**
+  /// **'We only send a link if this email has a Synk account.'**
   String get forYourSecurityWellSendA;
 
   /// No description provided for @weSentAResetLinkTo.
@@ -2749,12 +2749,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Re-enter the new password'**
   String get reEnterTheNewPassword;
-
-  /// No description provided for @useAtLeast8CharactersWith.
-  ///
-  /// In en, this message translates to:
-  /// **'Use at least 8 characters with uppercase, lowercase, a number, and a special character.'**
-  String get useAtLeast8CharactersWith;
 
   /// No description provided for @newPasswordMustBeDifferentFrom.
   ///

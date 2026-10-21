@@ -4,6 +4,7 @@ import '../../controllers/change_password_controller.dart';
 import '../../core/constants/synk_colors.dart';
 import '../../l10n/l10n.dart';
 import '../../utils/custom_widgets/synk_feedback.dart';
+import '../widgets/password_requirements.dart';
 
 class ChangePasswordView extends StatefulWidget {
   const ChangePasswordView({super.key});
@@ -197,11 +198,8 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                           onToggle: () =>
                               setState(() => _obscureNew = !_obscureNew),
                           errorText: _newError,
-                          onChanged: (_) {
-                            if (_newError != null) {
-                              setState(() => _newError = null);
-                            }
-                          },
+                          // Rebuild on every key so the checklist updates.
+                          onChanged: (_) => setState(() => _newError = null),
                           textInputAction: TextInputAction.next,
                         ),
 
@@ -226,16 +224,9 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                           onSubmitted: (_) => _submit(),
                         ),
 
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 8),
 
-                        Text(
-                          context.l10n.useAtLeast8CharactersWith,
-                          style: TextStyle(
-                            fontSize: 12,
-                            height: 1.4,
-                            color: SynkColors.textSecondary,
-                          ),
-                        ),
+                        PasswordRequirements(password: _newController.text),
                       ],
                     ),
                   ),

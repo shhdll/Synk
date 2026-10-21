@@ -6,6 +6,7 @@ import '../../core/constants/synk_colors.dart';
 import '../../l10n/l10n.dart';
 import '../../screens/auth/email_verification_screen.dart';
 import '../home/main_shell.dart';
+import '../widgets/password_requirements.dart';
 
 class AccountSetupSlide extends StatefulWidget {
   final SignupController signupController;
@@ -140,7 +141,9 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                _buildPasswordRequirements(signupController),
+                PasswordRequirements(
+                  password: signupController.passwordController.text,
+                ),
 
                 if (signupController.generalError != null) ...[
                   const SizedBox(height: 12),
@@ -247,46 +250,6 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
     );
   }
 
-  Widget _buildPasswordRequirements(SignupController signupController) {
-    final password = signupController.passwordController.text;
-    final rules = [
-      _PasswordRequirement(
-        text: context.l10n.eightPlusCharacters,
-        met: password.length >= 8,
-      ),
-      _PasswordRequirement(
-        text: context.l10n.uppercaseLetter,
-        met: RegExp(r'[A-Z]').hasMatch(password),
-      ),
-      _PasswordRequirement(
-        text: context.l10n.lowercaseLetter,
-        met: RegExp(r'[a-z]').hasMatch(password),
-      ),
-      _PasswordRequirement(
-        text: context.l10n.aNumber,
-        met: RegExp(r'[0-9]').hasMatch(password),
-      ),
-      _PasswordRequirement(
-        text: context.l10n.specialCharacter,
-        met: RegExp(r'[@$!%*?&_\-#^~+=<>.,:;/\\]|[^a-zA-Z0-9]')
-            .hasMatch(password),
-      ),
-    ];
-
-    // Two columns so the button fits without scrolling.
-    return Padding(
-      padding: const EdgeInsetsDirectional.only(start: 12, end: 8),
-      child: LayoutBuilder(
-        builder: (context, constraints) => Wrap(
-          children: [
-            for (final rule in rules)
-              SizedBox(width: constraints.maxWidth / 2, child: rule),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildField({
     required TextEditingController controller,
     required String label,
@@ -382,39 +345,6 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
           ),
         ],
       ],
-    );
-  }
-}
-
-class _PasswordRequirement extends StatelessWidget {
-  const _PasswordRequirement({required this.text, required this.met});
-
-  final String text;
-  final bool met;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = met ? SynkColors.teal : const Color(0xFF9CA3AF);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        children: [
-          Icon(
-            met ? Icons.check_circle : Icons.circle_outlined,
-            size: 15,
-            color: color,
-          ),
-          const SizedBox(width: 7),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 12,
-              color: color,
-              fontWeight: met ? FontWeight.w600 : FontWeight.w400,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
