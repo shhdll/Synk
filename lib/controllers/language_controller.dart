@@ -20,7 +20,9 @@ class LanguageController extends ChangeNotifier {
   Future<void> load() async {
     String? saved;
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await SharedPreferences.getInstance().timeout(
+        const Duration(seconds: 5),
+      );
       saved = prefs.getString(_prefsKey);
     } catch (_) {
       // Fall back to the phone's language below.
