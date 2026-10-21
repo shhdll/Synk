@@ -568,13 +568,12 @@
   "setBirthday": "Set birthday",
   "selectYourBirthday": "Select your birthday",
   "editAge": "Edit age",
-  "awaitingConfirmationOn": "Awaiting confirmation on {email}. Tap to resend or cancel.",
+  "awaitingConfirmationOn": "{email} isn't confirmed yet",
   "@awaitingConfirmationOn": {
     "placeholders": {
       "email": {}
     }
   },
-  "tapToChangeYourEmailAddress": "Tap to change your email address.",
   "changePassword": "Change password",
   "pleaseEnterYourName": "Please enter your name.",
   "adultMustBeBetween16And": "Adult must be between 16 and 65 years old.",
@@ -617,30 +616,26 @@
   "yourSessionHasExpiredPleaseLog": "Your session has expired. Please log in again.",
   "couldntUpdateYourPasswordPleaseTry": "Couldn't update your password. Please try again.",
   "couldntUpdateYourPasswordCheckYour": "Couldn't update your password. Check your connection and try again.",
-  "changeEmail": "Change Email",
-  "pendingEmailChange": "Pending Email Change",
-  "confirmationIsCurrentlyInProgress": "Confirmation is currently in progress",
-  "updateYourLoginAndContactEmail": "Update your login and contact email",
-  "currentEmailLabel": "Current:",
-  "awaitingConfirmation": "Awaiting Confirmation",
-  "changeLinkSentTo": "A change link was sent to {email}. Both your old and new email addresses must confirm the change before it updates.",
-  "@changeLinkSentTo": {
+  "changeEmail": "Change email",
+  "confirmYourNewEmail": "Confirm your new email",
+  "openTheLinkWeSentTo": "Open the link we sent to {email}.",
+  "@openTheLinkWeSentTo": {
     "placeholders": {
       "email": {}
     }
   },
-  "resendConfirmationLinks": "Resend Confirmation Links",
-  "cancelEmailChange": "Cancel Email Change",
-  "useADifferentEmailAddress": "Use a different email address",
+  "resendLink": "Resend link",
+  "cancelEmailChange": "Cancel change",
+  "useADifferentEmailAddress": "Use a different email",
   "pleaseEnterANewEmailAddress": "Please enter a new email address.",
   "newEmailMustBeDifferentFrom": "New email must be different from current email.",
-  "enterNewEmailAddress": "Enter new email address",
-  "confirmationEmailsWillBeSentTo": "Confirmation emails will be sent to both addresses. The change will take effect once confirmed.",
-  "sendVerification": "Send Verification",
-  "confirmationLinkSentPleaseCheckBoth": "Confirmation link sent! Please check both your current and new email inboxes to confirm the change.",
+  "enterNewEmailAddress": "New email address",
+  "weWillSendALinkToConfirm": "We'll send a link to confirm it.",
+  "sendLink": "Send link",
+  "linkSentCheckYourNewEmail": "Link sent. Check your new email.",
   "unableToUpdateEmailPleaseTry": "Unable to update email. Please try again.",
-  "confirmationLinksResentCheckYourInboxes": "Confirmation links resent! Check your inboxes to confirm.",
-  "pendingEmailChangeCancelled": "Pending email change cancelled.",
+  "linkSentAgain": "Link sent again.",
+  "pendingEmailChangeCancelled": "Email change cancelled.",
   "failedToCancelEmailChangeRequest": "Failed to cancel email change request.",
   "logOut": "Log Out",
   "logOutOfSynk": "Log out of Synk?",

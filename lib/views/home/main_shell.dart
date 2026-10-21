@@ -8,6 +8,7 @@ import '../../core/constants/synk_colors.dart';
 import '../../models/activities_model.dart';
 import '../../models/activity_model.dart';
 import '../../models/activity_participation_model.dart';
+import '../../models/auth_model.dart';
 import '../../models/home_tab.dart';
 import '../../services/push_notification_service.dart';
 import '../create_activity/create_activity_view.dart';
@@ -35,6 +36,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   final ActivitiesModel _activitiesModel = ActivitiesModel();
   final ActivityParticipationModel _participationModel =
       ActivityParticipationModel();
+  final AuthModel _authModel = AuthModel();
 
   // Poll for new join requests while the app is open.
   static const _requestPollInterval = Duration(minutes: 1);
@@ -63,6 +65,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     _activityStore.addListener(_openMapForFocus);
 
     unawaited(PushNotificationService.instance.registerForCurrentUser());
+    unawaited(_authModel.refreshIfEmailChangePending());
 
     // Loads hosted, participating, and public activities.
     _loadActivities();
@@ -87,6 +90,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       unawaited(_discoveryController.loadFeed(isSilent: true));
       _loadPendingRequestCount();
       unawaited(PushNotificationService.instance.registerForCurrentUser());
+      // Picks up an email change confirmed in the browser.
+      unawaited(_authModel.refreshIfEmailChangePending());
     }
   }
 

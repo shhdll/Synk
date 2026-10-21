@@ -42,8 +42,12 @@ class _ProfileViewState extends State<ProfileView> {
     try {
       _authSubscription = Supabase.instance.client.auth.onAuthStateChange
           .listen((data) {
-            if (data.event == AuthChangeEvent.userUpdated && mounted) {
+            if (!mounted) return;
+            if (data.event == AuthChangeEvent.userUpdated) {
               _controller.loadProfile();
+            } else if (data.event == AuthChangeEvent.tokenRefreshed) {
+              // The email is read from the session, so a rebuild shows it.
+              setState(() {});
             }
           });
     } catch (_) {}

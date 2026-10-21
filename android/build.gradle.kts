@@ -18,6 +18,12 @@ subprojects {
 subprojects {
     project.evaluationDependsOn(":app")
 }
+// Hide javac warnings/notes from plugin code we don't control (e.g. geolocator_android).
+subprojects {
+    tasks.withType<JavaCompile>().configureEach {
+        options.compilerArgs.addAll(listOf("-Xlint:none", "-nowarn", "-XDsuppressNotes"))
+    }
+}
 
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)

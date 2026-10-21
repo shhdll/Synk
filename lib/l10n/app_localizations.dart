@@ -2549,14 +2549,8 @@ abstract class AppLocalizations {
   /// No description provided for @awaitingConfirmationOn.
   ///
   /// In en, this message translates to:
-  /// **'Awaiting confirmation on {email}. Tap to resend or cancel.'**
+  /// **'{email} isn\'t confirmed yet'**
   String awaitingConfirmationOn(Object email);
-
-  /// No description provided for @tapToChangeYourEmailAddress.
-  ///
-  /// In en, this message translates to:
-  /// **'Tap to change your email address.'**
-  String get tapToChangeYourEmailAddress;
 
   /// No description provided for @changePassword.
   ///
@@ -2813,61 +2807,31 @@ abstract class AppLocalizations {
   /// No description provided for @changeEmail.
   ///
   /// In en, this message translates to:
-  /// **'Change Email'**
+  /// **'Change email'**
   String get changeEmail;
 
-  /// No description provided for @pendingEmailChange.
+  /// No description provided for @confirmYourNewEmail.
   ///
   /// In en, this message translates to:
-  /// **'Pending Email Change'**
-  String get pendingEmailChange;
+  /// **'Confirm your new email'**
+  String get confirmYourNewEmail;
 
-  /// No description provided for @confirmationIsCurrentlyInProgress.
+  /// No description provided for @openTheLinkWeSentTo.
   ///
   /// In en, this message translates to:
-  /// **'Confirmation is currently in progress'**
-  String get confirmationIsCurrentlyInProgress;
-
-  /// No description provided for @updateYourLoginAndContactEmail.
-  ///
-  /// In en, this message translates to:
-  /// **'Update your login and contact email'**
-  String get updateYourLoginAndContactEmail;
-
-  /// No description provided for @currentEmailLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Current:'**
-  String get currentEmailLabel;
-
-  /// No description provided for @awaitingConfirmation.
-  ///
-  /// In en, this message translates to:
-  /// **'Awaiting Confirmation'**
-  String get awaitingConfirmation;
-
-  /// No description provided for @changeLinkSentTo.
-  ///
-  /// In en, this message translates to:
-  /// **'A change link was sent to {email}. Both your old and new email addresses must confirm the change before it updates.'**
-  String changeLinkSentTo(Object email);
-
-  /// No description provided for @resendConfirmationLinks.
-  ///
-  /// In en, this message translates to:
-  /// **'Resend Confirmation Links'**
-  String get resendConfirmationLinks;
+  /// **'Open the link we sent to {email}.'**
+  String openTheLinkWeSentTo(Object email);
 
   /// No description provided for @cancelEmailChange.
   ///
   /// In en, this message translates to:
-  /// **'Cancel Email Change'**
+  /// **'Cancel change'**
   String get cancelEmailChange;
 
   /// No description provided for @useADifferentEmailAddress.
   ///
   /// In en, this message translates to:
-  /// **'Use a different email address'**
+  /// **'Use a different email'**
   String get useADifferentEmailAddress;
 
   /// No description provided for @pleaseEnterANewEmailAddress.
@@ -2885,26 +2849,26 @@ abstract class AppLocalizations {
   /// No description provided for @enterNewEmailAddress.
   ///
   /// In en, this message translates to:
-  /// **'Enter new email address'**
+  /// **'New email address'**
   String get enterNewEmailAddress;
 
-  /// No description provided for @confirmationEmailsWillBeSentTo.
+  /// No description provided for @weWillSendALinkToConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Confirmation emails will be sent to both addresses. The change will take effect once confirmed.'**
-  String get confirmationEmailsWillBeSentTo;
+  /// **'We\'ll send a link to confirm it.'**
+  String get weWillSendALinkToConfirm;
 
-  /// No description provided for @sendVerification.
+  /// No description provided for @sendLink.
   ///
   /// In en, this message translates to:
-  /// **'Send Verification'**
-  String get sendVerification;
+  /// **'Send link'**
+  String get sendLink;
 
-  /// No description provided for @confirmationLinkSentPleaseCheckBoth.
+  /// No description provided for @linkSentCheckYourNewEmail.
   ///
   /// In en, this message translates to:
-  /// **'Confirmation link sent! Please check both your current and new email inboxes to confirm the change.'**
-  String get confirmationLinkSentPleaseCheckBoth;
+  /// **'Link sent. Check your new email.'**
+  String get linkSentCheckYourNewEmail;
 
   /// No description provided for @unableToUpdateEmailPleaseTry.
   ///
@@ -2912,16 +2876,16 @@ abstract class AppLocalizations {
   /// **'Unable to update email. Please try again.'**
   String get unableToUpdateEmailPleaseTry;
 
-  /// No description provided for @confirmationLinksResentCheckYourInboxes.
+  /// No description provided for @linkSentAgain.
   ///
   /// In en, this message translates to:
-  /// **'Confirmation links resent! Check your inboxes to confirm.'**
-  String get confirmationLinksResentCheckYourInboxes;
+  /// **'Link sent again.'**
+  String get linkSentAgain;
 
   /// No description provided for @pendingEmailChangeCancelled.
   ///
   /// In en, this message translates to:
-  /// **'Pending email change cancelled.'**
+  /// **'Email change cancelled.'**
   String get pendingEmailChangeCancelled;
 
   /// No description provided for @failedToCancelEmailChangeRequest.

@@ -1397,11 +1397,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String awaitingConfirmationOn(Object email) {
-    return 'Awaiting confirmation on $email. Tap to resend or cancel.';
+    return '$email isn\'t confirmed yet';
   }
-
-  @override
-  String get tapToChangeYourEmailAddress => 'Tap to change your email address.';
 
   @override
   String get changePassword => 'Change password';
@@ -1546,38 +1543,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'Couldn\'t update your password. Check your connection and try again.';
 
   @override
-  String get changeEmail => 'Change Email';
+  String get changeEmail => 'Change email';
 
   @override
-  String get pendingEmailChange => 'Pending Email Change';
+  String get confirmYourNewEmail => 'Confirm your new email';
 
   @override
-  String get confirmationIsCurrentlyInProgress =>
-      'Confirmation is currently in progress';
-
-  @override
-  String get updateYourLoginAndContactEmail =>
-      'Update your login and contact email';
-
-  @override
-  String get currentEmailLabel => 'Current:';
-
-  @override
-  String get awaitingConfirmation => 'Awaiting Confirmation';
-
-  @override
-  String changeLinkSentTo(Object email) {
-    return 'A change link was sent to $email. Both your old and new email addresses must confirm the change before it updates.';
+  String openTheLinkWeSentTo(Object email) {
+    return 'Open the link we sent to $email.';
   }
 
   @override
-  String get resendConfirmationLinks => 'Resend Confirmation Links';
+  String get cancelEmailChange => 'Cancel change';
 
   @override
-  String get cancelEmailChange => 'Cancel Email Change';
-
-  @override
-  String get useADifferentEmailAddress => 'Use a different email address';
+  String get useADifferentEmailAddress => 'Use a different email';
 
   @override
   String get pleaseEnterANewEmailAddress => 'Please enter a new email address.';
@@ -1587,29 +1567,26 @@ class AppLocalizationsEn extends AppLocalizations {
       'New email must be different from current email.';
 
   @override
-  String get enterNewEmailAddress => 'Enter new email address';
+  String get enterNewEmailAddress => 'New email address';
 
   @override
-  String get confirmationEmailsWillBeSentTo =>
-      'Confirmation emails will be sent to both addresses. The change will take effect once confirmed.';
+  String get weWillSendALinkToConfirm => 'We\'ll send a link to confirm it.';
 
   @override
-  String get sendVerification => 'Send Verification';
+  String get sendLink => 'Send link';
 
   @override
-  String get confirmationLinkSentPleaseCheckBoth =>
-      'Confirmation link sent! Please check both your current and new email inboxes to confirm the change.';
+  String get linkSentCheckYourNewEmail => 'Link sent. Check your new email.';
 
   @override
   String get unableToUpdateEmailPleaseTry =>
       'Unable to update email. Please try again.';
 
   @override
-  String get confirmationLinksResentCheckYourInboxes =>
-      'Confirmation links resent! Check your inboxes to confirm.';
+  String get linkSentAgain => 'Link sent again.';
 
   @override
-  String get pendingEmailChangeCancelled => 'Pending email change cancelled.';
+  String get pendingEmailChangeCancelled => 'Email change cancelled.';
 
   @override
   String get failedToCancelEmailChangeRequest =>

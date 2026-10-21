@@ -139,6 +139,17 @@ class AuthModel {
     return false;
   }
 
+  // The email link is usually confirmed in the browser, so the app's stored
+  // user still has the old email. Refreshing the session loads the new one
+  // and emits tokenRefreshed for the screens that show it.
+  Future<void> refreshIfEmailChangePending() async {
+    final pending = _supabase.auth.currentUser?.newEmail;
+    if (pending == null || pending.isEmpty) return;
+    try {
+      await _supabase.auth.refreshSession();
+    } catch (_) {}
+  }
+
   // Requests an email change. Supabase emails the new address a
   // confirmation link before the change actually takes effect.
   Future<UserResponse> updateEmail(String newEmail) async {

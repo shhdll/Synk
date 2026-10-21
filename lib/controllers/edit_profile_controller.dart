@@ -237,6 +237,14 @@ class EditProfileController extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Picks up an email change confirmed outside the app, without touching
+  // the other drafts.
+  void syncEmailFromSession() {
+    _originalEmail = email;
+    _email = _originalEmail;
+    notifyListeners();
+  }
+
   // ---------------------------------------------------------------------------
   // Unsaved changes
   // ---------------------------------------------------------------------------
