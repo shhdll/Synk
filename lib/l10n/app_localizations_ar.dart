@@ -1545,7 +1545,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noInternetConnectionCheckYourConnection =>
-      'لا يوجد اتصال بالإنترنت، حاول مرة أخرى';
+      'لا يوجد اتصال بالإنترنت';
 
   @override
   String get tooManyAttemptsPleaseWaitA =>

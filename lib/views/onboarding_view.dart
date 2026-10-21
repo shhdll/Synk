@@ -11,9 +11,12 @@ import '../controllers/signup_controller.dart';
 import '../l10n/l10n.dart';
 import 'signup/personal_details_slide.dart';
 import 'signup/account_setup_slide.dart';
+import '../screens/auth/email_verification_screen.dart';
+import 'home/main_shell.dart';
 import 'widgets/blob_layout.dart';
 import 'widgets/pressed_circle_button.dart';
 import 'widgets/pressed_skip_button.dart';
+import 'widgets/bottom_fade.dart';
 
 class OnboardingView extends StatefulWidget {
   const OnboardingView({super.key});
@@ -86,6 +89,7 @@ class _OnboardingViewState extends State<OnboardingView>
   @override
   Widget build(BuildContext context) {
     final currentStep = _controller.currentStep;
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
 
     return PopScope(
       canPop: currentStep == 0,
@@ -98,44 +102,66 @@ class _OnboardingViewState extends State<OnboardingView>
         backgroundColor: SynkColors.background,
         // Background runs under the status and navigation bars; only the
         // content stays inside the safe area.
-        body: Stack(
-          children: [
-            Positioned.fill(child: _buildAnimatedBackground()),
-            Positioned.fill(
-              child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 28),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 18),
-                      _buildHeader(),
-                      const SizedBox(height: 34),
-                      Expanded(
-                        child: PageView(
-                          controller: _pageController,
-                          physics: const BouncingScrollPhysics(),
-                          onPageChanged: _onPageChanged,
-                          children: [
-                            _buildInterestsStep(),
-                            _buildActivityTypeStep(),
-                            _buildLocationStep(),
-                            PersonalDetailsSlide(controller: _signupController),
-                            AccountSetupSlide(
-                              signupController: _signupController,
-                              onboardingController: _controller,
-                            ),
-                          ],
+        // Tapping outside a field closes the keyboard, which brings the
+        // arrows back.
+        body: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: Stack(
+            children: [
+              Positioned.fill(child: _buildAnimatedBackground()),
+              Positioned.fill(
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 28),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 18),
+                        _buildHeader(),
+                        const SizedBox(height: 34),
+                        // The arrows float over the pages, so content scrolls
+                        // under them and fades out instead of stopping at a bar.
+                        Expanded(
+                          child: Stack(
+                            children: [
+                              Positioned.fill(
+                                child: PageView(
+                                  controller: _pageController,
+                                  physics: const BouncingScrollPhysics(),
+                                  onPageChanged: _onPageChanged,
+                                  children: [
+                                    _buildInterestsStep(),
+                                    _buildActivityTypeStep(),
+                                    _buildLocationStep(),
+                                    PersonalDetailsSlide(
+                                      controller: _signupController,
+                                    ),
+                                    AccountSetupSlide(
+                                      signupController: _signupController,
+                                      onboardingController: _controller,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Hidden while typing so the arrows don't cover
+                              // the fields above the keyboard.
+                              if (!keyboardOpen)
+                                PositionedDirectional(
+                                  start: 0,
+                                  end: 0,
+                                  bottom: 20,
+                                  child: _buildNavigation(),
+                                ),
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 18),
-                      _buildNavigation(),
-                      const SizedBox(height: 20),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -177,7 +203,29 @@ class _OnboardingViewState extends State<OnboardingView>
             letterSpacing: -1.2,
           ),
         ),
+        const Spacer(),
+        _buildStepCounter(),
       ],
+    );
+  }
+
+  // Small ring in the corner that fills up as the user moves through sign up.
+  Widget _buildStepCounter() {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(end: (_controller.currentStep + 1) / _stepCount),
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, _) => SizedBox(
+        width: 30,
+        height: 30,
+        child: CircularProgressIndicator(
+          value: value,
+          strokeWidth: 4,
+          strokeCap: StrokeCap.round,
+          color: SynkColors.orange,
+          backgroundColor: SynkColors.textSecondary.withValues(alpha: 0.15),
+        ),
+      ),
     );
   }
 
@@ -433,15 +481,18 @@ class _OnboardingViewState extends State<OnboardingView>
         ),
         const SizedBox(height: 28),
         Expanded(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Wrap(
-              spacing: 7,
-              runSpacing: 8,
-              children: [
-                for (final entry in kInterestEmojis.entries)
-                  _buildInterestChip(entry.key, entry.value),
-              ],
+          child: BottomFade(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.only(bottom: BottomFade.scrollPadding),
+              child: Wrap(
+                spacing: 7,
+                runSpacing: 8,
+                children: [
+                  for (final entry in kInterestEmojis.entries)
+                    _buildInterestChip(entry.key, entry.value),
+                ],
+              ),
             ),
           ),
         ),
@@ -729,45 +780,60 @@ class _OnboardingViewState extends State<OnboardingView>
 
     return Column(
       children: [
-        SizedBox(
-          height: 56,
-          child: Stack(
-            alignment: Alignment.center,
+        // On the last page the submit button takes the place of Skip and the
+        // next arrow.
+        if (isLastStep)
+          Row(
             children: [
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: PressedCircleButton(
-                  icon: Icons.arrow_back_rounded,
-                  enabled: true,
-                  onTap: _goToPreviousPage,
-                ),
+              PressedCircleButton(
+                icon: Icons.arrow_back_rounded,
+                enabled: true,
+                onTap: _goToPreviousPage,
               ),
-              Center(
-                child: Visibility(
-                  visible: _controller.currentStep < 3,
-                  maintainSize: true,
-                  maintainAnimation: true,
-                  maintainState: true,
-                  child: PressedSkipButton(onTap: _skipQuestion),
-                ),
-              ),
-              Align(
-                alignment: AlignmentDirectional.centerEnd,
-                child: Visibility(
-                  visible: !isLastStep, // Hides the arrow on Slide 5 (Registration button submits instead)
-                  maintainSize: true,
-                  maintainAnimation: true,
-                  maintainState: true,
+              const SizedBox(width: 14),
+              Expanded(child: _buildRegisterButton()),
+            ],
+          )
+        else
+          SizedBox(
+            height: 56,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
                   child: PressedCircleButton(
-                    icon: Icons.arrow_forward_rounded,
-                    enabled: canContinue,
-                    onTap: canContinue ? _goToNextPage : null,
+                    icon: Icons.arrow_back_rounded,
+                    enabled: true,
+                    onTap: _goToPreviousPage,
                   ),
                 ),
-              ),
-            ],
+                Center(
+                  child: Visibility(
+                    visible: _controller.currentStep < 3,
+                    maintainSize: true,
+                    maintainAnimation: true,
+                    maintainState: true,
+                    child: PressedSkipButton(onTap: _skipQuestion),
+                  ),
+                ),
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: Visibility(
+                    visible: !isLastStep, // Hides the arrow on Slide 5 (Registration button submits instead)
+                    maintainSize: true,
+                    maintainAnimation: true,
+                    maintainState: true,
+                    child: PressedCircleButton(
+                      icon: Icons.arrow_forward_rounded,
+                      enabled: canContinue,
+                      onTap: canContinue ? _goToNextPage : null,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
         const SizedBox(height: 6),
         _buildProgress(),
       ],
@@ -777,15 +843,15 @@ class _OnboardingViewState extends State<OnboardingView>
   // ---------------------------------------------------------------------------
   // PROGRESS
   // ---------------------------------------------------------------------------
-  Widget _buildProgress() {
-    const stepCount = 5;
+  static const _stepCount = 5;
 
+  Widget _buildProgress() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(stepCount, (index) {
+      children: List.generate(_stepCount, (index) {
         return Padding(
           padding: EdgeInsetsDirectional.only(
-            end: index == stepCount - 1 ? 0 : 7,
+            end: index == _stepCount - 1 ? 0 : 7,
           ),
           child: _buildProgressItem(_controller.currentStep == index),
         );
@@ -814,14 +880,12 @@ class _OnboardingViewState extends State<OnboardingView>
 
   bool _canContinue() {
     switch (_controller.currentStep) {
+      // The first three pages are optional: with nothing picked, the arrow
+      // just moves on like Skip.
       case 0:
-        return _controller.selectedInterests.isNotEmpty;
-
       case 1:
-        return _controller.activityType != null;
-
       case 2:
-        return _controller.locationPreference != null;
+        return true;
 
       case 3:
         return _signupController.isPersonalDetailsValid;
@@ -841,5 +905,73 @@ class _OnboardingViewState extends State<OnboardingView>
   // No-op: AccountSetupSlide (the last page) has its own "Create Account"
   // button that calls SignupController.registerUser directly, so tapping
   // Next/Skip while already on that page has nothing left to do.
-  void _finishOnboarding() {}
+  // Creates the account, then opens the app or the email check screen.
+  Future<void> _finishOnboarding() async {
+    final res = await _signupController.registerUser(
+      onboardingPreferences: _controller.onboardingData,
+      context: context,
+    );
+    final user = res?.user;
+    if (user == null || !mounted) return;
+
+    final isConfirmed =
+        res!.session != null &&
+        user.emailConfirmedAt != null &&
+        user.emailConfirmedAt!.isNotEmpty;
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (context) => isConfirmed
+            // Confirmation is off or the account was auto-confirmed.
+            ? const MainShell(isNewUser: true)
+            : EmailVerificationScreen(
+                email: _signupController.emailController.text.trim(),
+                password: _signupController.passwordController.text,
+              ),
+      ),
+      (route) => false,
+    );
+  }
+
+  // Submit button shown next to the back arrow on the last page.
+  Widget _buildRegisterButton() {
+    return ListenableBuilder(
+      listenable: _signupController,
+      builder: (context, _) {
+        final loading = _signupController.isLoading;
+        return SizedBox(
+          height: 56,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFF6F43),
+              disabledBackgroundColor: const Color(0xFFFF6F43)
+                  .withValues(alpha: 0.6),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28),
+              ),
+            ),
+            onPressed: loading ? null : _finishOnboarding,
+            child: loading
+                ? const SizedBox(
+                    height: 22,
+                    width: 22,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2.5,
+                    ),
+                  )
+                : Text(
+                    context.l10n.completeRegistration,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+          ),
+        );
+      },
+    );
+  }
 }

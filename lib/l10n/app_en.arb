@@ -641,7 +641,7 @@
   "youllNeedToSignInAgain": "You'll need to sign in again to access your profile, activities, and matches.",
   "unableToLogOut": "Unable to log out.",
   "unableToLogOutPleaseTry": "Unable to log out. Please try again.",
-  "noInternetConnectionCheckYourConnection": "No internet connection. Check your connection and try again.",
+  "noInternetConnectionCheckYourConnection": "No internet connection.",
   "tooManyAttemptsPleaseWaitA": "Too many attempts. Please wait a few minutes and try again.",
   "somethingWentWrongPleaseTryAgain": "Something went wrong. Please try again.",
   "somethingWentWrong": "Something went wrong.",

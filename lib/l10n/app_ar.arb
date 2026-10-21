@@ -471,7 +471,7 @@
   "youllNeedToSignInAgain": "ستحتاج لتسجيل الدخول مجددا للوصول إلى حسابك وأنشطتك",
   "unableToLogOut": "تعذر تسجيل الخروج",
   "unableToLogOutPleaseTry": "تعذر تسجيل الخروج، حاول مرة أخرى",
-  "noInternetConnectionCheckYourConnection": "لا يوجد اتصال بالإنترنت، حاول مرة أخرى",
+  "noInternetConnectionCheckYourConnection": "لا يوجد اتصال بالإنترنت",
   "tooManyAttemptsPleaseWaitA": "تجاوزت عدد المحاولات المسموح، انتظر بضع دقائق ثم حاول مرة أخرى",
   "somethingWentWrongPleaseTryAgain": "حدث خطأ، حاول مرة أخرى",
   "somethingWentWrong": "حدث خطأ",

@@ -2921,7 +2921,7 @@ abstract class AppLocalizations {
   /// No description provided for @noInternetConnectionCheckYourConnection.
   ///
   /// In en, this message translates to:
-  /// **'No internet connection. Check your connection and try again.'**
+  /// **'No internet connection.'**
   String get noInternetConnectionCheckYourConnection;
 
   /// No description provided for @tooManyAttemptsPleaseWaitA.

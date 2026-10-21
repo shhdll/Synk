@@ -1606,7 +1606,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noInternetConnectionCheckYourConnection =>
-      'No internet connection. Check your connection and try again.';
+      'No internet connection.';
 
   @override
   String get tooManyAttemptsPleaseWaitA =>

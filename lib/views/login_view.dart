@@ -116,6 +116,7 @@ class _LoginViewState extends State<LoginView> {
             builder: (context) => EmailVerificationScreen(
               email: _loginController.accountEmail ?? '',
               password: password,
+              sendEmailOnOpen: true,
             ),
           ),
         );
