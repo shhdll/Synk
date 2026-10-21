@@ -111,8 +111,9 @@ class ActivitiesModel {
 
   // Discovery Feed for Home Page:
   // - Excludes activities hosted by current user (host_id != currentUserId).
-  // - Enforces Gender Visibility Rule: Activities hosted by female users are
-  //   ONLY visible to users whose profile gender is 'Female'.
+  // - Enforces Gender Visibility Rule: activities are only visible to users
+  //   whose profile gender matches the host's (men see men's activities,
+  //   women see women's).
   // - Batches host profiles and participant counts.
   Future<List<Activity>> fetchDiscoveryFeed({
     String? currentUserId,
@@ -185,8 +186,8 @@ class ActivitiesModel {
         }
       } catch (_) {
         // Host genders are unknown, so the gender rule cannot be checked.
-        // Fail closed for viewers who are not female.
-        if (currentUserGender?.trim().toLowerCase() != 'female') return [];
+        // Fail closed.
+        return [];
       }
     }
 
@@ -212,8 +213,8 @@ class ActivitiesModel {
     }
 
     // 3. Filter by Gender Visibility Rule:
-    // Activities hosted by female users are ONLY visible to users whose profile gender is 'Female'.
-    final isViewerFemale = currentUserGender?.trim().toLowerCase() == 'female';
+    // Only activities whose host has the same gender as the viewer.
+    final viewerGender = currentUserGender?.trim().toLowerCase() ?? '';
 
     final result = <Activity>[];
 
@@ -224,10 +225,8 @@ class ActivitiesModel {
       final hostGender = (hostProfile?['gender'] as String?)
           ?.trim()
           .toLowerCase();
-      final isHostFemale = hostGender == 'female';
-
-      if (!isViewerFemale && (hostProfile == null || isHostFemale)) {
-        // Excluded by Gender Visibility Rule (unknown hosts fail closed)
+      if (viewerGender.isEmpty || hostGender != viewerGender) {
+        // Excluded by Gender Visibility Rule (unknown genders fail closed)
         continue;
       }
 

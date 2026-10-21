@@ -109,7 +109,7 @@ class HomeDiscoveryController extends ChangeNotifier {
       _currentUserGender = profile['gender'] as String?;
       _currentUserId = _activitiesModel.currentUserId;
 
-      // 2. Fetch discovery feed with exclusion & female visibility rule
+      // 2. Fetch discovery feed with exclusion & same-gender visibility rule
       final activities = await _activitiesModel.fetchDiscoveryFeed(
         currentUserId: _currentUserId,
         currentUserGender: _currentUserGender,
