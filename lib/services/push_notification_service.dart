@@ -36,6 +36,8 @@ class PushNotificationService {
   String? _registeredToken;
   String? _pendingActivityId;
   void Function(String activityId)? _onActivityTap;
+  bool _pendingJoinRequestsTap = false;
+  VoidCallback? _onJoinRequestsTap;
   void Function(String activityId)? _onActivityUpdated;
   bool _initialized = false;
 
@@ -53,7 +55,7 @@ class PushNotificationService {
             android: AndroidInitializationSettings('ic_launcher_foreground'),
         ),
         onDidReceiveNotificationResponse: (response) {
-          _dispatchActivityTap(response.payload);
+          _dispatchNotificationTap(response.payload);
         },
       );
 
@@ -91,7 +93,7 @@ class PushNotificationService {
         }
       });
       FirebaseMessaging.onMessageOpenedApp.listen(
-        (message) => _dispatchActivityTap(message.data['activity_id']),
+        (message) => _dispatchMessageTap(message),
       );
 
       _initialized = true;
@@ -99,13 +101,13 @@ class PushNotificationService {
       final initialMessage = await FirebaseMessaging.instance
           .getInitialMessage();
       if (initialMessage != null) {
-        _dispatchActivityTap(initialMessage.data['activity_id']);
+        _dispatchMessageTap(initialMessage);
       }
 
       final localLaunch = await _localNotifications
           .getNotificationAppLaunchDetails();
       if (localLaunch?.didNotificationLaunchApp ?? false) {
-        _dispatchActivityTap(localLaunch?.notificationResponse?.payload);
+        _dispatchNotificationTap(localLaunch?.notificationResponse?.payload);
       }
     } catch (error) {
       // Missing Firebase project configuration must not prevent Synk startup.
@@ -119,6 +121,14 @@ class PushNotificationService {
     if (pending != null) {
       _pendingActivityId = null;
       handler(pending);
+    }
+  }
+
+  void setJoinRequestsTapHandler(VoidCallback handler) {
+    _onJoinRequestsTap = handler;
+    if (_pendingJoinRequestsTap) {
+      _pendingJoinRequestsTap = false;
+      handler();
     }
   }
 
@@ -219,18 +229,27 @@ class PushNotificationService {
 
   Future<void> _showForegroundNotification(RemoteMessage message) async {
     final type = message.data['type'] as String?;
-    if (type != 'waitlist_promotion' && type != 'activity_updated') return;
+    if (type != 'waitlist_promotion' &&
+        type != 'activity_updated' &&
+        type != 'activity_deleted' &&
+        type != 'join_request_accepted' &&
+        type != 'join_request_rejected' &&
+        type != 'join_request_received') return;
     final activityId = message.data['activity_id'] as String?;
     if (activityId == null || activityId.isEmpty) return;
 
-    final activityUpdated = type == 'activity_updated';
-    final channelId = activityUpdated
+    final activityUpdate = type == 'activity_updated' ||
+        type == 'activity_deleted' ||
+        type == 'join_request_accepted' ||
+        type == 'join_request_rejected' ||
+        type == 'join_request_received';
+    final channelId = activityUpdate
         ? _activityUpdatesChannelId
         : _channelId;
-    final channelName = activityUpdated
+    final channelName = activityUpdate
         ? _activityUpdatesChannelName
         : _channelName;
-    final channelDescription = activityUpdated
+    final channelDescription = activityUpdate
         ? appL10n.updatesToActivitiesYouHaveJoined
         : appL10n.updatesWhenASpotOpensIn;
 
@@ -250,18 +269,41 @@ class PushNotificationService {
             (DateTime.now().millisecondsSinceEpoch & 0x7fffffff),
         title:
             message.notification?.title ??
-            (activityUpdated ? appL10n.activityUpdated : appL10n.youreIn),
+            (activityUpdate ? appL10n.activityUpdated : appL10n.youreIn),
         body:
             message.notification?.body ??
-            (activityUpdated
+            (activityUpdate
                 ? appL10n.anActivityYouJoinedHasNew
                 : appL10n.aSpotOpenedUpInYour),
         notificationDetails: details,
-        payload: activityId,
+        payload: type == 'join_request_received'
+            ? 'join_request_received'
+            : activityId,
       );
     } catch (error) {
       debugPrint('Could not display the foreground notification: $error');
     }
+  }
+
+  void _dispatchMessageTap(RemoteMessage message) {
+    if (message.data['type'] == 'join_request_received') {
+      _dispatchNotificationTap('join_request_received');
+    } else {
+      _dispatchActivityTap(message.data['activity_id'] as String?);
+    }
+  }
+
+  void _dispatchNotificationTap(String? payload) {
+    if (payload == 'join_request_received') {
+      final handler = _onJoinRequestsTap;
+      if (handler == null) {
+        _pendingJoinRequestsTap = true;
+      } else {
+        handler();
+      }
+      return;
+    }
+    _dispatchActivityTap(payload);
   }
 
   void _dispatchActivityTap(String? activityId) {

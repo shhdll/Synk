@@ -967,7 +967,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get thisActivityConflictsWithOneYouve =>
-      'This activity conflicts with one you\'ve already joined or created.';
+      'Another activity you host or have joined starts at the same time. Delete the one you host or leave the one you joined, then try again.';
 
   @override
   String get joinedTitle => 'Joined!';
