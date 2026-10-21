@@ -2,13 +2,13 @@
 
 # Synk
 
-Synk is an Android-focused Flutter application that helps Riyadh residents connect through shared interests, discover local activities, and organize meetups.
+Synk is a Flutter application for Android and iOS that helps Riyadh residents connect through shared interests, discover local activities, and organize meetups.
 
-The current implementation includes onboarding, account creation and verification, authentication, profile management, activity creation, a public activity feed, and location search for activities.
+The current implementation includes accounts and profiles, creating and joining activities, search and filters, a live map, waitlists, push notifications, and Arabic/English support.
 
 **Team:** Group #10  
 **Project version:** `1.0.0+1`  
-**Last documentation review:** 30 September 2026
+**Last documentation review:** 21 October 2026
 
 ---
 
@@ -35,8 +35,23 @@ The current implementation includes onboarding, account creation and verificatio
 | Create Activity | Implemented |
 | Activity location search | Implemented using Google Places through a Supabase Edge Function |
 | Activity photo upload | Implemented using Supabase Storage |
-| Activity search | Interface only |
-| Map | Placeholder screen; live nearby-activity map is not implemented |
+| Activity search | Implemented (by name) |
+| Activity filtering | Implemented (time, location, category) |
+| Map | Implemented with activity markers, filters, and marker preview |
+| Activity details | Implemented with status tags: Available, One More Needed, Full |
+| Joining and leaving activities | Implemented |
+| Public/private activities | Implemented |
+| Join with activity code | Implemented (six-digit code; private activities send a join request) |
+| Join requests | Implemented (hosts accept or reject; requesters can cancel) |
+| Waitlist | Implemented with automatic promotion in waiting order |
+| Scheduling conflicts | Prevented server-side |
+| Edit and delete activity | Implemented for hosts only |
+| Share activity code | Implemented with a ready-made message |
+| View another user's profile | Implemented |
+| Past activities and completed count | Implemented |
+| Push notifications | Implemented on Android only |
+| Arabic/English | Implemented with RTL/LTR layout |
+| iOS support | Implemented |
 
 ### Implemented Highlights
 
@@ -54,6 +69,8 @@ The current implementation includes onboarding, account creation and verificatio
   - Google Places location search and address resolution
 - Supabase-backed public activity feed
 - Separate upcoming and past activity lists for the signed-in user
+- Push notifications for join requests, accepted and rejected requests, waitlist promotion, and activity updates or cancellations
+- Joining, leaving, waitlist promotion, and host transfer run in database functions with row-level locking, so simultaneous actions stay consistent
 
 ---
 
@@ -61,17 +78,12 @@ The current implementation includes onboarding, account creation and verificatio
 
 The following features are not yet fully available:
 
-- Functional activity search and advanced filtering
-- Live Google Maps view for nearby activities
 - Live weather information and weather-based suggestions
-- Joining and leaving activities
-- Participant lists and capacity tracking beyond the host
-- Waitlist and capacity notifications
 - Activity group chats
 - Friend management
 - Participant ratings
 - Profile verification
-- Activity check-in and link sharing
+- Activity check-in
 
 ---
 
@@ -80,7 +92,7 @@ The following features are not yet fully available:
 | Component | Technology |
 | --- | --- |
 | Frontend | Flutter and Dart |
-| Platform | Android |
+| Platform | Android and iOS |
 | Backend | Supabase |
 | Authentication | Supabase Authentication |
 | Database | Supabase PostgreSQL |
@@ -88,6 +100,8 @@ The following features are not yet fully available:
 | Server-side integration | Supabase Edge Functions |
 | Location search | Google Places API |
 | Map dependency | `google_maps_flutter` |
+| Push notifications | Firebase Cloud Messaging (`firebase_messaging`) |
+| Localization | `flutter_localizations` with ARB files in `lib/l10n/` |
 | Environment configuration | `flutter_dotenv` |
 | Image selection | `image_picker` |
 | Local file storage | `path_provider` |
@@ -109,6 +123,7 @@ lib/
 ├── models/
 ├── core/
 │   └── constants/
+├── l10n/
 ├── screens/
 │   └── auth/
 ├── views/
@@ -116,17 +131,21 @@ lib/
 │   ├── home/
 │   ├── signup/
 │   └── widgets/
-├── service/
+├── services/
 └── utils/
     └── custom_widgets/
 
 supabase/
 ├── functions/
+│   ├── notify-waitlist-promotion/
 │   └── places-proxy/
-└── migrations/
+├── migrations/
+└── templates/
 
 assets/
 android/
+ios/
+docs/
 test/
 .env.example
 pubspec.yaml
@@ -147,6 +166,14 @@ Before running the project, install:
 - An Android emulator or physical Android device
 - Git
 - Access to the team’s Supabase project
+
+For iOS, you also need macOS, Xcode, CocoaPods, and an iOS simulator or iPhone. Switch Flutter to CocoaPods once:
+
+```bash
+flutter config --no-enable-swift-package-manager
+```
+
+Flutter installs the pods on the first iOS run. Without a Mac, see [docs/IOS_SETUP.md](docs/IOS_SETUP.md).
 
 Check the Flutter installation:
 
@@ -187,6 +214,14 @@ Only use a client-safe Supabase publishable or anonymous key. Never include a se
 
 The `.env` file must not be committed to Git.
 
+### Maps and Firebase Keys
+
+Ask a teammate for these files. They are git-ignored and must not be committed:
+
+- `android/local.properties`: `MAPS_API_KEY=...` (Android Maps key)
+- `ios/Flutter/Secrets.xcconfig`: `MAPS_API_KEY=...` (iOS Maps key)
+- `android/app/google-services.json`: Firebase config for push notifications
+
 ### Supabase Configuration
 
 The application requires:
@@ -200,9 +235,11 @@ The application requires:
 - An `activity-photos` Storage bucket for activity photos
 - The `places-proxy` Edge Function for Google Places requests
 - A server-side `GOOGLE_PLACES_API_KEY` secret for the Edge Function
+- The `notify-waitlist-promotion` Edge Function for push notifications, with the `FCM_SERVICE_ACCOUNT_JSON` and `PROMOTION_WEBHOOK_SECRET` secrets
+- The migrations in `supabase/migrations/`
 - Password-recovery and email-confirmation redirect URLs
 
-Android redirect URLs:
+Android and iOS redirect URLs:
 
 ```text
 io.supabase.synk://reset-password
@@ -228,10 +265,10 @@ flutter run
 To select a specific device:
 
 ```bash
-flutter run -d <android-device-id>
+flutter run -d <device-id>
 ```
 
-Replace `<android-device-id>` with an ID displayed by `flutter devices`.
+Replace `<device-id>` with an ID displayed by `flutter devices`.
 
 ---
 
@@ -242,12 +279,14 @@ Replace `<android-device-id>` with an ID displayed by `flutter devices`.
 3. To create an account, complete onboarding, personal details, and account setup.
 4. Open the verification email or request another verification message.
 5. Log in using either the registered email or username.
-6. Use the Home screen to view upcoming public activities.
-7. Use **Create Activity** to enter activity details, select a location, configure the schedule and capacity, and publish the activity.
-8. Use the Activities screen to view the signed-in user’s upcoming and past activities.
-9. Use the Profile screen to view or edit account information, interests, email, password, and profile photo.
-10. Use **Forgot Password** to request a password-recovery email.
-11. Log out from the profile area when finished.
+6. Use the Home screen to browse, search, and filter upcoming public activities.
+7. Use the Map screen to find activities near you.
+8. Open an activity to join, leave, or join its waitlist, or enter an activity code to join.
+9. Use **Create Activity** to enter activity details, select a location, configure the schedule and capacity, and publish the activity.
+10. Use the Activities screen to view the signed-in user’s upcoming and past activities.
+11. Use the Profile screen to view or edit account information, interests, email, password, and profile photo.
+12. Use **Forgot Password** to request a password-recovery email.
+13. Log out from the profile area when finished.
 
 ---
 
@@ -283,8 +322,9 @@ The repository currently includes tests for:
 - Password security rules
 - Email verification screen content
 - Email-change interface states
-
-The default counter test in `test/widget_test.dart` still needs to be replaced with a test that reflects the current Synk interface.
+- Activity status tags and completed activity count
+- Home and map filters
+- Localization
 
 ---
 
