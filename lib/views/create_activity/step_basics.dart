@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -6,6 +8,7 @@ import '../../core/constants/activity_constants.dart';
 import '../../core/constants/synk_colors.dart';
 import '../../l10n/l10n.dart';
 import '../../models/place_search_model.dart';
+import '../../utils/custom_widgets/synk_feedback.dart';
 import '../home/widgets/activity_thumbnail.dart';
 import '../home/widgets/synk_filter_chip.dart';
 import '../widgets/synk_date_picker.dart';
@@ -86,7 +89,7 @@ class _StepBasicsState extends State<StepBasics> {
       lastDate: lastDate,
     );
     if (picked != null) {
-      _c.setDate(picked);
+      await _selectDate(picked);
     } else {
       _c.touch(CreateField.date);
     }
@@ -100,9 +103,25 @@ class _StepBasicsState extends State<StepBasics> {
     );
     if (picked != null) {
       _c.setTime(picked);
+      await _showScheduleConflictIfNeeded();
     } else {
       _c.touch(CreateField.time);
     }
+  }
+
+  Future<void> _selectDate(DateTime date) async {
+    _c.setDate(date);
+    await _showScheduleConflictIfNeeded();
+  }
+
+  Future<void> _showScheduleConflictIfNeeded() async {
+    final message = await _c.checkSelectedScheduleConflict();
+    if (!mounted || message == null) return;
+    await SynkFeedback.showErrorDialog(
+      context,
+      title: _c.isEditing ? context.l10n.editActivity : context.l10n.createActivity,
+      message: message,
+    );
   }
 
   @override
@@ -169,13 +188,17 @@ class _StepBasicsState extends State<StepBasics> {
               focusNode: _titleFocus,
               maxLength: ActivityConstants.titleMaxLength,
               inputFormatters: <TextInputFormatter>[
-                FilteringTextInputFormatter.allow(
-                  CreateActivityController.titleAllowed,
+                _ActivityNameInputFormatter(
+                  onRejected: _c.markInvalidTitleAttempt,
                 ),
                 noArabicFormatter,
               ],
               textCapitalization: TextCapitalization.sentences,
               textInputAction: TextInputAction.done,
+              onChanged: (_) {
+                _c.clearInvalidTitleAttempt();
+                _c.touch(CreateField.title);
+              },
               onSubmitted: (_) => _c.touch(CreateField.title),
               style: const TextStyle(
                 fontSize: 15,
@@ -405,7 +428,7 @@ class _StepBasicsState extends State<StepBasics> {
           child: SynkFilterChip(
             label: context.l10n.today,
             selected: isToday,
-            onTap: () => _c.setDate(_today),
+            onTap: () => _selectDate(_today),
           ),
         ),
         const SizedBox(width: 8),
@@ -413,7 +436,7 @@ class _StepBasicsState extends State<StepBasics> {
           child: SynkFilterChip(
             label: context.l10n.tomorrow,
             selected: isTomorrow,
-            onTap: () => _c.setDate(_tomorrow),
+            onTap: () => _selectDate(_tomorrow),
           ),
         ),
         const SizedBox(width: 8),
@@ -470,6 +493,52 @@ class _StepBasicsState extends State<StepBasics> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ActivityNameInputFormatter extends TextInputFormatter {
+  _ActivityNameInputFormatter({required this.onRejected});
+
+  final VoidCallback onRejected;
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    var rejectedInput = false;
+    final filteredText = StringBuffer();
+    for (final rune in newValue.text.runes) {
+      final character = String.fromCharCode(rune);
+      if (CreateActivityController.isAllowedTitleRune(rune)) {
+        filteredText.write(character);
+      } else {
+        rejectedInput = true;
+      }
+    }
+    final text = filteredText.toString();
+    if (!rejectedInput) {
+      return newValue;
+    }
+    scheduleMicrotask(onRejected);
+    if (text == oldValue.text) return oldValue;
+
+    int mappedOffset(int offset) {
+      final safeOffset = offset.clamp(0, newValue.text.length).toInt();
+      final prefix = newValue.text.substring(0, safeOffset);
+      return prefix.runes
+          .where(CreateActivityController.isAllowedTitleRune)
+          .fold<int>(0, (length, rune) => length + String.fromCharCode(rune).length);
+    }
+
+    return newValue.copyWith(
+      text: text,
+      selection: TextSelection(
+        baseOffset: mappedOffset(newValue.selection.baseOffset),
+        extentOffset: mappedOffset(newValue.selection.extentOffset),
+      ),
+      composing: TextRange.empty,
     );
   }
 }

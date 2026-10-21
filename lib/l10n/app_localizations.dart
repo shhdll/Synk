@@ -2243,13 +2243,13 @@ abstract class AppLocalizations {
   /// No description provided for @keepItToLetters.
   ///
   /// In en, this message translates to:
-  /// **'Keep it to {n} letters'**
+  /// **'Keep it to {n} characters'**
   String keepItToLetters(Object n);
 
   /// No description provided for @useLettersOnly.
   ///
   /// In en, this message translates to:
-  /// **'Use letters only'**
+  /// **'Activity names can contain letters, numbers, spaces, &, apostrophes, and commas only.'**
   String get useLettersOnly;
 
   /// No description provided for @useEnglishLettersOnly.

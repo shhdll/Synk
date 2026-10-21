@@ -321,6 +321,54 @@ class ActivitiesModel {
   // Writes
   // ---------------------------------------------------------------------------
 
+  // Client preflight for the server's authoritative schedule guard. The
+  // database repeats this check under a per-user lock to cover races.
+  Future<String?> checkScheduleConflict({
+    required DateTime startsAt,
+    required DateTime endsAt,
+    String? excludedActivityId,
+  }) async {
+    final response = await _supabase.rpc(
+      'check_activity_schedule',
+      params: {
+        'proposed_start': startsAt.toUtc().toIso8601String(),
+        'proposed_end': endsAt.toUtc().toIso8601String(),
+        'excluded_activity_id': excludedActivityId,
+      },
+    );
+    final result = Map<String, dynamic>.from(response as Map);
+    return result['conflict'] == true ? result['message'] as String? : null;
+  }
+
+  Future<List<Map<String, dynamic>>> fetchScheduleConflicts() async {
+    final response = await _supabase.rpc('get_my_schedule_conflicts');
+    if (response is! List) return const [];
+    return response
+        .map((row) => Map<String, dynamic>.from(row as Map))
+        .toList();
+  }
+
+  Future<int> fetchConfirmedParticipantCount(String activityId) async {
+    final response = await _supabase.rpc(
+      'get_activity_participants_list',
+      params: {'p_activity_id': activityId},
+    );
+    if (response is! List) {
+      throw StateError('Could not load confirmed activity participants.');
+    }
+    return 1 + response.length;
+  }
+
+  Future<Map<String, dynamic>> resolveScheduleConflicts(
+    List<String> keepActivityIds,
+  ) async {
+    final response = await _supabase.rpc(
+      'resolve_my_schedule_conflicts',
+      params: {'keep_activity_ids': keepActivityIds},
+    );
+    return Map<String, dynamic>.from(response as Map);
+  }
+
   // Creates an activity owned by the signed-in user.
   Future<Activity> create(Activity draft) async {
     final uid = currentUserId;

@@ -184,13 +184,34 @@ class _PeopleCard extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              context.l10n.includingYou,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: SynkColors.textPrimary,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.l10n.includingYou,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: SynkColors.textPrimary,
+                  ),
+                ),
+                if (controller.isEditing) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    controller.isLoadingConfirmedParticipantCount
+                        ? 'Checking confirmed participants…'
+                        : controller.canVerifyConfirmedParticipantCount
+                        ? 'Currently confirmed: ${controller.confirmedParticipantCount}'
+                        : 'Could not verify the confirmed count. Capacity cannot be reduced.',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: controller.canVerifyConfirmedParticipantCount
+                          ? SynkColors.textSecondary
+                          : const Color(0xFFE53935),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
           _StepperButton(

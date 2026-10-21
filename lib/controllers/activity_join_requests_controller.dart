@@ -99,11 +99,22 @@ class ActivityJoinRequestsController extends ChangeNotifier {
           successfulResults.contains(result);
 
       if (wasSuccessful) {
-        // Removes the reviewed request immediately from the interface.
-        _requests.removeWhere(
-          (item) =>
-              item.participationId == participationId,
-        );
+        if (status == 'joined') {
+          try {
+            final latest = await _participationModel.getPendingRequests();
+            _requests
+              ..clear()
+              ..addAll(latest);
+          } catch (_) {
+            _requests.removeWhere(
+              (item) => item.participationId == participationId,
+            );
+          }
+        } else {
+          _requests.removeWhere(
+            (item) => item.participationId == participationId,
+          );
+        }
 
         if (status == 'waitlisted') {
           _successMessage =

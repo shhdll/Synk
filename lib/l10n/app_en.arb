@@ -490,13 +490,13 @@
     }
   },
   "addATitle": "Add a title",
-  "keepItToLetters": "Keep it to {n} letters",
+  "keepItToLetters": "Keep it to {n} characters",
   "@keepItToLetters": {
     "placeholders": {
       "n": {}
     }
   },
-  "useLettersOnly": "Use letters only",
+  "useLettersOnly": "Activity names can contain letters, numbers, spaces, &, apostrophes, and commas only.",
   "useEnglishLettersOnly": "Use English letters only",
   "keepItToCharacters": "Keep it to {n} characters",
   "@keepItToCharacters": {

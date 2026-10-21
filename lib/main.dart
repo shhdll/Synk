@@ -13,6 +13,7 @@ import 'models/activity_model.dart';
 import 'services/push_notification_service.dart';
 import 'services/startup_safe_session_storage.dart';
 import 'views/home/activity_notification_route.dart';
+import 'views/home/schedule_conflict_resolution_view.dart';
 import 'views/home/activity_join_requests_view.dart';
 import 'views/home/main_shell.dart';
 import 'views/new_password_view.dart';
@@ -157,9 +158,13 @@ class _MyAppState extends State<MyApp> {
     PushNotificationService.instance.setJoinRequestsTapHandler(
       _openJoinRequests,
     );
+    PushNotificationService.instance.setScheduleConflictsTapHandler(
+      _openScheduleConflictResolution,
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _drainPendingActivityNotification();
       _drainPendingJoinRequestsNotification();
+      _drainPendingScheduleConflictsNotification();
       unawaited(PushNotificationService.instance.initialize());
     });
 
@@ -205,6 +210,7 @@ class _MyAppState extends State<MyApp> {
 
   String? _pendingNotificationActivityId;
   bool _pendingJoinRequestsNotification = false;
+  bool _pendingScheduleConflictsNotification = false;
 
   void _openNotificationActivity(String activityId) {
     final navigator = _navigatorKey.currentState;
@@ -241,6 +247,21 @@ class _MyAppState extends State<MyApp> {
         builder: (_) => ActivityJoinRequestsView(activityStore: activityStore),
       ),
     );
+  }
+
+  void _openScheduleConflictResolution() {
+    final navigator = _navigatorKey.currentState;
+    if (navigator == null) {
+      _pendingScheduleConflictsNotification = true;
+      return;
+    }
+    showScheduleConflictResolutionDialog(navigator.context);
+  }
+
+  void _drainPendingScheduleConflictsNotification() {
+    if (!_pendingScheduleConflictsNotification || _navigatorKey.currentState == null) return;
+    _pendingScheduleConflictsNotification = false;
+    _openScheduleConflictResolution();
   }
 
   void _drainPendingJoinRequestsNotification() {

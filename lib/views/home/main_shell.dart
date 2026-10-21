@@ -16,6 +16,7 @@ import 'activities_view.dart';
 import 'home_view.dart';
 import 'map_view.dart';
 import 'profile_view.dart';
+import 'schedule_conflict_resolution_view.dart';
 import 'widgets/bottom_bar.dart';
 
 class MainShell extends StatefulWidget {
@@ -41,6 +42,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   // Poll for new join requests while the app is open.
   static const _requestPollInterval = Duration(minutes: 1);
   Timer? _requestPoll;
+  bool _checkingScheduleConflicts = false;
 
   late final HomeDiscoveryController _discoveryController =
       HomeDiscoveryController(activitiesModel: _activitiesModel);
@@ -73,7 +75,10 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _requestPoll = Timer.periodic(
       _requestPollInterval,
-      (_) => _loadPendingRequestCount(),
+      (_) {
+        _loadPendingRequestCount();
+        unawaited(_requireScheduleConflictResolution());
+      },
     );
   }
 
@@ -102,25 +107,27 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     unawaited(() async {
       try {
         final activity = await _activitiesModel.fetchById(activityId);
-        if (!mounted || activity == null) return;
-        final previous = _activityStore.byId(activityId);
-        _activityStore.upsert(
-          previous == null
-              ? activity
-              : activity.copyWith(
-                  hostName: previous.hostName,
-                  hostUsername: previous.hostUsername,
-                  hostAvatarUrl: previous.hostAvatarUrl,
-                  hostGender: previous.hostGender,
-                  participantsCount: previous.participantsCount,
-                  activityCode: previous.activityCode,
-                  participationId: previous.participationId,
-                  participationStatus: previous.participationStatus,
-                ),
-        );
+        if (mounted && activity != null) {
+          final previous = _activityStore.byId(activityId);
+          _activityStore.upsert(
+            previous == null
+                ? activity
+                : activity.copyWith(
+                    hostName: previous.hostName,
+                    hostUsername: previous.hostUsername,
+                    hostAvatarUrl: previous.hostAvatarUrl,
+                    hostGender: previous.hostGender,
+                    participantsCount: previous.participantsCount,
+                    activityCode: previous.activityCode,
+                    participationId: previous.participationId,
+                    participationStatus: previous.participationStatus,
+                  ),
+          );
+        }
       } catch (_) {
         // Keep the current activity visible when a refresh fails.
       }
+      await _loadActivities();
     }());
   }
 
@@ -131,6 +138,22 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       _loadPublicFeed(),
       _loadPendingRequestCount(),
     ]);
+    await _requireScheduleConflictResolution();
+  }
+
+  Future<void> _requireScheduleConflictResolution() async {
+    if (_checkingScheduleConflicts || !mounted) return;
+    _checkingScheduleConflicts = true;
+    try {
+      final conflicts = await _activitiesModel.fetchScheduleConflicts();
+      if (conflicts.isNotEmpty && mounted) {
+        await showScheduleConflictResolutionDialog(context);
+      }
+    } catch (_) {
+      // A failed conflict lookup should not prevent the rest of the app loading.
+    } finally {
+      _checkingScheduleConflicts = false;
+    }
   }
 
   Future<void> _loadPendingRequestCount() async {

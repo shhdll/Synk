@@ -1202,11 +1202,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String keepItToLetters(Object n) {
-    return 'Keep it to $n letters';
+    return 'Keep it to $n characters';
   }
 
   @override
-  String get useLettersOnly => 'Use letters only';
+  String get useLettersOnly =>
+      'Activity names can contain letters, numbers, spaces, &, apostrophes, and commas only.';
 
   @override
   String get useEnglishLettersOnly => 'Use English letters only';

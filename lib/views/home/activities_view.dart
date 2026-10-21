@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../controllers/activity_delete_controller.dart';
@@ -10,6 +12,7 @@ import '../../utils/custom_widgets/synk_feedback.dart';
 import '../widgets/synk_blob_background.dart';
 import 'activity_code_join_sheet.dart';
 import 'activity_join_requests_view.dart';
+import 'schedule_conflict_resolution_view.dart';
 import 'widgets/activity_details_sheet.dart';
 import 'widgets/code_bubble.dart';
 import 'widgets/empty_state.dart';
@@ -56,6 +59,8 @@ class _ActivitiesViewState extends State<ActivitiesView> {
   bool _showPast = false;
   _RoleFilter _filter = _RoleFilter.all;
   bool _codeBubbleExpanded = true;
+  List<Map<String, dynamic>> _scheduleConflicts = const [];
+  bool _loadingScheduleConflicts = false;
 
   // Participants per activity, for the faces on the cards.
   final Map<String, List<Map<String, dynamic>>> _people = {};
@@ -71,6 +76,7 @@ class _ActivitiesViewState extends State<ActivitiesView> {
     _store.addListener(_loadMissingPeople);
     _store.addListener(_takeDetailsFocus);
     _loadMissingPeople();
+    unawaited(_loadScheduleConflicts());
   }
 
   @override
@@ -96,6 +102,7 @@ class _ActivitiesViewState extends State<ActivitiesView> {
   }
 
   void _loadMissingPeople() {
+    unawaited(_loadScheduleConflicts());
     for (final activity in _store.all) {
       final id = activity.id;
       if (_people.containsKey(id) || !_loadingPeople.add(id)) continue;
@@ -125,7 +132,27 @@ class _ActivitiesViewState extends State<ActivitiesView> {
       _store
         ..setMine(results[0])
         ..setParticipating(results[1]);
+      await _loadScheduleConflicts();
     } catch (_) {}
+  }
+
+  Future<void> _loadScheduleConflicts() async {
+    if (_loadingScheduleConflicts) return;
+    _loadingScheduleConflicts = true;
+    try {
+      final conflicts = await _activitiesModel.fetchScheduleConflicts();
+      if (mounted) setState(() => _scheduleConflicts = conflicts);
+    } catch (_) {
+      // Keep the last known warning visible if refresh fails.
+    } finally {
+      _loadingScheduleConflicts = false;
+    }
+  }
+
+  Future<void> _openScheduleConflicts() async {
+    await showScheduleConflictResolutionDialog(context);
+    await _loadScheduleConflicts();
+    await _refresh();
   }
 
   void _openJoinRequests() {
@@ -280,6 +307,33 @@ class _ActivitiesViewState extends State<ActivitiesView> {
           ),
         ),
       ),
+      if (_scheduleConflicts.isNotEmpty) ...[
+        const SizedBox(height: 12),
+        Material(
+          color: const Color(0xFFFFE8D8),
+          borderRadius: BorderRadius.circular(16),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: _openScheduleConflicts,
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                children: [
+                  const Icon(Icons.warning_amber_rounded, color: SynkColors.orangeDark),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      '${_scheduleConflicts.length} unresolved schedule conflict${_scheduleConflicts.length == 1 ? '' : 's'} · Tap to review',
+                      style: const TextStyle(fontWeight: FontWeight.w700, color: SynkColors.textPrimary),
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right_rounded),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
       const SizedBox(height: 16),
       if (showRequests) ...[
         _JoinRequestsRow(

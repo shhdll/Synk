@@ -49,6 +49,9 @@ class CreateActivityController extends ChangeNotifier {
       _date = DateTime(activity.dateTime.year, activity.dateTime.month, activity.dateTime.day);
       _time = TimeOfDay.fromDateTime(activity.dateTime);
       _participants = activity.maxParticipants;
+      _confirmedParticipantCount = activity.joinedCount;
+      _isLoadingConfirmedParticipantCount = true;
+      _confirmedParticipantCountAvailable = false;
       _isPublic = activity.isPublic;
     }
   }
@@ -84,6 +87,15 @@ class CreateActivityController extends ChangeNotifier {
   bool _isSubmitting = false;
   bool _isPickingPhoto = false;
   String? _errorMessage;
+  bool _scheduleConflict = false;
+  String? _scheduleConflictMessage;
+  int _scheduleCheckVersion = 0;
+  int _confirmedParticipantCount = 1;
+  bool _isLoadingConfirmedParticipantCount = false;
+  bool _confirmedParticipantCountAvailable = true;
+  bool _capacityConflict = false;
+  bool _invalidTitleAttempt = false;
+  bool _disposed = false;
   String? _photoError;
 
   String get locationName => _locationName;
@@ -104,10 +116,22 @@ class CreateActivityController extends ChangeNotifier {
   bool get isSubmitting => _isSubmitting;
   bool get isPickingPhoto => _isPickingPhoto;
   String? get errorMessage => _errorMessage;
+  bool get hasScheduleConflict => _scheduleConflict;
+  bool get hasCapacityConflict => _capacityConflict;
+  String? get scheduleConflictMessage => _scheduleConflictMessage;
   String? get photoError => _photoError;
+  bool get isLoadingConfirmedParticipantCount =>
+      _isLoadingConfirmedParticipantCount;
+  bool get canVerifyConfirmedParticipantCount =>
+      _confirmedParticipantCountAvailable;
 
   int get spotsOpen => _participants - 1;
-  bool get canDecrement => _participants > ActivityConstants.minParticipants;
+  int get confirmedParticipantCount => _confirmedParticipantCount;
+  int get minimumParticipants => confirmedParticipantCount > ActivityConstants.minParticipants
+      ? confirmedParticipantCount
+      : ActivityConstants.minParticipants;
+  bool get canDecrement =>
+      _confirmedParticipantCountAvailable && _participants > minimumParticipants;
   bool get canIncrement => _participants < ActivityConstants.maxParticipants;
 
   // Date + time combined; null until both are chosen.
@@ -175,14 +199,62 @@ class CreateActivityController extends ChangeNotifier {
 
   void setDate(DateTime value) {
     _date = DateTime(value.year, value.month, value.day);
+    _clearScheduleConflict();
     _touched.add(CreateField.date);
+    notifyListeners();
+  }
+
+  void markInvalidTitleAttempt() {
+    if (_invalidTitleAttempt || _disposed) return;
+    _invalidTitleAttempt = true;
+    _touched.add(CreateField.title);
+    notifyListeners();
+  }
+
+  void clearInvalidTitleAttempt() {
+    if (!_invalidTitleAttempt) return;
+    _invalidTitleAttempt = false;
     notifyListeners();
   }
 
   void setTime(TimeOfDay value) {
     _time = value;
+    _clearScheduleConflict();
     _touched.add(CreateField.time);
     notifyListeners();
+  }
+
+  void _clearScheduleConflict() {
+    _scheduleCheckVersion++;
+    if (_scheduleConflict) {
+      _scheduleConflict = false;
+      _scheduleConflictMessage = null;
+      _errorMessage = null;
+    }
+  }
+
+  Future<String?> checkSelectedScheduleConflict() async {
+    final start = startsAt;
+    if (start == null || !start.isAfter(DateTime.now())) return null;
+    final version = ++_scheduleCheckVersion;
+    try {
+      final message = await _activitiesModel.checkScheduleConflict(
+        startsAt: start,
+        endsAt: start.add(const Duration(hours: 2)),
+        excludedActivityId: _editingActivity?.id,
+      );
+      if (version != _scheduleCheckVersion || startsAt != start) return null;
+      _scheduleConflict = message != null;
+      _scheduleConflictMessage = message;
+      _errorMessage = message;
+      if (_scheduleConflict) _touched.add(CreateField.time);
+      notifyListeners();
+      return message;
+    } catch (_) {
+      // The server repeats this validation when saving. A temporary preflight
+      // failure must not block the form or be mistaken for a schedule conflict.
+      return null;
+    }
   }
 
   void incrementParticipants() {
@@ -195,6 +267,30 @@ class CreateActivityController extends ChangeNotifier {
     if (!canDecrement) return;
     _participants--;
     notifyListeners();
+  }
+
+  Future<void> refreshConfirmedParticipantCount() async {
+    final activity = _editingActivity;
+    if (activity == null) return;
+    _isLoadingConfirmedParticipantCount = true;
+    notifyListeners();
+    try {
+      final count = await _activitiesModel.fetchConfirmedParticipantCount(
+        activity.id,
+      );
+      if (_disposed) return;
+      _confirmedParticipantCount = count;
+      _confirmedParticipantCountAvailable = true;
+    } catch (_) {
+      // Do not allow capacity reductions when the authoritative count cannot
+      // be loaded. Saving the unchanged capacity remains possible.
+      if (!_disposed) _confirmedParticipantCountAvailable = false;
+    } finally {
+      if (!_disposed) {
+        _isLoadingConfirmedParticipantCount = false;
+        notifyListeners();
+      }
+    }
   }
 
   void setPublic(bool value) {
@@ -318,7 +414,25 @@ class CreateActivityController extends ChangeNotifier {
   // Validation
   // ---------------------------------------------------------------------------
 
-  static final RegExp titleAllowed = RegExp(r'[\p{L} ]', unicode: true);
+  static final RegExp titleAllowed = RegExp(
+    r"^[\p{L}\p{M}0-9&', ]*$",
+    unicode: true,
+  );
+  static final RegExp _titleLetterOrMark = RegExp(
+    r'^[\p{L}\p{M}]$',
+    unicode: true,
+  );
+
+  static bool isAllowedTitleRune(int rune) {
+    if (rune == 0x20 || // space
+        rune == 0x26 || // ampersand
+        rune == 0x27 || // apostrophe
+        rune == 0x2C || // comma
+        (rune >= 0x30 && rune <= 0x39)) {
+      return true;
+    }
+    return _titleLetterOrMark.hasMatch(String.fromCharCode(rune));
+  }
 
   String? validateTitle(String? value) {
     final title = value?.trim() ?? '';
@@ -328,7 +442,7 @@ class CreateActivityController extends ChangeNotifier {
     if (title.characters.length > ActivityConstants.titleMaxLength) {
       return appL10n.keepItToLetters(ActivityConstants.titleMaxLength);
     }
-    if (!RegExp(r'^[\p{L} ]+$', unicode: true).hasMatch(title)) {
+    if (!titleAllowed.hasMatch(title)) {
       return appL10n.useLettersOnly;
     }
     return null;
@@ -362,7 +476,9 @@ class CreateActivityController extends ChangeNotifier {
   }
 
   String? _fieldError(CreateField field) => switch (field) {
-    CreateField.title => validateTitle(titleController.text),
+    CreateField.title => _invalidTitleAttempt
+        ? appL10n.useLettersOnly
+        : validateTitle(titleController.text),
     CreateField.location => _locationName.isEmpty ? appL10n.chooseALocation : null,
     CreateField.date => _date == null
         ? appL10n.pickADate
@@ -370,7 +486,9 @@ class CreateActivityController extends ChangeNotifier {
         ? appL10n.chooseADateWithinTheNext
         : null,
     CreateField.time =>
-      _time == null
+      _scheduleConflict
+          ? _scheduleConflictMessage
+          : _time == null
           ? appL10n.pickATime
           : startsAt != null && !startsAt!.isAfter(DateTime.now())
           ? appL10n.thisTimeHasAlreadyPassed
@@ -423,9 +541,23 @@ class CreateActivityController extends ChangeNotifier {
     _isSubmitting = true;
     _setLoading(true);
     _errorMessage = null;
+    _scheduleConflict = false;
+    _capacityConflict = false;
 
     Activity created;
     try {
+      final scheduleConflict = await _activitiesModel.checkScheduleConflict(
+        startsAt: start,
+        endsAt: start.add(const Duration(hours: 2)),
+        excludedActivityId: _editingActivity?.id,
+      );
+      if (scheduleConflict != null) {
+        _errorMessage = scheduleConflict;
+        _scheduleConflict = true;
+        _isSubmitting = false;
+        _setLoading(false);
+        return const CreateActivityResult();
+      }
       final draft = Activity(
           id: _editingActivity?.id ?? '',
           title: titleController.text,
@@ -453,7 +585,19 @@ class CreateActivityController extends ChangeNotifier {
           : await _activitiesModel.create(draft);
     } catch (error) {
       debugPrint('SYNK: create activity failed: $error');
-      _errorMessage = isEditing
+      final errorText = error.toString();
+      final normalizedError = errorText.toLowerCase();
+      _capacityConflict = normalizedError.contains(
+        'capacity cannot be lower than the current number of participants',
+      );
+      _scheduleConflict = normalizedError.contains(
+        'already have an activity scheduled',
+      );
+      _errorMessage = _scheduleConflict
+          ? 'You already have an activity scheduled during this time. Please choose a different date or time.'
+          : _capacityConflict
+          ? 'Capacity cannot be lower than the current number of participants.'
+          : isEditing
           ? appL10n.weCouldntSaveYourChanges
           : appL10n.weCouldntCreateYourActivityPlease;
       _isSubmitting = false;
@@ -564,6 +708,7 @@ class CreateActivityController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     titleController.dispose();
     descriptionController.dispose();
     super.dispose();

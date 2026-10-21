@@ -26,6 +26,7 @@ class Activity {
     required this.id,
     required this.title,
     required this.dateTime,
+    DateTime? endsAt,
     required this.location,
     this.description = '',
     this.categoryEmoji = '',
@@ -46,7 +47,7 @@ class Activity {
     this.activityCode,
     this.participationId,
     this.participationStatus,
-  });
+  }) : endsAt = endsAt ?? dateTime.add(const Duration(hours: 2));
 
   final String id;
   final String title;
@@ -56,6 +57,7 @@ class Activity {
   final String categoryLabel;
 
   final DateTime dateTime;
+  final DateTime endsAt;
 
   final String location;
   final String? locationAddress;
@@ -141,6 +143,9 @@ class Activity {
       title: map['title'] as String? ?? '',
       description: map['description'] as String? ?? '',
       dateTime: DateTime.parse(map['starts_at'] as String).toLocal(),
+      endsAt: map['ends_at'] == null
+          ? DateTime.parse(map['starts_at'] as String).toLocal().add(const Duration(hours: 2))
+          : DateTime.parse(map['ends_at'] as String).toLocal(),
       location: map['location_name'] as String? ?? '',
       locationAddress: map['location_address'] as String?,
       latitude: (map['latitude'] as num?)?.toDouble(),
@@ -166,6 +171,7 @@ class Activity {
       'title': title.trim(),
       'description': description.trim().isEmpty ? null : description.trim(),
       'starts_at': dateTime.toUtc().toIso8601String(),
+      'ends_at': endsAt.toUtc().toIso8601String(),
       'location_name': location.trim(),
       'location_address': locationAddress?.trim(),
       'latitude': latitude,
@@ -199,6 +205,7 @@ class Activity {
       title: title,
       description: description,
       dateTime: dateTime,
+      endsAt: endsAt,
       location: location,
       locationAddress: locationAddress,
       latitude: latitude,

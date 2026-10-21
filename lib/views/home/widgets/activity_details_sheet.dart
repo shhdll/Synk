@@ -264,7 +264,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
           await SynkFeedback.showErrorDialog(
             context,
             title: context.l10n.unableToJoin,
-            message: context.l10n.thisActivityConflictsWithOneYouve,
+            message: result.message,
           );
           return;
         }
@@ -322,7 +322,11 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
       date.day,
       date.year,
     );
-    return '$day · ${formatTime(date.hour, date.minute)}';
+    final end = _currentActivity.endsAt;
+    final endDate = DateUtils.isSameDay(date, end)
+        ? ''
+        : '${formatShortDate(end)} · ';
+    return '$day · ${formatTime(date.hour, date.minute)} – $endDate${formatTime(end.hour, end.minute)}';
   }
 
   // How far the sheet has to be dragged down before letting go closes it.

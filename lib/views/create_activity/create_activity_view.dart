@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../l10n/l10n.dart';
@@ -46,6 +48,7 @@ class _CreateActivityViewState extends State<CreateActivityView> {
     super.initState();
     _controller = CreateActivityController(activity: widget.activity);
     _controller.addListener(_onControllerChanged);
+    unawaited(_controller.refreshConfirmedParticipantCount());
   }
 
   @override
@@ -145,6 +148,28 @@ class _CreateActivityViewState extends State<CreateActivityView> {
     if (!mounted) return;
 
     if (!result.created) {
+      if (_controller.hasScheduleConflict) {
+        await SynkFeedback.showErrorDialog(
+          context,
+          title: _controller.isEditing
+              ? context.l10n.editActivity
+              : context.l10n.createActivity,
+          message: _controller.errorMessage ??
+              context.l10n.thisActivityConflictsWithOneYouve,
+        );
+        return;
+      }
+      if (_controller.hasCapacityConflict) {
+        await _controller.refreshConfirmedParticipantCount();
+        if (!mounted) return;
+        await SynkFeedback.showErrorDialog(
+          context,
+          title: context.l10n.editActivity,
+          message: _controller.errorMessage ??
+              'Capacity cannot be lower than the number of confirmed participants.',
+        );
+        return;
+      }
       _showMessage(
         _controller.errorMessage ??
             (_controller.isEditing

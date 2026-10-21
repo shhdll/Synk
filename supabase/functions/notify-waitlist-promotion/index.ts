@@ -15,7 +15,12 @@ type PromotionEvent = {
   activity_id: string;
   activity_title: string;
   status: string;
-  event_type?: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received";
+  host_id?: string;
+  conflict_id?: string;
+  schedule_changed?: boolean;
+  starts_at?: string;
+  ends_at?: string;
+  event_type?: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received" | "host_assigned" | "activity_conflict";
 };
 
 type FcmCredentials = {
@@ -122,6 +127,14 @@ function isUnregisteredToken(error: Record<string, unknown>): boolean {
   );
 }
 
+function formatScheduleTime(value: string): string {
+  return new Date(value).toLocaleString("en-US", {
+    timeZone: "Asia/Riyadh",
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
 async function sendToToken(
   token: string,
   event: PromotionEvent,
@@ -160,6 +173,16 @@ async function sendToToken(
                 title: "New join request",
                 body: `Someone requested to join ${event.activity_title}. Review their request.`,
               }
+              : event.event_type === "host_assigned"
+              ? {
+                title: "You're Now the Host! \u{1F389}",
+                body: `You've been assigned as the new host of ${event.activity_title}.`,
+              }
+              : event.event_type === "activity_conflict"
+              ? {
+                title: "Scheduling Conflict Detected",
+                body: `${event.activity_title} was rescheduled${event.starts_at ? ` to ${formatScheduleTime(event.starts_at)}` : ""} and now overlaps another activity. Tap to resolve.`,
+              }
               : event.event_type === "activity_deleted"
               ? {
                 title: "Activity canceled",
@@ -167,8 +190,10 @@ async function sendToToken(
               }
               : event.event_type === "activity_updated"
               ? {
-                title: "Activity updated",
-                body: `${event.activity_title} has new details. Tap to review the changes.`,
+                title: event.schedule_changed ? "Activity Schedule Updated" : "Activity updated",
+                body: event.schedule_changed && event.starts_at
+                  ? `${event.activity_title} has been rescheduled to ${formatScheduleTime(event.starts_at)}.`
+                  : `${event.activity_title} has new details. Tap to review the changes.`,
               }
               : {
                 title: "You're In! \u{1F389}",
@@ -186,7 +211,9 @@ async function sendToToken(
                     event.event_type === "activity_deleted" ||
                     event.event_type === "join_request_accepted" ||
                     event.event_type === "join_request_rejected" ||
-                    event.event_type === "join_request_received"
+                    event.event_type === "join_request_received" ||
+                    event.event_type === "host_assigned" ||
+                    event.event_type === "activity_conflict"
                   ? "activity_updates"
                   : "waitlist_promotions",
                 tag: `${event.event_type ?? "waitlist_promotion"}_${event.id}`,
@@ -235,7 +262,7 @@ Deno.serve(async (request: Request) => {
   }
 
   let eventId: string;
-  let eventType: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received";
+  let eventType: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received" | "host_assigned" | "activity_conflict";
   try {
     const body = await request.json();
     eventId = typeof body.event_id === "string" ? body.event_id : "";
@@ -243,7 +270,9 @@ Deno.serve(async (request: Request) => {
         body.event_type === "activity_deleted" ||
         body.event_type === "join_request_accepted" ||
         body.event_type === "join_request_rejected" ||
-        body.event_type === "join_request_received"
+        body.event_type === "join_request_received" ||
+        body.event_type === "host_assigned" ||
+        body.event_type === "activity_conflict"
       ? body.event_type
       : "waitlist_promotion";
   } catch {
@@ -263,13 +292,24 @@ Deno.serve(async (request: Request) => {
     ? "join_request_rejected_notification_outbox"
     : eventType === "join_request_received"
     ? "join_request_received_notification_outbox"
+    : eventType === "host_assigned"
+    ? "host_transfer_notification_outbox"
+    : eventType === "activity_conflict"
+    ? "activity_conflict_notification_outbox"
     : "waitlist_promotion_notification_outbox";
+  const eventColumns = eventType === "activity_updated"
+    ? "id, user_id, activity_id, activity_title, status"
+    : eventType === "activity_deleted"
+    ? "id, user_id, activity_id, activity_title, status"
+    : eventType === "activity_conflict"
+    ? "id, user_id, activity_id, activity_title, conflict_id, status"
+    : "id, user_id, activity_id, activity_title, status";
   const { data: event, error: claimError } = await admin
     .from(outboxTable)
     .update({ status: "processing" })
     .eq("id", eventId)
     .eq("status", "pending")
-    .select("id, user_id, activity_id, activity_title, status")
+    .select(eventColumns)
     .maybeSingle();
 
   if (claimError) {
@@ -282,6 +322,63 @@ Deno.serve(async (request: Request) => {
   }
 
   const typedEvent = { ...(event as PromotionEvent), event_type: eventType };
+  if (eventType === "activity_updated" || eventType === "activity_deleted") {
+    const metadataColumn = eventType === "activity_updated"
+      ? "schedule_changed"
+      : "host_id";
+    const { data: metadata } = await admin.from(outboxTable)
+      .select(metadataColumn)
+      .eq("id", eventId)
+      .maybeSingle();
+    if (metadata && eventType === "activity_updated") {
+      typedEvent.schedule_changed = metadata.schedule_changed === true;
+    } else if (metadata && eventType === "activity_deleted") {
+      typedEvent.host_id = metadata.host_id as string | undefined;
+    }
+  }
+  if (eventType === "activity_deleted" && typedEvent.host_id === typedEvent.user_id) {
+    await admin.from(outboxTable)
+      .update({ status: "no_tokens", processed_at: new Date().toISOString() })
+      .eq("id", eventId);
+    return jsonResponse({ ok: true, sent: 0, skipped: "host" });
+  }
+  if (eventType === "activity_updated" || eventType === "activity_conflict") {
+    const { data: schedule } = await admin.from("activities")
+      .select("starts_at, ends_at, host_id")
+      .eq("id", typedEvent.activity_id)
+      .maybeSingle();
+    if (schedule) {
+      typedEvent.starts_at = schedule.starts_at;
+      typedEvent.ends_at = schedule.ends_at;
+
+      // The host initiated this update, so never send them their own update
+      // notification, even if a stale or incorrectly queued outbox row exists.
+      if (eventType === "activity_updated" && schedule.host_id === typedEvent.user_id) {
+        await admin.from(outboxTable)
+          .update({ status: "no_tokens", processed_at: new Date().toISOString() })
+          .eq("id", eventId);
+        return jsonResponse({ ok: true, sent: 0, skipped: "host" });
+      }
+    }
+  }
+  if (eventType === "activity_conflict" && typedEvent.conflict_id) {
+    const { data: conflict } = await admin.from("activity_schedule_conflicts")
+      .select("changed_activity_id")
+      .eq("id", typedEvent.conflict_id)
+      .maybeSingle();
+    if (conflict) {
+      const { data: changedActivity } = await admin.from("activities")
+        .select("host_id")
+        .eq("id", conflict.changed_activity_id)
+        .maybeSingle();
+      if (changedActivity?.host_id === typedEvent.user_id) {
+        await admin.from(outboxTable)
+          .update({ status: "no_tokens", processed_at: new Date().toISOString() })
+          .eq("id", eventId);
+        return jsonResponse({ ok: true, sent: 0, skipped: "edited_activity_host" });
+      }
+    }
+  }
   const { data: tokens, error: tokenError } = await admin
     .from("push_device_tokens")
     .select("fcm_token")

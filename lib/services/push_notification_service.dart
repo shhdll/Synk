@@ -38,6 +38,8 @@ class PushNotificationService {
   void Function(String activityId)? _onActivityTap;
   bool _pendingJoinRequestsTap = false;
   VoidCallback? _onJoinRequestsTap;
+  bool _pendingScheduleConflictsTap = false;
+  VoidCallback? _onScheduleConflictsTap;
   void Function(String activityId)? _onActivityUpdated;
   bool _initialized = false;
 
@@ -84,8 +86,26 @@ class PushNotificationService {
           ?.createNotificationChannel(activityUpdatesChannel);
 
       FirebaseMessaging.onMessage.listen((message) {
-        unawaited(_showForegroundNotification(message));
-        if (message.data['type'] == 'activity_updated') {
+        if (message.data['type'] == 'activity_conflict') {
+          // Show the conflict alert and immediately require the user to
+          // resolve it while the app is open.
+          unawaited(() async {
+            await _showForegroundNotification(message);
+            _dispatchNotificationTap('schedule_conflict');
+          }());
+        } else {
+          unawaited(_showForegroundNotification(message));
+        }
+        const refreshTypes = {
+          'activity_updated',
+          'activity_deleted',
+          'join_request_accepted',
+          'join_request_received',
+          'waitlist_promotion',
+          'host_assigned',
+          'activity_conflict',
+        };
+        if (refreshTypes.contains(message.data['type'])) {
           final activityId = message.data['activity_id'] as String?;
           if (activityId != null && activityId.isNotEmpty) {
             _onActivityUpdated?.call(activityId);
@@ -132,8 +152,20 @@ class PushNotificationService {
     }
   }
 
+  void setScheduleConflictsTapHandler(VoidCallback handler) {
+    _onScheduleConflictsTap = handler;
+    if (_pendingScheduleConflictsTap) {
+      _pendingScheduleConflictsTap = false;
+      handler();
+    }
+  }
+
   void setActivityUpdatedHandler(void Function(String activityId)? handler) {
     _onActivityUpdated = handler;
+  }
+
+  void refreshActivity(String activityId) {
+    _onActivityUpdated?.call(activityId);
   }
 
   Future<void> registerForCurrentUser() async {
@@ -234,7 +266,9 @@ class PushNotificationService {
         type != 'activity_deleted' &&
         type != 'join_request_accepted' &&
         type != 'join_request_rejected' &&
-        type != 'join_request_received') return;
+        type != 'join_request_received' &&
+        type != 'host_assigned' &&
+        type != 'activity_conflict') return;
     final activityId = message.data['activity_id'] as String?;
     if (activityId == null || activityId.isEmpty) return;
 
@@ -242,7 +276,9 @@ class PushNotificationService {
         type == 'activity_deleted' ||
         type == 'join_request_accepted' ||
         type == 'join_request_rejected' ||
-        type == 'join_request_received';
+        type == 'join_request_received' ||
+        type == 'host_assigned' ||
+        type == 'activity_conflict';
     final channelId = activityUpdate
         ? _activityUpdatesChannelId
         : _channelId;
@@ -278,6 +314,8 @@ class PushNotificationService {
         notificationDetails: details,
         payload: type == 'join_request_received'
             ? 'join_request_received'
+            : type == 'activity_conflict'
+            ? 'schedule_conflict'
             : activityId,
       );
     } catch (error) {
@@ -288,12 +326,23 @@ class PushNotificationService {
   void _dispatchMessageTap(RemoteMessage message) {
     if (message.data['type'] == 'join_request_received') {
       _dispatchNotificationTap('join_request_received');
+    } else if (message.data['type'] == 'activity_conflict') {
+      _dispatchNotificationTap('schedule_conflict');
     } else {
       _dispatchActivityTap(message.data['activity_id'] as String?);
     }
   }
 
   void _dispatchNotificationTap(String? payload) {
+    if (payload == 'schedule_conflict') {
+      final handler = _onScheduleConflictsTap;
+      if (handler == null) {
+        _pendingScheduleConflictsTap = true;
+      } else {
+        handler();
+      }
+      return;
+    }
     if (payload == 'join_request_received') {
       final handler = _onJoinRequestsTap;
       if (handler == null) {

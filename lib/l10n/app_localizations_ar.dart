@@ -1166,11 +1166,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String keepItToLetters(Object n) {
-    return 'لا يتجاوز $n حرف';
+    return 'لا يتجاوز $n حرفًا أو رمزًا';
   }
 
   @override
-  String get useLettersOnly => 'حروف فقط';
+  String get useLettersOnly =>
+      'يجب أن يتكون اسم النشاط من حروف وأرقام ومسافات ورمز & وفواصل وعلامة اقتباس فقط.';
 
   @override
   String get useEnglishLettersOnly => 'حروف إنجليزية فقط';
