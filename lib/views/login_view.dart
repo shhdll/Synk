@@ -116,6 +116,7 @@ class _LoginViewState extends State<LoginView> {
             builder: (context) => EmailVerificationScreen(
               email: _loginController.accountEmail ?? '',
               password: password,
+              sendEmailOnOpen: true,
             ),
           ),
         );
@@ -166,356 +167,382 @@ class _LoginViewState extends State<LoginView> {
         children: [
           const Positioned.fill(child: SynkBlobBackground()),
           SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Form(
-            key: _formKey,
-            // Shows each field's error as soon as the user leaves it.
-            autovalidateMode: AutovalidateMode.onUnfocus,
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 20),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Form(
+                key: _formKey,
+                // Shows each field's error as soon as the user leaves it.
+                autovalidateMode: AutovalidateMode.onUnfocus,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const SizedBox(height: 20),
 
-                  // Back button and application branding.
-                  Row(
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          _loginController.goBack(context);
-                        },
-                        icon: const Icon(
-                          Icons.arrow_back_rounded,
-                          color: SynkColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Container(
-                        width: 44,
-                        height: 44,
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(14),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.06),
-                              blurRadius: 10,
-                              offset: const Offset(0, 3),
+                            // Back button and application branding.
+                            Row(
+                              children: [
+                                IconButton(
+                                  onPressed: () {
+                                    _loginController.goBack(context);
+                                  },
+                                  icon: const Icon(
+                                    Icons.arrow_back_rounded,
+                                    color: SynkColors.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(14),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(
+                                          alpha: 0.06,
+                                        ),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 3),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.asset(
+                                      'assets/synk_logo.png',
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (_, _, _) => const Icon(
+                                        Icons.all_inclusive_rounded,
+                                        color: SynkColors.orange,
+                                        size: 26,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                const Text(
+                                  'Synk',
+                                  style: TextStyle(
+                                    fontSize: 30,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: -0.8,
+                                    color: SynkColors.textPrimary,
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 40),
+
+                            Text(
+                              context.l10n.welcomeBack,
+                              style: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: SynkColors.textPrimary,
+                              ),
+                            ),
+
+                            const SizedBox(height: 8),
+
+                            Text(
+                              context.l10n.logInToConnectAndJoin,
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: SynkColors.textSecondary,
+                              ),
+                            ),
+
+                            const SizedBox(height: 28),
+
+                            // Mode Toggle: Username vs Email
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(25),
+                              ),
+                              padding: const EdgeInsets.all(4),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        if (!_loginWithUsernameMode) {
+                                          setState(() {
+                                            _loginWithUsernameMode = true;
+                                          });
+                                          _loginController.clearError();
+                                          _clearServerErrors();
+                                        }
+                                      },
+                                      child: AnimatedContainer(
+                                        duration: const Duration(
+                                          milliseconds: 200,
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 10,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: _loginWithUsernameMode
+                                              ? SynkColors.orangeDark
+                                              : Colors.transparent,
+                                          borderRadius: BorderRadius.circular(
+                                            22,
+                                          ),
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          context.l10n.username,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                            color: _loginWithUsernameMode
+                                                ? Colors.white
+                                                : SynkColors.textSecondary,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        if (_loginWithUsernameMode) {
+                                          setState(() {
+                                            _loginWithUsernameMode = false;
+                                          });
+                                          _loginController.clearError();
+                                          _clearServerErrors();
+                                        }
+                                      },
+                                      child: AnimatedContainer(
+                                        duration: const Duration(
+                                          milliseconds: 200,
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 10,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: !_loginWithUsernameMode
+                                              ? SynkColors.orangeDark
+                                              : Colors.transparent,
+                                          borderRadius: BorderRadius.circular(
+                                            22,
+                                          ),
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          context.l10n.email,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                            color: !_loginWithUsernameMode
+                                                ? Colors.white
+                                                : SynkColors.textSecondary,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            const SizedBox(height: 20),
+
+                            // Dedicated Username input field
+                            if (_loginWithUsernameMode)
+                              TextFormField(
+                                controller: _usernameController,
+                                style: synkInputTextStyle,
+                                textInputAction: TextInputAction.next,
+                                onChanged: (_) => _clearServerErrors(),
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return context.l10n.pleaseEnterYourUsername;
+                                  }
+                                  return _identifierServerError;
+                                },
+                                decoration: synkInputDecoration(
+                                  label: context.l10n.username,
+                                  hint: context.l10n.username,
+                                  icon: Icons.alternate_email_rounded,
+                                ),
+                              )
+                            // Dedicated Email input field
+                            else
+                              TextFormField(
+                                controller: _emailController,
+                                keyboardType: TextInputType.emailAddress,
+                                style: synkInputTextStyle,
+                                textInputAction: TextInputAction.next,
+                                onChanged: (_) => _clearServerErrors(),
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return context.l10n.pleaseEnterYourEmail;
+                                  }
+                                  if (!AuthConstants.emailRegex.hasMatch(
+                                    value.trim(),
+                                  )) {
+                                    return context.l10n.pleaseEnterAValidEmail;
+                                  }
+                                  return _identifierServerError;
+                                },
+                                decoration: synkInputDecoration(
+                                  label: context.l10n.email,
+                                  hint: context.l10n.emailAddress,
+                                  icon: Icons.email_outlined,
+                                ),
+                              ),
+
+                            const SizedBox(height: 16),
+
+                            // Password input field.
+                            TextFormField(
+                              controller: _passwordController,
+                              obscureText: _obscurePassword,
+                              style: synkInputTextStyle,
+                              textInputAction: TextInputAction.done,
+                              onChanged: (_) => _clearServerErrors(),
+                              onFieldSubmitted: (_) {
+                                if (!_loginController.isLoading) _handleLogin();
+                              },
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return context.l10n.pleaseEnterYourPassword;
+                                }
+                                return _passwordServerError;
+                              },
+                              decoration: synkInputDecoration(
+                                label: context.l10n.password,
+                                hint: context.l10n.password,
+                                icon: Icons.lock_outline,
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined,
+                                    color: SynkColors.textSecondary,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    });
+                                  },
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            // Password recovery navigation.
+                            Align(
+                              alignment: AlignmentDirectional.centerEnd,
+                              child: TextButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ForgotPasswordView(
+                                        initialEmail: _emailController.text
+                                            .trim(),
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  context.l10n.forgotPassword,
+                                  style: TextStyle(
+                                    color: SynkColors.orangeDark,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
                             ),
                           ],
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.asset(
-                            'assets/synk_logo.png',
-                            fit: BoxFit.contain,
-                            errorBuilder: (_, _, _) => const Icon(
-                              Icons.all_inclusive_rounded,
-                              color: SynkColors.orange,
-                              size: 26,
+                      ),
+                    ),
+
+                    // Pinned to the bottom; rises above the keyboard.
+                    const SizedBox(height: 12),
+
+                    // Rebuilds the button when authentication state changes.
+                    AnimatedBuilder(
+                      animation: _loginController,
+                      builder: (context, _) {
+                        return ElevatedButton(
+                          onPressed: _loginController.isLoading
+                              ? null
+                              : _handleLogin,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: SynkColors.orangeDark,
+                            disabledBackgroundColor: SynkColors.orangeDark
+                                .withValues(alpha: 0.6),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
                             ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      const Text(
-                        'Synk',
-                        style: TextStyle(
-                          fontSize: 30,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -0.8,
-                          color: SynkColors.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 40),
-
-                  Text(
-                    context.l10n.welcomeBack,
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: SynkColors.textPrimary,
+                          child: _loginController.isLoading
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : Text(
+                                  context.l10n.logIn,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                        );
+                      },
                     ),
-                  ),
 
-                  const SizedBox(height: 8),
+                    const SizedBox(height: 8),
 
-                  Text(
-                    context.l10n.logInToConnectAndJoin,
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: SynkColors.textSecondary,
-                    ),
-                  ),
-
-                  const SizedBox(height: 28),
-
-                  // Mode Toggle: Username vs Email
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    padding: const EdgeInsets.all(4),
-                    child: Row(
+                    // Account registration navigation.
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () {
-                              if (!_loginWithUsernameMode) {
-                                setState(() {
-                                  _loginWithUsernameMode = true;
-                                });
-                                _loginController.clearError();
-                                _clearServerErrors();
-                              }
-                            },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              decoration: BoxDecoration(
-                                color: _loginWithUsernameMode
-                                    ? SynkColors.orangeDark
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(22),
-                              ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                context.l10n.username,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  color: _loginWithUsernameMode
-                                      ? Colors.white
-                                      : SynkColors.textSecondary,
-                                ),
-                              ),
-                            ),
-                          ),
+                        Text(
+                          context.l10n.dontHaveAnAccount,
+                          style: TextStyle(color: SynkColors.textSecondary),
                         ),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () {
-                              if (_loginWithUsernameMode) {
-                                setState(() {
-                                  _loginWithUsernameMode = false;
-                                });
-                                _loginController.clearError();
-                                _clearServerErrors();
-                              }
-                            },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              decoration: BoxDecoration(
-                                color: !_loginWithUsernameMode
-                                    ? SynkColors.orangeDark
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(22),
-                              ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                context.l10n.email,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  color: !_loginWithUsernameMode
-                                      ? Colors.white
-                                      : SynkColors.textSecondary,
-                                ),
-                              ),
+                        TextButton(
+                          onPressed: () {
+                            _loginController.onSignUp(context);
+                          },
+                          child: Text(
+                            context.l10n.signUp,
+                            style: TextStyle(
+                              color: SynkColors.orangeDark,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
                       ],
                     ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Dedicated Username input field
-                  if (_loginWithUsernameMode)
-                    TextFormField(
-                      controller: _usernameController,
-                      style: synkInputTextStyle,
-                      textInputAction: TextInputAction.next,
-                      onChanged: (_) => _clearServerErrors(),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return context.l10n.pleaseEnterYourUsername;
-                        }
-                        return _identifierServerError;
-                      },
-                      decoration: synkInputDecoration(
-                        label: context.l10n.username,
-                        hint: context.l10n.username,
-                        icon: Icons.alternate_email_rounded,
-                      ),
-                    )
-                  // Dedicated Email input field
-                  else
-                    TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      style: synkInputTextStyle,
-                      textInputAction: TextInputAction.next,
-                      onChanged: (_) => _clearServerErrors(),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return context.l10n.pleaseEnterYourEmail;
-                        }
-                        if (!AuthConstants.emailRegex.hasMatch(value.trim())) {
-                          return context.l10n.pleaseEnterAValidEmail;
-                        }
-                        return _identifierServerError;
-                      },
-                      decoration: synkInputDecoration(
-                        label: context.l10n.email,
-                        hint: context.l10n.emailAddress,
-                        icon: Icons.email_outlined,
-                      ),
-                    ),
-
-                  const SizedBox(height: 16),
-
-                  // Password input field.
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: _obscurePassword,
-                    style: synkInputTextStyle,
-                    textInputAction: TextInputAction.done,
-                    onChanged: (_) => _clearServerErrors(),
-                    onFieldSubmitted: (_) {
-                      if (!_loginController.isLoading) _handleLogin();
-                    },
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return context.l10n.pleaseEnterYourPassword;
-                      }
-                      return _passwordServerError;
-                    },
-                    decoration: synkInputDecoration(
-                      label: context.l10n.password,
-                      hint: context.l10n.password,
-                      icon: Icons.lock_outline,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                          color: SynkColors.textSecondary,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Password recovery navigation.
-                  Align(
-                    alignment: AlignmentDirectional.centerEnd,
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ForgotPasswordView(
-                              initialEmail: _emailController.text.trim(),
-                            ),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        context.l10n.forgotPassword,
-                        style: TextStyle(
-                          color: SynkColors.orangeDark,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 28),
-
-                  // Rebuilds the button when authentication state changes.
-                  AnimatedBuilder(
-                    animation: _loginController,
-                    builder: (context, _) {
-                      return ElevatedButton(
-                        onPressed: _loginController.isLoading
-                            ? null
-                            : _handleLogin,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: SynkColors.orangeDark,
-                          disabledBackgroundColor: SynkColors.orangeDark
-                              .withValues(alpha: 0.6),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(vertical: 18),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                        ),
-                        child: _loginController.isLoading
-                            ? const SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : Text(
-                                context.l10n.logIn,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Account registration navigation.
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        context.l10n.dontHaveAnAccount,
-                        style: TextStyle(color: SynkColors.textSecondary),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          _loginController.onSignUp(context);
-                        },
-                        child: Text(
-                          context.l10n.signUp,
-                          style: TextStyle(
-                            color: SynkColors.orangeDark,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      ),
         ],
       ),
     );

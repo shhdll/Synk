@@ -9,6 +9,7 @@ import '../utils/custom_widgets/puzzle_piece_tile.dart';
 import 'forgot_password_view.dart';
 import 'login_view.dart';
 import 'reset_success_view.dart';
+import 'widgets/password_requirements.dart';
 
 class NewPasswordView extends StatefulWidget {
   const NewPasswordView({super.key, this.linkExpired = false});
@@ -329,11 +330,8 @@ class _NewPasswordViewState extends State<NewPasswordView>
           obscureText: _obscurePassword,
           errorText: _passwordError,
           textInputAction: TextInputAction.next,
-          onChanged: (_) {
-            if (_passwordError != null) {
-              setState(() => _passwordError = null);
-            }
-          },
+          // Rebuild on every key so the checklist updates.
+          onChanged: (_) => setState(() => _passwordError = null),
           suffixIcon: IconButton(
             icon: Icon(
               _obscurePassword
@@ -383,6 +381,9 @@ class _NewPasswordViewState extends State<NewPasswordView>
             ),
           ),
         ),
+
+        const SizedBox(height: 8),
+        PasswordRequirements(password: _passwordController.text),
 
         const SizedBox(height: 28),
 

@@ -4,7 +4,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../core/constants/synk_colors.dart';
 import '../../l10n/l10n.dart';
 
-
 const Color kFieldErrorColor = Color(0xFFE53935);
 
 class CreateGroupLabel extends StatelessWidget {

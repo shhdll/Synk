@@ -851,7 +851,7 @@ abstract class AppLocalizations {
   /// No description provided for @forYourSecurityWellSendA.
   ///
   /// In en, this message translates to:
-  /// **'For your security, we\'ll send a link only if this email belongs to a Synk account.'**
+  /// **'We only send a link if this email has a Synk account.'**
   String get forYourSecurityWellSendA;
 
   /// No description provided for @weSentAResetLinkTo.
@@ -1082,6 +1082,12 @@ abstract class AppLocalizations {
   /// **'Ready for something new?'**
   String get readyForSomethingNew;
 
+  /// Same as readyForSomethingNew, for women; Arabic changes the adjective
+  ///
+  /// In en, this message translates to:
+  /// **'Ready for something new?'**
+  String get readyForSomethingNewFemale;
+
   /// No description provided for @searchActivitiesOrLocations.
   ///
   /// In en, this message translates to:
@@ -1265,7 +1271,7 @@ abstract class AppLocalizations {
   /// No description provided for @slotEveningHours.
   ///
   /// In en, this message translates to:
-  /// **'5–9 PM'**
+  /// **'12–9 PM'**
   String get slotEveningHours;
 
   /// No description provided for @slotNightHours.
@@ -2225,8 +2231,8 @@ abstract class AppLocalizations {
   /// No description provided for @peopleSummary.
   ///
   /// In en, this message translates to:
-  /// **'{n} including you · {spots, plural, =1{1 spot open} other{{spots} spots open}}'**
-  String peopleSummary(Object n, int spots);
+  /// **'{n} including you'**
+  String peopleSummary(Object n);
 
   /// No description provided for @addATitle.
   ///
@@ -2245,6 +2251,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use letters only'**
   String get useLettersOnly;
+
+  /// No description provided for @useEnglishLettersOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Use English letters only'**
+  String get useEnglishLettersOnly;
 
   /// No description provided for @keepItToCharacters.
   ///
@@ -2549,14 +2561,8 @@ abstract class AppLocalizations {
   /// No description provided for @awaitingConfirmationOn.
   ///
   /// In en, this message translates to:
-  /// **'Awaiting confirmation on {email}. Tap to resend or cancel.'**
+  /// **'{email} isn\'t confirmed yet'**
   String awaitingConfirmationOn(Object email);
-
-  /// No description provided for @tapToChangeYourEmailAddress.
-  ///
-  /// In en, this message translates to:
-  /// **'Tap to change your email address.'**
-  String get tapToChangeYourEmailAddress;
 
   /// No description provided for @changePassword.
   ///
@@ -2756,12 +2762,6 @@ abstract class AppLocalizations {
   /// **'Re-enter the new password'**
   String get reEnterTheNewPassword;
 
-  /// No description provided for @useAtLeast8CharactersWith.
-  ///
-  /// In en, this message translates to:
-  /// **'Use at least 8 characters with uppercase, lowercase, a number, and a special character.'**
-  String get useAtLeast8CharactersWith;
-
   /// No description provided for @newPasswordMustBeDifferentFrom.
   ///
   /// In en, this message translates to:
@@ -2813,61 +2813,31 @@ abstract class AppLocalizations {
   /// No description provided for @changeEmail.
   ///
   /// In en, this message translates to:
-  /// **'Change Email'**
+  /// **'Change email'**
   String get changeEmail;
 
-  /// No description provided for @pendingEmailChange.
+  /// No description provided for @confirmYourNewEmail.
   ///
   /// In en, this message translates to:
-  /// **'Pending Email Change'**
-  String get pendingEmailChange;
+  /// **'Confirm your new email'**
+  String get confirmYourNewEmail;
 
-  /// No description provided for @confirmationIsCurrentlyInProgress.
+  /// No description provided for @openTheLinkWeSentTo.
   ///
   /// In en, this message translates to:
-  /// **'Confirmation is currently in progress'**
-  String get confirmationIsCurrentlyInProgress;
-
-  /// No description provided for @updateYourLoginAndContactEmail.
-  ///
-  /// In en, this message translates to:
-  /// **'Update your login and contact email'**
-  String get updateYourLoginAndContactEmail;
-
-  /// No description provided for @currentEmailLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Current:'**
-  String get currentEmailLabel;
-
-  /// No description provided for @awaitingConfirmation.
-  ///
-  /// In en, this message translates to:
-  /// **'Awaiting Confirmation'**
-  String get awaitingConfirmation;
-
-  /// No description provided for @changeLinkSentTo.
-  ///
-  /// In en, this message translates to:
-  /// **'A change link was sent to {email}. Both your old and new email addresses must confirm the change before it updates.'**
-  String changeLinkSentTo(Object email);
-
-  /// No description provided for @resendConfirmationLinks.
-  ///
-  /// In en, this message translates to:
-  /// **'Resend Confirmation Links'**
-  String get resendConfirmationLinks;
+  /// **'Open the link we sent to {email}.'**
+  String openTheLinkWeSentTo(Object email);
 
   /// No description provided for @cancelEmailChange.
   ///
   /// In en, this message translates to:
-  /// **'Cancel Email Change'**
+  /// **'Cancel change'**
   String get cancelEmailChange;
 
   /// No description provided for @useADifferentEmailAddress.
   ///
   /// In en, this message translates to:
-  /// **'Use a different email address'**
+  /// **'Use a different email'**
   String get useADifferentEmailAddress;
 
   /// No description provided for @pleaseEnterANewEmailAddress.
@@ -2885,26 +2855,26 @@ abstract class AppLocalizations {
   /// No description provided for @enterNewEmailAddress.
   ///
   /// In en, this message translates to:
-  /// **'Enter new email address'**
+  /// **'New email address'**
   String get enterNewEmailAddress;
 
-  /// No description provided for @confirmationEmailsWillBeSentTo.
+  /// No description provided for @weWillSendALinkToConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Confirmation emails will be sent to both addresses. The change will take effect once confirmed.'**
-  String get confirmationEmailsWillBeSentTo;
+  /// **'We\'ll send a link to confirm it.'**
+  String get weWillSendALinkToConfirm;
 
-  /// No description provided for @sendVerification.
+  /// No description provided for @sendLink.
   ///
   /// In en, this message translates to:
-  /// **'Send Verification'**
-  String get sendVerification;
+  /// **'Send link'**
+  String get sendLink;
 
-  /// No description provided for @confirmationLinkSentPleaseCheckBoth.
+  /// No description provided for @linkSentCheckYourNewEmail.
   ///
   /// In en, this message translates to:
-  /// **'Confirmation link sent! Please check both your current and new email inboxes to confirm the change.'**
-  String get confirmationLinkSentPleaseCheckBoth;
+  /// **'Link sent. Check your new email.'**
+  String get linkSentCheckYourNewEmail;
 
   /// No description provided for @unableToUpdateEmailPleaseTry.
   ///
@@ -2912,16 +2882,16 @@ abstract class AppLocalizations {
   /// **'Unable to update email. Please try again.'**
   String get unableToUpdateEmailPleaseTry;
 
-  /// No description provided for @confirmationLinksResentCheckYourInboxes.
+  /// No description provided for @linkSentAgain.
   ///
   /// In en, this message translates to:
-  /// **'Confirmation links resent! Check your inboxes to confirm.'**
-  String get confirmationLinksResentCheckYourInboxes;
+  /// **'Link sent again.'**
+  String get linkSentAgain;
 
   /// No description provided for @pendingEmailChangeCancelled.
   ///
   /// In en, this message translates to:
-  /// **'Pending email change cancelled.'**
+  /// **'Email change cancelled.'**
   String get pendingEmailChangeCancelled;
 
   /// No description provided for @failedToCancelEmailChangeRequest.
@@ -2963,7 +2933,7 @@ abstract class AppLocalizations {
   /// No description provided for @noInternetConnectionCheckYourConnection.
   ///
   /// In en, this message translates to:
-  /// **'No internet connection. Check your connection and try again.'**
+  /// **'No internet connection.'**
   String get noInternetConnectionCheckYourConnection;
 
   /// No description provided for @tooManyAttemptsPleaseWaitA.
@@ -3541,6 +3511,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{weekday}, {month} {day}'**
   String shortDate(Object weekday, Object month, Object day);
+
+  /// For example Oct 21
+  ///
+  /// In en, this message translates to:
+  /// **'{month} {day}'**
+  String monthDay(Object month, Object day);
 
   /// For example 7:30 PM
   ///

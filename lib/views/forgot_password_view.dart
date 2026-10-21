@@ -137,80 +137,112 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
         children: [
           const Positioned.fill(child: SynkBlobBackground()),
           SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Form(
-            key: _formKey,
-            child: SingleChildScrollView(
-              child: AnimatedBuilder(
-                animation: _controller,
-                builder: (context, _) {
-                  final sent = _controller.emailSent;
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Form(
+                key: _formKey,
+                child: AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, _) {
+                    final sent = _controller.emailSent;
 
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const SizedBox(height: 20),
-                      _buildHeader(),
-                      const SizedBox(height: 40),
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                const SizedBox(height: 20),
+                                _buildHeader(),
+                                const SizedBox(height: 40),
 
-                      // Motif: missing → sending → sent.
-                      Align(
-                        alignment: AlignmentDirectional.centerStart,
-                        child: PuzzlePieceTile(
-                          state: sent
-                              ? PieceState.sent
-                              : _controller.isLoading
-                              ? PieceState.sending
-                              : PieceState.missing,
-                          badgeIcon: sent
-                              ? Icons.mark_email_read_rounded
-                              : null,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Heading + supporting copy cross-fade between states.
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        child: sent ? _buildSentIntro() : _buildFormIntro(),
-                      ),
-                      const SizedBox(height: 36),
-
-                      // Body morphs between the form and the sent card.
-                      AnimatedSize(
-                        duration: const Duration(milliseconds: 350),
-                        curve: Curves.easeOutCubic,
-                        alignment: Alignment.topCenter,
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 350),
-                          switchInCurve: Curves.easeOutCubic,
-                          switchOutCurve: Curves.easeInCubic,
-                          transitionBuilder: (child, animation) =>
-                              FadeTransition(
-                                opacity: animation,
-                                child: SlideTransition(
-                                  position: Tween<Offset>(
-                                    begin: const Offset(0, 0.04),
-                                    end: Offset.zero,
-                                  ).animate(animation),
-                                  child: child,
+                                // Motif: missing → sending → sent.
+                                Align(
+                                  alignment: AlignmentDirectional.centerStart,
+                                  child: PuzzlePieceTile(
+                                    state: sent
+                                        ? PieceState.sent
+                                        : _controller.isLoading
+                                        ? PieceState.sending
+                                        : PieceState.missing,
+                                    badgeIcon: sent
+                                        ? Icons.mark_email_read_rounded
+                                        : null,
+                                  ),
                                 ),
-                              ),
-                          child: sent
-                              ? _buildSentBody(key: const ValueKey('sent'))
-                              : _buildFormBody(key: const ValueKey('form')),
+                                const SizedBox(height: 20),
+
+                                // Heading + supporting copy cross-fade between states.
+                                AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 300),
+                                  // The default centers the text; keep it at the start
+                                  // edge like the tile and card.
+                                  layoutBuilder: (current, previous) => Stack(
+                                    alignment: AlignmentDirectional.topStart,
+                                    children: [...previous, ?current],
+                                  ),
+                                  child: sent
+                                      ? _buildSentIntro()
+                                      : _buildFormIntro(),
+                                ),
+                                const SizedBox(height: 36),
+
+                                // Body morphs between the form and the sent card.
+                                AnimatedSize(
+                                  duration: const Duration(milliseconds: 350),
+                                  curve: Curves.easeOutCubic,
+                                  alignment: Alignment.topCenter,
+                                  child: AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 350),
+                                    switchInCurve: Curves.easeOutCubic,
+                                    switchOutCurve: Curves.easeInCubic,
+                                    transitionBuilder: (child, animation) =>
+                                        FadeTransition(
+                                          opacity: animation,
+                                          child: SlideTransition(
+                                            position: Tween<Offset>(
+                                              begin: const Offset(0, 0.04),
+                                              end: Offset.zero,
+                                            ).animate(animation),
+                                            child: child,
+                                          ),
+                                        ),
+                                    child: sent
+                                        ? _buildSentBody(
+                                            key: const ValueKey('sent'),
+                                          )
+                                        : _buildFormBody(
+                                            key: const ValueKey('form'),
+                                          ),
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-                  );
-                },
+
+                        // Pinned to the bottom; rises above the keyboard.
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 300),
+                          child: sent
+                              ? _buildSentActions(
+                                  key: const ValueKey('sent-actions'),
+                                )
+                              : _buildFormActions(
+                                  key: const ValueKey('form-actions'),
+                                ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                    );
+                  },
+                ),
               ),
             ),
           ),
-        ),
-      ),
         ],
       ),
     );
@@ -345,10 +377,35 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
             ),
           ),
         ),
+      ],
+    );
+  }
 
-        const SizedBox(height: 28),
+  Widget _buildFormActions({required Key key}) {
+    return Column(
+      key: key,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Explains why we never confirm whether an account exists.
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            context.l10n.forYourSecurityWellSendA,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              height: 1.45,
+              color: SynkColors.textSecondary.withValues(alpha: 0.7),
+            ),
+          ),
+        ),
 
-        _buildPrimaryButton(label: context.l10n.sendResetLink, onPressed: _handleSend),
+        const SizedBox(height: 14),
+
+        _buildPrimaryButton(
+          label: context.l10n.sendResetLink,
+          onPressed: _handleSend,
+        ),
 
         const SizedBox(height: 16),
 
@@ -361,22 +418,6 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
                 color: SynkColors.orangeDark,
                 fontWeight: FontWeight.bold,
               ),
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 12),
-
-        // Explains why we never confirm whether an account exists.
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Text(
-            context.l10n.forYourSecurityWellSendA,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12,
-              height: 1.45,
-              color: SynkColors.textSecondary.withValues(alpha: 0.7),
             ),
           ),
         ),
@@ -419,9 +460,6 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
   }
 
   Widget _buildSentBody({required Key key}) {
-    final seconds = _controller.resendSecondsLeft;
-    final canResend = _controller.canResend;
-
     return Column(
       key: key,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -459,8 +497,34 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
             ],
           ),
         ),
+      ],
+    );
+  }
 
-        const SizedBox(height: 28),
+  Widget _buildSentActions({required Key key}) {
+    final seconds = _controller.resendSecondsLeft;
+    final canResend = _controller.canResend;
+
+    return Column(
+      key: key,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Same order as the form: small note, button, then a text link.
+        Center(
+          child: TextButton(
+            onPressed: _controller.editEmail,
+            child: Text(
+              context.l10n.wrongEmailEditIt,
+              style: TextStyle(
+                fontSize: 13,
+                color: SynkColors.orangeDark,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 4),
 
         _buildPrimaryButton(
           label: context.l10n.backToLogIn,
@@ -484,20 +548,6 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView>
                     ? SynkColors.orangeDark
                     : SynkColors.textSecondary,
                 fontWeight: canResend ? FontWeight.bold : FontWeight.w600,
-              ),
-            ),
-          ),
-        ),
-
-        Center(
-          child: TextButton(
-            onPressed: _controller.editEmail,
-            child: Text(
-              context.l10n.wrongEmailEditIt,
-              style: TextStyle(
-                fontSize: 13,
-                color: SynkColors.orangeDark,
-                fontWeight: FontWeight.w600,
               ),
             ),
           ),

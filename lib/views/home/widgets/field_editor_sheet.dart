@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/synk_colors.dart';
 import '../../../l10n/l10n.dart';
+import '../../../utils/text_direction.dart';
 
 // Shared bottom-sheet editor for a single text field (name, bio, email, ...)
 // on the Edit Profile screen.
@@ -67,43 +68,49 @@ class FieldEditorSheet extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 14),
-              TextFormField(
-                controller: controller,
-                autofocus: true,
-                maxLines: maxLines,
-                maxLength: maxLength,
-                keyboardType: keyboardType,
-                validator: validator == null
-                    ? null
-                    : (value) => validator!(value ?? ''),
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: SynkColors.textPrimary,
-                ),
-                decoration: InputDecoration(
-                  hintText: hint,
-                  hintStyle: const TextStyle(color: SynkColors.textSecondary),
-                  helperText: helperText,
-                  helperMaxLines: 2,
-                  helperStyle: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: SynkColors.textSecondary.withValues(alpha: 0.85),
+              // Rebuilt as the user types so Arabic and English each run in
+              // their own direction.
+              ListenableBuilder(
+                listenable: controller,
+                builder: (context, _) => TextFormField(
+                  controller: controller,
+                  textDirection: textDirectionOf(controller.text),
+                  autofocus: true,
+                  maxLines: maxLines,
+                  maxLength: maxLength,
+                  keyboardType: keyboardType,
+                  validator: validator == null
+                      ? null
+                      : (value) => validator!(value ?? ''),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: SynkColors.textPrimary,
                   ),
-                  counterStyle: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: SynkColors.textSecondary.withValues(alpha: 0.85),
-                  ),
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
+                  decoration: InputDecoration(
+                    hintText: hint,
+                    hintStyle: const TextStyle(color: SynkColors.textSecondary),
+                    helperText: helperText,
+                    helperMaxLines: 2,
+                    helperStyle: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: SynkColors.textSecondary.withValues(alpha: 0.85),
+                    ),
+                    counterStyle: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: SynkColors.textSecondary.withValues(alpha: 0.85),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                   ),
                 ),
               ),

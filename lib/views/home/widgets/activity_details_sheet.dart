@@ -128,14 +128,14 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
           hostGender: host['gender'] as String?,
         );
       });
-    } catch (_) {
-    }
+    } catch (_) {}
   }
 
   @override
   void dispose() {
     widget.activityStore.removeListener(_syncActivityFromStore);
     _leaveController.dispose();
+    _scroll.dispose();
     super.dispose();
   }
 
@@ -144,7 +144,21 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     if (!mounted || latest == null || identical(latest, _currentActivity)) {
       return;
     }
-    setState(() => _currentActivity = latest);
+    // Activities you joined or host come into the store without the host's
+    // profile, so keep the one already loaded instead of falling back to
+    // "Host".
+    final previous = _currentActivity;
+    setState(() {
+      _currentActivity = latest.hostName != null
+          ? latest
+          : latest.copyWith(
+              hostName: previous.hostName,
+              hostUsername: previous.hostUsername,
+              hostAvatarUrl: previous.hostAvatarUrl,
+              hostGender: previous.hostGender,
+            );
+    });
+    if (_currentActivity.hostName == null) _loadHostProfile();
   }
 
   Future<void> _loadOwnProfile() async {
@@ -293,9 +307,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
       );
     } catch (_) {
       if (mounted) {
-        setState(
-          () => _joinError = context.l10n.unableToJoinTheActivityPlease,
-        );
+        setState(() => _joinError = context.l10n.unableToJoinTheActivityPlease);
       }
     } finally {
       if (mounted) setState(() => _isJoining = false);
@@ -313,12 +325,60 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     return '$day · ${formatTime(date.hour, date.minute)}';
   }
 
+  // How far the sheet has to be dragged down before letting go closes it.
+  static const double _closeDistance = 120;
+  final ScrollController _scroll = ScrollController();
+  // How far the whole sheet is pulled down, following the finger.
+  double _dragOffset = 0;
+  bool _dragging = false;
+  bool _closing = false;
+
+  // At the top, pulling down moves the whole sheet with the finger instead of
+  // stretching the content, and letting go far enough closes it.
+  bool _onScroll(ScrollNotification notification) {
+    if (notification.depth != 0 || _closing) return false;
+
+    if (notification is OverscrollNotification &&
+        notification.dragDetails != null &&
+        notification.overscroll < 0) {
+      setState(() {
+        _dragging = true;
+        _dragOffset -= notification.overscroll;
+      });
+    } else if (notification is ScrollUpdateNotification &&
+        notification.dragDetails != null &&
+        _dragOffset > 0 &&
+        (notification.scrollDelta ?? 0) > 0) {
+      // Finger moving back up: raise the sheet before scrolling the content.
+      final delta = notification.scrollDelta!;
+      setState(
+        () => _dragOffset = (_dragOffset - delta).clamp(0, double.infinity),
+      );
+      _scroll.jumpTo(0);
+    } else if (notification is ScrollEndNotification && _dragging) {
+      if (_dragOffset > _closeDistance) {
+        _closing = true;
+        Navigator.of(context).maybePop();
+      } else {
+        setState(() {
+          _dragging = false;
+          _dragOffset = 0;
+        });
+      }
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final maxHeight = mediaQuery.size.height * 0.90;
 
-    return Container(
+    return AnimatedContainer(
+      // Follows the finger while dragging, springs back when let go.
+      duration: _dragging ? Duration.zero : const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      transform: Matrix4.translationValues(0, _dragOffset, 0),
       constraints: BoxConstraints(maxHeight: maxHeight),
       decoration: const BoxDecoration(
         color: SynkColors.background,
@@ -330,51 +390,60 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
           children: [
             // Scrollable Content
             Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeaderVisual(),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        20,
-                        16,
-                        20,
-                        // The join bar handles the bottom safe area itself.
-                        24 +
-                            (_showJoinBar || _showHostBar
-                                ? 0
-                                : MediaQuery.paddingOf(context).bottom),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildTitleAndBadges(),
-                          const SizedBox(height: 18),
-                          _buildScheduleAndLocationSection(),
-                          if (_currentActivity.description.isNotEmpty) ...[
-                            const SizedBox(height: 20),
-                            _buildDescriptionSection(),
-                          ],
-                          const SizedBox(height: 22),
-                          _buildParticipantsSection(),
-                          if (_shareableCode != null) ...[
-                            const SizedBox(height: 22),
-                            _buildCodeRow(_shareableCode!),
-                          ],
-                          if (_isViewerHost &&
-                              !_currentActivity.isPast &&
-                              (widget.onDelete != null ||
-                                  widget.onEdit != null)) ...[
-                            const SizedBox(height: 10),
-                            _buildHostTools(),
-                          ],
-                          const SizedBox(height: 10),
-                        ],
-                      ),
+              child: NotificationListener<ScrollNotification>(
+                onNotification: _onScroll,
+                // No stretch or bounce at the edges; the sheet itself moves.
+                child: ScrollConfiguration(
+                  behavior: ScrollConfiguration.of(context)
+                      .copyWith(overscroll: false),
+                  child: SingleChildScrollView(
+                    controller: _scroll,
+                    physics: const ClampingScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeaderVisual(),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            20,
+                            16,
+                            20,
+                            // The join bar handles the bottom safe area itself.
+                            24 +
+                                (_showJoinBar || _showHostBar
+                                    ? 0
+                                    : MediaQuery.paddingOf(context).bottom),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildTitleAndBadges(),
+                              const SizedBox(height: 18),
+                              _buildScheduleAndLocationSection(),
+                              if (_currentActivity.description.isNotEmpty) ...[
+                                const SizedBox(height: 20),
+                                _buildDescriptionSection(),
+                              ],
+                              const SizedBox(height: 22),
+                              _buildParticipantsSection(),
+                              if (_shareableCode != null) ...[
+                                const SizedBox(height: 22),
+                                _buildCodeRow(_shareableCode!),
+                              ],
+                              if (_isViewerHost &&
+                                  !_currentActivity.isPast &&
+                                  (widget.onDelete != null ||
+                                      widget.onEdit != null)) ...[
+                                const SizedBox(height: 10),
+                                _buildHostTools(),
+                              ],
+                              const SizedBox(height: 10),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -400,116 +469,126 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
 
   Widget _buildCodeRow(String code) {
     return Container(
-            padding: const EdgeInsetsDirectional.fromSTEB(14, 6, 6, 6),
-            decoration: BoxDecoration(
-              color: SynkColors.orangeDark.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: SynkColors.orangeDark.withValues(alpha: 0.18),
+      padding: const EdgeInsetsDirectional.fromSTEB(14, 6, 6, 6),
+      decoration: BoxDecoration(
+        color: SynkColors.orangeDark.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: SynkColors.orangeDark.withValues(alpha: 0.18),
+        ),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.password_rounded,
+            size: 19,
+            color: SynkColors.orangeDark,
+          ),
+          const SizedBox(width: 9),
+          Text(
+            context.l10n.activityCode,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: SynkColors.textPrimary,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            code,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 2,
+              color: SynkColors.orangeDark,
+            ),
+          ),
+          IconButton(
+            tooltip: context.l10n.copyCode,
+            onPressed: () async {
+              await Clipboard.setData(ClipboardData(text: code));
+              if (!mounted) return;
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  SnackBar(content: Text(context.l10n.activityCodeCopied)),
+                );
+            },
+            icon: const Icon(
+              Icons.copy_rounded,
+              size: 18,
+              color: SynkColors.orangeDark,
+            ),
+          ),
+          Builder(
+            builder: (buttonContext) => IconButton(
+              tooltip: context.l10n.shareCode,
+              onPressed: () =>
+                  shareActivityCode(buttonContext, _currentActivity, code),
+              icon: const Icon(
+                Icons.share_rounded,
+                size: 18,
+                color: SynkColors.orangeDark,
               ),
             ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.password_rounded,
-                  size: 19,
-                  color: SynkColors.orangeDark,
-                ),
-                const SizedBox(width: 9),
-                Text(
-                  context.l10n.activityCode,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: SynkColors.textPrimary,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  code,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 2,
-                    color: SynkColors.orangeDark,
-                  ),
-                ),
-                IconButton(
-                  tooltip: context.l10n.copyCode,
-                  onPressed: () async {
-                    await Clipboard.setData(ClipboardData(text: code));
-                    if (!mounted) return;
-                    ScaffoldMessenger.of(context)
-                      ..hideCurrentSnackBar()
-                      ..showSnackBar(
-                        SnackBar(content: Text(context.l10n.activityCodeCopied)),
-                      );
-                  },
-                  icon: const Icon(
-                    Icons.copy_rounded,
-                    size: 18,
-                    color: SynkColors.orangeDark,
-                  ),
-                ),
-                Builder(
-                  builder: (buttonContext) => IconButton(
-                    tooltip: context.l10n.shareCode,
-                    onPressed: () =>
-                        shareActivityCode(buttonContext, _currentActivity, code),
-                    icon: const Icon(
-                      Icons.share_rounded,
-                      size: 18,
-                      color: SynkColors.orangeDark,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildHostTools() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-          Row(
-            children: [
-              if (widget.onEdit != null)
-                Expanded(
-                  child: TextButton.icon(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      widget.onEdit!();
-                    },
-                    style: TextButton.styleFrom(
-                      foregroundColor: SynkColors.orangeDark,
-                      minimumSize: const Size.fromHeight(46),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        Row(
+          children: [
+            if (widget.onEdit != null)
+              Expanded(
+                child: TextButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    widget.onEdit!();
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: SynkColors.orangeDark,
+                    minimumSize: const Size.fromHeight(46),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                    icon: const Icon(Icons.edit_outlined, size: 20),
-                    label: Text(context.l10n.editActivity, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  ),
+                  icon: const Icon(Icons.edit_outlined, size: 20),
+                  label: Text(
+                    context.l10n.editActivity,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),
-              if (widget.onEdit != null && widget.onDelete != null)
-                const SizedBox(width: 8),
-              if (widget.onDelete != null)
-                Expanded(
-                  child: TextButton.icon(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      widget.onDelete!();
-                    },
-                    style: TextButton.styleFrom(
-                      foregroundColor: const Color(0xFFE85D5D),
-                      minimumSize: const Size.fromHeight(46),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+            if (widget.onEdit != null && widget.onDelete != null)
+              const SizedBox(width: 8),
+            if (widget.onDelete != null)
+              Expanded(
+                child: TextButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    widget.onDelete!();
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFFE85D5D),
+                    minimumSize: const Size.fromHeight(46),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                    icon: const Icon(Icons.delete_outline_rounded, size: 20),
-                    label: Text(context.l10n.deleteActivity, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  ),
+                  icon: const Icon(Icons.delete_outline_rounded, size: 20),
+                  label: Text(
+                    context.l10n.deleteActivity,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),
-            ],
-          ),
+              ),
+          ],
+        ),
       ],
     );
   }
@@ -614,7 +693,9 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                           : Icons.person_add_alt_1_rounded,
                       size: 20,
                     ),
-              label: Text(isFull ? context.l10n.joinWaitlist : context.l10n.joinActivity),
+              label: Text(
+                isFull ? context.l10n.joinWaitlist : context.l10n.joinActivity,
+              ),
             ),
           ),
           if (_joinError != null) ...[
@@ -760,8 +841,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
       'waitlisted' => (
         icon: SynkIcons.logout,
         title: context.l10n.leaveWaitlistTitle,
-        message:
-            context.l10n.confirmLeaveWaitlist,
+        message: context.l10n.confirmLeaveWaitlist,
         stay: context.l10n.stayOnWaitlist,
         action: context.l10n.leaveWaitlist,
         successTitle: context.l10n.youLeftTheWaitlist,
@@ -770,8 +850,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
       'pending' => (
         icon: Icons.close_rounded,
         title: context.l10n.cancelRequestTitle,
-        message:
-            context.l10n.confirmCancelRequest,
+        message: context.l10n.confirmCancelRequest,
         stay: context.l10n.keepRequest,
         action: context.l10n.cancelRequest,
         successTitle: context.l10n.requestCancelled,
@@ -1531,7 +1610,8 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                 ),
               ),
               _buildParticipantRow(
-                name: (p['full_name'] as String?) ?? context.l10n.communityMember,
+                name:
+                    (p['full_name'] as String?) ?? context.l10n.communityMember,
                 username: p['username'] as String?,
                 userId: p['user_id'] as String?,
                 avatarUrl: p['avatar_url'] as String?,

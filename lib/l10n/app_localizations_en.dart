@@ -412,7 +412,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get forYourSecurityWellSendA =>
-      'For your security, we\'ll send a link only if this email belongs to a Synk account.';
+      'We only send a link if this email has a Synk account.';
 
   @override
   String get weSentAResetLinkTo => 'We sent a reset link to';
@@ -547,6 +547,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get readyForSomethingNew => 'Ready for something new?';
 
   @override
+  String get readyForSomethingNewFemale => 'Ready for something new?';
+
+  @override
   String get searchActivitiesOrLocations => 'Search activities or locations...';
 
   @override
@@ -647,7 +650,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get slotMorningHours => '6 AM–12 PM';
 
   @override
-  String get slotEveningHours => '5–9 PM';
+  String get slotEveningHours => '12–9 PM';
 
   @override
   String get slotNightHours => '9 PM–12 AM';
@@ -1190,14 +1193,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get people => 'People';
 
   @override
-  String peopleSummary(Object n, int spots) {
-    String _temp0 = intl.Intl.pluralLogic(
-      spots,
-      locale: localeName,
-      other: '$spots spots open',
-      one: '1 spot open',
-    );
-    return '$n including you · $_temp0';
+  String peopleSummary(Object n) {
+    return '$n including you';
   }
 
   @override
@@ -1210,6 +1207,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get useLettersOnly => 'Use letters only';
+
+  @override
+  String get useEnglishLettersOnly => 'Use English letters only';
 
   @override
   String keepItToCharacters(Object n) {
@@ -1397,11 +1397,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String awaitingConfirmationOn(Object email) {
-    return 'Awaiting confirmation on $email. Tap to resend or cancel.';
+    return '$email isn\'t confirmed yet';
   }
-
-  @override
-  String get tapToChangeYourEmailAddress => 'Tap to change your email address.';
 
   @override
   String get changePassword => 'Change password';
@@ -1513,10 +1510,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reEnterTheNewPassword => 'Re-enter the new password';
 
   @override
-  String get useAtLeast8CharactersWith =>
-      'Use at least 8 characters with uppercase, lowercase, a number, and a special character.';
-
-  @override
   String get newPasswordMustBeDifferentFrom =>
       'New password must be different from your current one';
 
@@ -1546,38 +1539,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'Couldn\'t update your password. Check your connection and try again.';
 
   @override
-  String get changeEmail => 'Change Email';
+  String get changeEmail => 'Change email';
 
   @override
-  String get pendingEmailChange => 'Pending Email Change';
+  String get confirmYourNewEmail => 'Confirm your new email';
 
   @override
-  String get confirmationIsCurrentlyInProgress =>
-      'Confirmation is currently in progress';
-
-  @override
-  String get updateYourLoginAndContactEmail =>
-      'Update your login and contact email';
-
-  @override
-  String get currentEmailLabel => 'Current:';
-
-  @override
-  String get awaitingConfirmation => 'Awaiting Confirmation';
-
-  @override
-  String changeLinkSentTo(Object email) {
-    return 'A change link was sent to $email. Both your old and new email addresses must confirm the change before it updates.';
+  String openTheLinkWeSentTo(Object email) {
+    return 'Open the link we sent to $email.';
   }
 
   @override
-  String get resendConfirmationLinks => 'Resend Confirmation Links';
+  String get cancelEmailChange => 'Cancel change';
 
   @override
-  String get cancelEmailChange => 'Cancel Email Change';
-
-  @override
-  String get useADifferentEmailAddress => 'Use a different email address';
+  String get useADifferentEmailAddress => 'Use a different email';
 
   @override
   String get pleaseEnterANewEmailAddress => 'Please enter a new email address.';
@@ -1587,29 +1563,26 @@ class AppLocalizationsEn extends AppLocalizations {
       'New email must be different from current email.';
 
   @override
-  String get enterNewEmailAddress => 'Enter new email address';
+  String get enterNewEmailAddress => 'New email address';
 
   @override
-  String get confirmationEmailsWillBeSentTo =>
-      'Confirmation emails will be sent to both addresses. The change will take effect once confirmed.';
+  String get weWillSendALinkToConfirm => 'We\'ll send a link to confirm it.';
 
   @override
-  String get sendVerification => 'Send Verification';
+  String get sendLink => 'Send link';
 
   @override
-  String get confirmationLinkSentPleaseCheckBoth =>
-      'Confirmation link sent! Please check both your current and new email inboxes to confirm the change.';
+  String get linkSentCheckYourNewEmail => 'Link sent. Check your new email.';
 
   @override
   String get unableToUpdateEmailPleaseTry =>
       'Unable to update email. Please try again.';
 
   @override
-  String get confirmationLinksResentCheckYourInboxes =>
-      'Confirmation links resent! Check your inboxes to confirm.';
+  String get linkSentAgain => 'Link sent again.';
 
   @override
-  String get pendingEmailChangeCancelled => 'Pending email change cancelled.';
+  String get pendingEmailChangeCancelled => 'Email change cancelled.';
 
   @override
   String get failedToCancelEmailChangeRequest =>
@@ -1633,7 +1606,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noInternetConnectionCheckYourConnection =>
-      'No internet connection. Check your connection and try again.';
+      'No internet connection.';
 
   @override
   String get tooManyAttemptsPleaseWaitA =>
@@ -1928,6 +1901,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String shortDate(Object weekday, Object month, Object day) {
     return '$weekday, $month $day';
+  }
+
+  @override
+  String monthDay(Object month, Object day) {
+    return '$month $day';
   }
 
   @override

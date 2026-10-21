@@ -16,9 +16,10 @@ String escapeLike(String value) => value
     .replaceAll('_', r'\_');
 
 bool isNetworkError(Object error) {
-  if (error is AuthRetryableFetchException || error is TimeoutException) {
-    return true;
-  }
+  if (error is TimeoutException) return true;
+  // Supabase also uses this for 5xx server errors, which carry a status code;
+  // only a request that never got a response is a connection problem.
+  if (error is AuthRetryableFetchException) return error.statusCode == null;
   final text = error.toString();
   return text.contains('SocketException') ||
       text.contains('ClientException') ||

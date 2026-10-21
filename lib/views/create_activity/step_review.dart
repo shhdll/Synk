@@ -20,7 +20,6 @@ class StepReview extends StatelessWidget {
     final DateTime? start = c.startsAt;
     final double? lat = c.latitude;
     final double? lng = c.longitude;
-    final int spots = c.spotsOpen;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
@@ -94,7 +93,7 @@ class StepReview extends StatelessWidget {
               _Row(
                 icon: Icons.groups_rounded,
                 label: context.l10n.people,
-                value: context.l10n.peopleSummary(c.participants, spots),
+                value: context.l10n.peopleSummary(c.participants),
                 onTap: () => c.goToStep(1),
               ),
               const _Divider(),

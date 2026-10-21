@@ -11,6 +11,7 @@ import '../home/widgets/synk_filter_chip.dart';
 import '../widgets/synk_date_picker.dart';
 import 'create_activity_widgets.dart';
 import 'location_search_sheet.dart';
+import '../../utils/text_direction.dart';
 
 class StepBasics extends StatefulWidget {
   const StepBasics({super.key, required this.controller});
@@ -171,6 +172,7 @@ class _StepBasicsState extends State<StepBasics> {
                 FilteringTextInputFormatter.allow(
                   CreateActivityController.titleAllowed,
                 ),
+                noArabicFormatter,
               ],
               textCapitalization: TextCapitalization.sentences,
               textInputAction: TextInputAction.done,

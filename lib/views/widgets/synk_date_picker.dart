@@ -26,6 +26,31 @@ Future<DateTime?> showSynkDatePicker({
   );
 }
 
+// Same calendar, but a second tap after the first day makes a range.
+// Returns a one-day range when only one day is picked.
+Future<DateTimeRange?> showSynkDateRangePicker({
+  required BuildContext context,
+  required DateTime initialDate,
+  required DateTime firstDate,
+  required DateTime lastDate,
+  String? title,
+  String? confirmLabel,
+}) {
+  return showModalBottomSheet<DateTimeRange>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => _DatePickerSheet(
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: lastDate,
+      title: title ?? context.l10n.pickADate,
+      confirmLabel: confirmLabel ?? context.l10n.setDate,
+      allowRange: true,
+    ),
+  );
+}
+
 Future<TimeOfDay?> showSynkTimePicker({
   required BuildContext context,
   required TimeOfDay initialTime,
@@ -154,6 +179,7 @@ class _DatePickerSheet extends StatefulWidget {
     required this.lastDate,
     required this.title,
     required this.confirmLabel,
+    this.allowRange = false,
   });
 
   final DateTime initialDate;
@@ -161,6 +187,8 @@ class _DatePickerSheet extends StatefulWidget {
   final DateTime lastDate;
   final String title;
   final String confirmLabel;
+  // Pops a DateTimeRange instead of a DateTime.
+  final bool allowRange;
 
   @override
   State<_DatePickerSheet> createState() => _DatePickerSheetState();
@@ -183,6 +211,10 @@ class _DatePickerSheetState extends State<_DatePickerSheet> {
   late final DateTime _first = _dateOnly(widget.firstDate);
   late final DateTime _last = _dateOnly(widget.lastDate);
   late DateTime _selected;
+  // Range mode only: the last day, after [_selected].
+  DateTime? _rangeEnd;
+  // Range mode only: the preselected day doesn't count as a first tap.
+  bool _startTapped = false;
   late DateTime _visibleMonth;
   bool _choosingYear = false;
   ScrollController? _yearScroll;
@@ -324,7 +356,18 @@ class _DatePickerSheetState extends State<_DatePickerSheet> {
           const SizedBox(height: 12),
           SynkSheetConfirmButton(
             label: widget.confirmLabel,
-            onTap: () => Navigator.of(context).pop(_selected),
+            onTap: () {
+              // Range mode: nothing to confirm before a day is picked.
+              if (widget.allowRange && !_startTapped) return;
+              Navigator.of(context).pop(
+                widget.allowRange
+                    ? DateTimeRange(
+                        start: _selected,
+                        end: _rangeEnd ?? _selected,
+                      )
+                    : _selected,
+              );
+            },
           ),
         ],
       ),
@@ -435,8 +478,18 @@ class _DatePickerSheetState extends State<_DatePickerSheet> {
     );
     final bool isDisabled =
         cellDate.isBefore(_first) || cellDate.isAfter(_last);
-    final bool isSelected = cellDate == _selected;
-    final bool isToday = cellDate == _dateOnly(DateTime.now());
+    // In range mode nothing is highlighted until the first tap.
+    final bool isSelected =
+        (cellDate == _selected && (!widget.allowRange || _startTapped)) ||
+        cellDate == _rangeEnd;
+    final bool isBetween =
+        _rangeEnd != null &&
+        cellDate.isAfter(_selected) &&
+        cellDate.isBefore(_rangeEnd!);
+    // No outline on today in range mode, so the calendar opens with nothing
+    // marked.
+    final bool isToday =
+        !widget.allowRange && cellDate == _dateOnly(DateTime.now());
 
     return Padding(
       padding: const EdgeInsets.all(3),
@@ -445,7 +498,7 @@ class _DatePickerSheetState extends State<_DatePickerSheet> {
         shape: const CircleBorder(),
         child: InkWell(
           customBorder: const CircleBorder(),
-          onTap: isDisabled ? null : () => setState(() => _selected = cellDate),
+          onTap: isDisabled ? null : () => _onDayTapped(cellDate),
           child: Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
@@ -454,7 +507,10 @@ class _DatePickerSheetState extends State<_DatePickerSheet> {
                       colors: <Color>[SynkColors.orange, SynkColors.orangeDark],
                     )
                   : null,
-              border: (!isSelected && isToday)
+              color: isBetween
+                  ? SynkColors.orange.withValues(alpha: 0.16)
+                  : null,
+              border: (!isSelected && !isBetween && isToday)
                   ? Border.all(color: SynkColors.orangeDark, width: 1.4)
                   : null,
             ),
@@ -466,6 +522,8 @@ class _DatePickerSheetState extends State<_DatePickerSheet> {
                 fontWeight: FontWeight.w700,
                 color: isSelected
                     ? Colors.white
+                    : isBetween
+                    ? SynkColors.orangeDark
                     : isDisabled
                     ? SynkColors.textSecondary.withValues(alpha: 0.35)
                     : SynkColors.textPrimary,
@@ -475,6 +533,23 @@ class _DatePickerSheetState extends State<_DatePickerSheet> {
         ),
       ),
     );
+  }
+
+  void _onDayTapped(DateTime day) {
+    setState(() {
+      // A later day after a single pick closes the range; anything else
+      // starts over from the tapped day.
+      if (widget.allowRange &&
+          _startTapped &&
+          _rangeEnd == null &&
+          day.isAfter(_selected)) {
+        _rangeEnd = day;
+      } else {
+        _selected = day;
+        _rangeEnd = null;
+        _startTapped = true;
+      }
+    });
   }
 }
 
@@ -539,8 +614,7 @@ class _TimePickerSheetState extends State<_TimePickerSheet> {
     _periodIndex = widget.initialTime.period == DayPeriod.am ? 0 : 1;
     _hourController = FixedExtentScrollController(initialItem: hour12 - 1);
     _minuteController = FixedExtentScrollController(initialItem: _minute);
-    _periodController =
-        FixedExtentScrollController(initialItem: _periodIndex);
+    _periodController = FixedExtentScrollController(initialItem: _periodIndex);
   }
 
   @override

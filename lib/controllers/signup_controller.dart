@@ -562,6 +562,11 @@ class SignupController extends ChangeNotifier {
         // Usually the username was taken between the check and sign up.
         debugPrint('Signup database error: ${e.message}');
         generalError = appL10n.weCouldntCreateYourAccountPlease;
+      } else if (e is AuthRetryableFetchException) {
+        // A server error (5xx), such as the confirmation email failing to
+        // send. The raw message is JSON, so show a plain one instead.
+        debugPrint('Signup server error ${e.statusCode}: ${e.message}');
+        generalError = appL10n.weCouldntCreateYourAccountPlease;
       } else if (msg.contains('already registered') ||
           msg.contains('user already exists') ||
           msg.contains('already exists') ||

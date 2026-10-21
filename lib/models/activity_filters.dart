@@ -6,7 +6,7 @@ import '../core/constants/activity_categories.dart';
 import '../l10n/l10n.dart';
 import 'activity_model.dart';
 
-export '../l10n/l10n.dart' show formatShortDate;
+export '../l10n/l10n.dart' show formatMonthDay, formatShortDate;
 
 typedef GeoPoint = ({double latitude, double longitude});
 
@@ -50,7 +50,7 @@ enum DateOption {
 // [startHour, endHour)
 enum DaySlot {
   morning(6, 12),
-  evening(17, 21),
+  evening(12, 21),
   night(21, 24);
 
   const DaySlot(this.startHour, this.endHour);
@@ -108,6 +108,7 @@ class ActivityFilters {
     this.sort,
     this.date = DateOption.any,
     this.customDate,
+    this.customEndDate,
     this.daySlot,
     this.fromMinute,
     this.categories = const {},
@@ -121,6 +122,8 @@ class ActivityFilters {
   final SortOption? sort;
   final DateOption date;
   final DateTime? customDate;
+  // Last day when the picked date is a range; null for a single day.
+  final DateTime? customEndDate;
   // Either a slot or a start time, never both.
   final DaySlot? daySlot;
   final int? fromMinute;
@@ -139,6 +142,7 @@ class ActivityFilters {
       sort: sort ?? this.sort,
       date: date,
       customDate: customDate,
+      customEndDate: customEndDate,
       daySlot: daySlot,
       fromMinute: fromMinute,
       categories: categories ?? this.categories,
@@ -147,11 +151,32 @@ class ActivityFilters {
     );
   }
 
-  ActivityFilters withDate(DateOption date, {DateTime? customDate}) {
+  // Unlike copyWith, this can clear the sort back to null.
+  ActivityFilters withSort(SortOption? sort) {
     return ActivityFilters(
       sort: sort,
       date: date,
-      customDate: date == DateOption.custom ? customDate : null,
+      customDate: customDate,
+      customEndDate: customEndDate,
+      daySlot: daySlot,
+      fromMinute: fromMinute,
+      categories: categories,
+      distance: distance,
+      spots: spots,
+    );
+  }
+
+  ActivityFilters withDate(
+    DateOption date, {
+    DateTime? customDate,
+    DateTime? customEndDate,
+  }) {
+    final isCustom = date == DateOption.custom;
+    return ActivityFilters(
+      sort: sort,
+      date: date,
+      customDate: isCustom ? customDate : null,
+      customEndDate: isCustom ? customEndDate : null,
       daySlot: daySlot,
       fromMinute: fromMinute,
       categories: categories,
@@ -165,6 +190,7 @@ class ActivityFilters {
       sort: sort,
       date: date,
       customDate: customDate,
+      customEndDate: customEndDate,
       daySlot: slot,
       fromMinute: slot == null ? fromMinute : null,
       categories: categories,
@@ -210,7 +236,8 @@ class ActivityFilters {
         final picked = customDate;
         if (picked == null) return null;
         final start = DateTime(picked.year, picked.month, picked.day);
-        return (start, DateTime(start.year, start.month, start.day + 1));
+        final last = customEndDate ?? start;
+        return (start, DateTime(last.year, last.month, last.day + 1));
     }
   }
 
@@ -232,7 +259,11 @@ class ActivityFilters {
   String? get dateLabel => switch (date) {
     DateOption.any => null,
     DateOption.custom =>
-      customDate == null ? null : formatShortDate(customDate!),
+      customDate == null
+          ? null
+          : customEndDate == null || customEndDate == customDate
+          ? formatShortDate(customDate!)
+          : '${formatMonthDay(customDate!)} – ${formatMonthDay(customEndDate!)}',
     _ => date.label,
   };
 
@@ -256,10 +287,10 @@ class ActivityFilters {
     final distances = <String, double>{};
     double? kmTo(Activity activity) {
       if (from == null || !activity.hasCoordinates) return null;
-      return distances[activity.id] ??= distanceKm(
-        from,
-        (latitude: activity.latitude!, longitude: activity.longitude!),
-      );
+      return distances[activity.id] ??= distanceKm(from, (
+        latitude: activity.latitude!,
+        longitude: activity.longitude!,
+      ));
     }
 
     final result = activities.where((activity) {
@@ -365,9 +396,7 @@ class ActivityFilters {
         : wanted;
     final keywords = kActivityCategories[category] ?? [stem];
     final text = '${activity.title} ${activity.description}'.toLowerCase();
-    return keywords.any(
-      (k) => RegExp('\\b${RegExp.escape(k)}').hasMatch(text),
-    );
+    return keywords.any((k) => RegExp('\\b${RegExp.escape(k)}').hasMatch(text));
   }
 
   static double distanceKm(GeoPoint a, GeoPoint b) {

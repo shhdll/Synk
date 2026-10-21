@@ -404,7 +404,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get forYourSecurityWellSendA =>
-      'لحمايتك، نرسل الرابط فقط إذا كان البريد مسجل في Synk';
+      'نرسل الرابط فقط إذا كان البريد مسجل في Synk';
 
   @override
   String get weSentAResetLinkTo => 'أرسلنا رابط الاستعادة إلى';
@@ -537,6 +537,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get readyForSomethingNew => 'جاهز لشيء جديد؟';
 
   @override
+  String get readyForSomethingNewFemale => 'جاهزة لشيء جديد؟';
+
+  @override
   String get searchActivitiesOrLocations => 'ابحث عن نشاط أو مكان...';
 
   @override
@@ -635,7 +638,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get slotMorningHours => '6 ص–12 م';
 
   @override
-  String get slotEveningHours => '5–9 م';
+  String get slotEveningHours => '12–9 م';
 
   @override
   String get slotNightHours => '9 م–12 ص';
@@ -703,7 +706,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get available => 'متاح';
 
   @override
-  String get oneMoreNeeded => 'ينقص شخص واحد';
+  String get oneMoreNeeded => 'ناقص شخص واحد';
 
   @override
   String joinedOfMaxGoing(Object joined, Object max) {
@@ -945,7 +948,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get thisActivityConflictsWithOneYouve =>
-      'هناك نشاط آخر تستضيفه أو انضممت إليه يبدأ في الوقت نفسه. احذف النشاط الذي تستضيفه أو غادر النشاط الذي انضممت إليه، ثم حاول مجددًا.';
+      'هناك نشاط آخر تستضيفه أو انضممت إليه يبدأ في الوقت نفسه، احذف النشاط الذي تستضيفه أو غادر النشاط الذي انضممت إليه، ثم حاول مجددا';
 
   @override
   String get joinedTitle => 'تم الانضمام!';
@@ -1065,7 +1068,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get time => 'الوقت';
 
   @override
-  String get activityTitleHint => 'بادل صباحي';
+  String get activityTitleHint => 'Morning padel';
 
   @override
   String get tapToChange => 'اضغط للتغيير';
@@ -1154,8 +1157,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get people => 'الأشخاص';
 
   @override
-  String peopleSummary(Object n, int spots) {
-    return '$n بما فيهم أنت · $spots متاح';
+  String peopleSummary(Object n) {
+    return '$n بما فيهم أنت';
   }
 
   @override
@@ -1168,6 +1171,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get useLettersOnly => 'حروف فقط';
+
+  @override
+  String get useEnglishLettersOnly => 'حروف إنجليزية فقط';
 
   @override
   String keepItToCharacters(Object n) {
@@ -1340,11 +1346,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String awaitingConfirmationOn(Object email) {
-    return 'بانتظار تأكيد $email، اضغط لإعادة الإرسال أو الإلغاء';
+    return 'لم يتم تأكيد $email بعد';
   }
-
-  @override
-  String get tapToChangeYourEmailAddress => 'اضغط لتغيير بريدك الإلكتروني';
 
   @override
   String get changePassword => 'تغيير كلمة المرور';
@@ -1453,10 +1456,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get reEnterTheNewPassword => 'أعد إدخال كلمة المرور الجديدة';
 
   @override
-  String get useAtLeast8CharactersWith =>
-      'استخدم 8 أحرف على الأقل تشمل حرف كبير وصغير ورقم ورمز خاص';
-
-  @override
   String get newPasswordMustBeDifferentFrom =>
       'يجب أن تختلف كلمة المرور الجديدة عن الحالية';
 
@@ -1489,30 +1488,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get changeEmail => 'تغيير البريد';
 
   @override
-  String get pendingEmailChange => 'تغيير بريد معلق';
+  String get confirmYourNewEmail => 'أكد بريدك الجديد';
 
   @override
-  String get confirmationIsCurrentlyInProgress => 'التأكيد قيد التنفيذ';
-
-  @override
-  String get updateYourLoginAndContactEmail => 'حدث بريد الدخول والتواصل';
-
-  @override
-  String get currentEmailLabel => 'الحالي:';
-
-  @override
-  String get awaitingConfirmation => 'بانتظار التأكيد';
-
-  @override
-  String changeLinkSentTo(Object email) {
-    return 'أرسلنا رابط التغيير إلى $email، ويجب التأكيد من البريدين القديم والجديد قبل التحديث';
+  String openTheLinkWeSentTo(Object email) {
+    return 'افتح الرابط المرسل إلى $email';
   }
 
   @override
-  String get resendConfirmationLinks => 'إعادة إرسال روابط التأكيد';
-
-  @override
-  String get cancelEmailChange => 'إلغاء تغيير البريد';
+  String get cancelEmailChange => 'إلغاء التغيير';
 
   @override
   String get useADifferentEmailAddress => 'استخدام بريد آخر';
@@ -1525,25 +1509,23 @@ class AppLocalizationsAr extends AppLocalizations {
       'يجب أن يختلف البريد الجديد عن الحالي';
 
   @override
-  String get enterNewEmailAddress => 'أدخل البريد الجديد';
+  String get enterNewEmailAddress => 'البريد الجديد';
 
   @override
-  String get confirmationEmailsWillBeSentTo =>
-      'سنرسل رسالة تأكيد للبريدين ويتم التغيير بعد التأكيد';
+  String get weWillSendALinkToConfirm => 'سنرسل رابط لتأكيده';
 
   @override
-  String get sendVerification => 'إرسال التأكيد';
+  String get sendLink => 'إرسال الرابط';
 
   @override
-  String get confirmationLinkSentPleaseCheckBoth =>
-      'تم إرسال رابط التأكيد! تحقق من بريدك الحالي والجديد';
+  String get linkSentCheckYourNewEmail =>
+      'تم إرسال الرابط، تحقق من بريدك الجديد';
 
   @override
   String get unableToUpdateEmailPleaseTry => 'تعذر تحديث البريد، حاول مرة أخرى';
 
   @override
-  String get confirmationLinksResentCheckYourInboxes =>
-      'أعدنا إرسال الروابط! تحقق من بريدك';
+  String get linkSentAgain => 'أعدنا إرسال الرابط';
 
   @override
   String get pendingEmailChangeCancelled => 'تم إلغاء تغيير البريد';
@@ -1569,7 +1551,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noInternetConnectionCheckYourConnection =>
-      'لا يوجد اتصال بالإنترنت، حاول مرة أخرى';
+      'لا يوجد اتصال بالإنترنت';
 
   @override
   String get tooManyAttemptsPleaseWaitA =>
@@ -1863,6 +1845,11 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String shortDate(Object weekday, Object month, Object day) {
     return '$weekday، $day $month';
+  }
+
+  @override
+  String monthDay(Object month, Object day) {
+    return '$day $month';
   }
 
   @override

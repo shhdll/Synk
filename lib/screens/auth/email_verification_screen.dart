@@ -9,15 +9,21 @@ import '../../core/constants/synk_colors.dart';
 import '../../l10n/l10n.dart';
 import '../../views/home/main_shell.dart';
 import '../../views/login_view.dart';
+import '../../views/welcome_view.dart';
 
 class EmailVerificationScreen extends StatefulWidget {
   final String email;
   final String? password;
 
+  /// Sends a fresh confirmation email as soon as the screen opens. Used when
+  /// an unconfirmed user logs in, since their sign up email may be old or lost.
+  final bool sendEmailOnOpen;
+
   const EmailVerificationScreen({
     super.key,
     required this.email,
     this.password,
+    this.sendEmailOnOpen = false,
   });
 
   @override
@@ -70,6 +76,11 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
 
     WidgetsBinding.instance.addObserver(this);
     _startPolling();
+
+    if (widget.sendEmailOnOpen) {
+      // After the first frame so the confirmation snackbar can show.
+      WidgetsBinding.instance.addPostFrameCallback((_) => _handleResendEmail());
+    }
 
     // Deep-link / auth state listener:
     // The synk.cc landing page opens io.supabase.synk://login-callback,
@@ -348,10 +359,14 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
     } catch (_) {}
 
     if (!mounted) return;
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const LoginView()),
+    // Rebuild the stack as Welcome → Login. Login on its own would leave its
+    // back arrow nothing to go back to, which shows a black screen.
+    final navigator = Navigator.of(context);
+    navigator.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const WelcomeView()),
       (route) => false,
     );
+    navigator.push(MaterialPageRoute(builder: (_) => const LoginView()));
   }
 
   @override
