@@ -948,7 +948,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get thisActivityConflictsWithOneYouve =>
-      'هناك نشاط آخر تستضيفه أو انضممت إليه يبدأ في الوقت نفسه. احذف النشاط الذي تستضيفه أو غادر النشاط الذي انضممت إليه، ثم حاول مجددًا.';
+      'هناك نشاط آخر تستضيفه أو انضممت إليه يبدأ في الوقت نفسه، احذف النشاط الذي تستضيفه أو غادر النشاط الذي انضممت إليه، ثم حاول مجددا';
 
   @override
   String get joinedTitle => 'تم الانضمام!';
