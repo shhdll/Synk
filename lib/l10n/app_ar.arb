@@ -1,5 +1,7 @@
 {
   "@@locale": "ar",
+  "overlappingActivity": "نشاط متداخل في الموعد",
+  "overlappingActivityNotice": "إذا تم قبولك في نشاط، ستتم إزالتك تلقائيا من قائمة الانتظار المتداخلة الأخرى أو إلغاء طلبك المعلق.",
   "shareCode": "مشاركة الرمز",
   "share": "مشاركة",
   "shareMessage": "ودك تجي معنا {title}!\n📅 {date}\n📍 {place}\n\nاكتب الرمز في Synk: {code}",

@@ -10,6 +10,13 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
+  String get overlappingActivity => 'نشاط متداخل في الموعد';
+
+  @override
+  String get overlappingActivityNotice =>
+      'إذا تم قبولك في نشاط، ستتم إزالتك تلقائيا من قائمة الانتظار المتداخلة الأخرى أو إلغاء طلبك المعلق.';
+
+  @override
   String get shareCode => 'مشاركة الرمز';
 
   @override

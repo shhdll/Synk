@@ -1,5 +1,7 @@
 {
   "@@locale": "en",
+  "overlappingActivity": "Overlapping activity",
+  "overlappingActivityNotice": "If you’re accepted into one activity, you’ll automatically be removed from the other conflicting waitlist or your pending request will be cancelled.",
   "shareCode": "Share code",
   "share": "Share",
   "shareMessage": "Want to join us for {title}?\n📅 {date}\n📍 {place}\n\nEnter the code in Synk: {code}",

@@ -8,6 +8,7 @@ import '../../models/activities_model.dart';
 import '../../models/activity_model.dart';
 import '../../models/activity_participation_model.dart';
 import '../../utils/custom_widgets/synk_feedback.dart';
+import 'widgets/overlapping_activity_notice.dart';
 
 // Shared by Home and Activities.
 Future<void> joinActivityWithCode(
@@ -86,6 +87,11 @@ class ActivityCodeJoinSheet extends StatefulWidget {
 
 class _ActivityCodeJoinSheetState extends State<ActivityCodeJoinSheet> {
   late final ActivityJoinController _controller;
+  final ActivitiesModel _activitiesModel = ActivitiesModel();
+  Activity? _resolvedActivity;
+  bool _hasPendingScheduleOverlap = false;
+  bool _isResolvingCode = false;
+  int _resolveRequestId = 0;
 
   @override
   void initState() {
@@ -93,6 +99,46 @@ class _ActivityCodeJoinSheetState extends State<ActivityCodeJoinSheet> {
 
     _controller = ActivityJoinController();
     _controller.addListener(_refresh);
+  }
+
+  Future<void> _codeChanged(String code) async {
+    final requestId = ++_resolveRequestId;
+    _controller.clearFeedback();
+    setState(() {
+      _resolvedActivity = null;
+      _hasPendingScheduleOverlap = false;
+      _isResolvingCode = RegExp(r'^[0-9]{6}$').hasMatch(code);
+    });
+    if (!RegExp(r'^[0-9]{6}$').hasMatch(code)) return;
+    try {
+      final activity = await _activitiesModel.resolveActivityCode(code);
+      if (!mounted ||
+          requestId != _resolveRequestId ||
+          _controller.codeController.text.trim() != code) {
+        return;
+      }
+      if (activity == null) {
+        setState(() => _isResolvingCode = false);
+        return;
+      }
+      final participating = await _activitiesModel.fetchParticipating();
+      if (!mounted ||
+          requestId != _resolveRequestId ||
+          _controller.codeController.text.trim() != code) {
+        return;
+      }
+      setState(() {
+        _resolvedActivity = activity;
+        _isResolvingCode = false;
+        _hasPendingScheduleOverlap =
+            ActivitiesModel.hasPendingOverlap(activity, participating);
+      });
+    } catch (_) {
+      // The existing join action remains available if the preview lookup fails.
+      if (mounted && requestId == _resolveRequestId) {
+        setState(() => _isResolvingCode = false);
+      }
+    }
   }
 
   void _refresh() {
@@ -104,7 +150,7 @@ class _ActivityCodeJoinSheetState extends State<ActivityCodeJoinSheet> {
   // Submits the code and closes the sheet only when the result
   // represents a successful or existing participation state.
   Future<void> _submitCode() async {
-    if (_controller.isLoading) return;
+    if (_controller.isLoading || _isResolvingCode) return;
 
     await _controller.joinByCode();
 
@@ -215,9 +261,7 @@ class _ActivityCodeJoinSheetState extends State<ActivityCodeJoinSheet> {
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(6),
                 ],
-                onChanged: (_) {
-                  _controller.clearFeedback();
-                },
+                onChanged: _codeChanged,
                 onSubmitted: (_) {
                   _submitCode();
                 },
@@ -268,12 +312,31 @@ class _ActivityCodeJoinSheetState extends State<ActivityCodeJoinSheet> {
                   ),
                 ),
               ),
+              if (_resolvedActivity != null) ...[
+                const SizedBox(height: 12),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(
+                    _resolvedActivity!.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: SynkColors.textPrimary,
+                    ),
+                  ),
+                ),
+                if (_hasPendingScheduleOverlap) ...[
+                  const SizedBox(height: 10),
+                  const OverlappingActivityNotice(),
+                ],
+              ],
               const SizedBox(height: 22),
               SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: FilledButton(
-                  onPressed: _controller.isLoading ? null : _submitCode,
+                  onPressed: _controller.isLoading || _isResolvingCode
+                      ? null
+                      : _submitCode,
                   style: FilledButton.styleFrom(
                     backgroundColor: SynkColors.orangeDark,
                     disabledBackgroundColor: SynkColors.orangeDark.withValues(

@@ -51,6 +51,26 @@ class ActivitiesModel {
     return _withActivityCodes(activities);
   }
 
+  Future<Activity?> resolveActivityCode(String code) async {
+    final response = await _supabase.rpc(
+      'resolve_activity_code',
+      params: {'entered_code': code},
+    );
+    final row = Map<String, dynamic>.from(response as Map);
+    if (row['found'] != true) return null;
+    return Activity.fromMap(Map<String, dynamic>.from(row['activity'] as Map));
+  }
+
+  static bool hasPendingOverlap(Activity target, Iterable<Activity> activities) {
+    return activities.any((existing) {
+      if (existing.id == target.id ||
+          (existing.participationStatus != 'pending' &&
+              existing.participationStatus != 'waitlisted')) return false;
+      return target.dateTime.isBefore(existing.endsAt) &&
+          target.endsAt.isAfter(existing.dateTime);
+    });
+  }
+
   // The RPC strips codes, so read them for joined activities.
   Future<List<Activity>> _withActivityCodes(List<Activity> activities) async {
     final ids = [

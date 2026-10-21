@@ -98,6 +98,18 @@ abstract class AppLocalizations {
     Locale('en'),
   ];
 
+  /// No description provided for @overlappingActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Overlapping activity'**
+  String get overlappingActivity;
+
+  /// No description provided for @overlappingActivityNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'If you’re accepted into one activity, you’ll automatically be removed from the other conflicting waitlist or your pending request will be cancelled.'**
+  String get overlappingActivityNotice;
+
   /// No description provided for @shareCode.
   ///
   /// In en, this message translates to:

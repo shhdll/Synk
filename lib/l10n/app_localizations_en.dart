@@ -10,6 +10,13 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get overlappingActivity => 'Overlapping activity';
+
+  @override
+  String get overlappingActivityNotice =>
+      'If you’re accepted into one activity, you’ll automatically be removed from the other conflicting waitlist or your pending request will be cancelled.';
+
+  @override
   String get shareCode => 'Share code';
 
   @override

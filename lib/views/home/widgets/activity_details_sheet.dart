@@ -19,6 +19,7 @@ import '../../widgets/anonymous_avatar.dart';
 import '../../widgets/crown_icon.dart';
 import 'activity_thumbnail.dart';
 import 'activity_status_chip.dart';
+import 'overlapping_activity_notice.dart';
 import 'host_transfer_sheet.dart';
 import 'user_profile_sheet.dart';
 
@@ -83,6 +84,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
   String? _participationStatus;
   bool _isJoining = false;
   String? _joinError;
+  bool _hasPendingScheduleOverlap = false;
   bool _isLeaving = false;
   String? _leaveError;
 
@@ -107,6 +109,16 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     _loadParticipants();
     _loadOwnProfile();
     _loadHostProfile();
+    _loadPendingScheduleOverlap();
+  }
+
+  Future<void> _loadPendingScheduleOverlap() async {
+    try {
+      final participating = await _activitiesModel.fetchParticipating();
+      if (!mounted) return;
+      setState(() => _hasPendingScheduleOverlap =
+          ActivitiesModel.hasPendingOverlap(_currentActivity, participating));
+    } catch (_) {}
   }
 
   // Our own activities come without the host profile.
@@ -663,6 +675,10 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
       content = Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (_hasPendingScheduleOverlap) ...[
+            const OverlappingActivityNotice(),
+            const SizedBox(height: 10),
+          ],
           SizedBox(
             width: double.infinity,
             height: 52,
