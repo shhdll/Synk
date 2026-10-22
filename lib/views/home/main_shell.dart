@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../controllers/home_discovery_controller.dart';
+import '../../controllers/notification_center_controller.dart';
 import '../../core/constants/synk_colors.dart';
 import '../../models/activities_model.dart';
 import '../../models/activity_model.dart';
@@ -50,6 +51,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   late final ActivityStore _activityStore;
   late HomeTab _tab;
 
+  final NotificationCenterController _notifications =
+      NotificationCenterController();
+
   @override
   void initState() {
     super.initState();
@@ -62,6 +66,11 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     PushNotificationService.instance.setActivityUpdatedHandler(
       _refreshActivity,
     );
+    // A push while the app is open adds to the list straight away.
+    PushNotificationService.instance.setMessageReceivedHandler(
+      () => unawaited(_notifications.refresh()),
+    );
+    unawaited(_notifications.refresh());
 
     _tab = widget.initialTab;
     _activityStore.addListener(_openMapForFocus);
@@ -78,6 +87,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       (_) {
         _loadPendingRequestCount();
         unawaited(_requireScheduleConflictResolution());
+        unawaited(_notifications.refresh());
       },
     );
   }
@@ -97,6 +107,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       unawaited(_loadActivities());
       unawaited(_discoveryController.loadFeed(isSilent: true));
       _loadPendingRequestCount();
+      unawaited(_notifications.refresh());
       unawaited(PushNotificationService.instance.registerForCurrentUser());
       // Picks up an email change confirmed in the browser.
       unawaited(_authModel.refreshIfEmailChangePending());
@@ -207,6 +218,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   void dispose() {
     _requestPoll?.cancel();
     PushNotificationService.instance.setActivityUpdatedHandler(null);
+    PushNotificationService.instance.setMessageReceivedHandler(null);
+    _notifications.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _activityStore.removeListener(_openMapForFocus);
     _activityStore.dispose();
@@ -251,6 +264,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
         discoveryController: _discoveryController,
         isNewUser: widget.isNewUser,
         onCreateActivity: _openAddActivity,
+        notifications: _notifications,
       ),
     ];
 

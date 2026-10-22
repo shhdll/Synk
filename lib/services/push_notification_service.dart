@@ -41,6 +41,7 @@ class PushNotificationService {
   bool _pendingScheduleConflictsTap = false;
   VoidCallback? _onScheduleConflictsTap;
   void Function(String activityId)? _onActivityUpdated;
+  VoidCallback? _onMessageReceived;
   bool _initialized = false;
 
   bool get isInitialized => _initialized;
@@ -86,6 +87,7 @@ class PushNotificationService {
           ?.createNotificationChannel(activityUpdatesChannel);
 
       FirebaseMessaging.onMessage.listen((message) {
+        _onMessageReceived?.call();
         if (message.data['type'] == 'activity_conflict') {
           // Show the conflict alert and immediately require the user to
           // resolve it while the app is open.
@@ -162,6 +164,11 @@ class PushNotificationService {
 
   void setActivityUpdatedHandler(void Function(String activityId)? handler) {
     _onActivityUpdated = handler;
+  }
+
+  // Called for every push that arrives while the app is open.
+  void setMessageReceivedHandler(VoidCallback? handler) {
+    _onMessageReceived = handler;
   }
 
   void refreshActivity(String activityId) {

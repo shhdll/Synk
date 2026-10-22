@@ -2324,6 +2324,78 @@ abstract class AppLocalizations {
   /// **'This time overlaps with another one of your activities. Choose a different date or time.'**
   String get youAlreadyHaveAnActivityAtThisTime;
 
+  /// No description provided for @notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notifications;
+
+  /// No description provided for @noNotificationsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications yet'**
+  String get noNotificationsYet;
+
+  /// No description provided for @noNotificationsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Updates about your activities will show up here.'**
+  String get noNotificationsHint;
+
+  /// No description provided for @couldntLoadNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load notifications. Pull down to try again.'**
+  String get couldntLoadNotifications;
+
+  /// No description provided for @notifWaitlistPromotion.
+  ///
+  /// In en, this message translates to:
+  /// **'A spot opened up! You\'ve joined {title}.'**
+  String notifWaitlistPromotion(String title);
+
+  /// No description provided for @notifActivityUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'{title} was updated. Check the new details.'**
+  String notifActivityUpdated(String title);
+
+  /// No description provided for @notifActivityDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{title} was cancelled by the host.'**
+  String notifActivityDeleted(String title);
+
+  /// No description provided for @notifRequestAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Your request to join {title} was accepted. You\'re in!'**
+  String notifRequestAccepted(String title);
+
+  /// No description provided for @notifRequestRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Your request to join {title} was declined.'**
+  String notifRequestRejected(String title);
+
+  /// No description provided for @notifRequestReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone asked to join {title}. Tap to review.'**
+  String notifRequestReceived(String title);
+
+  /// No description provided for @notifHostAssigned.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re now the host of {title}.'**
+  String notifHostAssigned(String title);
+
+  /// No description provided for @notifActivityConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'{title} was rescheduled and now overlaps another activity. Tap to resolve.'**
+  String notifActivityConflict(String title);
+
   /// No description provided for @conflictJoinJoined.
   ///
   /// In en, this message translates to:

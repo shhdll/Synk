@@ -514,6 +514,58 @@
   "chooseADateWithinTheNext": "Choose a date within the next 3 months",
   "thisTimeHasAlreadyPassed": "This time has already passed",
   "youAlreadyHaveAnActivityAtThisTime": "This time overlaps with another one of your activities. Choose a different date or time.",
+  "notifications": "Notifications",
+  "noNotificationsYet": "No notifications yet",
+  "noNotificationsHint": "Updates about your activities will show up here.",
+  "couldntLoadNotifications": "Couldn't load notifications. Pull down to try again.",
+  "notifWaitlistPromotion": "A spot opened up! You've joined {title}.",
+  "@notifWaitlistPromotion": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "notifActivityUpdated": "{title} was updated. Check the new details.",
+  "@notifActivityUpdated": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "notifActivityDeleted": "{title} was cancelled by the host.",
+  "@notifActivityDeleted": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "notifRequestAccepted": "Your request to join {title} was accepted. You're in!",
+  "@notifRequestAccepted": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "notifRequestRejected": "Your request to join {title} was declined.",
+  "@notifRequestRejected": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "notifRequestReceived": "Someone asked to join {title}. Tap to review.",
+  "@notifRequestReceived": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "notifHostAssigned": "You're now the host of {title}.",
+  "@notifHostAssigned": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "notifActivityConflict": "{title} was rescheduled and now overlaps another activity. Tap to resolve.",
+  "@notifActivityConflict": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
   "conflictJoinJoined": "This overlaps with {title}, which you've already joined. Leave it first to join this one.",
   "@conflictJoinJoined": {
     "placeholders": {

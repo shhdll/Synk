@@ -1214,6 +1214,59 @@ class AppLocalizationsAr extends AppLocalizations {
       'يتعارض هذا الوقت مع نشاط آخر من أنشطتك، اختر تاريخا أو وقتا مختلفا';
 
   @override
+  String get notifications => 'الإشعارات';
+
+  @override
+  String get noNotificationsYet => 'لا توجد إشعارات بعد';
+
+  @override
+  String get noNotificationsHint => 'ستظهر هنا التحديثات الخاصة بأنشطتك';
+
+  @override
+  String get couldntLoadNotifications =>
+      'تعذر تحميل الإشعارات، اسحب للأسفل للمحاولة مجددا';
+
+  @override
+  String notifWaitlistPromotion(String title) {
+    return 'توفر مكان، تم انضمامك إلى $title';
+  }
+
+  @override
+  String notifActivityUpdated(String title) {
+    return 'تم تحديث $title، اطلع على التفاصيل الجديدة';
+  }
+
+  @override
+  String notifActivityDeleted(String title) {
+    return 'ألغى المضيف $title';
+  }
+
+  @override
+  String notifRequestAccepted(String title) {
+    return 'تم قبول طلبك للانضمام إلى $title';
+  }
+
+  @override
+  String notifRequestRejected(String title) {
+    return 'تم رفض طلبك للانضمام إلى $title';
+  }
+
+  @override
+  String notifRequestReceived(String title) {
+    return 'طلب شخص الانضمام إلى $title، اضغط للمراجعة';
+  }
+
+  @override
+  String notifHostAssigned(String title) {
+    return 'أصبحت مضيف $title';
+  }
+
+  @override
+  String notifActivityConflict(String title) {
+    return 'تغير موعد $title وأصبح يتعارض مع نشاط آخر، اضغط لحل التعارض';
+  }
+
+  @override
   String conflictJoinJoined(String title) {
     return 'يتعارض هذا النشاط مع $title الذي انضممت إليه، غادره أولا لتنضم إلى هذا النشاط';
   }

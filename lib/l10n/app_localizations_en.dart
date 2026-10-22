@@ -1251,6 +1251,60 @@ class AppLocalizationsEn extends AppLocalizations {
       'This time overlaps with another one of your activities. Choose a different date or time.';
 
   @override
+  String get notifications => 'Notifications';
+
+  @override
+  String get noNotificationsYet => 'No notifications yet';
+
+  @override
+  String get noNotificationsHint =>
+      'Updates about your activities will show up here.';
+
+  @override
+  String get couldntLoadNotifications =>
+      'Couldn\'t load notifications. Pull down to try again.';
+
+  @override
+  String notifWaitlistPromotion(String title) {
+    return 'A spot opened up! You\'ve joined $title.';
+  }
+
+  @override
+  String notifActivityUpdated(String title) {
+    return '$title was updated. Check the new details.';
+  }
+
+  @override
+  String notifActivityDeleted(String title) {
+    return '$title was cancelled by the host.';
+  }
+
+  @override
+  String notifRequestAccepted(String title) {
+    return 'Your request to join $title was accepted. You\'re in!';
+  }
+
+  @override
+  String notifRequestRejected(String title) {
+    return 'Your request to join $title was declined.';
+  }
+
+  @override
+  String notifRequestReceived(String title) {
+    return 'Someone asked to join $title. Tap to review.';
+  }
+
+  @override
+  String notifHostAssigned(String title) {
+    return 'You\'re now the host of $title.';
+  }
+
+  @override
+  String notifActivityConflict(String title) {
+    return '$title was rescheduled and now overlaps another activity. Tap to resolve.';
+  }
+
+  @override
   String conflictJoinJoined(String title) {
     return 'This overlaps with $title, which you\'ve already joined. Leave it first to join this one.';
   }

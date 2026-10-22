@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/synk_colors.dart';
 import '../../controllers/home_discovery_controller.dart';
+import '../../controllers/notification_center_controller.dart';
 import '../../l10n/l10n.dart';
 import '../../models/activities_model.dart';
 import '../../models/activity_filters.dart';
@@ -18,6 +19,7 @@ import 'widgets/discovery_activity_card.dart';
 import 'widgets/empty_state.dart';
 import 'widgets/filter_bottom_sheet.dart';
 import 'widgets/filter_button.dart';
+import 'widgets/notification_bell.dart';
 import 'widgets/synk_filter_chip.dart';
 
 class HomeView extends StatefulWidget {
@@ -27,6 +29,7 @@ class HomeView extends StatefulWidget {
     required this.discoveryController,
     this.isNewUser = false,
     this.onCreateActivity,
+    this.notifications,
     this.activitiesModel,
     this.profileModel,
   });
@@ -37,6 +40,9 @@ class HomeView extends StatefulWidget {
   final HomeDiscoveryController discoveryController;
 
   final VoidCallback? onCreateActivity;
+
+  // Drives the bell in the header; no bell when null.
+  final NotificationCenterController? notifications;
 
   // Injectable for tests; default to the Supabase-backed models.
   final ActivitiesModel? activitiesModel;
@@ -295,28 +301,13 @@ class _HomeViewState extends State<HomeView> {
             ],
           ),
         ),
-        const SizedBox(width: 12),
-        Container(
-          width: 44,
-          height: 44,
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
+        if (widget.notifications != null) ...[
+          const SizedBox(width: 12),
+          NotificationBell(
+            controller: widget.notifications!,
+            activityStore: widget.activityStore,
           ),
-          child: Image.asset(
-            'assets/synk_logo_transparent.png',
-            fit: BoxFit.contain,
-            errorBuilder: (_, _, _) => const SizedBox.shrink(),
-          ),
-        ),
+        ],
       ],
     );
   }
