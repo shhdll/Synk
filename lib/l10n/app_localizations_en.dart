@@ -784,6 +784,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get youreOnTheWaitlist => 'You\'re on the waitlist';
 
   @override
+  String waitlistPeopleAhead(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n people ahead of you',
+      one: '1 person ahead of you',
+      zero: 'You\'re next in the waitlist',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get waitingForHostApproval => 'Waiting for host approval';
 
   @override

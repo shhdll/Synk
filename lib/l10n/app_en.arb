@@ -324,6 +324,14 @@
   "activityCodeCopied": "Activity code copied",
   "deleteActivity": "Delete activity",
   "youreOnTheWaitlist": "You're on the waitlist",
+  "waitlistPeopleAhead": "{n, plural, =0{You're next in the waitlist} =1{1 person ahead of you} other{{n} people ahead of you}}",
+  "@waitlistPeopleAhead": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "waitingForHostApproval": "Waiting for host approval",
   "youveJoinedThisActivity": "You've joined this activity",
   "joinWaitlist": "Join waitlist",

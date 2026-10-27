@@ -235,6 +235,7 @@
   "activityCodeCopied": "تم نسخ الرمز",
   "deleteActivity": "حذف النشاط",
   "youreOnTheWaitlist": "أنت في قائمة الانتظار",
+  "waitlistPeopleAhead": "{n, plural, =0{أنت التالي في قائمة الانتظار} =1{شخص واحد قبلك} =2{شخصان قبلك} few{{n} أشخاص قبلك} many{{n} شخصًا قبلك} other{{n} شخص قبلك}}",
   "waitingForHostApproval": "بانتظار موافقة المنظم",
   "youveJoinedThisActivity": "انضممت لهذا النشاط",
   "joinWaitlist": "انضم لقائمة الانتظار",

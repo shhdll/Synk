@@ -221,6 +221,17 @@ class ActivityParticipationModel {
     );
   }
 
+  // Number of waitlisted users ahead of the signed-in user, or null when
+  // they are not on this activity's waitlist.
+  Future<int?> fetchWaitlistPosition(String activityId) async {
+    final response = await _client.rpc(
+      'get_my_waitlist_position',
+      params: {'requested_activity_id': activityId},
+    );
+
+    return (response as num?)?.toInt();
+  }
+
   // Makes a joined participant the new host and removes the current host.
   Future<ActivityJoinResult> transferHostAndLeave({
     required String activityId,
