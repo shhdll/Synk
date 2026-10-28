@@ -358,6 +358,10 @@
   "anyoneCanFindAndJoin": "يمكن لأي شخص إيجاده والانضمام",
   "private": "خاص",
   "joinByCodeYouApprove": "الانضمام بالرمز بعد موافقتك",
+  "setting": "المكان",
+  "settingIndoor": "داخلي",
+  "settingOutdoor": "خارجي",
+  "chooseIndoorOrOutdoor": "اختر داخلي أو خارجي",
   "whenLabel": "متى",
   "whereLabel": "أين",
   "people": "الأشخاص",
@@ -382,6 +386,26 @@
   "notifRequestAccepted": "تم قبول طلبك للانضمام إلى {title}",
   "notifRequestRejected": "تم رفض طلبك للانضمام إلى {title}",
   "notifRequestReceived": "طلب شخص الانضمام إلى {title}، اضغط للمراجعة",
+  "notifActivityFull": "اكتمل عدد المشاركين في {title}!",
+  "@notifActivityFull": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "friendRequestNotificationTitle": "طلب صداقة جديد",
+  "notifFriendRequestReceived": "أرسل إليك {name} طلب صداقة.",
+  "@notifFriendRequestReceived": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "friendRequestAcceptedNotificationTitle": "تم قبول طلب الصداقة",
+  "notifFriendRequestAccepted": "قبل {name} طلب صداقتك. أصبحتما صديقين الآن.",
+  "@notifFriendRequestAccepted": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
   "notifHostAssigned": "أصبحت مضيف {title}",
   "notifActivityConflict": "تغير موعد {title} وأصبح يتعارض مع نشاط آخر، اضغط لحل التعارض",
   "conflictJoinJoined": "يتعارض هذا النشاط مع {title} الذي انضممت إليه، غادره أولا لتنضم إلى هذا النشاط",
@@ -677,6 +701,23 @@
   "blockUserMessage": "لن يتمكن من العثور عليك أو إرسال طلبات صداقة لك، وستتم إزالته من أصدقائك. لن يتم إشعاره بذلك",
   "block": "حظر",
   "unblock": "إلغاء الحظر",
+  "reportName": "الإبلاغ عن {name}",
+  "reportTitle": "إبلاغ",
+  "reportWhyName": "لماذا تبلغ عن {name}؟",
+  "back": "رجوع",
+  "reportUserMessage": "لن يعرف {name} أنك أبلغت عنه",
+  "reportReasonHarassment": "تحرش أو تنمر",
+  "reportReasonSpam": "رسائل مزعجة",
+  "reportReasonFakeProfile": "حساب مزيف",
+  "reportReasonInappropriateContent": "محتوى غير لائق",
+  "reportReasonOther": "سبب آخر",
+  "reportDetailsHint": "أضف أي تفاصيل تساعدنا في مراجعة البلاغ، هذا اختياري",
+  "reportDetailsRequiredHint": "أخبرنا بما حدث",
+  "reportAndBlockName": "إرسال البلاغ وحظر {name}",
+  "submitReport": "إرسال البلاغ",
+  "reportSent": "تم إرسال البلاغ",
+  "reportedAndBlockedName": "تم الإبلاغ عن {name} وحظره",
+  "alreadyReportedName": "سبق أن أبلغت عن {name}",
   "blockedUsersInfo": "لا يمكن للمستخدمين المحظورين العثور عليك أو إرسال طلبات صداقة لك، ولا يتم إشعارهم بالحظر",
   "noBlockedUsers": "لا يوجد مستخدمون محظورون",
   "peopleYouBlockShowUpHere": "سيظهر هنا الأشخاص الذين تحظرهم",

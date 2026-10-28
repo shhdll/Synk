@@ -6,10 +6,11 @@ import '../../../l10n/l10n.dart';
 import '../../../models/friends_model.dart';
 import '../../../utils/custom_widgets/synk_dialog.dart';
 import '../../../utils/custom_widgets/synk_feedback.dart';
+import 'report_user_sheet.dart';
 import 'user_avatar.dart';
 import 'user_profile_sheet.dart';
 
-// The ⋮ menu on a friend: view profile, remove friend, block.
+// The ⋮ menu on a friend: view profile, remove friend, report, block.
 Future<void> showFriendOptionsSheet({
   required BuildContext context,
   required FriendUser friend,
@@ -108,6 +109,15 @@ Future<void> showFriendOptionsSheet({
                           onTap: () {
                             Navigator.pop(sheetContext);
                             confirmRemoveFriend(context, friend);
+                          },
+                        ),
+                        const _OptionDivider(),
+                        _OptionTile(
+                          icon: Icons.flag_outlined,
+                          label: l10n.reportName(friend.name.split(' ').first),
+                          onTap: () {
+                            Navigator.pop(sheetContext);
+                            showReportUserSheet(context: context, user: friend);
                           },
                         ),
                         const _OptionDivider(),

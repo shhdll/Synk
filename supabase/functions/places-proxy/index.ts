@@ -7,15 +7,20 @@
 // JWT verification is ON (the Supabase default) — only a signed-in Synk user
 // can call this function. Do not deploy with --no-verify-jwt.
 //
-// Two actions, chosen by the request body's "action" field:
+// Three actions, chosen by the request body's "action" field:
 //   { "action": "autocomplete", "input": "padel", "sessionToken": "..." }
 //   { "action": "details", "placeId": "...", "sessionToken": "..." }
+//   { "action": "poi", "placeId": "..." }
 //
 // The Details call intentionally requests only `id`, `formattedAddress` and
 // `location` — Places Details Essentials pricing. It never requests
 // `displayName`, which is Pro-tier. The venue name is expected to come from
 // the autocomplete suggestion the caller already has (structuredFormat in the
 // autocomplete response), not from this call.
+//
+// The poi action is for a place pin tapped on the map. There is no
+// autocomplete suggestion to take the name from, so it also requests
+// `displayName` and is billed at the Pro tier.
 
 const GOOGLE_PLACES_API_KEY = Deno.env.get("GOOGLE_PLACES_API_KEY");
 
@@ -28,6 +33,7 @@ const RIYADH_BIAS = {
 };
 
 const DETAILS_FIELD_MASK = "id,formattedAddress,location";
+const POI_FIELD_MASK = "id,displayName,formattedAddress,location";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -45,6 +51,7 @@ function jsonResponse(body: unknown, status = 200): Response {
 async function handleAutocomplete(
   input: string,
   sessionToken: string | undefined,
+  languageCode: string,
 ): Promise<Response> {
   const trimmed = input.trim();
   if (trimmed.length === 0) {
@@ -55,7 +62,7 @@ async function handleAutocomplete(
     input: trimmed,
     locationBias: RIYADH_BIAS,
     includedRegionCodes: ["sa"],
-    languageCode: "en",
+    languageCode: languageCode === "ar" ? "ar" : "en",
   };
   if (sessionToken) payload.sessionToken = sessionToken;
 
@@ -86,6 +93,8 @@ async function handleAutocomplete(
 async function handleDetails(
   placeId: string,
   sessionToken: string | undefined,
+  languageCode: string,
+  fieldMask = DETAILS_FIELD_MASK,
 ): Promise<Response> {
   if (!placeId) {
     return jsonResponse({ error: "placeId is required" }, 400);
@@ -95,6 +104,7 @@ async function handleDetails(
     `https://places.googleapis.com/v1/places/${placeId}`,
   );
   if (sessionToken) url.searchParams.set("sessionToken", sessionToken);
+  url.searchParams.set("languageCode", languageCode === "ar" ? "ar" : "en");
 
   const googleResponse = await fetch(url.toString(), {
     method: "GET",
@@ -102,7 +112,7 @@ async function handleDetails(
       "X-Goog-Api-Key": GOOGLE_PLACES_API_KEY!,
       // Hard-coded, not caller-supplied: this is what keeps us on the
       // Essentials pricing tier rather than Pro.
-      "X-Goog-FieldMask": DETAILS_FIELD_MASK,
+      "X-Goog-FieldMask": fieldMask,
     },
   });
 
@@ -142,15 +152,21 @@ Deno.serve(async (req: Request) => {
   const action = body.action;
   const sessionToken =
     typeof body.sessionToken === "string" ? body.sessionToken : undefined;
+  const languageCode = body.languageCode === "ar" ? "ar" : "en";
 
   if (action === "autocomplete") {
     const input = typeof body.input === "string" ? body.input : "";
-    return handleAutocomplete(input, sessionToken);
+    return handleAutocomplete(input, sessionToken, languageCode);
   }
 
   if (action === "details") {
     const placeId = typeof body.placeId === "string" ? body.placeId : "";
-    return handleDetails(placeId, sessionToken);
+    return handleDetails(placeId, sessionToken, languageCode);
+  }
+
+  if (action === "poi") {
+    const placeId = typeof body.placeId === "string" ? body.placeId : "";
+    return handleDetails(placeId, undefined, languageCode, POI_FIELD_MASK);
   }
 
   return jsonResponse({ error: "unknown_action" }, 400);

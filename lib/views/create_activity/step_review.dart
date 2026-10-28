@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../controllers/create_activity_controller.dart';
 import '../../core/constants/synk_colors.dart';
 import '../../l10n/l10n.dart';
+import '../../models/activity_model.dart';
 import '../home/widgets/activity_thumbnail.dart';
 import '../home/widgets/discovery_activity_card.dart';
 import 'create_activity_widgets.dart';
@@ -77,6 +78,17 @@ class StepReview extends StatelessWidget {
                 detail: c.locationAddress,
                 onTap: () => c.goToStep(0),
               ),
+              if (c.setting case final setting?) ...<Widget>[
+                const _Divider(),
+                _Row(
+                  icon: setting == ActivitySetting.outdoor
+                      ? Icons.park_rounded
+                      : Icons.home_rounded,
+                  label: context.l10n.setting,
+                  value: setting.label,
+                  onTap: () => c.goToStep(0),
+                ),
+              ],
               if (lat != null && lng != null)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),

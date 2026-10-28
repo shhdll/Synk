@@ -1212,6 +1212,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get joinByCodeYouApprove => 'Join by code, you approve';
 
   @override
+  String get setting => 'Setting';
+
+  @override
+  String get settingIndoor => 'Indoor';
+
+  @override
+  String get settingOutdoor => 'Outdoor';
+
+  @override
+  String get chooseIndoorOrOutdoor => 'Choose indoor or outdoor';
+
+  @override
   String get whenLabel => 'When';
 
   @override
@@ -1304,6 +1316,28 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String notifRequestReceived(String title) {
     return 'Someone asked to join $title. Tap to review.';
+  }
+
+  @override
+  String notifActivityFull(String title) {
+    return '$title is full! Every spot has been taken.';
+  }
+
+  @override
+  String get friendRequestNotificationTitle => 'New friend request';
+
+  @override
+  String notifFriendRequestReceived(String name) {
+    return '$name sent you a friend request.';
+  }
+
+  @override
+  String get friendRequestAcceptedNotificationTitle =>
+      'Friend request accepted';
+
+  @override
+  String notifFriendRequestAccepted(String name) {
+    return '$name accepted your friend request. You\'re now friends!';
   }
 
   @override
@@ -2311,6 +2345,70 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unblock => 'Unblock';
+
+  @override
+  String reportName(Object name) {
+    return 'Report $name';
+  }
+
+  @override
+  String get reportTitle => 'Report';
+
+  @override
+  String reportWhyName(Object name) {
+    return 'Why are you reporting $name?';
+  }
+
+  @override
+  String get back => 'Back';
+
+  @override
+  String reportUserMessage(Object name) {
+    return '$name won\'t know you reported them.';
+  }
+
+  @override
+  String get reportReasonHarassment => 'Harassment or bullying';
+
+  @override
+  String get reportReasonSpam => 'Spam';
+
+  @override
+  String get reportReasonFakeProfile => 'Fake profile';
+
+  @override
+  String get reportReasonInappropriateContent => 'Inappropriate content';
+
+  @override
+  String get reportReasonOther => 'Something else';
+
+  @override
+  String get reportDetailsHint =>
+      'Add anything that would help us review this. This is optional.';
+
+  @override
+  String get reportDetailsRequiredHint => 'Tell us what happened';
+
+  @override
+  String reportAndBlockName(Object name) {
+    return 'Send report & block $name';
+  }
+
+  @override
+  String get submitReport => 'Send report';
+
+  @override
+  String get reportSent => 'Report sent';
+
+  @override
+  String reportedAndBlockedName(Object name) {
+    return 'Reported and blocked $name';
+  }
+
+  @override
+  String alreadyReportedName(Object name) {
+    return 'You already reported $name';
+  }
 
   @override
   String get blockedUsersInfo =>
