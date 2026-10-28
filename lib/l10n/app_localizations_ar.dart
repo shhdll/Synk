@@ -2157,4 +2157,174 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get anActivityYouJoinedHasNew => 'تغيرت تفاصيل نشاط انضممت له';
+
+  @override
+  String get findPeople => 'البحث عن أشخاص';
+
+  @override
+  String get searchFriends => 'ابحث في الأصدقاء';
+
+  @override
+  String get searchByNameOrUsername => 'ابحث بالاسم أو @اسم المستخدم';
+
+  @override
+  String get friendRequestsTab => 'الطلبات';
+
+  @override
+  String get receivedRequests => 'المستلمة';
+
+  @override
+  String get sentRequests => 'المرسلة';
+
+  @override
+  String get blockedUsers => 'المستخدمون المحظورون';
+
+  @override
+  String get addFriend => 'إضافة صديق';
+
+  @override
+  String get addShort => 'إضافة';
+
+  @override
+  String get acceptRequest => 'قبول الطلب';
+
+  @override
+  String get sentYouAFriendRequest => 'أرسل لك طلب صداقة';
+
+  @override
+  String get viewProfile => 'عرض الملف الشخصي';
+
+  @override
+  String get friendOptions => 'خيارات الصديق';
+
+  @override
+  String get moreOptions => 'خيارات أخرى';
+
+  @override
+  String get removeFriend => 'إزالة الصديق';
+
+  @override
+  String removeFriendTitle(Object name) {
+    return 'إزالة $name؟';
+  }
+
+  @override
+  String removeFriendMessage(Object name) {
+    return 'ستتم إزالة $name من قائمة أصدقائك. يمكنك إرسال طلب صداقة جديد في أي وقت';
+  }
+
+  @override
+  String get remove => 'إزالة';
+
+  @override
+  String blockName(Object name) {
+    return 'حظر $name';
+  }
+
+  @override
+  String blockUserTitle(Object name) {
+    return 'حظر $name؟';
+  }
+
+  @override
+  String get blockUserMessage =>
+      'لن يتمكن من العثور عليك أو إرسال طلبات صداقة لك، وستتم إزالته من أصدقائك. لن يتم إشعاره بذلك';
+
+  @override
+  String get block => 'حظر';
+
+  @override
+  String get unblock => 'إلغاء الحظر';
+
+  @override
+  String get blockedUsersInfo =>
+      'لا يمكن للمستخدمين المحظورين العثور عليك أو إرسال طلبات صداقة لك، ولا يتم إشعارهم بالحظر';
+
+  @override
+  String get noBlockedUsers => 'لا يوجد مستخدمون محظورون';
+
+  @override
+  String get peopleYouBlockShowUpHere => 'سيظهر هنا الأشخاص الذين تحظرهم';
+
+  @override
+  String get noFriendsYet => 'لا يوجد أصدقاء بعد';
+
+  @override
+  String get findPeopleYouKnow => 'ابحث عن أشخاص تعرفهم وأضفهم كأصدقاء';
+
+  @override
+  String get noFriendRequests => 'لا توجد طلبات صداقة';
+
+  @override
+  String get newFriendRequestsShowUpHere => 'ستظهر طلبات الصداقة الجديدة هنا';
+
+  @override
+  String get noFriendsMatchYourSearch => 'لا يوجد أصدقاء يطابقون بحثك';
+
+  @override
+  String get noPeopleFound => 'لم يتم العثور على أشخاص';
+
+  @override
+  String get tryAnotherNameOrUsername => 'ابحث باسم آخر أو اسم مستخدم آخر';
+
+  @override
+  String get searchForPeopleOnSynk => 'ابحث عن أشخاص في Synk';
+
+  @override
+  String get friendRequestSent => 'تم إرسال طلب الصداقة';
+
+  @override
+  String get friendRequestCancelled => 'تم إلغاء طلب الصداقة';
+
+  @override
+  String youAreNowFriendsWith(Object name) {
+    return 'أصبحت أنت و$name أصدقاء';
+  }
+
+  @override
+  String get friendRequestRejected => 'تم رفض طلب الصداقة';
+
+  @override
+  String friendRemoved(Object name) {
+    return 'تمت إزالة $name من أصدقائك';
+  }
+
+  @override
+  String userBlocked(Object name) {
+    return 'تم حظر $name';
+  }
+
+  @override
+  String userUnblocked(Object name) {
+    return 'تم إلغاء حظر $name';
+  }
+
+  @override
+  String friendIsGoing(Object name) {
+    return '$name مشارك';
+  }
+
+  @override
+  String twoFriendsAreGoing(Object first, Object second) {
+    return '$first و$second مشاركين';
+  }
+
+  @override
+  String friendAndOthersAreGoing(Object name, int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n من أصدقائك',
+      few: '$n أصدقاء آخرين',
+      two: 'صديقان آخران',
+      one: 'صديق آخر',
+    );
+    return '$name و$_temp0 مشاركين';
+  }
+
+  @override
+  String get yourFriendsGroup => 'أصدقاؤك';
+
+  @override
+  String get othersGroup => 'الآخرون';
 }

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../controllers/activity_leave_controller.dart';
+import '../../../controllers/friends_controller.dart';
 import '../../../core/constants/synk_colors.dart';
 import '../../../core/constants/synk_icons.dart';
 import '../../../l10n/l10n.dart';
@@ -10,6 +11,7 @@ import '../../../models/activities_model.dart';
 import '../../../models/activity_model.dart';
 import '../../../models/activity_participation_model.dart';
 import '../../../models/avatar_uploader.dart';
+import '../../../models/friends_model.dart';
 import '../../../models/user_profile_model.dart';
 import '../../../utils/custom_widgets/synk_dialog.dart';
 import '../../../utils/custom_widgets/synk_feedback.dart';
@@ -110,6 +112,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     _currentActivity = widget.activity;
     _participationStatus = _storedParticipationStatus();
     widget.activityStore.addListener(_syncActivityFromStore);
+    FriendsController.instance.addListener(_onFriendsChanged);
     _loadParticipants();
     _loadOwnProfile();
     _loadHostProfile();
@@ -163,6 +166,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
   @override
   void dispose() {
     widget.activityStore.removeListener(_syncActivityFromStore);
+    FriendsController.instance.removeListener(_onFriendsChanged);
     _leaveController.dispose();
     _scroll.dispose();
     super.dispose();
@@ -255,6 +259,15 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
   );
 
   bool get _hideMembers => _participationStatus == 'pending' && !_isViewerHost;
+
+  void _onFriendsChanged() {
+    if (mounted) setState(() {});
+  }
+
+  bool _isFriend(String? userId) =>
+      userId != null &&
+      FriendsController.instance.statusFor(userId) == FriendshipStatus.friends;
+
 
   int get _anonymousCount =>
       (_joinedCount - 1).clamp(0, _currentActivity.maxParticipants);
@@ -1661,6 +1674,76 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
   Widget _buildParticipantsList() {
     // Collect attendees: starting with host
     final hostName = _currentActivity.hostName ?? context.l10n.host;
+    final hostRow = _buildParticipantRow(
+      name: hostName,
+      username: _currentActivity.hostUsername,
+      userId: _currentActivity.hostId,
+      avatarUrl: _currentActivity.hostAvatarUrl,
+      gender: _currentActivity.hostGender,
+      isHost: true,
+    );
+
+    Widget divider() => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Divider(
+        height: 1,
+        color: SynkColors.textSecondary.withValues(alpha: 0.08),
+      ),
+    );
+
+    List<Widget> withDividers(List<Widget> rows) => [
+      for (final (i, row) in rows.indexed) ...[if (i > 0) divider(), row],
+    ];
+
+    final List<Widget> children;
+    if (_hideMembers) {
+      // Server doesn't send pending users the list, so use the count.
+      children = [
+        hostRow,
+        for (var i = 0; i < _anonymousCount; i++) ...[
+          divider(),
+          _buildAnonymousRow(),
+        ],
+      ];
+    } else {
+      // Friends are grouped first; without friends the list is unchanged.
+      final friendRows = <Widget>[];
+      final otherRows = <Widget>[];
+      (_isFriend(_currentActivity.hostId) ? friendRows : otherRows).add(
+        hostRow,
+      );
+      for (final p in _participants) {
+        final userId = p['user_id'] as String?;
+        (_isFriend(userId) ? friendRows : otherRows).add(
+          _buildParticipantRow(
+            name: (p['full_name'] as String?) ?? context.l10n.communityMember,
+            username: p['username'] as String?,
+            userId: userId,
+            avatarUrl: p['avatar_url'] as String?,
+            gender: p['gender'] as String?,
+            isHost: false,
+          ),
+        );
+      }
+
+      children = friendRows.isEmpty
+          ? withDividers(otherRows)
+          : [
+              _buildGroupLabel(
+                context.l10n.yourFriendsGroup,
+                SynkColors.tealText,
+              ),
+              ...withDividers(friendRows),
+              if (otherRows.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                _buildGroupLabel(
+                  context.l10n.othersGroup,
+                  SynkColors.labelGrey,
+                ),
+                ...withDividers(otherRows),
+              ],
+            ];
+    }
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -1671,50 +1754,24 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
           color: SynkColors.textSecondary.withValues(alpha: 0.08),
         ),
       ),
-      child: Column(
-        children: [
-          // Host entry
-          _buildParticipantRow(
-            name: hostName,
-            username: _currentActivity.hostUsername,
-            userId: _currentActivity.hostId,
-            avatarUrl: _currentActivity.hostAvatarUrl,
-            gender: _currentActivity.hostGender,
-            isHost: true,
-          ),
+      child: Column(children: children),
+    );
+  }
 
-          // Server doesn't send pending users the list, so use the count.
-          if (_hideMembers)
-            for (var i = 0; i < _anonymousCount; i++) ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Divider(
-                  height: 1,
-                  color: SynkColors.textSecondary.withValues(alpha: 0.08),
-                ),
-              ),
-              _buildAnonymousRow(),
-            ]
-          else
-            for (final p in _participants) ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Divider(
-                  height: 1,
-                  color: SynkColors.textSecondary.withValues(alpha: 0.08),
-                ),
-              ),
-              _buildParticipantRow(
-                name:
-                    (p['full_name'] as String?) ?? context.l10n.communityMember,
-                username: p['username'] as String?,
-                userId: p['user_id'] as String?,
-                avatarUrl: p['avatar_url'] as String?,
-                gender: p['gender'] as String?,
-                isHost: false,
-              ),
-            ],
-        ],
+  Widget _buildGroupLabel(String text, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: Text(
+          text.toUpperCase(),
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.7,
+            color: color,
+          ),
+        ),
       ),
     );
   }

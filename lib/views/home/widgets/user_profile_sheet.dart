@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../controllers/friends_controller.dart';
 import '../../../core/constants/interest_emojis.dart';
 import '../../../core/constants/synk_colors.dart';
 import '../../../l10n/l10n.dart';
 import '../../../models/activities_model.dart';
 import '../../../models/avatar_uploader.dart';
+import '../../../models/friends_model.dart';
+import '../../../utils/custom_widgets/synk_feedback.dart';
 import '../../widgets/avatar_preview.dart';
 import '../../widgets/profile_header_banner.dart';
+import 'friend_action_button.dart';
+import 'friend_options_sheet.dart';
 
 Future<void> showUserProfileSheet({
   required BuildContext context,
@@ -224,6 +229,19 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
                   ),
                 ],
               ),
+              if (widget.userId !=
+                  Supabase.instance.client.auth.currentUser?.id) ...[
+                const SizedBox(height: 20),
+                _FriendActions(
+                  user: FriendUser(
+                    id: widget.userId,
+                    name: name,
+                    username: username,
+                    avatarUrl: avatarUrl,
+                    gender: gender,
+                  ),
+                ),
+              ],
               if (_loading) ...[
                 const SizedBox(height: 24),
                 const SizedBox(
@@ -327,6 +345,104 @@ class _Stat extends StatelessWidget {
           style: const TextStyle(fontSize: 12, color: SynkColors.textSecondary),
         ),
       ],
+    );
+  }
+}
+
+// Add friend (or Requested / Accept / Friends), plus a ⋯ menu to unfriend or
+// block. A blocked user only gets Unblock.
+class _FriendActions extends StatelessWidget {
+  const _FriendActions({required this.user});
+
+  final FriendUser user;
+
+  @override
+  Widget build(BuildContext context) {
+    final friends = FriendsController.instance;
+
+    return ListenableBuilder(
+      listenable: friends,
+      builder: (context, _) {
+        final status = friends.statusFor(user.id);
+
+        if (status == FriendshipStatus.blocked) {
+          return SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () async {
+                final ok = await friends.unblock(user.id);
+                if (!ok && context.mounted) {
+                  SynkFeedback.showError(
+                    context,
+                    context.l10n.somethingWentWrongPleaseTryAgain,
+                  );
+                }
+              },
+              icon: const Icon(Icons.block_rounded, size: 20),
+              label: Text(context.l10n.unblock),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(52),
+                foregroundColor: SynkColors.textPrimary,
+                textStyle: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                ),
+                side: BorderSide(
+                  color: SynkColors.textSecondary.withValues(alpha: 0.30),
+                  width: 1.5,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(child: FriendActionButton(user: user)),
+            const SizedBox(width: 10),
+            PopupMenuButton<VoidCallback>(
+              tooltip: context.l10n.moreOptions,
+              onSelected: (action) => action(),
+              color: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              itemBuilder: (_) => [
+                if (status == FriendshipStatus.friends)
+                  PopupMenuItem(
+                    value: () => confirmRemoveFriend(context, user),
+                    child: Text(context.l10n.removeFriend),
+                  ),
+                PopupMenuItem(
+                  value: () => confirmBlockUser(context, user),
+                  child: Text(
+                    context.l10n.blockName(user.name.split(' ').first),
+                    style: const TextStyle(color: SynkColors.badge),
+                  ),
+                ),
+              ],
+              child: Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: SynkColors.textSecondary.withValues(alpha: 0.30),
+                    width: 1.5,
+                  ),
+                ),
+                child: const Icon(
+                  Icons.more_horiz_rounded,
+                  color: SynkColors.textPrimary,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

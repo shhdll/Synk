@@ -19,6 +19,7 @@ import 'widgets/discovery_activity_card.dart';
 import 'widgets/empty_state.dart';
 import 'widgets/filter_bottom_sheet.dart';
 import 'widgets/filter_button.dart';
+import 'widgets/friends_button.dart';
 import 'widgets/notification_bell.dart';
 import 'widgets/synk_filter_chip.dart';
 
@@ -301,8 +302,10 @@ class _HomeViewState extends State<HomeView> {
             ],
           ),
         ),
+        const SizedBox(width: 12),
+        const FriendsButton(),
         if (widget.notifications != null) ...[
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           NotificationBell(
             controller: widget.notifications!,
             activityStore: widget.activityStore,

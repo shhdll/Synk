@@ -2233,4 +2233,174 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get anActivityYouJoinedHasNew =>
       'An activity you joined has new details.';
+
+  @override
+  String get findPeople => 'Find people';
+
+  @override
+  String get searchFriends => 'Search friends';
+
+  @override
+  String get searchByNameOrUsername => 'Search by name or @username';
+
+  @override
+  String get friendRequestsTab => 'Requests';
+
+  @override
+  String get receivedRequests => 'Received';
+
+  @override
+  String get sentRequests => 'Sent';
+
+  @override
+  String get blockedUsers => 'Blocked users';
+
+  @override
+  String get addFriend => 'Add friend';
+
+  @override
+  String get addShort => 'Add';
+
+  @override
+  String get acceptRequest => 'Accept request';
+
+  @override
+  String get sentYouAFriendRequest => 'Sent you a friend request';
+
+  @override
+  String get viewProfile => 'View profile';
+
+  @override
+  String get friendOptions => 'Friend options';
+
+  @override
+  String get moreOptions => 'More options';
+
+  @override
+  String get removeFriend => 'Remove friend';
+
+  @override
+  String removeFriendTitle(Object name) {
+    return 'Remove $name?';
+  }
+
+  @override
+  String removeFriendMessage(Object name) {
+    return '$name will be removed from your friends list. You can send a new friend request any time.';
+  }
+
+  @override
+  String get remove => 'Remove';
+
+  @override
+  String blockName(Object name) {
+    return 'Block $name';
+  }
+
+  @override
+  String blockUserTitle(Object name) {
+    return 'Block $name?';
+  }
+
+  @override
+  String get blockUserMessage =>
+      'They won\'t be able to find you or send you friend requests. This also removes them from your friends. They won\'t be told.';
+
+  @override
+  String get block => 'Block';
+
+  @override
+  String get unblock => 'Unblock';
+
+  @override
+  String get blockedUsersInfo =>
+      'Blocked users can\'t find you or send you friend requests. They aren\'t told they\'re blocked.';
+
+  @override
+  String get noBlockedUsers => 'No blocked users';
+
+  @override
+  String get peopleYouBlockShowUpHere => 'People you block will show up here.';
+
+  @override
+  String get noFriendsYet => 'No friends yet';
+
+  @override
+  String get findPeopleYouKnow =>
+      'Find people you know and add them as friends.';
+
+  @override
+  String get noFriendRequests => 'No friend requests';
+
+  @override
+  String get newFriendRequestsShowUpHere =>
+      'New friend requests will show up here.';
+
+  @override
+  String get noFriendsMatchYourSearch => 'No friends match your search';
+
+  @override
+  String get noPeopleFound => 'No people found';
+
+  @override
+  String get tryAnotherNameOrUsername => 'Try another name or username.';
+
+  @override
+  String get searchForPeopleOnSynk => 'Search for people on Synk';
+
+  @override
+  String get friendRequestSent => 'Friend request sent';
+
+  @override
+  String get friendRequestCancelled => 'Friend request cancelled';
+
+  @override
+  String youAreNowFriendsWith(Object name) {
+    return 'You\'re now friends with $name';
+  }
+
+  @override
+  String get friendRequestRejected => 'Friend request rejected';
+
+  @override
+  String friendRemoved(Object name) {
+    return '$name was removed from your friends';
+  }
+
+  @override
+  String userBlocked(Object name) {
+    return '$name was blocked';
+  }
+
+  @override
+  String userUnblocked(Object name) {
+    return '$name was unblocked';
+  }
+
+  @override
+  String friendIsGoing(Object name) {
+    return '$name is going';
+  }
+
+  @override
+  String twoFriendsAreGoing(Object first, Object second) {
+    return '$first and $second are going';
+  }
+
+  @override
+  String friendAndOthersAreGoing(Object name, int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n other friends',
+      one: '1 other friend',
+    );
+    return '$name and $_temp0 are going';
+  }
+
+  @override
+  String get yourFriendsGroup => 'Your friends';
+
+  @override
+  String get othersGroup => 'Others';
 }

@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../core/constants/activity_categories.dart';
 import '../l10n/l10n.dart';
 import '../models/activities_model.dart';
+import 'friends_controller.dart';
 import '../models/activity_filters.dart';
 import '../models/activity_model.dart';
 import '../models/user_profile_model.dart';
@@ -117,6 +120,13 @@ class HomeDiscoveryController extends ChangeNotifier {
 
       _allActivities = activities;
       _applyFilters();
+
+      // Which friends are going, for the cards.
+      unawaited(
+        FriendsController.instance.loadFriendsGoing(
+          activities.map((a) => a.id),
+        ),
+      );
     } catch (e) {
       _errorMessage = appL10n.unableToLoadActivitiesPullDown;
     } finally {

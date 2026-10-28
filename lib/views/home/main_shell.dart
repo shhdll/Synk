@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../controllers/friends_controller.dart';
 import '../../controllers/home_discovery_controller.dart';
 import '../../controllers/notification_center_controller.dart';
 import '../../core/constants/synk_colors.dart';
@@ -71,6 +72,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       () => unawaited(_notifications.refresh()),
     );
     unawaited(_notifications.refresh());
+    unawaited(FriendsController.instance.refresh());
 
     _tab = widget.initialTab;
     _activityStore.addListener(_openMapForFocus);
@@ -88,6 +90,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
         _loadPendingRequestCount();
         unawaited(_requireScheduleConflictResolution());
         unawaited(_notifications.refresh());
+        unawaited(FriendsController.instance.refresh());
       },
     );
   }
@@ -108,6 +111,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       unawaited(_discoveryController.loadFeed(isSilent: true));
       _loadPendingRequestCount();
       unawaited(_notifications.refresh());
+      unawaited(FriendsController.instance.refresh());
       unawaited(PushNotificationService.instance.registerForCurrentUser());
       // Picks up an email change confirmed in the browser.
       unawaited(_authModel.refreshIfEmailChangePending());
