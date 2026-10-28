@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../../../controllers/friends_controller.dart';
 import '../../../core/constants/synk_colors.dart';
 import '../../../l10n/l10n.dart';
 import '../../../models/activity_model.dart';
 import '../../../models/avatar_uploader.dart';
+import '../../../models/friends_model.dart';
 import 'activity_status_chip.dart';
 import 'activity_thumbnail.dart';
+import 'friends_going.dart';
 
 // Compact home feed card. Reading order: title, when and where, who is
 // hosting, how many have joined. Tapping opens the details sheet.
@@ -65,7 +68,12 @@ class DiscoveryActivityCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 14),
-                _buildFooter(),
+                ListenableBuilder(
+                  listenable: FriendsController.instance,
+                  builder: (context, _) => _buildFooter(
+                    FriendsController.instance.friendsGoingIn(activity.id),
+                  ),
+                ),
               ],
             ),
           ),
@@ -112,7 +120,9 @@ class DiscoveryActivityCard extends StatelessWidget {
     );
   }
 
-  Widget _buildFooter() {
+  // Host on the left and the count on the right; friends who are going get
+  // a line underneath with their photos and who is going.
+  Widget _buildFooter(List<FriendUser> friendsGoing) {
     final handle = activity.hostUsername?.trim();
     final hostLabel = handle != null && handle.isNotEmpty
         ? '@$handle'
@@ -121,7 +131,7 @@ class DiscoveryActivityCard extends StatelessWidget {
         : appL10n.synkMember;
     final avatarUrl = activity.hostAvatarUrl?.trim();
 
-    return Row(
+    final hostRow = Row(
       children: [
         CircleAvatar(
           radius: 10,
@@ -149,6 +159,34 @@ class DiscoveryActivityCard extends StatelessWidget {
           label:
               '${activity.joinedCount}/${activity.maxParticipants} '
               '${activity.availability.label}',
+        ),
+      ],
+    );
+
+    if (friendsGoing.isEmpty) return hostRow;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        hostRow,
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            FriendAvatarStack(friends: friendsGoing, size: 28),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                friendsGoingText(friendsGoing),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: SynkColors.tealText,
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );

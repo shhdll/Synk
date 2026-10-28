@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../controllers/friends_controller.dart';
 import '../../controllers/profile_controller.dart';
 import '../../core/constants/interest_emojis.dart';
 import '../../core/constants/synk_colors.dart';
@@ -12,6 +13,7 @@ import '../../models/activity_model.dart';
 import '../../models/avatar_uploader.dart';
 import 'edit_interests_view.dart';
 import 'edit_profile_view.dart';
+import 'friends_view.dart';
 import 'logout_view.dart';
 import 'settings_view.dart';
 import 'widgets/app_header.dart';
@@ -212,7 +214,6 @@ class _ProfileViewState extends State<ProfileView> {
     final avatarImage = AvatarUploader.imageFor(profile);
     final displayImage =
         avatarImage ?? AvatarUploader.defaultImageForGender(gender);
-    final friendsCount = profile['friends_count'] as int? ?? 0;
     final activitiesCount = widget.activityStore?.completedCount ?? 0;
     final ratingValue = profile['rating'];
     final ratingText = ratingValue is num
@@ -360,10 +361,22 @@ class _ProfileViewState extends State<ProfileView> {
                         Row(
                           children: [
                             Expanded(
-                              child: _StatItem(
-                                icon: Icons.people_alt_rounded,
-                                value: '$friendsCount',
-                                label: context.l10n.friends,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(12),
+                                onTap: () => Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => const FriendsView(),
+                                  ),
+                                ),
+                                child: ListenableBuilder(
+                                  listenable: FriendsController.instance,
+                                  builder: (context, _) => _StatItem(
+                                    icon: Icons.people_alt_rounded,
+                                    value:
+                                        '${FriendsController.instance.friends.length}',
+                                    label: context.l10n.friends,
+                                  ),
+                                ),
                               ),
                             ),
                             const _StatDivider(),

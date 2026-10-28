@@ -4015,6 +4015,282 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'An activity you joined has new details.'**
   String get anActivityYouJoinedHasNew;
+
+  /// No description provided for @findPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'Find people'**
+  String get findPeople;
+
+  /// No description provided for @searchFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Search friends'**
+  String get searchFriends;
+
+  /// No description provided for @searchByNameOrUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name or @username'**
+  String get searchByNameOrUsername;
+
+  /// No description provided for @friendRequestsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests'**
+  String get friendRequestsTab;
+
+  /// No description provided for @receivedRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Received'**
+  String get receivedRequests;
+
+  /// No description provided for @sentRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get sentRequests;
+
+  /// No description provided for @blockedUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked users'**
+  String get blockedUsers;
+
+  /// No description provided for @addFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Add friend'**
+  String get addFriend;
+
+  /// No description provided for @addShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get addShort;
+
+  /// No description provided for @acceptRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept request'**
+  String get acceptRequest;
+
+  /// No description provided for @sentYouAFriendRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent you a friend request'**
+  String get sentYouAFriendRequest;
+
+  /// No description provided for @viewProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'View profile'**
+  String get viewProfile;
+
+  /// No description provided for @friendOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend options'**
+  String get friendOptions;
+
+  /// No description provided for @moreOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'More options'**
+  String get moreOptions;
+
+  /// No description provided for @removeFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove friend'**
+  String get removeFriend;
+
+  /// No description provided for @removeFriendTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name}?'**
+  String removeFriendTitle(Object name);
+
+  /// No description provided for @removeFriendMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} will be removed from your friends list. You can send a new friend request any time.'**
+  String removeFriendMessage(Object name);
+
+  /// No description provided for @remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get remove;
+
+  /// No description provided for @blockName.
+  ///
+  /// In en, this message translates to:
+  /// **'Block {name}'**
+  String blockName(Object name);
+
+  /// No description provided for @blockUserTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Block {name}?'**
+  String blockUserTitle(Object name);
+
+  /// No description provided for @blockUserMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'They won\'t be able to find you or send you friend requests. This also removes them from your friends. They won\'t be told.'**
+  String get blockUserMessage;
+
+  /// No description provided for @block.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get block;
+
+  /// No description provided for @unblock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock'**
+  String get unblock;
+
+  /// No description provided for @blockedUsersInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked users can\'t find you or send you friend requests. They aren\'t told they\'re blocked.'**
+  String get blockedUsersInfo;
+
+  /// No description provided for @noBlockedUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'No blocked users'**
+  String get noBlockedUsers;
+
+  /// No description provided for @peopleYouBlockShowUpHere.
+  ///
+  /// In en, this message translates to:
+  /// **'People you block will show up here.'**
+  String get peopleYouBlockShowUpHere;
+
+  /// No description provided for @noFriendsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No friends yet'**
+  String get noFriendsYet;
+
+  /// No description provided for @findPeopleYouKnow.
+  ///
+  /// In en, this message translates to:
+  /// **'Find people you know and add them as friends.'**
+  String get findPeopleYouKnow;
+
+  /// No description provided for @noFriendRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'No friend requests'**
+  String get noFriendRequests;
+
+  /// No description provided for @newFriendRequestsShowUpHere.
+  ///
+  /// In en, this message translates to:
+  /// **'New friend requests will show up here.'**
+  String get newFriendRequestsShowUpHere;
+
+  /// No description provided for @noFriendsMatchYourSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'No friends match your search'**
+  String get noFriendsMatchYourSearch;
+
+  /// No description provided for @noPeopleFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No people found'**
+  String get noPeopleFound;
+
+  /// No description provided for @tryAnotherNameOrUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another name or username.'**
+  String get tryAnotherNameOrUsername;
+
+  /// No description provided for @searchForPeopleOnSynk.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for people on Synk'**
+  String get searchForPeopleOnSynk;
+
+  /// No description provided for @friendRequestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend request sent'**
+  String get friendRequestSent;
+
+  /// No description provided for @friendRequestCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend request cancelled'**
+  String get friendRequestCancelled;
+
+  /// No description provided for @youAreNowFriendsWith.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re now friends with {name}'**
+  String youAreNowFriendsWith(Object name);
+
+  /// No description provided for @friendRequestRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend request rejected'**
+  String get friendRequestRejected;
+
+  /// No description provided for @friendRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} was removed from your friends'**
+  String friendRemoved(Object name);
+
+  /// No description provided for @userBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} was blocked'**
+  String userBlocked(Object name);
+
+  /// No description provided for @userUnblocked.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} was unblocked'**
+  String userUnblocked(Object name);
+
+  /// No description provided for @friendIsGoing.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is going'**
+  String friendIsGoing(Object name);
+
+  /// No description provided for @twoFriendsAreGoing.
+  ///
+  /// In en, this message translates to:
+  /// **'{first} and {second} are going'**
+  String twoFriendsAreGoing(Object first, Object second);
+
+  /// No description provided for @friendAndOthersAreGoing.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} and {n, plural, =1{1 other friend} other{{n} other friends}} are going'**
+  String friendAndOthersAreGoing(Object name, int n);
+
+  /// No description provided for @yourFriendsGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Your friends'**
+  String get yourFriendsGroup;
+
+  /// No description provided for @othersGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Others'**
+  String get othersGroup;
 }
 
 class _AppLocalizationsDelegate
