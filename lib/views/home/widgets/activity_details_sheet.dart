@@ -83,6 +83,9 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
   // The viewer's status for this activity: joined, pending, waitlisted,
   // or null when they have not joined.
   String? _participationStatus;
+
+  // Waitlisted users ahead of the viewer; null until loaded.
+  int? _waitlistAhead;
   bool _isJoining = false;
   String? _joinError;
   bool _hasPendingScheduleOverlap = false;
@@ -111,6 +114,19 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     _loadOwnProfile();
     _loadHostProfile();
     _loadPendingScheduleOverlap();
+    _loadWaitlistPosition();
+  }
+
+  Future<void> _loadWaitlistPosition() async {
+    if (_participationStatus != 'waitlisted') return;
+    try {
+      final ahead = await _participationModel.fetchWaitlistPosition(
+        _currentActivity.id,
+      );
+      if (mounted) setState(() => _waitlistAhead = ahead);
+    } catch (_) {
+      // The pill still shows the viewer is on the waitlist.
+    }
   }
 
   Future<void> _loadPendingScheduleOverlap() async {
@@ -316,6 +332,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
       }
 
       setState(() => _participationStatus = status);
+      _loadWaitlistPosition();
 
       // Show the viewer in the participants list and update the count.
       await _loadParticipants();
@@ -665,26 +682,51 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
         ),
       };
 
+      // Waitlisted viewers also see how many people are ahead of them.
+      final aheadLabel =
+          _participationStatus == 'waitlisted' && _waitlistAhead != null
+          ? context.l10n.waitlistPeopleAhead(_waitlistAhead!)
+          : null;
+
       final statusPill = Container(
-        height: 52,
+        constraints: const BoxConstraints(minHeight: 52),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: color.withValues(alpha: 0.24)),
         ),
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 20, color: color),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-                color: color,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 20, color: color),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: color,
+                  ),
+                ),
+              ],
             ),
+            if (aheadLabel != null) ...[
+              const SizedBox(height: 2),
+              Text(
+                aheadLabel,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+              ),
+            ],
           ],
         ),
       );

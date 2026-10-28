@@ -1508,6 +1508,12 @@ abstract class AppLocalizations {
   /// **'You\'re on the waitlist'**
   String get youreOnTheWaitlist;
 
+  /// No description provided for @waitlistPeopleAhead.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =0{You\'re next in the waitlist} =1{1 person ahead of you} other{{n} people ahead of you}}'**
+  String waitlistPeopleAhead(int n);
+
   /// No description provided for @waitingForHostApproval.
   ///
   /// In en, this message translates to:
