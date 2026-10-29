@@ -13,8 +13,9 @@ import '../../core/constants/synk_colors.dart';
 import '../../l10n/l10n.dart';
 import '../../models/place_search_model.dart';
 
-// Search for a place or tap anywhere on the map. The chosen spot gets a
-// marker, and "Use this location" pops it as a resolved [PlaceSuggestion].
+// Search for a place, tap a place pin, or tap anywhere on the map. The chosen
+// spot gets a marker, and "Use this location" pops it as a resolved
+// [PlaceSuggestion].
 class LocationSearchSheet extends StatefulWidget {
   const LocationSearchSheet({super.key, this.initialPlace});
 
@@ -153,6 +154,38 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
         _errorMessage = error.message;
       });
     }
+  }
+
+  // A tap on one of Google's place pins: use that place, name and all.
+  // Not reported on iOS, where the tap lands in [_onMapTap] instead.
+  Future<void> _onPointOfInterestTap(PointOfInterestId id) async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    final int version = ++_tapVersion;
+    setState(() {
+      _isResolving = true;
+      _resultsHidden = true;
+      _errorMessage = null;
+    });
+
+    PlaceSuggestion? place;
+    String? problem;
+    try {
+      place = await _model.getPointOfInterest(id.value);
+    } on PlaceSearchException catch (error) {
+      problem = error.message;
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _isResolving = false;
+      // A later tap has already moved the marker.
+      if (version != _tapVersion) return;
+      _errorMessage = problem;
+      if (place != null) {
+        _selectedPoint = LatLng(place.latitude!, place.longitude!);
+        _selected = place;
+      }
+    });
   }
 
   // A tap on the map: drop the marker there and look up its address with
@@ -451,6 +484,7 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
       ),
       onMapCreated: (GoogleMapController controller) => _map = controller,
       onTap: _onMapTap,
+      onPointOfInterestTap: _onPointOfInterestTap,
       markers: <Marker>{
         if (point != null)
           Marker(markerId: const MarkerId('chosen-place'), position: point),

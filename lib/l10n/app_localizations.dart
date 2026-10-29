@@ -1112,6 +1112,54 @@ abstract class AppLocalizations {
   /// **'Upcoming plans'**
   String get upcomingPlans;
 
+  /// No description provided for @topPicksTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Top 5 picks for you'**
+  String get topPicksTitle;
+
+  /// No description provided for @topPickLikesIndoor.
+  ///
+  /// In en, this message translates to:
+  /// **'You like indoor plans'**
+  String get topPickLikesIndoor;
+
+  /// No description provided for @topPickLikesOutdoor.
+  ///
+  /// In en, this message translates to:
+  /// **'You like outdoor plans'**
+  String get topPickLikesOutdoor;
+
+  /// No description provided for @topPickYouLike.
+  ///
+  /// In en, this message translates to:
+  /// **'You like {interest}'**
+  String topPickYouLike(Object interest);
+
+  /// No description provided for @topPickPopularNearYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Popular near you'**
+  String get topPickPopularNearYou;
+
+  /// No description provided for @topPickDistanceKm.
+  ///
+  /// In en, this message translates to:
+  /// **'{km} km'**
+  String topPickDistanceKm(Object km);
+
+  /// No description provided for @topPickDistanceAway.
+  ///
+  /// In en, this message translates to:
+  /// **'{km} km away'**
+  String topPickDistanceAway(Object km);
+
+  /// No description provided for @topPickSemanticLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick {rank}: {details}'**
+  String topPickSemanticLabel(Object rank, Object details);
+
   /// No description provided for @clearFilters.
   ///
   /// In en, this message translates to:
@@ -2246,6 +2294,30 @@ abstract class AppLocalizations {
   /// **'Join by code, you approve'**
   String get joinByCodeYouApprove;
 
+  /// No description provided for @setting.
+  ///
+  /// In en, this message translates to:
+  /// **'Setting'**
+  String get setting;
+
+  /// No description provided for @settingIndoor.
+  ///
+  /// In en, this message translates to:
+  /// **'Indoor'**
+  String get settingIndoor;
+
+  /// No description provided for @settingOutdoor.
+  ///
+  /// In en, this message translates to:
+  /// **'Outdoor'**
+  String get settingOutdoor;
+
+  /// No description provided for @chooseIndoorOrOutdoor.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose indoor or outdoor'**
+  String get chooseIndoorOrOutdoor;
+
   /// No description provided for @whenLabel.
   ///
   /// In en, this message translates to:
@@ -2389,6 +2461,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Someone asked to join {title}. Tap to review.'**
   String notifRequestReceived(String title);
+
+  /// No description provided for @notifActivityFull.
+  ///
+  /// In en, this message translates to:
+  /// **'{title} is full! Every spot has been taken.'**
+  String notifActivityFull(String title);
+
+  /// No description provided for @friendRequestNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New friend request'**
+  String get friendRequestNotificationTitle;
+
+  /// No description provided for @notifFriendRequestReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} sent you a friend request.'**
+  String notifFriendRequestReceived(String name);
+
+  /// No description provided for @friendRequestAcceptedNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend request accepted'**
+  String get friendRequestAcceptedNotificationTitle;
+
+  /// No description provided for @notifFriendRequestAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} accepted your friend request. You\'re now friends!'**
+  String notifFriendRequestAccepted(String name);
 
   /// No description provided for @notifHostAssigned.
   ///
@@ -4046,6 +4148,78 @@ abstract class AppLocalizations {
   /// **'Received'**
   String get receivedRequests;
 
+  /// No description provided for @friendRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend requests'**
+  String get friendRequests;
+
+  /// No description provided for @seeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See all'**
+  String get seeAll;
+
+  /// No description provided for @markAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all read'**
+  String get markAllRead;
+
+  /// No description provided for @markAsRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as read'**
+  String get markAsRead;
+
+  /// No description provided for @notificationsLast7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get notificationsLast7Days;
+
+  /// No description provided for @notificationsEarlier.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier'**
+  String get notificationsEarlier;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @notificationsUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread'**
+  String get notificationsUnread;
+
+  /// No description provided for @showMoreCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Show {n} more'**
+  String showMoreCount(Object n);
+
+  /// No description provided for @showLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get showLess;
+
+  /// No description provided for @allCaughtUp.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re all caught up'**
+  String get allCaughtUp;
+
+  /// No description provided for @notificationDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification deleted'**
+  String get notificationDeleted;
+
   /// No description provided for @sentRequests.
   ///
   /// In en, this message translates to:
@@ -4153,6 +4327,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unblock'**
   String get unblock;
+
+  /// No description provided for @reportName.
+  ///
+  /// In en, this message translates to:
+  /// **'Report {name}'**
+  String reportName(Object name);
+
+  /// No description provided for @reportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Report'**
+  String get reportTitle;
+
+  /// No description provided for @reportWhyName.
+  ///
+  /// In en, this message translates to:
+  /// **'Why are you reporting {name}?'**
+  String reportWhyName(Object name);
+
+  /// No description provided for @back.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get back;
+
+  /// No description provided for @reportUserMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} won\'t know you reported them.'**
+  String reportUserMessage(Object name);
+
+  /// No description provided for @reportReasonHarassment.
+  ///
+  /// In en, this message translates to:
+  /// **'Harassment or bullying'**
+  String get reportReasonHarassment;
+
+  /// No description provided for @reportReasonSpam.
+  ///
+  /// In en, this message translates to:
+  /// **'Spam'**
+  String get reportReasonSpam;
+
+  /// No description provided for @reportReasonFakeProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Fake profile'**
+  String get reportReasonFakeProfile;
+
+  /// No description provided for @reportReasonInappropriateContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Inappropriate content'**
+  String get reportReasonInappropriateContent;
+
+  /// No description provided for @reportReasonOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Something else'**
+  String get reportReasonOther;
+
+  /// No description provided for @reportDetailsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add anything that would help us review this. This is optional.'**
+  String get reportDetailsHint;
+
+  /// No description provided for @reportDetailsRequiredHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell us what happened'**
+  String get reportDetailsRequiredHint;
+
+  /// No description provided for @reportAndBlockName.
+  ///
+  /// In en, this message translates to:
+  /// **'Send report & block {name}'**
+  String reportAndBlockName(Object name);
+
+  /// No description provided for @submitReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Send report'**
+  String get submitReport;
+
+  /// No description provided for @reportSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Report sent'**
+  String get reportSent;
+
+  /// No description provided for @reportedAndBlockedName.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported and blocked {name}'**
+  String reportedAndBlockedName(Object name);
+
+  /// No description provided for @alreadyReportedName.
+  ///
+  /// In en, this message translates to:
+  /// **'You already reported {name}'**
+  String alreadyReportedName(Object name);
 
   /// No description provided for @blockedUsersInfo.
   ///

@@ -563,6 +563,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get upcomingPlans => 'Upcoming plans';
 
   @override
+  String get topPicksTitle => 'Top 5 picks for you';
+
+  @override
+  String get topPickLikesIndoor => 'You like indoor plans';
+
+  @override
+  String get topPickLikesOutdoor => 'You like outdoor plans';
+
+  @override
+  String topPickYouLike(Object interest) {
+    return 'You like $interest';
+  }
+
+  @override
+  String get topPickPopularNearYou => 'Popular near you';
+
+  @override
+  String topPickDistanceKm(Object km) {
+    return '$km km';
+  }
+
+  @override
+  String topPickDistanceAway(Object km) {
+    return '$km km away';
+  }
+
+  @override
+  String topPickSemanticLabel(Object rank, Object details) {
+    return 'Pick $rank: $details';
+  }
+
+  @override
   String get clearFilters => 'Clear filters';
 
   @override
@@ -1212,6 +1244,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get joinByCodeYouApprove => 'Join by code, you approve';
 
   @override
+  String get setting => 'Setting';
+
+  @override
+  String get settingIndoor => 'Indoor';
+
+  @override
+  String get settingOutdoor => 'Outdoor';
+
+  @override
+  String get chooseIndoorOrOutdoor => 'Choose indoor or outdoor';
+
+  @override
   String get whenLabel => 'When';
 
   @override
@@ -1304,6 +1348,28 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String notifRequestReceived(String title) {
     return 'Someone asked to join $title. Tap to review.';
+  }
+
+  @override
+  String notifActivityFull(String title) {
+    return '$title is full! Every spot has been taken.';
+  }
+
+  @override
+  String get friendRequestNotificationTitle => 'New friend request';
+
+  @override
+  String notifFriendRequestReceived(String name) {
+    return '$name sent you a friend request.';
+  }
+
+  @override
+  String get friendRequestAcceptedNotificationTitle =>
+      'Friend request accepted';
+
+  @override
+  String notifFriendRequestAccepted(String name) {
+    return '$name accepted your friend request. You\'re now friends!';
   }
 
   @override
@@ -2250,6 +2316,44 @@ class AppLocalizationsEn extends AppLocalizations {
   String get receivedRequests => 'Received';
 
   @override
+  String get friendRequests => 'Friend requests';
+
+  @override
+  String get seeAll => 'See all';
+
+  @override
+  String get markAllRead => 'Mark all read';
+
+  @override
+  String get markAsRead => 'Mark as read';
+
+  @override
+  String get notificationsLast7Days => 'Last 7 days';
+
+  @override
+  String get notificationsEarlier => 'Earlier';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get notificationsUnread => 'Unread';
+
+  @override
+  String showMoreCount(Object n) {
+    return 'Show $n more';
+  }
+
+  @override
+  String get showLess => 'Show less';
+
+  @override
+  String get allCaughtUp => 'You\'re all caught up';
+
+  @override
+  String get notificationDeleted => 'Notification deleted';
+
+  @override
   String get sentRequests => 'Sent';
 
   @override
@@ -2311,6 +2415,70 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unblock => 'Unblock';
+
+  @override
+  String reportName(Object name) {
+    return 'Report $name';
+  }
+
+  @override
+  String get reportTitle => 'Report';
+
+  @override
+  String reportWhyName(Object name) {
+    return 'Why are you reporting $name?';
+  }
+
+  @override
+  String get back => 'Back';
+
+  @override
+  String reportUserMessage(Object name) {
+    return '$name won\'t know you reported them.';
+  }
+
+  @override
+  String get reportReasonHarassment => 'Harassment or bullying';
+
+  @override
+  String get reportReasonSpam => 'Spam';
+
+  @override
+  String get reportReasonFakeProfile => 'Fake profile';
+
+  @override
+  String get reportReasonInappropriateContent => 'Inappropriate content';
+
+  @override
+  String get reportReasonOther => 'Something else';
+
+  @override
+  String get reportDetailsHint =>
+      'Add anything that would help us review this. This is optional.';
+
+  @override
+  String get reportDetailsRequiredHint => 'Tell us what happened';
+
+  @override
+  String reportAndBlockName(Object name) {
+    return 'Send report & block $name';
+  }
+
+  @override
+  String get submitReport => 'Send report';
+
+  @override
+  String get reportSent => 'Report sent';
+
+  @override
+  String reportedAndBlockedName(Object name) {
+    return 'Reported and blocked $name';
+  }
+
+  @override
+  String alreadyReportedName(Object name) {
+    return 'You already reported $name';
+  }
 
   @override
   String get blockedUsersInfo =>

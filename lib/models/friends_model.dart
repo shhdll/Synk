@@ -1,7 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // Friends, friend requests and blocks. Changes go through database functions
-// (supabase/migrations/20261028120000_friends.sql), which enforce the rules.
+// (supabase/migrations/20261028200000_friends.sql), which enforce the rules.
 
 // Where the signed-in user stands with someone else.
 enum FriendshipStatus { none, requestSent, requestReceived, friends, blocked }

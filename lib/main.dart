@@ -15,6 +15,8 @@ import 'services/startup_safe_session_storage.dart';
 import 'views/home/activity_notification_route.dart';
 import 'views/home/schedule_conflict_resolution_view.dart';
 import 'views/home/activity_join_requests_view.dart';
+import 'views/home/friend_requests_view.dart';
+import 'views/home/friends_view.dart';
 import 'views/home/main_shell.dart';
 import 'views/new_password_view.dart';
 import 'views/welcome_view.dart';
@@ -158,12 +160,18 @@ class _MyAppState extends State<MyApp> {
     PushNotificationService.instance.setJoinRequestsTapHandler(
       _openJoinRequests,
     );
+    PushNotificationService.instance.setFriendRequestsTapHandler(
+      _openFriendRequests,
+    );
+    PushNotificationService.instance.setFriendsTapHandler(_openFriends);
     PushNotificationService.instance.setScheduleConflictsTapHandler(
       _openScheduleConflictResolution,
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _drainPendingActivityNotification();
       _drainPendingJoinRequestsNotification();
+      _drainPendingFriendRequestsNotification();
+      _drainPendingFriendsNotification();
       _drainPendingScheduleConflictsNotification();
       unawaited(PushNotificationService.instance.initialize());
     });
@@ -210,6 +218,8 @@ class _MyAppState extends State<MyApp> {
 
   String? _pendingNotificationActivityId;
   bool _pendingJoinRequestsNotification = false;
+  bool _pendingFriendRequestsNotification = false;
+  bool _pendingFriendsNotification = false;
   bool _pendingScheduleConflictsNotification = false;
 
   void _openNotificationActivity(String activityId) {
@@ -249,6 +259,30 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
+  void _openFriendRequests() {
+    final navigator = _navigatorKey.currentState;
+    if (navigator == null) {
+      _pendingFriendRequestsNotification = true;
+      return;
+    }
+    navigator.push(
+      MaterialPageRoute<void>(
+        builder: (_) => const FriendRequestsView(),
+      ),
+    );
+  }
+
+  void _openFriends() {
+    final navigator = _navigatorKey.currentState;
+    if (navigator == null) {
+      _pendingFriendsNotification = true;
+      return;
+    }
+    navigator.push(
+      MaterialPageRoute<void>(builder: (_) => const FriendsView()),
+    );
+  }
+
   void _openScheduleConflictResolution() {
     final navigator = _navigatorKey.currentState;
     if (navigator == null) {
@@ -271,6 +305,23 @@ class _MyAppState extends State<MyApp> {
     }
     _pendingJoinRequestsNotification = false;
     _openJoinRequests();
+  }
+
+  void _drainPendingFriendRequestsNotification() {
+    if (!_pendingFriendRequestsNotification ||
+        _navigatorKey.currentState == null) {
+      return;
+    }
+    _pendingFriendRequestsNotification = false;
+    _openFriendRequests();
+  }
+
+  void _drainPendingFriendsNotification() {
+    if (!_pendingFriendsNotification || _navigatorKey.currentState == null) {
+      return;
+    }
+    _pendingFriendsNotification = false;
+    _openFriends();
   }
 
   void _onAuthLinkResult(OtpType type, AuthLinkOutcome outcome) {

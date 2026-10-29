@@ -553,6 +553,38 @@ class AppLocalizationsAr extends AppLocalizations {
   String get upcomingPlans => 'الخطط القادمة';
 
   @override
+  String get topPicksTitle => 'أفضل 5 اختيارات لك';
+
+  @override
+  String get topPickLikesIndoor => 'تحب الأنشطة الداخلية';
+
+  @override
+  String get topPickLikesOutdoor => 'تحب الأنشطة الخارجية';
+
+  @override
+  String topPickYouLike(Object interest) {
+    return 'تحب $interest';
+  }
+
+  @override
+  String get topPickPopularNearYou => 'رائج بالقرب منك';
+
+  @override
+  String topPickDistanceKm(Object km) {
+    return '$km كم';
+  }
+
+  @override
+  String topPickDistanceAway(Object km) {
+    return 'على بعد $km كم';
+  }
+
+  @override
+  String topPickSemanticLabel(Object rank, Object details) {
+    return 'الاختيار $rank: $details';
+  }
+
+  @override
   String get clearFilters => 'مسح الفلاتر';
 
   @override
@@ -1179,6 +1211,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get joinByCodeYouApprove => 'الانضمام بالرمز بعد موافقتك';
 
   @override
+  String get setting => 'المكان';
+
+  @override
+  String get settingIndoor => 'داخلي';
+
+  @override
+  String get settingOutdoor => 'خارجي';
+
+  @override
+  String get chooseIndoorOrOutdoor => 'اختر داخلي أو خارجي';
+
+  @override
   String get whenLabel => 'متى';
 
   @override
@@ -1269,6 +1313,27 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String notifRequestReceived(String title) {
     return 'طلب شخص الانضمام إلى $title، اضغط للمراجعة';
+  }
+
+  @override
+  String notifActivityFull(String title) {
+    return 'اكتمل عدد المشاركين في $title!';
+  }
+
+  @override
+  String get friendRequestNotificationTitle => 'طلب صداقة جديد';
+
+  @override
+  String notifFriendRequestReceived(String name) {
+    return 'أرسل إليك $name طلب صداقة';
+  }
+
+  @override
+  String get friendRequestAcceptedNotificationTitle => 'تم قبول طلب الصداقة';
+
+  @override
+  String notifFriendRequestAccepted(String name) {
+    return 'قبل $name طلب صداقتك، أصبحتما صديقين الآن';
   }
 
   @override
@@ -2174,6 +2239,44 @@ class AppLocalizationsAr extends AppLocalizations {
   String get receivedRequests => 'المستلمة';
 
   @override
+  String get friendRequests => 'طلبات الصداقة';
+
+  @override
+  String get seeAll => 'عرض الكل';
+
+  @override
+  String get markAllRead => 'تحديد الكل كمقروء';
+
+  @override
+  String get markAsRead => 'تحديد كمقروء';
+
+  @override
+  String get notificationsLast7Days => 'آخر 7 أيام';
+
+  @override
+  String get notificationsEarlier => 'أقدم';
+
+  @override
+  String get delete => 'حذف';
+
+  @override
+  String get notificationsUnread => 'غير المقروءة';
+
+  @override
+  String showMoreCount(Object n) {
+    return 'عرض $n أخرى';
+  }
+
+  @override
+  String get showLess => 'عرض أقل';
+
+  @override
+  String get allCaughtUp => 'لا توجد إشعارات جديدة';
+
+  @override
+  String get notificationDeleted => 'تم حذف الإشعار';
+
+  @override
   String get sentRequests => 'المرسلة';
 
   @override
@@ -2235,6 +2338,70 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get unblock => 'إلغاء الحظر';
+
+  @override
+  String reportName(Object name) {
+    return 'الإبلاغ عن $name';
+  }
+
+  @override
+  String get reportTitle => 'إبلاغ';
+
+  @override
+  String reportWhyName(Object name) {
+    return 'لماذا تبلغ عن $name؟';
+  }
+
+  @override
+  String get back => 'رجوع';
+
+  @override
+  String reportUserMessage(Object name) {
+    return 'لن يعرف $name أنك أبلغت عنه';
+  }
+
+  @override
+  String get reportReasonHarassment => 'تحرش أو تنمر';
+
+  @override
+  String get reportReasonSpam => 'رسائل مزعجة';
+
+  @override
+  String get reportReasonFakeProfile => 'حساب مزيف';
+
+  @override
+  String get reportReasonInappropriateContent => 'محتوى غير لائق';
+
+  @override
+  String get reportReasonOther => 'سبب آخر';
+
+  @override
+  String get reportDetailsHint =>
+      'أضف أي تفاصيل تساعدنا في مراجعة البلاغ، هذا اختياري';
+
+  @override
+  String get reportDetailsRequiredHint => 'أخبرنا بما حدث';
+
+  @override
+  String reportAndBlockName(Object name) {
+    return 'إرسال البلاغ وحظر $name';
+  }
+
+  @override
+  String get submitReport => 'إرسال البلاغ';
+
+  @override
+  String get reportSent => 'تم إرسال البلاغ';
+
+  @override
+  String reportedAndBlockedName(Object name) {
+    return 'تم الإبلاغ عن $name وحظره';
+  }
+
+  @override
+  String alreadyReportedName(Object name) {
+    return 'سبق أن أبلغت عن $name';
+  }
 
   @override
   String get blockedUsersInfo =>

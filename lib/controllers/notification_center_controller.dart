@@ -31,7 +31,12 @@ class NotificationCenterController extends ChangeNotifier {
       notifyListeners();
     }
     try {
-      _items = await _model.fetch();
+      // Incoming friend requests have their own section at the top, so
+      // their notifications would only repeat it.
+      _items = [
+        for (final n in await _model.fetch())
+          if (n.kind != 'friend_request_received') n,
+      ];
       _unreadCount = _items.where((n) => n.isUnread).length;
       _error = null;
       _hasLoaded = true;
@@ -45,7 +50,7 @@ class NotificationCenterController extends ChangeNotifier {
     }
   }
 
-  // Opening the list counts as reading everything in it.
+  // "Mark all read": everything in the list counts as read.
   Future<void> markAllSeen() async {
     if (_unreadCount == 0) return;
     _unreadCount = 0;
@@ -55,6 +60,37 @@ class NotificationCenterController extends ChangeNotifier {
       await _model.markSeen();
     } catch (error) {
       debugPrint('SYNK: marking notifications seen failed: $error');
+    }
+  }
+
+  // Updated here first so the row changes at once; a failed save comes back
+  // as unread on the next refresh.
+  Future<void> markRead(AppNotification notification) async {
+    if (!notification.isUnread) return;
+    _items = [
+      for (final n in _items) n.id == notification.id ? n.asRead() : n,
+    ];
+    _unreadCount = _items.where((n) => n.isUnread).length;
+    notifyListeners();
+    try {
+      await _model.markRead(notification.id);
+    } catch (error) {
+      debugPrint('SYNK: marking a notification read failed: $error');
+    }
+  }
+
+  Future<void> delete(AppNotification notification) async {
+    _items = [
+      for (final n in _items)
+        if (n.id != notification.id) n,
+    ];
+    _unreadCount = _items.where((n) => n.isUnread).length;
+    notifyListeners();
+    try {
+      await _model.delete(notification.id);
+    } catch (error) {
+      debugPrint('SYNK: deleting a notification failed: $error');
+      await refresh();
     }
   }
 }

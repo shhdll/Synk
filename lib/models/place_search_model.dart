@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../controllers/language_controller.dart';
 import '../l10n/l10n.dart';
 
 // A place returned by search, or fully resolved after selection.
@@ -109,6 +110,7 @@ class PlaceSearchModel {
       'action': 'autocomplete',
       'input': trimmed,
       'sessionToken': sessionToken,
+      'languageCode': LanguageController.instance.locale.languageCode,
     });
 
     final List<dynamic> suggestions =
@@ -133,6 +135,7 @@ class PlaceSearchModel {
       'action': 'details',
       'placeId': suggestion.placeId,
       'sessionToken': sessionToken,
+      'languageCode': LanguageController.instance.locale.languageCode,
     });
 
     final String? address = data['formattedAddress'] as String?;
@@ -148,6 +151,38 @@ class PlaceSearchModel {
     }
 
     return suggestion.withDetails(
+      address: address,
+      latitude: lat.toDouble(),
+      longitude: lng.toDouble(),
+    );
+  }
+
+  // Resolves a place pin tapped on the map. Unlike [getDetails], there is no
+  // autocomplete name to keep, so this one also fetches the place's name.
+  Future<PlaceSuggestion> getPointOfInterest(String placeId) async {
+    final Map<String, dynamic> data = await _invoke(<String, dynamic>{
+      'action': 'poi',
+      'placeId': placeId,
+      'languageCode': LanguageController.instance.locale.languageCode,
+    });
+
+    final String? name =
+        (data['displayName'] as Map<String, dynamic>?)?['text'] as String?;
+    final String? address = data['formattedAddress'] as String?;
+    final Map<String, dynamic>? location =
+        data['location'] as Map<String, dynamic>?;
+    final num? lat = location?['latitude'] as num?;
+    final num? lng = location?['longitude'] as num?;
+
+    if (name == null || name.trim().isEmpty || lat == null || lng == null) {
+      throw PlaceSearchException(
+        appL10n.theSelectedPlaceIsMissingIts,
+      );
+    }
+
+    return PlaceSuggestion(
+      placeId: placeId,
+      name: name.trim(),
       address: address,
       latitude: lat.toDouble(),
       longitude: lng.toDouble(),

@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../controllers/language_controller.dart';
 import '../l10n/l10n.dart';
 
 @pragma('vm:entry-point')
@@ -38,6 +39,10 @@ class PushNotificationService {
   void Function(String activityId)? _onActivityTap;
   bool _pendingJoinRequestsTap = false;
   VoidCallback? _onJoinRequestsTap;
+  bool _pendingFriendRequestsTap = false;
+  VoidCallback? _onFriendRequestsTap;
+  bool _pendingFriendsTap = false;
+  VoidCallback? _onFriendsTap;
   bool _pendingScheduleConflictsTap = false;
   VoidCallback? _onScheduleConflictsTap;
   void Function(String activityId)? _onActivityUpdated;
@@ -106,6 +111,7 @@ class PushNotificationService {
           'waitlist_promotion',
           'host_assigned',
           'activity_conflict',
+          'activity_full',
         };
         if (refreshTypes.contains(message.data['type'])) {
           final activityId = message.data['activity_id'] as String?;
@@ -150,6 +156,22 @@ class PushNotificationService {
     _onJoinRequestsTap = handler;
     if (_pendingJoinRequestsTap) {
       _pendingJoinRequestsTap = false;
+      handler();
+    }
+  }
+
+  void setFriendRequestsTapHandler(VoidCallback handler) {
+    _onFriendRequestsTap = handler;
+    if (_pendingFriendRequestsTap) {
+      _pendingFriendRequestsTap = false;
+      handler();
+    }
+  }
+
+  void setFriendsTapHandler(VoidCallback handler) {
+    _onFriendsTap = handler;
+    if (_pendingFriendsTap) {
+      _pendingFriendsTap = false;
       handler();
     }
   }
@@ -258,6 +280,7 @@ class PushNotificationService {
         'fcm_token': token,
         'user_id': userId,
         'platform': 'android',
+        'language': LanguageController.instance.locale.languageCode,
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       }, onConflict: 'fcm_token');
       _registeredToken = token;
@@ -274,18 +297,30 @@ class PushNotificationService {
         type != 'join_request_accepted' &&
         type != 'join_request_rejected' &&
         type != 'join_request_received' &&
+        type != 'friend_request_received' &&
+        type != 'friend_request_accepted' &&
         type != 'host_assigned' &&
-        type != 'activity_conflict') return;
+        type != 'activity_conflict' &&
+        type != 'activity_full') return;
     final activityId = message.data['activity_id'] as String?;
-    if (activityId == null || activityId.isEmpty) return;
+    final isFriendRequest = type == 'friend_request_received';
+    final isFriendAccepted = type == 'friend_request_accepted';
+    if (!isFriendRequest &&
+        !isFriendAccepted &&
+        (activityId == null || activityId.isEmpty)) {
+      return;
+    }
 
     final activityUpdate = type == 'activity_updated' ||
         type == 'activity_deleted' ||
         type == 'join_request_accepted' ||
         type == 'join_request_rejected' ||
         type == 'join_request_received' ||
+        isFriendRequest ||
+        isFriendAccepted ||
         type == 'host_assigned' ||
-        type == 'activity_conflict';
+        type == 'activity_conflict' ||
+        type == 'activity_full';
     final channelId = activityUpdate
         ? _activityUpdatesChannelId
         : _channelId;
@@ -312,15 +347,35 @@ class PushNotificationService {
             (DateTime.now().millisecondsSinceEpoch & 0x7fffffff),
         title:
             message.notification?.title ??
-            (activityUpdate ? appL10n.activityUpdated : appL10n.youreIn),
+            (isFriendRequest
+                ? appL10n.friendRequestNotificationTitle
+                : isFriendAccepted
+                ? appL10n.friendRequestAcceptedNotificationTitle
+                : activityUpdate
+                ? appL10n.activityUpdated
+                : appL10n.youreIn),
         body:
             message.notification?.body ??
-            (activityUpdate
+            (isFriendRequest
+                ? appL10n.notifFriendRequestReceived(
+                    (message.data['requester_name'] as String?) ??
+                        appL10n.communityMember,
+                  )
+                : isFriendAccepted
+                ? appL10n.notifFriendRequestAccepted(
+                    (message.data['friend_name'] as String?) ??
+                        appL10n.communityMember,
+                  )
+                : activityUpdate
                 ? appL10n.anActivityYouJoinedHasNew
                 : appL10n.aSpotOpenedUpInYour),
         notificationDetails: details,
         payload: type == 'join_request_received'
             ? 'join_request_received'
+            : isFriendRequest
+            ? 'friend_request_received'
+            : isFriendAccepted
+            ? 'friend_request_accepted'
             : type == 'activity_conflict'
             ? 'schedule_conflict'
             : activityId,
@@ -333,6 +388,10 @@ class PushNotificationService {
   void _dispatchMessageTap(RemoteMessage message) {
     if (message.data['type'] == 'join_request_received') {
       _dispatchNotificationTap('join_request_received');
+    } else if (message.data['type'] == 'friend_request_received') {
+      _dispatchNotificationTap('friend_request_received');
+    } else if (message.data['type'] == 'friend_request_accepted') {
+      _dispatchNotificationTap('friend_request_accepted');
     } else if (message.data['type'] == 'activity_conflict') {
       _dispatchNotificationTap('schedule_conflict');
     } else {
@@ -354,6 +413,24 @@ class PushNotificationService {
       final handler = _onJoinRequestsTap;
       if (handler == null) {
         _pendingJoinRequestsTap = true;
+      } else {
+        handler();
+      }
+      return;
+    }
+    if (payload == 'friend_request_received') {
+      final handler = _onFriendRequestsTap;
+      if (handler == null) {
+        _pendingFriendRequestsTap = true;
+      } else {
+        handler();
+      }
+      return;
+    }
+    if (payload == 'friend_request_accepted') {
+      final handler = _onFriendsTap;
+      if (handler == null) {
+        _pendingFriendsTap = true;
       } else {
         handler();
       }
