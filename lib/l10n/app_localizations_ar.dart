@@ -553,6 +553,38 @@ class AppLocalizationsAr extends AppLocalizations {
   String get upcomingPlans => 'الخطط القادمة';
 
   @override
+  String get topPicksTitle => 'أفضل 5 اختيارات لك';
+
+  @override
+  String get topPickLikesIndoor => 'تحب الأنشطة الداخلية';
+
+  @override
+  String get topPickLikesOutdoor => 'تحب الأنشطة الخارجية';
+
+  @override
+  String topPickYouLike(Object interest) {
+    return 'تحب $interest';
+  }
+
+  @override
+  String get topPickPopularNearYou => 'رائج بالقرب منك';
+
+  @override
+  String topPickDistanceKm(Object km) {
+    return '$km كم';
+  }
+
+  @override
+  String topPickDistanceAway(Object km) {
+    return 'على بعد $km كم';
+  }
+
+  @override
+  String topPickSemanticLabel(Object rank, Object details) {
+    return 'الاختيار $rank: $details';
+  }
+
+  @override
   String get clearFilters => 'مسح الفلاتر';
 
   @override
@@ -777,7 +809,7 @@ class AppLocalizationsAr extends AppLocalizations {
       n,
       locale: localeName,
       other: '$n شخص قبلك',
-      many: '$n شخصًا قبلك',
+      many: '$n شخصا قبلك',
       few: '$n أشخاص قبلك',
       two: 'شخصان قبلك',
       one: 'شخص واحد قبلك',
@@ -1293,7 +1325,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String notifFriendRequestReceived(String name) {
-    return 'أرسل إليك $name طلب صداقة.';
+    return 'أرسل إليك $name طلب صداقة';
   }
 
   @override
@@ -1301,7 +1333,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String notifFriendRequestAccepted(String name) {
-    return 'قبل $name طلب صداقتك. أصبحتما صديقين الآن.';
+    return 'قبل $name طلب صداقتك، أصبحتما صديقين الآن';
   }
 
   @override
@@ -2205,6 +2237,44 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get receivedRequests => 'المستلمة';
+
+  @override
+  String get friendRequests => 'طلبات الصداقة';
+
+  @override
+  String get seeAll => 'عرض الكل';
+
+  @override
+  String get markAllRead => 'تحديد الكل كمقروء';
+
+  @override
+  String get markAsRead => 'تحديد كمقروء';
+
+  @override
+  String get notificationsLast7Days => 'آخر 7 أيام';
+
+  @override
+  String get notificationsEarlier => 'أقدم';
+
+  @override
+  String get delete => 'حذف';
+
+  @override
+  String get notificationsUnread => 'غير المقروءة';
+
+  @override
+  String showMoreCount(Object n) {
+    return 'عرض $n أخرى';
+  }
+
+  @override
+  String get showLess => 'عرض أقل';
+
+  @override
+  String get allCaughtUp => 'لا توجد إشعارات جديدة';
+
+  @override
+  String get notificationDeleted => 'تم حذف الإشعار';
 
   @override
   String get sentRequests => 'المرسلة';
