@@ -7,6 +7,7 @@ import '../../controllers/create_activity_controller.dart';
 import '../../core/constants/activity_constants.dart';
 import '../../core/constants/synk_colors.dart';
 import '../../l10n/l10n.dart';
+import '../../models/activity_model.dart';
 import '../../models/place_search_model.dart';
 import '../home/widgets/activity_details_sheet.dart';
 import '../home/widgets/activity_thumbnail.dart';
@@ -164,6 +165,11 @@ class _StepBasicsState extends State<StepBasics> {
         const SizedBox(height: 10),
         _buildLocation(),
         FieldError(_c.errorFor(CreateField.location)),
+        const SizedBox(height: 24),
+        CreateGroupLabel(text: context.l10n.setting, isRequired: true),
+        const SizedBox(height: 10),
+        _buildSetting(),
+        FieldError(_c.errorFor(CreateField.setting)),
         const SizedBox(height: 24),
         CreateGroupLabel(text: context.l10n.date, isRequired: true),
         const SizedBox(height: 10),
@@ -442,6 +448,32 @@ class _StepBasicsState extends State<StepBasics> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSetting() {
+    final ActivitySetting? setting = _c.setting;
+
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: SynkFilterChip(
+            label: context.l10n.settingIndoor,
+            icon: Icons.home_rounded,
+            selected: setting == ActivitySetting.indoor,
+            onTap: () => _c.setSetting(ActivitySetting.indoor),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: SynkFilterChip(
+            label: context.l10n.settingOutdoor,
+            icon: Icons.park_rounded,
+            selected: setting == ActivitySetting.outdoor,
+            onTap: () => _c.setSetting(ActivitySetting.outdoor),
+          ),
+        ),
+      ],
     );
   }
 

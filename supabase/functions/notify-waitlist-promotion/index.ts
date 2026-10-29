@@ -12,7 +12,7 @@ const FCM_SCOPE = "https://www.googleapis.com/auth/firebase.messaging";
 type PromotionEvent = {
   id: string;
   user_id: string;
-  activity_id: string;
+  activity_id?: string | null;
   activity_title: string;
   status: string;
   host_id?: string;
@@ -20,7 +20,7 @@ type PromotionEvent = {
   schedule_changed?: boolean;
   starts_at?: string;
   ends_at?: string;
-  event_type?: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received" | "host_assigned" | "activity_conflict";
+  event_type?: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received" | "friend_request_received" | "friend_request_accepted" | "host_assigned" | "activity_conflict" | "activity_full";
 };
 
 type FcmCredentials = {
@@ -140,6 +140,7 @@ async function sendToToken(
   event: PromotionEvent,
   credentials: FcmCredentials,
   accessToken: string,
+  language: string,
 ): Promise<{
   sent: boolean;
   unregistered: boolean;
@@ -173,6 +174,29 @@ async function sendToToken(
                 title: "New join request",
                 body: `Someone requested to join ${event.activity_title}. Review their request.`,
               }
+              : event.event_type === "activity_full"
+              ? {
+                title: language === "ar"
+                  ? "اكتمل النشاط! 🎉"
+                  : "Activity full! 🎉",
+                body: language === "ar"
+                  ? `وصل نشاط ${event.activity_title} إلى الحد الأقصى للمشاركين.`
+                  : `${event.activity_title} has reached its participant limit.`,
+              }
+              : event.event_type === "friend_request_received"
+              ? {
+                title: language === "ar" ? "طلب صداقة جديد" : "New friend request",
+                body: language === "ar"
+                  ? `${event.activity_title} أرسل إليك طلب صداقة.`
+                  : `${event.activity_title} sent you a friend request.`,
+              }
+              : event.event_type === "friend_request_accepted"
+              ? {
+                title: language === "ar" ? "تم قبول طلب الصداقة" : "Friend request accepted",
+                body: language === "ar"
+                  ? `قبل ${event.activity_title} طلب صداقتك. أصبحتما صديقين الآن.`
+                  : `${event.activity_title} accepted your friend request. You're now friends!`,
+              }
               : event.event_type === "host_assigned"
               ? {
                 title: "You're Now the Host! \u{1F389}",
@@ -202,7 +226,12 @@ async function sendToToken(
             data: {
               type: event.event_type ?? "waitlist_promotion",
               event_id: event.id,
-              activity_id: event.activity_id,
+              ...(event.activity_id ? { activity_id: event.activity_id } : {}),
+              ...(event.event_type === "friend_request_received"
+                ? { requester_name: event.activity_title }
+                : event.event_type === "friend_request_accepted"
+                ? { friend_name: event.activity_title }
+                : {}),
             },
             android: {
               priority: "HIGH",
@@ -213,7 +242,10 @@ async function sendToToken(
                     event.event_type === "join_request_rejected" ||
                     event.event_type === "join_request_received" ||
                     event.event_type === "host_assigned" ||
-                    event.event_type === "activity_conflict"
+                    event.event_type === "activity_conflict" ||
+                    event.event_type === "activity_full" ||
+                    event.event_type === "friend_request_received" ||
+                    event.event_type === "friend_request_accepted"
                   ? "activity_updates"
                   : "waitlist_promotions",
                 tag: `${event.event_type ?? "waitlist_promotion"}_${event.id}`,
@@ -262,7 +294,7 @@ Deno.serve(async (request: Request) => {
   }
 
   let eventId: string;
-  let eventType: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received" | "host_assigned" | "activity_conflict";
+  let eventType: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received" | "friend_request_received" | "friend_request_accepted" | "host_assigned" | "activity_conflict" | "activity_full";
   try {
     const body = await request.json();
     eventId = typeof body.event_id === "string" ? body.event_id : "";
@@ -272,7 +304,10 @@ Deno.serve(async (request: Request) => {
         body.event_type === "join_request_rejected" ||
         body.event_type === "join_request_received" ||
         body.event_type === "host_assigned" ||
-        body.event_type === "activity_conflict"
+        body.event_type === "activity_conflict" ||
+        body.event_type === "activity_full" ||
+        body.event_type === "friend_request_received" ||
+        body.event_type === "friend_request_accepted"
       ? body.event_type
       : "waitlist_promotion";
   } catch {
@@ -296,6 +331,12 @@ Deno.serve(async (request: Request) => {
     ? "host_transfer_notification_outbox"
     : eventType === "activity_conflict"
     ? "activity_conflict_notification_outbox"
+    : eventType === "friend_request_received"
+    ? "friend_request_notification_outbox"
+    : eventType === "friend_request_accepted"
+    ? "friend_request_accepted_notification_outbox"
+    : eventType === "activity_full"
+    ? "activity_full_notification_outbox"
     : "waitlist_promotion_notification_outbox";
   const eventColumns = eventType === "activity_updated"
     ? "id, user_id, activity_id, activity_title, status"
@@ -381,7 +422,7 @@ Deno.serve(async (request: Request) => {
   }
   const { data: tokens, error: tokenError } = await admin
     .from("push_device_tokens")
-    .select("fcm_token")
+    .select("fcm_token, language")
     .eq("user_id", typedEvent.user_id);
 
   if (tokenError) {
@@ -415,8 +456,14 @@ Deno.serve(async (request: Request) => {
 
   try {
     const accessToken = await getFcmAccessToken(credentials);
-    const outcomes = await Promise.all(tokens.map(({ fcm_token }) =>
-      sendToToken(fcm_token, typedEvent, credentials, accessToken)
+    const outcomes = await Promise.all(tokens.map(({ fcm_token, language }) =>
+      sendToToken(
+        fcm_token,
+        typedEvent,
+        credentials,
+        accessToken,
+        language ?? "en",
+      )
     ));
     outcomes.forEach((outcome) => {
       if (!outcome.sent) {

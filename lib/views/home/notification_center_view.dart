@@ -7,6 +7,7 @@ import '../../models/activity_model.dart';
 import '../../models/notifications_model.dart';
 import 'activity_join_requests_view.dart';
 import 'activity_notification_route.dart';
+import 'friends_view.dart';
 import 'schedule_conflict_resolution_view.dart';
 
 // The list behind the bell. Opening it clears the badge.
@@ -47,6 +48,16 @@ class _NotificationCenterViewState extends State<NotificationCenterView> {
             builder: (_) =>
                 ActivityJoinRequestsView(activityStore: widget.activityStore),
           ),
+        );
+      case 'friend_request_received':
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => const FriendsView(showRequestsFirst: true),
+          ),
+        );
+      case 'friend_request_accepted':
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const FriendsView()),
         );
       case 'activity_conflict':
         await showScheduleConflictResolutionDialog(context);
@@ -206,6 +217,15 @@ class _NotificationTile extends StatelessWidget {
         l.notifRequestReceived,
       ),
       'host_assigned' => (Icons.workspace_premium_rounded, l.notifHostAssigned),
+      'activity_full' => (Icons.groups_rounded, l.notifActivityFull),
+      'friend_request_received' => (
+        Icons.person_add_alt_1_rounded,
+        l.notifFriendRequestReceived,
+      ),
+      'friend_request_accepted' => (
+        Icons.people_alt_rounded,
+        l.notifFriendRequestAccepted,
+      ),
       _ => (Icons.warning_amber_rounded, l.notifActivityConflict),
     };
   }

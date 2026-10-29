@@ -21,6 +21,23 @@ enum ActivityAvailability {
   }
 }
 
+// Whether an activity happens indoors or outdoors.
+enum ActivitySetting {
+  indoor,
+  outdoor;
+
+  String get label => switch (this) {
+    indoor => appL10n.settingIndoor,
+    outdoor => appL10n.settingOutdoor,
+  };
+
+  static ActivitySetting? fromName(String? value) => switch (value) {
+    'indoor' => indoor,
+    'outdoor' => outdoor,
+    _ => null,
+  };
+}
+
 class Activity {
   Activity({
     required this.id,
@@ -42,6 +59,7 @@ class Activity {
     this.longitude,
     this.maxParticipants = 2,
     this.isPublic = true,
+    this.setting,
     this.photoUrl,
     this.createdAt,
     this.activityCode,
@@ -75,6 +93,9 @@ class Activity {
   final int maxParticipants;
 
   final bool isPublic;
+
+  // Null for activities created before the setting existed.
+  final ActivitySetting? setting;
 
   final String? photoUrl;
 
@@ -152,6 +173,7 @@ class Activity {
       longitude: (map['longitude'] as num?)?.toDouble(),
       maxParticipants: map['max_participants'] as int? ?? 2,
       isPublic: map['is_public'] as bool? ?? true,
+      setting: ActivitySetting.fromName(map['setting'] as String?),
       photoUrl: map['photo_url'] as String?,
       categoryEmoji: map['category_emoji'] as String? ?? '',
       categoryLabel: map['category_label'] as String? ?? '',
@@ -178,6 +200,7 @@ class Activity {
       'longitude': longitude,
       'max_participants': maxParticipants,
       'is_public': isPublic,
+      'setting': setting?.name,
       'category_emoji': categoryEmoji.isEmpty ? null : categoryEmoji,
       'category_label': categoryLabel.isEmpty ? null : categoryLabel,
     };
@@ -212,6 +235,7 @@ class Activity {
       longitude: longitude,
       maxParticipants: maxParticipants,
       isPublic: isPublic,
+      setting: setting,
       photoUrl: photoUrl ?? this.photoUrl,
       categoryEmoji: categoryEmoji,
       categoryLabel: categoryLabel,

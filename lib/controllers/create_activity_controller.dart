@@ -13,7 +13,7 @@ import '../utils/text_direction.dart';
 // Image formats accepted for an activity photo.
 enum PhotoFormat { jpeg, png }
 
-enum CreateField { title, location, date, time }
+enum CreateField { title, location, setting, date, time }
 
 // Outcome of a create attempt.
 //
@@ -49,6 +49,7 @@ class CreateActivityController extends ChangeNotifier {
       _locationAddress = activity.locationAddress;
       _latitude = activity.latitude;
       _longitude = activity.longitude;
+      _setting = activity.setting;
       _date = DateTime(activity.dateTime.year, activity.dateTime.month, activity.dateTime.day);
       _time = TimeOfDay.fromDateTime(activity.dateTime);
       _participants = activity.maxParticipants;
@@ -74,6 +75,8 @@ class CreateActivityController extends ChangeNotifier {
   String? _locationAddress;
   double? _latitude;
   double? _longitude;
+
+  ActivitySetting? _setting;
 
   DateTime? _date;
   TimeOfDay? _time;
@@ -109,6 +112,7 @@ class CreateActivityController extends ChangeNotifier {
   String? get locationAddress => _locationAddress;
   double? get latitude => _latitude;
   double? get longitude => _longitude;
+  ActivitySetting? get setting => _setting;
   DateTime? get date => _date;
   TimeOfDay? get time => _time;
   int get participants => _participants;
@@ -165,6 +169,7 @@ class CreateActivityController extends ChangeNotifier {
           _locationAddress != original.locationAddress ||
           _latitude != original.latitude ||
           _longitude != original.longitude ||
+          _setting != original.setting ||
           startsAt != original.dateTime ||
           _participants != original.maxParticipants ||
           _isPublic != original.isPublic ||
@@ -175,6 +180,7 @@ class CreateActivityController extends ChangeNotifier {
     return titleController.text.trim().isNotEmpty ||
         descriptionController.text.trim().isNotEmpty ||
         _locationName.isNotEmpty ||
+        _setting != null ||
         _date != null ||
         _time != null ||
         _photo != null ||
@@ -205,6 +211,12 @@ class CreateActivityController extends ChangeNotifier {
     _latitude = null;
     _longitude = null;
     _touched.add(CreateField.location);
+    notifyListeners();
+  }
+
+  void setSetting(ActivitySetting value) {
+    _setting = value;
+    _touched.add(CreateField.setting);
     notifyListeners();
   }
 
@@ -514,6 +526,7 @@ class CreateActivityController extends ChangeNotifier {
         ? appL10n.useLettersOnly
         : validateTitle(titleController.text),
     CreateField.location => _locationName.isEmpty ? appL10n.chooseALocation : null,
+    CreateField.setting => _setting == null ? appL10n.chooseIndoorOrOutdoor : null,
     CreateField.date => _date == null
         ? appL10n.pickADate
         : _date!.isAfter(ActivityConstants.latestAllowedDate(DateTime.now()))
@@ -602,6 +615,7 @@ class CreateActivityController extends ChangeNotifier {
           longitude: _longitude,
           maxParticipants: _participants,
           isPublic: _isPublic,
+          setting: _setting,
           categoryEmoji: _editingActivity?.categoryEmoji ?? '',
           categoryLabel: _editingActivity?.categoryLabel ?? '',
           photoUrl: _removeExistingPhoto ? null : _editingActivity?.photoUrl,
