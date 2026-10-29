@@ -8,9 +8,12 @@ import '../../l10n/l10n.dart';
 import '../../models/activities_model.dart';
 import '../../models/activity_filters.dart';
 import '../../models/activity_model.dart';
+import '../../models/avatar_uploader.dart';
 import '../../models/user_profile_model.dart';
+import '../../utils/text_direction.dart';
 import '../widgets/synk_blob_background.dart';
 import 'activity_code_join_sheet.dart';
+import 'profile_view.dart';
 import 'widgets/activity_card_skeleton.dart';
 import 'widgets/activity_details_sheet.dart';
 import 'widgets/code_bubble.dart';
@@ -28,7 +31,6 @@ class HomeView extends StatefulWidget {
     super.key,
     required this.activityStore,
     required this.discoveryController,
-    this.isNewUser = false,
     this.onCreateActivity,
     this.notifications,
     this.activitiesModel,
@@ -36,7 +38,6 @@ class HomeView extends StatefulWidget {
   });
 
   final ActivityStore activityStore;
-  final bool isNewUser;
 
   final HomeDiscoveryController discoveryController;
 
@@ -61,9 +62,8 @@ class _HomeViewState extends State<HomeView> {
   HomeDiscoveryController get _discoveryController =>
       widget.discoveryController;
 
-  String _firstName = 'there';
-  // Arabic uses a feminine form of some phrases.
-  bool _isFemale = false;
+  // The signed-in user's row, for the avatar in the header.
+  Map<String, dynamic> _profile = const {};
   bool _codeBubbleExpanded = true;
 
   // Tracks leave and host-transfer changes so the feed reloads once each.
@@ -77,7 +77,7 @@ class _HomeViewState extends State<HomeView> {
   void initState() {
     super.initState();
     _discoveryController.init();
-    _loadFirstName();
+    _loadProfile();
 
     _seenParticipationVersion = widget.activityStore.participationVersion;
     widget.activityStore.addListener(_onActivityStoreChanged);
@@ -116,18 +116,23 @@ class _HomeViewState extends State<HomeView> {
     }
   }
 
-  Future<void> _loadFirstName() async {
-    final profile = await _profileModel.fetchProfile();
-    final fullName = (profile['full_name'] as String?)?.trim();
-    final gender = (profile['gender'] as String?)?.trim().toLowerCase();
+  Future<void> _loadProfile() async {
+    try {
+      final profile = await _profileModel.fetchProfile();
+      if (mounted) setState(() => _profile = profile);
+    } catch (_) {
+      // The default avatar stays until the next load.
+    }
+  }
 
-    if (!mounted) return;
-    setState(() {
-      if (fullName?.isNotEmpty ?? false) {
-        _firstName = fullName!.split(' ').first;
-      }
-      _isFemale = gender == 'female';
-    });
+  Future<void> _openProfile() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ProfileView(activityStore: widget.activityStore),
+      ),
+    );
+    // Picks up a new photo chosen on the profile.
+    await _loadProfile();
   }
 
   Future<void> _openActivityCodeSheet() {
@@ -259,47 +264,90 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Widget _buildHeader() {
-    final hasName = _firstName != 'there';
-    final greeting = widget.isNewUser
-        ? (hasName
-              ? context.l10n.welcomeName(_firstName)
-              : context.l10n.welcomeToSynk)
-        : (hasName ? context.l10n.heyName(_firstName) : context.l10n.heyThere);
-    final headline = widget.isNewUser
-        ? context.l10n.letsFindYourPeople
-        : _isFemale
-        ? context.l10n.readyForSomethingNewFemale
-        : context.l10n.readyForSomethingNew;
+    final gender = _profile['gender'] as String?;
+    final image =
+        AvatarUploader.imageFor(_profile) ??
+        AvatarUploader.defaultImageForGender(gender);
+    final fullName = (_profile['full_name'] as String?)?.trim() ?? '';
+    final username = (_profile['username'] as String?)?.trim() ?? '';
+    final name = fullName.isNotEmpty ? fullName : username;
 
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // The photo and name both open the profile.
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                greeting,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  height: 1.15,
-                  letterSpacing: -0.8,
-                  color: SynkColors.textPrimary,
-                ),
+          child: Semantics(
+            button: true,
+            label: context.l10n.profile,
+            child: GestureDetector(
+              onTap: _openProfile,
+              behavior: HitTestBehavior.opaque,
+              child: Row(
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: ClipOval(
+                      child: Image(
+                        image: image,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => Image(
+                          image: AvatarUploader.defaultImageForGender(gender),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (name.isNotEmpty) ...[
+                    const SizedBox(width: 12),
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textDirection: textDirectionOf(name),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              // Spacing pulls joined Arabic letters apart.
+                              letterSpacing: hasArabic(name) ? 0 : -0.3,
+                              color: SynkColors.textPrimary,
+                            ),
+                          ),
+                          if (username.isNotEmpty && username != name)
+                            Text(
+                              '@$username',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: SynkColors.textSecondary,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
               ),
-              const SizedBox(height: 4),
-              Text(
-                headline,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: SynkColors.textSecondary,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
         const SizedBox(width: 12),

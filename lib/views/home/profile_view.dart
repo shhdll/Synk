@@ -235,6 +235,19 @@ class _ProfileViewState extends State<ProfileView> {
           children: [
             Row(
               children: [
+                // Opened from the avatar in the home header.
+                if (Navigator.of(context).canPop()) ...[
+                  IconButton(
+                    tooltip: MaterialLocalizations.of(context)
+                        .backButtonTooltip,
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(
+                      Icons.arrow_back_rounded,
+                      color: SynkColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                ],
                 const Expanded(child: AppHeader()),
                 Material(
                   color: Colors.white,

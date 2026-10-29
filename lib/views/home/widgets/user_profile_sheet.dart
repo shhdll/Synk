@@ -11,6 +11,7 @@ import '../../../models/friends_model.dart';
 import '../../../utils/custom_widgets/synk_feedback.dart';
 import '../../widgets/avatar_preview.dart';
 import '../../widgets/profile_header_banner.dart';
+import '../chats_view.dart';
 import 'friend_action_button.dart';
 import 'friend_options_sheet.dart';
 
@@ -21,6 +22,7 @@ Future<void> showUserProfileSheet({
   String? username,
   String? avatarUrl,
   String? gender,
+  bool showMessageButton = true,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -32,6 +34,7 @@ Future<void> showUserProfileSheet({
       username: username,
       avatarUrl: avatarUrl,
       gender: gender,
+      showMessageButton: showMessageButton,
     ),
   );
 }
@@ -44,6 +47,7 @@ class UserProfileSheet extends StatefulWidget {
     this.username,
     this.avatarUrl,
     this.gender,
+    this.showMessageButton = true,
   });
 
   final String userId;
@@ -51,6 +55,9 @@ class UserProfileSheet extends StatefulWidget {
   final String? username;
   final String? avatarUrl;
   final String? gender;
+
+  // Off when opened from your chat with this person.
+  final bool showMessageButton;
 
   @override
   State<UserProfileSheet> createState() => _UserProfileSheetState();
@@ -233,6 +240,7 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
                   Supabase.instance.client.auth.currentUser?.id) ...[
                 const SizedBox(height: 20),
                 _FriendActions(
+                  showMessageButton: widget.showMessageButton,
                   user: FriendUser(
                     id: widget.userId,
                     name: name,
@@ -350,11 +358,12 @@ class _Stat extends StatelessWidget {
 }
 
 // Add friend (or Requested / Accept / Friends), plus a ⋯ menu to unfriend or
-// block. A blocked user only gets Unblock.
+// block. Friends also get Message. A blocked user only gets Unblock.
 class _FriendActions extends StatelessWidget {
-  const _FriendActions({required this.user});
+  const _FriendActions({required this.user, this.showMessageButton = true});
 
   final FriendUser user;
+  final bool showMessageButton;
 
   @override
   Widget build(BuildContext context) {
@@ -403,6 +412,10 @@ class _FriendActions extends StatelessWidget {
           children: [
             Expanded(child: FriendActionButton(user: user)),
             const SizedBox(width: 10),
+            if (showMessageButton && status == FriendshipStatus.friends) ...[
+              Expanded(child: _MessageButton(user: user)),
+              const SizedBox(width: 10),
+            ],
             PopupMenuButton<VoidCallback>(
               tooltip: context.l10n.moreOptions,
               onSelected: (action) => action(),
@@ -443,6 +456,76 @@ class _FriendActions extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+// Opens the chat with a friend, or starts it. The sheet stays underneath,
+// so going back returns to the profile.
+class _MessageButton extends StatefulWidget {
+  const _MessageButton({required this.user});
+
+  final FriendUser user;
+
+  @override
+  State<_MessageButton> createState() => _MessageButtonState();
+}
+
+class _MessageButtonState extends State<_MessageButton> {
+  bool _opening = false;
+
+  Future<void> _open() async {
+    if (_opening) return;
+    setState(() => _opening = true);
+    await openDirectChatWith(context, widget.user);
+    if (mounted) setState(() => _opening = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: SynkColors.orangeLight,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: _open,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          height: 52,
+          padding: const EdgeInsets.symmetric(horizontal: 18),
+          alignment: Alignment.center,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _opening
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: SynkColors.orangeDeep,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.chat_bubble_outline_rounded,
+                      size: 20,
+                      color: SynkColors.orangeDeep,
+                    ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  context.l10n.message,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: SynkColors.orangeDeep,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

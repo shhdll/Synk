@@ -76,10 +76,10 @@ class FriendActionButton extends StatelessWidget {
             },
           ),
           FriendshipStatus.friends => _button(
-            label: l10n.friends,
+            label: l10n.following,
             icon: Icons.check_rounded,
-            background: SynkColors.teal.withValues(alpha: 0.18),
-            foreground: SynkColors.tealText,
+            background: SynkColors.orangeLight,
+            foreground: SynkColors.orangeDeep,
           ),
           FriendshipStatus.blocked => const SizedBox.shrink(),
         };

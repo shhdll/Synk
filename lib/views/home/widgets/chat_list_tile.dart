@@ -1,0 +1,191 @@
+import 'package:flutter/material.dart';
+
+import '../../../core/constants/synk_colors.dart';
+import '../../../l10n/l10n.dart';
+import '../../../models/chat_model.dart';
+import '../../../utils/text_direction.dart';
+import 'activity_thumbnail.dart';
+import 'discovery_activity_card.dart';
+import 'user_avatar.dart';
+
+// "1:52 PM" today, "Yesterday", the weekday this week, otherwise the date.
+String formatChatTime(DateTime time, {DateTime? now}) {
+  final today = DateUtils.dateOnly(now ?? DateTime.now());
+  final dayDiff = today.difference(DateUtils.dateOnly(time)).inDays;
+  if (dayDiff <= 0) return formatTime(time.hour, time.minute);
+  if (dayDiff == 1) return appL10n.yesterday;
+  if (dayDiff < 7) return weekdayShort(time);
+  return formatMonthDay(time);
+}
+
+// A chat in the Chat tab: the activity or friend, the last message, when it
+// was sent and how many are unread.
+class ChatListTile extends StatelessWidget {
+  const ChatListTile({
+    super.key,
+    required this.chat,
+    required this.currentUserId,
+    required this.onTap,
+  });
+
+  final ChatSummary chat;
+  final String? currentUserId;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final unread = chat.unreadCount > 0;
+    final activity = chat.activity;
+    final friend = chat.otherUser;
+
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
+          children: [
+            if (activity != null)
+              ActivityThumbnail(activity: activity, size: 52, radius: 14)
+            else
+              UserAvatar(
+                avatarUrl: friend?.avatarUrl,
+                gender: friend?.gender,
+                size: 52,
+              ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          chat.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: SynkColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      if (chat.lastMessageAt != null) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          formatChatTime(chat.lastMessageAt!),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: unread
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            color: unread
+                                ? SynkColors.orangeDark
+                                : SynkColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  if (activity != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      [
+                        DiscoveryActivityCard.formatWhen(activity.dateTime),
+                        context.l10n.membersCount(chat.memberCount),
+                      ].join(' · '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: activity.isPast
+                            ? SynkColors.textSecondary
+                            : SynkColors.orangeDark,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _preview(context),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: unread
+                                ? FontWeight.w700
+                                : FontWeight.w400,
+                            color: unread
+                                ? SynkColors.textPrimary
+                                : SynkColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                      if (unread) ...[
+                        const SizedBox(width: 8),
+                        _UnreadBadge(count: chat.unreadCount),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _preview(BuildContext context) {
+    final message = chat.lastMessageBody;
+    if (message == null) return context.l10n.noMessagesYet;
+    // A photo sent without text has an empty body.
+    // Keeps an Arabic message's punctuation in place after "You: ".
+    final body = message.trim().isEmpty
+        ? '📷 ${context.l10n.photo}'
+        : bidiIsolate(message);
+    if (chat.lastMessageSenderId == currentUserId) {
+      return context.l10n.youSaid(body);
+    }
+    final sender = chat.lastMessageSenderName;
+    if (chat.isActivity && sender != null && sender.isNotEmpty) {
+      return context.l10n.personSaid(
+        bidiIsolate(sender.split(' ').first),
+        body,
+      );
+    }
+    return body;
+  }
+}
+
+class _UnreadBadge extends StatelessWidget {
+  const _UnreadBadge({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 22),
+      height: 22,
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: SynkColors.orangeDark,
+        borderRadius: BorderRadius.circular(11),
+      ),
+      child: Text(
+        count > 99 ? '99+' : '$count',
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+}

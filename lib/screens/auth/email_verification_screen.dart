@@ -222,7 +222,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
     if (!mounted) return;
     debugPrint('EmailVerificationScreen: email confirmed, opening MainShell');
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const MainShell(isNewUser: true)),
+      MaterialPageRoute(builder: (_) => const MainShell()),
       (route) => false,
     );
   }

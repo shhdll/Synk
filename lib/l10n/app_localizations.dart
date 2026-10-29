@@ -4291,6 +4291,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Others'**
   String get othersGroup;
+
+  /// No description provided for @chat.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat'**
+  String get chat;
+
+  /// No description provided for @chats.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats'**
+  String get chats;
+
+  /// No description provided for @activityChats.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity chats'**
+  String get activityChats;
+
+  /// No description provided for @activeChatsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} active'**
+  String activeChatsCount(int n);
+
+  /// No description provided for @searchChats.
+  ///
+  /// In en, this message translates to:
+  /// **'Search chats'**
+  String get searchChats;
+
+  /// No description provided for @newChat.
+  ///
+  /// In en, this message translates to:
+  /// **'New chat'**
+  String get newChat;
+
+  /// No description provided for @membersCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 member} other{{n} members}}'**
+  String membersCount(int n);
+
+  /// No description provided for @youSaid.
+  ///
+  /// In en, this message translates to:
+  /// **'You: {message}'**
+  String youSaid(Object message);
+
+  /// No description provided for @personSaid.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: {message}'**
+  String personSaid(Object name, Object message);
+
+  /// No description provided for @noMessagesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages yet'**
+  String get noMessagesYet;
+
+  /// No description provided for @noChatsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No chats yet'**
+  String get noChatsYet;
+
+  /// No description provided for @chatsShowUpHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Join an activity or message a friend to start chatting.'**
+  String get chatsShowUpHere;
+
+  /// No description provided for @noChatsMatchYourSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'No chats match your search'**
+  String get noChatsMatchYourSearch;
+
+  /// No description provided for @messageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get messageHint;
+
+  /// No description provided for @send.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get send;
+
+  /// No description provided for @messageNotSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send your message'**
+  String get messageNotSent;
+
+  /// No description provided for @canOnlyMessageFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'You can only message friends'**
+  String get canOnlyMessageFriends;
+
+  /// No description provided for @couldntOpenChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open this chat'**
+  String get couldntOpenChat;
+
+  /// No description provided for @yesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get yesterday;
+
+  /// No description provided for @messageAFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Message a friend'**
+  String get messageAFriend;
+
+  /// No description provided for @message.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get message;
+
+  /// No description provided for @chatClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'This chat is closed'**
+  String get chatClosed;
+
+  /// No description provided for @chatClosedActivityFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'The activity has finished, so its chat was closed.'**
+  String get chatClosedActivityFinished;
+
+  /// No description provided for @listSeparator.
+  ///
+  /// In en, this message translates to:
+  /// **', '**
+  String get listSeparator;
+
+  /// No description provided for @sayHiToName.
+  ///
+  /// In en, this message translates to:
+  /// **'Say hi to {name}'**
+  String sayHiToName(Object name);
+
+  /// No description provided for @youBothLike.
+  ///
+  /// In en, this message translates to:
+  /// **'You both like {interests}.'**
+  String youBothLike(Object interests);
+
+  /// No description provided for @listAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'{rest} and {last}'**
+  String listAnd(Object rest, Object last);
+
+  /// No description provided for @planActivityTogether.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan {title} together'**
+  String planActivityTogether(Object title);
+
+  /// No description provided for @sortOutTheDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Say hi and sort out the details with everyone going.'**
+  String get sortOutTheDetails;
+
+  /// No description provided for @following.
+  ///
+  /// In en, this message translates to:
+  /// **'Following'**
+  String get following;
+
+  /// No description provided for @sendAPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a photo'**
+  String get sendAPhoto;
+
+  /// No description provided for @youreChattingWithAllYourFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'You already have a chat with all your friends'**
+  String get youreChattingWithAllYourFriends;
 }
 
 class _AppLocalizationsDelegate

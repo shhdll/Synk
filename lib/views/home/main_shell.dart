@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../controllers/chat_controller.dart';
 import '../../controllers/friends_controller.dart';
 import '../../controllers/home_discovery_controller.dart';
 import '../../controllers/notification_center_controller.dart';
@@ -15,21 +16,16 @@ import '../../models/home_tab.dart';
 import '../../services/push_notification_service.dart';
 import '../create_activity/create_activity_view.dart';
 import 'activities_view.dart';
+import 'chats_view.dart';
 import 'home_view.dart';
 import 'map_view.dart';
-import 'profile_view.dart';
 import 'schedule_conflict_resolution_view.dart';
 import 'widgets/bottom_bar.dart';
 
 class MainShell extends StatefulWidget {
-  const MainShell({
-    super.key,
-    this.initialTab = HomeTab.home,
-    this.isNewUser = false,
-  });
+  const MainShell({super.key, this.initialTab = HomeTab.home});
 
   final HomeTab initialTab;
-  final bool isNewUser;
 
   @override
   State<MainShell> createState() => _MainShellState();
@@ -73,6 +69,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     );
     unawaited(_notifications.refresh());
     unawaited(FriendsController.instance.refresh());
+    unawaited(ChatController.instance.refresh());
 
     _tab = widget.initialTab;
     _activityStore.addListener(_openMapForFocus);
@@ -91,6 +88,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
         unawaited(_requireScheduleConflictResolution());
         unawaited(_notifications.refresh());
         unawaited(FriendsController.instance.refresh());
+        unawaited(ChatController.instance.refresh());
       },
     );
   }
@@ -112,6 +110,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       _loadPendingRequestCount();
       unawaited(_notifications.refresh());
       unawaited(FriendsController.instance.refresh());
+      unawaited(ChatController.instance.refresh());
       unawaited(PushNotificationService.instance.registerForCurrentUser());
       // Picks up an email change confirmed in the browser.
       unawaited(_authModel.refreshIfEmailChangePending());
@@ -256,7 +255,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final pages = [
-      ProfileView(activityStore: _activityStore),
+      ChatsView(activityStore: _activityStore),
       MapView(
         activityStore: _activityStore,
         discoveryController: _discoveryController,
@@ -266,14 +265,13 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       HomeView(
         activityStore: _activityStore,
         discoveryController: _discoveryController,
-        isNewUser: widget.isNewUser,
         onCreateActivity: _openAddActivity,
         notifications: _notifications,
       ),
     ];
 
     final stackIndex = switch (_tab) {
-      HomeTab.profile => 0,
+      HomeTab.chat => 0,
       HomeTab.map => 1,
       HomeTab.activities => 2,
       HomeTab.home => 3,
@@ -284,15 +282,19 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       extendBody: true,
       body: IndexedStack(index: stackIndex, children: pages),
       bottomNavigationBar: ListenableBuilder(
-        listenable: _activityStore,
+        listenable: Listenable.merge([_activityStore, ChatController.instance]),
         builder: (context, _) => BottomBar(
           selected: _tab,
           onSelect: (tab) {
             setState(() => _tab = tab);
             if (tab == HomeTab.activities) _loadPendingRequestCount();
+            if (tab == HomeTab.chat) {
+              unawaited(ChatController.instance.refresh());
+            }
           },
           onAddTap: _openAddActivity,
           activitiesBadge: _activityStore.pendingRequestCount,
+          chatBadge: ChatController.instance.unreadChatCount,
         ),
       ),
     );

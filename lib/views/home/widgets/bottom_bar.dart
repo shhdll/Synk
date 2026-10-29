@@ -17,12 +17,14 @@ class BottomBar extends StatelessWidget {
     required this.onSelect,
     required this.onAddTap,
     this.activitiesBadge = 0,
+    this.chatBadge = 0,
   });
 
   final HomeTab selected;
   final ValueChanged<HomeTab> onSelect;
   final VoidCallback onAddTap;
   final int activitiesBadge;
+  final int chatBadge;
 
   @override
   Widget build(BuildContext context) {
@@ -118,10 +120,11 @@ class BottomBar extends StatelessWidget {
                       onTap: () => onSelect(HomeTab.map),
                     ),
                     NavItem(
-                      icon: Icons.person_rounded,
-                      label: context.l10n.profile,
-                      selected: selected == HomeTab.profile,
-                      onTap: () => onSelect(HomeTab.profile),
+                      image: const AssetImage('assets/chat_icon.png'),
+                      label: context.l10n.chat,
+                      selected: selected == HomeTab.chat,
+                      badgeCount: chatBadge,
+                      onTap: () => onSelect(HomeTab.chat),
                     ),
                   ],
                 ),

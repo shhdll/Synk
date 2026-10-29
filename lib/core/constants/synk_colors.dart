@@ -12,6 +12,12 @@ class SynkColors {
   static const Color beige = Color(0xFFE8D2B0);
   static const Color beigeDark = Color(0xFFC7A06B);
 
+  // Deeper than orangeDark: text on orangeLight, or a fill under white text.
+  static const Color orangeDeep = Color(0xFFCA602F);
+
+  // Light orange fill for secondary buttons, e.g. Following and Message.
+  static const Color orangeLight = Color(0xFFFCE3D4);
+
   // Filter colors (tealText/labelGrey darkened for contrast).
   static const Color ink = Color(0xFF2D2A32);
   static const Color tealText = Color(0xFF2A6F65);

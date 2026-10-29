@@ -923,7 +923,7 @@ class _OnboardingViewState extends State<OnboardingView>
       MaterialPageRoute(
         builder: (context) => isConfirmed
             // Confirmation is off or the account was auto-confirmed.
-            ? const MainShell(isNewUser: true)
+            ? const MainShell()
             : EmailVerificationScreen(
                 email: _signupController.emailController.text.trim(),
                 password: _signupController.passwordController.text,

@@ -1,2 +1,3 @@
 // The four destinations reachable from the main bottom navigation bar.
-enum HomeTab { profile, map, activities, home }
+// Profile opens from the avatar in the home header.
+enum HomeTab { chat, map, activities, home }

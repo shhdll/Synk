@@ -2403,4 +2403,126 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get othersGroup => 'Others';
+
+  @override
+  String get chat => 'Chat';
+
+  @override
+  String get chats => 'Chats';
+
+  @override
+  String get activityChats => 'Activity chats';
+
+  @override
+  String activeChatsCount(int n) {
+    return '$n active';
+  }
+
+  @override
+  String get searchChats => 'Search chats';
+
+  @override
+  String get newChat => 'New chat';
+
+  @override
+  String membersCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n members',
+      one: '1 member',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String youSaid(Object message) {
+    return 'You: $message';
+  }
+
+  @override
+  String personSaid(Object name, Object message) {
+    return '$name: $message';
+  }
+
+  @override
+  String get noMessagesYet => 'No messages yet';
+
+  @override
+  String get noChatsYet => 'No chats yet';
+
+  @override
+  String get chatsShowUpHere =>
+      'Join an activity or message a friend to start chatting.';
+
+  @override
+  String get noChatsMatchYourSearch => 'No chats match your search';
+
+  @override
+  String get messageHint => 'Message';
+
+  @override
+  String get send => 'Send';
+
+  @override
+  String get messageNotSent => 'Couldn\'t send your message';
+
+  @override
+  String get canOnlyMessageFriends => 'You can only message friends';
+
+  @override
+  String get couldntOpenChat => 'Couldn\'t open this chat';
+
+  @override
+  String get yesterday => 'Yesterday';
+
+  @override
+  String get messageAFriend => 'Message a friend';
+
+  @override
+  String get message => 'Message';
+
+  @override
+  String get chatClosed => 'This chat is closed';
+
+  @override
+  String get chatClosedActivityFinished =>
+      'The activity has finished, so its chat was closed.';
+
+  @override
+  String get listSeparator => ', ';
+
+  @override
+  String sayHiToName(Object name) {
+    return 'Say hi to $name';
+  }
+
+  @override
+  String youBothLike(Object interests) {
+    return 'You both like $interests.';
+  }
+
+  @override
+  String listAnd(Object rest, Object last) {
+    return '$rest and $last';
+  }
+
+  @override
+  String planActivityTogether(Object title) {
+    return 'Plan $title together';
+  }
+
+  @override
+  String get sortOutTheDetails =>
+      'Say hi and sort out the details with everyone going.';
+
+  @override
+  String get following => 'Following';
+
+  @override
+  String get sendAPhoto => 'Send a photo';
+
+  @override
+  String get youreChattingWithAllYourFriends =>
+      'You already have a chat with all your friends';
 }
