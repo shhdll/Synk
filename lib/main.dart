@@ -15,6 +15,7 @@ import 'services/startup_safe_session_storage.dart';
 import 'views/home/activity_notification_route.dart';
 import 'views/home/schedule_conflict_resolution_view.dart';
 import 'views/home/activity_join_requests_view.dart';
+import 'views/home/friend_requests_view.dart';
 import 'views/home/friends_view.dart';
 import 'views/home/main_shell.dart';
 import 'views/new_password_view.dart';
@@ -266,7 +267,7 @@ class _MyAppState extends State<MyApp> {
     }
     navigator.push(
       MaterialPageRoute<void>(
-        builder: (_) => const FriendsView(showRequestsFirst: true),
+        builder: (_) => const FriendRequestsView(),
       ),
     );
   }

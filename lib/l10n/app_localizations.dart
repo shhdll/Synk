@@ -1112,6 +1112,54 @@ abstract class AppLocalizations {
   /// **'Upcoming plans'**
   String get upcomingPlans;
 
+  /// No description provided for @topPicksTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Top 5 picks for you'**
+  String get topPicksTitle;
+
+  /// No description provided for @topPickLikesIndoor.
+  ///
+  /// In en, this message translates to:
+  /// **'You like indoor plans'**
+  String get topPickLikesIndoor;
+
+  /// No description provided for @topPickLikesOutdoor.
+  ///
+  /// In en, this message translates to:
+  /// **'You like outdoor plans'**
+  String get topPickLikesOutdoor;
+
+  /// No description provided for @topPickYouLike.
+  ///
+  /// In en, this message translates to:
+  /// **'You like {interest}'**
+  String topPickYouLike(Object interest);
+
+  /// No description provided for @topPickPopularNearYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Popular near you'**
+  String get topPickPopularNearYou;
+
+  /// No description provided for @topPickDistanceKm.
+  ///
+  /// In en, this message translates to:
+  /// **'{km} km'**
+  String topPickDistanceKm(Object km);
+
+  /// No description provided for @topPickDistanceAway.
+  ///
+  /// In en, this message translates to:
+  /// **'{km} km away'**
+  String topPickDistanceAway(Object km);
+
+  /// No description provided for @topPickSemanticLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick {rank}: {details}'**
+  String topPickSemanticLabel(Object rank, Object details);
+
   /// No description provided for @clearFilters.
   ///
   /// In en, this message translates to:
@@ -4099,6 +4147,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Received'**
   String get receivedRequests;
+
+  /// No description provided for @friendRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend requests'**
+  String get friendRequests;
+
+  /// No description provided for @seeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See all'**
+  String get seeAll;
+
+  /// No description provided for @markAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all read'**
+  String get markAllRead;
+
+  /// No description provided for @markAsRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as read'**
+  String get markAsRead;
+
+  /// No description provided for @notificationsLast7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get notificationsLast7Days;
+
+  /// No description provided for @notificationsEarlier.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier'**
+  String get notificationsEarlier;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @notificationsUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread'**
+  String get notificationsUnread;
+
+  /// No description provided for @showMoreCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Show {n} more'**
+  String showMoreCount(Object n);
+
+  /// No description provided for @showLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get showLess;
+
+  /// No description provided for @allCaughtUp.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re all caught up'**
+  String get allCaughtUp;
+
+  /// No description provided for @notificationDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification deleted'**
+  String get notificationDeleted;
 
   /// No description provided for @sentRequests.
   ///

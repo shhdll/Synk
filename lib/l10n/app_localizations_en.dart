@@ -563,6 +563,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get upcomingPlans => 'Upcoming plans';
 
   @override
+  String get topPicksTitle => 'Top 5 picks for you';
+
+  @override
+  String get topPickLikesIndoor => 'You like indoor plans';
+
+  @override
+  String get topPickLikesOutdoor => 'You like outdoor plans';
+
+  @override
+  String topPickYouLike(Object interest) {
+    return 'You like $interest';
+  }
+
+  @override
+  String get topPickPopularNearYou => 'Popular near you';
+
+  @override
+  String topPickDistanceKm(Object km) {
+    return '$km km';
+  }
+
+  @override
+  String topPickDistanceAway(Object km) {
+    return '$km km away';
+  }
+
+  @override
+  String topPickSemanticLabel(Object rank, Object details) {
+    return 'Pick $rank: $details';
+  }
+
+  @override
   String get clearFilters => 'Clear filters';
 
   @override
@@ -2282,6 +2314,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get receivedRequests => 'Received';
+
+  @override
+  String get friendRequests => 'Friend requests';
+
+  @override
+  String get seeAll => 'See all';
+
+  @override
+  String get markAllRead => 'Mark all read';
+
+  @override
+  String get markAsRead => 'Mark as read';
+
+  @override
+  String get notificationsLast7Days => 'Last 7 days';
+
+  @override
+  String get notificationsEarlier => 'Earlier';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get notificationsUnread => 'Unread';
+
+  @override
+  String showMoreCount(Object n) {
+    return 'Show $n more';
+  }
+
+  @override
+  String get showLess => 'Show less';
+
+  @override
+  String get allCaughtUp => 'You\'re all caught up';
+
+  @override
+  String get notificationDeleted => 'Notification deleted';
 
   @override
   String get sentRequests => 'Sent';

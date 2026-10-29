@@ -169,6 +169,14 @@
   "readyForSomethingNewFemale": "جاهزة لشيء جديد؟",
   "searchActivitiesOrLocations": "ابحث عن نشاط أو مكان...",
   "upcomingPlans": "الخطط القادمة",
+  "topPicksTitle": "أفضل 5 اختيارات لك",
+  "topPickLikesIndoor": "تحب الأنشطة الداخلية",
+  "topPickLikesOutdoor": "تحب الأنشطة الخارجية",
+  "topPickYouLike": "تحب {interest}",
+  "topPickPopularNearYou": "رائج بالقرب منك",
+  "topPickDistanceKm": "{km} كم",
+  "topPickDistanceAway": "على بعد {km} كم",
+  "topPickSemanticLabel": "الاختيار {rank}: {details}",
   "clearFilters": "مسح الفلاتر",
   "noPlansMatchQuery": "لا توجد خطط تطابق \"{q}\"",
   "noPlansMatchYourFilters": "لا توجد خطط تطابق الفلاتر",
@@ -235,7 +243,7 @@
   "activityCodeCopied": "تم نسخ الرمز",
   "deleteActivity": "حذف النشاط",
   "youreOnTheWaitlist": "أنت في قائمة الانتظار",
-  "waitlistPeopleAhead": "{n, plural, =0{أنت التالي في قائمة الانتظار} =1{شخص واحد قبلك} =2{شخصان قبلك} few{{n} أشخاص قبلك} many{{n} شخصًا قبلك} other{{n} شخص قبلك}}",
+  "waitlistPeopleAhead": "{n, plural, =0{أنت التالي في قائمة الانتظار} =1{شخص واحد قبلك} =2{شخصان قبلك} few{{n} أشخاص قبلك} many{{n} شخصا قبلك} other{{n} شخص قبلك}}",
   "waitingForHostApproval": "بانتظار موافقة المنظم",
   "youveJoinedThisActivity": "انضممت لهذا النشاط",
   "joinWaitlist": "انضم لقائمة الانتظار",
@@ -393,14 +401,14 @@
     }
   },
   "friendRequestNotificationTitle": "طلب صداقة جديد",
-  "notifFriendRequestReceived": "أرسل إليك {name} طلب صداقة.",
+  "notifFriendRequestReceived": "أرسل إليك {name} طلب صداقة",
   "@notifFriendRequestReceived": {
     "placeholders": {
       "name": {"type": "String"}
     }
   },
   "friendRequestAcceptedNotificationTitle": "تم قبول طلب الصداقة",
-  "notifFriendRequestAccepted": "قبل {name} طلب صداقتك. أصبحتما صديقين الآن.",
+  "notifFriendRequestAccepted": "قبل {name} طلب صداقتك، أصبحتما صديقين الآن",
   "@notifFriendRequestAccepted": {
     "placeholders": {
       "name": {"type": "String"}
@@ -683,6 +691,18 @@
   "searchByNameOrUsername": "ابحث بالاسم أو @اسم المستخدم",
   "friendRequestsTab": "الطلبات",
   "receivedRequests": "المستلمة",
+  "friendRequests": "طلبات الصداقة",
+  "seeAll": "عرض الكل",
+  "markAllRead": "تحديد الكل كمقروء",
+  "markAsRead": "تحديد كمقروء",
+  "notificationsLast7Days": "آخر 7 أيام",
+  "notificationsEarlier": "أقدم",
+  "delete": "حذف",
+  "notificationsUnread": "غير المقروءة",
+  "showMoreCount": "عرض {n} أخرى",
+  "showLess": "عرض أقل",
+  "allCaughtUp": "لا توجد إشعارات جديدة",
+  "notificationDeleted": "تم حذف الإشعار",
   "sentRequests": "المرسلة",
   "blockedUsers": "المستخدمون المحظورون",
   "addFriend": "إضافة صديق",

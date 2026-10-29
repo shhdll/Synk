@@ -55,4 +55,19 @@ class NotificationsModel {
   Future<void> markSeen() async {
     await _supabase.rpc('mark_my_notifications_seen');
   }
+
+  Future<void> markRead(String id) async {
+    await _supabase.rpc(
+      'mark_notification_read',
+      params: {'p_notification_id': id},
+    );
+  }
+
+  // Hides it from the list for good.
+  Future<void> delete(String id) async {
+    await _supabase.rpc(
+      'delete_notification',
+      params: {'p_notification_id': id},
+    );
+  }
 }

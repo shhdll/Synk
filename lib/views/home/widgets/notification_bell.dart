@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../../../controllers/friends_controller.dart';
 import '../../../controllers/notification_center_controller.dart';
 import '../../../core/constants/synk_colors.dart';
 import '../../../l10n/l10n.dart';
 import '../../../models/activity_model.dart';
 import '../notification_center_view.dart';
 
-// The bell in the home header, with a badge for unread notifications.
+// The bell in the home header, with a badge for unread notifications plus
+// friend requests waiting for an answer.
 class NotificationBell extends StatelessWidget {
   const NotificationBell({
     super.key,
@@ -19,10 +21,12 @@ class NotificationBell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final friends = FriendsController.instance;
+
     return AnimatedBuilder(
-      animation: controller,
+      animation: Listenable.merge([controller, friends]),
       builder: (context, _) {
-        final count = controller.unreadCount;
+        final count = controller.unreadCount + friends.pendingCount;
         return Stack(
           clipBehavior: Clip.none,
           children: [
