@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -11,18 +12,23 @@ import '../../models/activities_model.dart';
 import '../../models/activity_model.dart';
 import '../../models/chat_model.dart';
 import '../../models/friends_model.dart';
+import '../../models/place_search_model.dart';
+import '../../utils/custom_widgets/synk_dialog.dart';
 import '../../utils/custom_widgets/synk_feedback.dart';
+import '../../utils/maps_launcher.dart';
 import '../../utils/text_direction.dart';
+import '../create_activity/location_search_sheet.dart';
 import 'activity_notification_route.dart';
+import 'widgets/activity_details_sheet.dart';
 import 'widgets/activity_thumbnail.dart';
 import 'widgets/chat_list_tile.dart';
-import 'widgets/activity_details_sheet.dart';
+import 'widgets/chat_share_sheets.dart';
 import 'widgets/discovery_activity_card.dart';
 import 'widgets/friend_options_sheet.dart';
 import 'widgets/user_avatar.dart';
 
-// [activityStore] lets an activity chat's title open the activity in the
-// Activities tab; without it the activity opens on its own page.
+// [activityStore] lets activities open over the chat with the app's own
+// activity data; without it they open on their own page.
 Future<void> openChatRoom(
   BuildContext context,
   ChatSummary chat, {
@@ -33,6 +39,30 @@ Future<void> openChatRoom(
       builder: (_) => ChatRoomView(chat: chat, activityStore: activityStore),
     ),
   );
+}
+
+// Asks first, then deletes the chat for you only. True when it was deleted.
+Future<bool> confirmDeleteChat(BuildContext context, ChatSummary chat) async {
+  final action = await SynkDialog.destructive(
+    icon: Icons.delete_outline_rounded,
+    title: context.l10n.deleteThisChat,
+    message: context.l10n.chatDeletedOnlyForYou,
+    primaryLabel: context.l10n.cancel,
+    secondaryLabel: context.l10n.deleteLabel,
+  ).show(context);
+  if (action != SynkDialogAction.secondary || !context.mounted) return false;
+
+  final ok = await ChatController.instance.deleteChatForMe(chat.id);
+  if (!context.mounted) return ok;
+  if (ok) {
+    SynkFeedback.showToast(context, title: context.l10n.chatDeleted);
+  } else {
+    SynkFeedback.showError(
+      context,
+      context.l10n.somethingWentWrongPleaseTryAgain,
+    );
+  }
+  return ok;
 }
 
 // One conversation: an activity's group chat or a chat with a friend.
@@ -116,7 +146,13 @@ class _ChatRoomViewState extends State<ChatRoomView> {
   }
 
   void _onMessage(ChatMessage message) {
-    if (!mounted || _messages.any((m) => m.id == message.id)) return;
+    if (!mounted) return;
+    // An update, e.g. the message was deleted.
+    final index = _messages.indexWhere((m) => m.id == message.id);
+    if (index != -1) {
+      setState(() => _messages = [..._messages]..[index] = message);
+      return;
+    }
     setState(() => _messages = [..._messages, message]);
     unawaited(_chats.markRead(widget.chat.id));
     unawaited(_loadPhotoLinks([message]));
@@ -174,8 +210,45 @@ class _ChatRoomViewState extends State<ChatRoomView> {
     if (await _deliver(text: text)) _input.clear();
   }
 
-  Future<void> _sendPhoto() async {
+  // The + button: a photo, a location or an activity.
+  Future<void> _sendAttachment() async {
     if (_isSending) return;
+    final choice = await showAttachmentSheet(context);
+    if (!mounted || choice == null) return;
+    switch (choice) {
+      case ChatAttachment.photo:
+        await _sendPhoto();
+      case ChatAttachment.location:
+        await _sendLocation();
+      case ChatAttachment.activity:
+        await _sendActivity();
+    }
+  }
+
+  Future<void> _sendLocation() async {
+    final place = await showModalBottomSheet<PlaceSuggestion?>(
+      context: context,
+      isScrollControlled: true,
+      // Keeps the sheet's title below the status bar.
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) =>
+          LocationSearchSheet(confirmLabel: context.l10n.sendThisLocation),
+    );
+    if (!mounted || place == null || !place.hasCoordinates) return;
+    await _deliver(place: place);
+  }
+
+  Future<void> _sendActivity() async {
+    final activity = await showActivityPickerSheet(
+      context,
+      store: widget.activityStore,
+    );
+    if (!mounted || activity == null) return;
+    await _deliver(activityId: activity.id);
+  }
+
+  Future<void> _sendPhoto() async {
     final XFile? file;
     try {
       file = await _model.pickPhoto();
@@ -187,8 +260,13 @@ class _ChatRoomViewState extends State<ChatRoomView> {
     await _deliver(photo: file);
   }
 
-  // Sends text or a photo; true when it was sent.
-  Future<bool> _deliver({String text = '', XFile? photo}) async {
+  // Sends one of: text, a photo, an activity or a place. True when sent.
+  Future<bool> _deliver({
+    String text = '',
+    XFile? photo,
+    String? activityId,
+    PlaceSuggestion? place,
+  }) async {
     setState(() => _isSending = true);
     var result = '';
     ChatMessage? sent;
@@ -200,6 +278,8 @@ class _ChatRoomViewState extends State<ChatRoomView> {
         widget.chat.id,
         text,
         imagePath: imagePath,
+        activityId: activityId,
+        place: place,
       );
     } catch (error) {
       debugPrint('SYNK: message failed to send: $error');
@@ -218,6 +298,14 @@ class _ChatRoomViewState extends State<ChatRoomView> {
       Navigator.pop(context);
       return false;
     }
+    if (result == 'not_visible_to_all') {
+      SynkFeedback.showToast(
+        context,
+        title: context.l10n.activityNotVisibleToAll,
+        success: false,
+      );
+      return false;
+    }
     if (sent == null) {
       SynkFeedback.showToast(
         context,
@@ -234,10 +322,17 @@ class _ChatRoomViewState extends State<ChatRoomView> {
     return true;
   }
 
-  // Shows the activity over the chat; closing it comes back here.
-  Future<void> _openActivity() async {
-    final activityId = widget.chat.activity?.id;
-    if (activityId == null) return;
+  // Shows an activity over the chat, this chat's or a shared one; closing it
+  // comes back here. A null id is a shared activity that was deleted.
+  Future<void> _openActivity(String? activityId) async {
+    if (activityId == null || activityId.isEmpty) {
+      SynkFeedback.showToast(
+        context,
+        title: context.l10n.thisActivityIsNoLongerAvailable,
+        success: false,
+      );
+      return;
+    }
     final store = widget.activityStore;
 
     if (store == null) {
@@ -282,6 +377,137 @@ class _ChatRoomViewState extends State<ChatRoomView> {
     if (_chats.byId(widget.chat.id) == null) Navigator.pop(context);
   }
 
+  // A small menu just under the long-pressed message.
+  Future<void> _showMessageMenu(ChatMessage message, Rect bubble) async {
+    unawaited(HapticFeedback.mediumImpact());
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final canDeleteForEveryone = message.senderId == _me && !message.isDeleted;
+
+    final action = await showMenu<_MessageAction>(
+      context: context,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      // Lines up with the bubble's outer edge, below it.
+      position: RelativeRect.fromRect(
+        Rect.fromLTRB(
+          bubble.left,
+          bubble.bottom + 4,
+          bubble.right,
+          bubble.bottom + 4,
+        ),
+        Offset.zero & overlay.size,
+      ),
+      items: [
+        if (canDeleteForEveryone)
+          _menuItem(
+            _MessageAction.deleteForEveryone,
+            Icons.delete_outline_rounded,
+            context.l10n.deleteForEveryone,
+            color: SynkColors.badge,
+          ),
+        _menuItem(
+          _MessageAction.deleteForMe,
+          Icons.remove_circle_outline_rounded,
+          context.l10n.deleteForMe,
+        ),
+      ],
+    );
+    if (!mounted) return;
+    switch (action) {
+      case _MessageAction.deleteForEveryone:
+        await _deleteForEveryone(message);
+      case _MessageAction.deleteForMe:
+        await _deleteForMe(message);
+      case null:
+        break;
+    }
+  }
+
+  PopupMenuItem<_MessageAction> _menuItem(
+    _MessageAction value,
+    IconData icon,
+    String label, {
+    Color color = SynkColors.textPrimary,
+  }) {
+    return PopupMenuItem(
+      value: value,
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: color),
+          const SizedBox(width: 12),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Everyone sees "This message was deleted".
+  Future<void> _deleteForEveryone(ChatMessage message) async {
+    var ok = false;
+    try {
+      ok = await _model.deleteMessage(message.id);
+    } catch (error) {
+      debugPrint('SYNK: deleting message failed: $error');
+    }
+    if (!mounted) return;
+    if (!ok) return _showDeleteError();
+    // Realtime brings the same change; this shows it without waiting.
+    _onMessage(
+      ChatMessage(
+        id: message.id,
+        chatId: message.chatId,
+        senderId: message.senderId,
+        body: '',
+        createdAt: message.createdAt,
+        deletedAt: DateTime.now(),
+      ),
+    );
+    unawaited(_chats.refresh());
+  }
+
+  // Gone for you only, with no placeholder; put back if it fails.
+  Future<void> _deleteForMe(ChatMessage message) async {
+    final index = _messages.indexWhere((m) => m.id == message.id);
+    if (index == -1) return;
+    setState(() => _messages = [..._messages]..removeAt(index));
+
+    var ok = false;
+    try {
+      ok = await _model.hideMessage(message.id);
+    } catch (error) {
+      debugPrint('SYNK: hiding message failed: $error');
+    }
+    if (!mounted) return;
+    if (!ok) {
+      setState(
+        () =>
+            _messages = [..._messages, message]
+              ..sort((a, b) => a.createdAt.compareTo(b.createdAt)),
+      );
+      return _showDeleteError();
+    }
+    unawaited(_chats.refresh());
+  }
+
+  void _showDeleteError() {
+    SynkFeedback.showError(
+      context,
+      context.l10n.somethingWentWrongPleaseTryAgain,
+    );
+  }
+
+  Future<void> _deleteChat() async {
+    final deleted = await confirmDeleteChat(context, widget.chat);
+    if (deleted && mounted) Navigator.pop(context);
+  }
+
   void _openProfile(FriendUser user) {
     if (user.id == _me) return;
     openFriendProfile(
@@ -321,6 +547,29 @@ class _ChatRoomViewState extends State<ChatRoomView> {
           ),
         ),
         title: _buildTitle(),
+        actions: [
+          PopupMenuButton<VoidCallback>(
+            tooltip: context.l10n.moreOptions,
+            onSelected: (action) => action(),
+            color: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            icon: const Icon(
+              Icons.more_vert_rounded,
+              color: SynkColors.textPrimary,
+            ),
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                value: _deleteChat,
+                child: Text(
+                  context.l10n.deleteChat,
+                  style: const TextStyle(color: SynkColors.badge),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -393,7 +642,9 @@ class _ChatRoomViewState extends State<ChatRoomView> {
           ? context.l10n.viewActivity
           : context.l10n.viewProfile,
       child: InkWell(
-        onTap: activity != null ? _openActivity : () => _openProfile(friend!),
+        onTap: activity != null
+            ? () => _openActivity(activity.id)
+            : () => _openProfile(friend!),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
@@ -454,6 +705,8 @@ class _ChatRoomViewState extends State<ChatRoomView> {
               isGroupChat: widget.chat.isActivity,
               photoLink: _photoLinks[message.imagePath],
               onSenderTap: _openProfile,
+              onOpenActivity: _openActivity,
+              onLongPress: (bubble) => _showMessageMenu(message, bubble),
             ),
           ],
         );
@@ -571,8 +824,8 @@ class _ChatRoomViewState extends State<ChatRoomView> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             IconButton.filled(
-              tooltip: context.l10n.sendAPhoto,
-              onPressed: _isSending ? null : _sendPhoto,
+              tooltip: context.l10n.sendSomething,
+              onPressed: _isSending ? null : _sendAttachment,
               style: IconButton.styleFrom(
                 backgroundColor: SynkColors.textSecondary.withValues(
                   alpha: 0.12,
@@ -666,6 +919,8 @@ class _ChatRoomViewState extends State<ChatRoomView> {
   }
 }
 
+enum _MessageAction { deleteForEveryone, deleteForMe }
+
 // Shows a chat photo full screen; pinch to zoom, tap to close.
 Future<void> _showPhoto(BuildContext context, String link) {
   return showGeneralDialog<void>(
@@ -719,6 +974,8 @@ class _MessageBubble extends StatelessWidget {
     required this.isGroupChat,
     this.photoLink,
     this.onSenderTap,
+    this.onLongPress,
+    this.onOpenActivity,
   });
 
   final ChatMessage message;
@@ -734,8 +991,163 @@ class _MessageBubble extends StatelessWidget {
   // Opens the sender's profile from their photo.
   final ValueChanged<FriendUser>? onSenderTap;
 
+  // Opens the message menu; gets where the bubble is on screen.
+  final ValueChanged<Rect>? onLongPress;
+
+  // Opens a shared activity; null id when it was deleted.
+  final ValueChanged<String?>? onOpenActivity;
+
   static const double _avatarSize = 28;
   static const double _photoSize = 220;
+
+  bool get _hasCard =>
+      !message.isDeleted && (message.isActivityShare || message.isLocation);
+
+  // A white card inside the bubble, for a shared activity or place.
+  Widget _card({
+    required Widget leading,
+    required String title,
+    required String? subtitle,
+    required String action,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: SizedBox(
+          width: _photoSize,
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    leading,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textDirection: textDirectionOf(title),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: SynkColors.textPrimary,
+                            ),
+                          ),
+                          if (subtitle != null && subtitle.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              subtitle,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: SynkColors.orangeDark,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: SynkColors.orangeLight,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    action,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: SynkColors.orangeDeep,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActivityCard(BuildContext context) {
+    final activity = message.sharedActivity!;
+    return _card(
+      leading: ActivityThumbnail(activity: activity, size: 52, radius: 12),
+      title: activity.title,
+      subtitle: [
+        DiscoveryActivityCard.formatWhen(activity.dateTime),
+        if (activity.location.trim().isNotEmpty) activity.location.trim(),
+      ].join(' · '),
+      action: context.l10n.viewActivity,
+      onTap: () => onOpenActivity?.call(message.sharedActivityId),
+    );
+  }
+
+  Widget _buildLocationCard(BuildContext context) {
+    final name = message.locationName?.trim() ?? '';
+    final address = message.locationAddress?.trim();
+    return _card(
+      leading: Container(
+        width: 52,
+        height: 52,
+        decoration: BoxDecoration(
+          color: SynkColors.teal.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(
+          Icons.location_on_rounded,
+          size: 28,
+          color: SynkColors.tealText,
+        ),
+      ),
+      title: name.isNotEmpty ? name : context.l10n.sendLocation,
+      subtitle: address == name ? null : address,
+      action: context.l10n.openInGoogleMaps,
+      onTap: () =>
+          MapsLauncher.openCoordinates(message.latitude!, message.longitude!),
+    );
+  }
+
+  Widget _buildDeleted(BuildContext context) {
+    final color = isMine
+        ? Colors.white.withValues(alpha: 0.85)
+        : SynkColors.textSecondary;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.block_rounded, size: 15, color: color),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            context.l10n.messageWasDeleted,
+            style: TextStyle(
+              fontSize: 14.5,
+              fontStyle: FontStyle.italic,
+              color: color,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
   Widget _buildPhoto(BuildContext context) {
     final link = photoLink;
@@ -777,11 +1189,11 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bubble = Container(
+    final content = Container(
       constraints: BoxConstraints(
         maxWidth: MediaQuery.sizeOf(context).width * 0.72,
       ),
-      padding: message.hasPhoto
+      padding: message.hasPhoto || _hasCard
           ? const EdgeInsets.fromLTRB(4, 4, 4, 6)
           : const EdgeInsets.fromLTRB(12, 8, 12, 6),
       decoration: BoxDecoration(
@@ -797,7 +1209,12 @@ class _MessageBubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (message.isDeleted) _buildDeleted(context),
           if (message.hasPhoto) _buildPhoto(context),
+          if (!message.isDeleted && message.isActivityShare)
+            _buildActivityCard(context),
+          if (!message.isDeleted && message.isLocation)
+            _buildLocationCard(context),
           if (message.body.isNotEmpty)
             Padding(
               padding: message.hasPhoto
@@ -815,7 +1232,7 @@ class _MessageBubble extends StatelessWidget {
             ),
           const SizedBox(height: 2),
           Padding(
-            padding: message.hasPhoto
+            padding: message.hasPhoto || _hasCard
                 ? const EdgeInsetsDirectional.only(end: 8)
                 : EdgeInsets.zero,
             child: Text(
@@ -829,6 +1246,18 @@ class _MessageBubble extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+
+    final bubble = Builder(
+      builder: (bubbleContext) => GestureDetector(
+        onLongPress: onLongPress == null
+            ? null
+            : () {
+                final box = bubbleContext.findRenderObject() as RenderBox;
+                onLongPress!(box.localToGlobal(Offset.zero) & box.size);
+              },
+        child: content,
       ),
     );
 

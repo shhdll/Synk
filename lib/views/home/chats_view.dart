@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../controllers/chat_controller.dart';
@@ -166,104 +167,136 @@ class _ChatsViewState extends State<ChatsView> {
         _chats.activityChats.isEmpty &&
         _chats.directChats.isEmpty;
 
-    Widget tile(ChatSummary chat) => ChatListTile(
-      chat: chat,
-      currentUserId: me,
-      onTap: () =>
-          openChatRoom(context, chat, activityStore: widget.activityStore),
+    // Swipe toward the start to show Mute and Delete.
+    Widget tile(ChatSummary chat) => Slidable(
+      key: ValueKey(chat.id),
+      groupTag: 'chats',
+      endActionPane: ActionPane(
+        motion: const DrawerMotion(),
+        extentRatio: 0.5,
+        children: [
+          SlidableAction(
+            onPressed: (_) => _chats.setMuted(chat.id, !chat.isMuted),
+            backgroundColor: SynkColors.textSecondary,
+            foregroundColor: Colors.white,
+            icon: chat.isMuted
+                ? Icons.notifications_active_outlined
+                : Icons.notifications_off_outlined,
+            label: chat.isMuted ? context.l10n.unmute : context.l10n.mute,
+          ),
+          SlidableAction(
+            onPressed: (_) => confirmDeleteChat(context, chat),
+            backgroundColor: SynkColors.badge,
+            foregroundColor: Colors.white,
+            icon: Icons.delete_outline_rounded,
+            label: context.l10n.deleteLabel,
+          ),
+        ],
+      ),
+      child: ChatListTile(
+        chat: chat,
+        currentUserId: me,
+        onTap: () =>
+            openChatRoom(context, chat, activityStore: widget.activityStore),
+      ),
     );
 
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(
-        parent: BouncingScrollPhysics(),
-      ),
-      // Bottom room for MainShell's bar, which this tab extends behind.
-      padding: const EdgeInsets.fromLTRB(_gutter, 20, _gutter, 140),
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                context.l10n.chats,
-                style: TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.w900,
-                  // Spacing pulls joined Arabic letters apart.
-                  letterSpacing: hasArabic(context.l10n.chats) ? 0 : -0.8,
-                  color: SynkColors.textPrimary,
+    // Opening one row's actions closes any other.
+    return SlidableAutoCloseBehavior(
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
+        // Bottom room for MainShell's bar, which this tab extends behind.
+        padding: const EdgeInsets.fromLTRB(_gutter, 20, _gutter, 140),
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  context.l10n.chats,
+                  style: TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.w900,
+                    // Spacing pulls joined Arabic letters apart.
+                    letterSpacing: hasArabic(context.l10n.chats) ? 0 : -0.8,
+                    color: SynkColors.textPrimary,
+                  ),
                 ),
               ),
-            ),
-            Material(
-              color: Colors.white,
-              shape: const CircleBorder(),
-              elevation: 1,
-              shadowColor: Colors.black12,
-              child: IconButton(
-                tooltip: context.l10n.newChat,
-                onPressed: _openNewChatSheet,
-                icon: const NewChatIcon(color: SynkColors.textPrimary),
+              Material(
+                color: Colors.white,
+                shape: const CircleBorder(),
+                elevation: 1,
+                shadowColor: Colors.black12,
+                child: IconButton(
+                  tooltip: context.l10n.newChat,
+                  onPressed: _openNewChatSheet,
+                  icon: const NewChatIcon(color: SynkColors.textPrimary),
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 18),
-        FriendsSearchField(
-          controller: _search,
-          hint: context.l10n.searchChats,
-          onChanged: (_) => setState(() {}),
-        ),
-        if (_chats.isLoading && !_chats.hasLoaded)
-          const Padding(
-            padding: EdgeInsets.only(top: 80),
-            child: Center(
-              child: CircularProgressIndicator(color: SynkColors.orangeDark),
-            ),
-          )
-        else if (!_chats.hasLoaded && _chats.error != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 60),
-            child: EmptyState(
-              icon: Icons.cloud_off_rounded,
-              title: context.l10n.weCouldntReachSynk,
-              message: context.l10n.checkYourConnectionAndTryAgain,
-              actionLabel: context.l10n.refresh,
-              onAction: _chats.refresh,
-            ),
-          )
-        else if (nothingYet)
-          Padding(
-            padding: const EdgeInsets.only(top: 60),
-            child: EmptyState(
-              icon: Icons.chat_bubble_outline_rounded,
-              title: context.l10n.noChatsYet,
-              message: context.l10n.chatsShowUpHere,
-              actionLabel: context.l10n.messageAFriend,
-              onAction: _openNewChatSheet,
-            ),
-          )
-        else if (searching && activityChats.isEmpty && directChats.isEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 60),
-            child: EmptyState(
-              icon: Icons.search_off_rounded,
-              title: context.l10n.noChatsMatchYourSearch,
-            ),
-          )
-        else ...[
-          if (activityChats.isNotEmpty) ...[
-            _SectionHeader(
-              title: context.l10n.activityChats,
-              trailing: context.l10n.activeChatsCount(activityChats.length),
-            ),
-            FriendsListCard(children: [for (final c in activityChats) tile(c)]),
-          ],
-          if (directChats.isNotEmpty) ...[
-            _SectionHeader(title: context.l10n.friends),
-            FriendsListCard(children: [for (final c in directChats) tile(c)]),
+            ],
+          ),
+          const SizedBox(height: 18),
+          FriendsSearchField(
+            controller: _search,
+            hint: context.l10n.searchChats,
+            onChanged: (_) => setState(() {}),
+          ),
+          if (_chats.isLoading && !_chats.hasLoaded)
+            const Padding(
+              padding: EdgeInsets.only(top: 80),
+              child: Center(
+                child: CircularProgressIndicator(color: SynkColors.orangeDark),
+              ),
+            )
+          else if (!_chats.hasLoaded && _chats.error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 60),
+              child: EmptyState(
+                icon: Icons.cloud_off_rounded,
+                title: context.l10n.weCouldntReachSynk,
+                message: context.l10n.checkYourConnectionAndTryAgain,
+                actionLabel: context.l10n.refresh,
+                onAction: _chats.refresh,
+              ),
+            )
+          else if (nothingYet)
+            Padding(
+              padding: const EdgeInsets.only(top: 60),
+              child: EmptyState(
+                icon: Icons.chat_bubble_outline_rounded,
+                title: context.l10n.noChatsYet,
+                message: context.l10n.chatsShowUpHere,
+                actionLabel: context.l10n.messageAFriend,
+                onAction: _openNewChatSheet,
+              ),
+            )
+          else if (searching && activityChats.isEmpty && directChats.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 60),
+              child: EmptyState(
+                icon: Icons.search_off_rounded,
+                title: context.l10n.noChatsMatchYourSearch,
+              ),
+            )
+          else ...[
+            if (activityChats.isNotEmpty) ...[
+              _SectionHeader(
+                title: context.l10n.activityChats,
+                trailing: context.l10n.activeChatsCount(activityChats.length),
+              ),
+              FriendsListCard(
+                children: [for (final c in activityChats) tile(c)],
+              ),
+            ],
+            if (directChats.isNotEmpty) ...[
+              _SectionHeader(title: context.l10n.friends),
+              FriendsListCard(children: [for (final c in directChats) tile(c)]),
+            ],
           ],
         ],
-      ],
+      ),
     );
   }
 }

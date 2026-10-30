@@ -29,6 +29,15 @@ class MapsLauncher {
 
   static bool canOpen(Activity activity) => googleMapsUri(activity) != null;
 
+  // A point shared in a chat.
+  static Future<bool> openCoordinates(double latitude, double longitude) {
+    final uri = Uri.https('www.google.com', '/maps/search/', {
+      'api': '1',
+      'query': '$latitude,$longitude',
+    });
+    return launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
   static Future<bool> open(Activity activity) async {
     final uri = googleMapsUri(activity);
     if (uri == null) return false;

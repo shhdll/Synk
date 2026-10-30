@@ -39,8 +39,9 @@ class ChatController extends ChangeNotifier {
   List<ChatSummary> get directChats =>
       _chats.where((c) => !c.isActivity).toList();
 
-  // The number on the Chat tab badge: chats with unread messages.
-  int get unreadChatCount => _chats.where((c) => c.unreadCount > 0).length;
+  // The number on the Chat tab badge: unmuted chats with unread messages.
+  int get unreadChatCount =>
+      _chats.where((c) => c.unreadCount > 0 && !c.isMuted).length;
 
   ChatSummary? byId(String chatId) {
     for (final chat in _chats) {
@@ -100,19 +101,7 @@ class ChatController extends ChangeNotifier {
   Future<void> markRead(String chatId) async {
     final index = _chats.indexWhere((c) => c.id == chatId);
     if (index != -1 && _chats[index].unreadCount > 0) {
-      final chat = _chats[index];
-      _chats[index] = ChatSummary(
-        id: chat.id,
-        kind: chat.kind,
-        createdAt: chat.createdAt,
-        activity: chat.activity,
-        otherUser: chat.otherUser,
-        memberCount: chat.memberCount,
-        lastMessageBody: chat.lastMessageBody,
-        lastMessageSenderId: chat.lastMessageSenderId,
-        lastMessageSenderName: chat.lastMessageSenderName,
-        lastMessageAt: chat.lastMessageAt,
-      );
+      _chats[index] = _chats[index].copyWith(unreadCount: 0);
       notifyListeners();
     }
     try {
@@ -120,6 +109,39 @@ class ChatController extends ChangeNotifier {
     } catch (error) {
       debugPrint('SYNK: marking chat read failed: $error');
     }
+  }
+
+  // Shows the change straight away; false when it failed, and the reload
+  // puts it back.
+  Future<bool> setMuted(String chatId, bool mute) async {
+    final index = _chats.indexWhere((c) => c.id == chatId);
+    if (index != -1) {
+      _chats[index] = _chats[index].copyWith(isMuted: mute);
+      notifyListeners();
+    }
+    var ok = false;
+    try {
+      ok = await _model.setMuted(chatId, mute);
+    } catch (error) {
+      debugPrint('SYNK: muting chat failed: $error');
+    }
+    await refresh();
+    return ok;
+  }
+
+  // Removes the chat from your list straight away; false when it failed, and
+  // the reload puts it back.
+  Future<bool> deleteChatForMe(String chatId) async {
+    _chats.removeWhere((c) => c.id == chatId);
+    notifyListeners();
+    var ok = false;
+    try {
+      ok = await _model.deleteChatForMe(chatId);
+    } catch (error) {
+      debugPrint('SYNK: deleting chat failed: $error');
+    }
+    await refresh();
+    return ok;
   }
 
   // The chat id with a friend, or null when it can't be opened.

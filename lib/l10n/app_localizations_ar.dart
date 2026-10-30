@@ -2423,7 +2423,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String youBothLike(Object interests) {
-    return 'تحبان $interests';
+    return 'كلاكما تحبان $interests!';
   }
 
   @override
@@ -2444,8 +2444,85 @@ class AppLocalizationsAr extends AppLocalizations {
   String get following => 'متابع';
 
   @override
-  String get sendAPhoto => 'أرسل صورة';
+  String get youreChattingWithAllYourFriends => 'لديك محادثة مع جميع أصدقائك';
 
   @override
-  String get youreChattingWithAllYourFriends => 'لديك محادثة مع جميع أصدقائك';
+  String get messageWasDeleted => 'تم حذف هذه الرسالة';
+
+  @override
+  String get deleteChat => 'حذف المحادثة';
+
+  @override
+  String get deleteThisChat => 'حذف هذه المحادثة؟';
+
+  @override
+  String get chatDeletedOnlyForYou =>
+      'تحذف لديك فقط، وإذا وصلت رسالة جديدة ستظهر المحادثة مجددا';
+
+  @override
+  String get chatDeleted => 'تم حذف المحادثة';
+
+  @override
+  String get deleteLabel => 'حذف';
+
+  @override
+  String get deleteForEveryone => 'حذف لدى الجميع';
+
+  @override
+  String get deleteForMe => 'حذف لدي';
+
+  @override
+  String get mute => 'كتم';
+
+  @override
+  String get unmute => 'إلغاء الكتم';
+
+  @override
+  String get muted => 'مكتومة';
+
+  @override
+  String get sendSomething => 'إرسال';
+
+  @override
+  String get sendLocation => 'موقع';
+
+  @override
+  String get sendActivity => 'نشاط';
+
+  @override
+  String get sendThisLocation => 'أرسل هذا الموقع';
+
+  @override
+  String get shareAnActivity => 'شارك نشاطا';
+
+  @override
+  String get noUpcomingActivitiesToShare => 'لا توجد أنشطة قادمة للمشاركة';
+
+  @override
+  String get joinOrCreateToShare => 'انضم إلى نشاط أو أنشئ واحدا، ثم شاركه هنا';
+
+  @override
+  String get activityNotVisibleToAll =>
+      'بعض الأشخاص في هذه المحادثة لا يمكنهم رؤية هذا النشاط';
+
+  @override
+  String sharedActivityLabel(Object title) {
+    return 'نشاط: $title';
+  }
+
+  @override
+  String sharedLocationLabel(Object name) {
+    return 'موقع: $name';
+  }
+
+  @override
+  String get shareInChat => 'شارك في المحادثة';
+
+  @override
+  String sentTo(Object name) {
+    return 'أرسل إلى $name';
+  }
+
+  @override
+  String get sent => 'تم الإرسال';
 }

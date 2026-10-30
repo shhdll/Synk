@@ -16,10 +16,13 @@ import '../../models/place_search_model.dart';
 // Search for a place or tap anywhere on the map. The chosen spot gets a
 // marker, and "Use this location" pops it as a resolved [PlaceSuggestion].
 class LocationSearchSheet extends StatefulWidget {
-  const LocationSearchSheet({super.key, this.initialPlace});
+  const LocationSearchSheet({super.key, this.initialPlace, this.confirmLabel});
 
   /// The place already chosen, shown on the map when the sheet opens.
   final PlaceSuggestion? initialPlace;
+
+  /// The button's label; "Use this location" by default.
+  final String? confirmLabel;
 
   @override
   State<LocationSearchSheet> createState() => _LocationSearchSheetState();
@@ -593,7 +596,7 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
           ),
         ),
         child: Text(
-          context.l10n.useThisLocation,
+          widget.confirmLabel ?? context.l10n.useThisLocation,
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
       ),

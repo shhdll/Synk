@@ -71,6 +71,15 @@ class ChatListTile extends StatelessWidget {
                           ),
                         ),
                       ),
+                      if (chat.isMuted) ...[
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.notifications_off_outlined,
+                          size: 15,
+                          color: SynkColors.textSecondary,
+                          semanticLabel: context.l10n.muted,
+                        ),
+                      ],
                       if (chat.lastMessageAt != null) ...[
                         const SizedBox(width: 8),
                         Text(
@@ -127,7 +136,10 @@ class ChatListTile extends StatelessWidget {
                       ),
                       if (unread) ...[
                         const SizedBox(width: 8),
-                        _UnreadBadge(count: chat.unreadCount),
+                        _UnreadBadge(
+                          count: chat.unreadCount,
+                          muted: chat.isMuted,
+                        ),
                       ],
                     ],
                   ),
@@ -143,11 +155,18 @@ class ChatListTile extends StatelessWidget {
   String _preview(BuildContext context) {
     final message = chat.lastMessageBody;
     if (message == null) return context.l10n.noMessagesYet;
-    // A photo sent without text has an empty body.
+    if (chat.lastMessageIsDeleted) return context.l10n.messageWasDeleted;
+    final label = bidiIsolate(chat.lastMessageLabel ?? '');
     // Keeps an Arabic message's punctuation in place after "You: ".
-    final body = message.trim().isEmpty
-        ? '📷 ${context.l10n.photo}'
-        : bidiIsolate(message);
+    final body = switch (chat.lastMessageKind) {
+      'activity' => '📅 ${context.l10n.sharedActivityLabel(label)}',
+      'location' =>
+        (chat.lastMessageLabel ?? '').trim().isEmpty
+            ? '📍 ${context.l10n.sendLocation}'
+            : '📍 ${context.l10n.sharedLocationLabel(label)}',
+      _ when message.trim().isNotEmpty => bidiIsolate(message),
+      _ => '📷 ${context.l10n.photo}',
+    };
     if (chat.lastMessageSenderId == currentUserId) {
       return context.l10n.youSaid(body);
     }
@@ -163,9 +182,12 @@ class ChatListTile extends StatelessWidget {
 }
 
 class _UnreadBadge extends StatelessWidget {
-  const _UnreadBadge({required this.count});
+  const _UnreadBadge({required this.count, this.muted = false});
 
   final int count;
+
+  // Grey for muted chats, which don't count toward the Chat tab badge.
+  final bool muted;
 
   @override
   Widget build(BuildContext context) {
@@ -175,7 +197,7 @@ class _UnreadBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6),
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: SynkColors.orangeDark,
+        color: muted ? SynkColors.textSecondary : SynkColors.orangeDark,
         borderRadius: BorderRadius.circular(11),
       ),
       child: Text(

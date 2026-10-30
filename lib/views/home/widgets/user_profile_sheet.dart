@@ -483,12 +483,19 @@ class _MessageButtonState extends State<_MessageButton> {
 
   @override
   Widget build(BuildContext context) {
+    // White with an orange outline, pill-shaped like Following beside it.
+    final shape = StadiumBorder(
+      side: BorderSide(
+        color: SynkColors.orangeDeep.withValues(alpha: 0.4),
+        width: 1.5,
+      ),
+    );
     return Material(
-      color: SynkColors.orangeLight,
-      borderRadius: BorderRadius.circular(16),
+      color: Colors.white,
+      shape: shape,
       child: InkWell(
         onTap: _open,
-        borderRadius: BorderRadius.circular(16),
+        customBorder: shape,
         child: Container(
           height: 52,
           padding: const EdgeInsets.symmetric(horizontal: 18),

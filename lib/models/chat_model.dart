@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'activity_model.dart';
 import 'friends_model.dart';
+import 'place_search_model.dart';
 
 // Activity group chats and one-to-one chats between friends. Changes go
 // through database functions (supabase/migrations/20261029120000_chats.sql),
@@ -25,7 +26,12 @@ class ChatSummary {
     this.lastMessageSenderId,
     this.lastMessageSenderName,
     this.lastMessageAt,
+    this.lastMessageIsDeleted = false,
+    this.lastMessageHasPhoto = false,
+    this.lastMessageKind = 'text',
+    this.lastMessageLabel,
     this.unreadCount = 0,
+    this.isMuted = false,
   });
 
   final String id;
@@ -43,13 +49,45 @@ class ChatSummary {
   final String? lastMessageSenderId;
   final String? lastMessageSenderName;
   final DateTime? lastMessageAt;
+  final bool lastMessageIsDeleted;
+  final bool lastMessageHasPhoto;
+
+  // 'text', 'photo', 'activity' or 'location'.
+  final String lastMessageKind;
+
+  // The shared activity's title or the place's name.
+  final String? lastMessageLabel;
   final int unreadCount;
+
+  // Left out of the Chat tab badge.
+  final bool isMuted;
 
   bool get isActivity => kind == ChatKind.activity;
 
   String get title => activity?.title ?? otherUser?.name ?? '';
 
   DateTime get sortTime => lastMessageAt ?? createdAt;
+
+  ChatSummary copyWith({int? unreadCount, bool? isMuted}) {
+    return ChatSummary(
+      id: id,
+      kind: kind,
+      createdAt: createdAt,
+      activity: activity,
+      otherUser: otherUser,
+      memberCount: memberCount,
+      lastMessageBody: lastMessageBody,
+      lastMessageSenderId: lastMessageSenderId,
+      lastMessageSenderName: lastMessageSenderName,
+      lastMessageAt: lastMessageAt,
+      lastMessageIsDeleted: lastMessageIsDeleted,
+      lastMessageHasPhoto: lastMessageHasPhoto,
+      lastMessageKind: lastMessageKind,
+      lastMessageLabel: lastMessageLabel,
+      unreadCount: unreadCount ?? this.unreadCount,
+      isMuted: isMuted ?? this.isMuted,
+    );
+  }
 
   factory ChatSummary.fromMap(Map<String, dynamic> map) {
     final kind = map['kind'] == 'direct' ? ChatKind.direct : ChatKind.activity;
@@ -85,7 +123,12 @@ class ChatSummary {
       lastMessageSenderId: map['last_message_sender_id'] as String?,
       lastMessageSenderName: map['last_message_sender_name'] as String?,
       lastMessageAt: lastAt == null ? null : DateTime.parse(lastAt).toLocal(),
+      lastMessageIsDeleted: map['last_message_is_deleted'] == true,
+      lastMessageHasPhoto: map['last_message_has_photo'] == true,
+      lastMessageKind: map['last_message_kind'] as String? ?? 'text',
+      lastMessageLabel: map['last_message_label'] as String?,
       unreadCount: map['unread_count'] as int? ?? 0,
+      isMuted: map['is_muted'] == true,
     );
   }
 }
@@ -98,6 +141,14 @@ class ChatMessage {
     required this.body,
     required this.createdAt,
     this.imagePath,
+    this.deletedAt,
+    this.kind = 'text',
+    this.sharedActivityId,
+    this.sharedActivity,
+    this.latitude,
+    this.longitude,
+    this.locationName,
+    this.locationAddress,
   });
 
   final String id;
@@ -112,7 +163,31 @@ class ChatMessage {
   // Where the photo is in the chat-photos bucket, for photo messages.
   final String? imagePath;
 
+  // Set when the sender deleted it for everyone; text and photo are gone.
+  final DateTime? deletedAt;
+
   bool get hasPhoto => imagePath != null && imagePath!.isNotEmpty;
+
+  bool get isDeleted => deletedAt != null;
+
+  // 'text', 'photo', 'activity' or 'location'.
+  final String kind;
+
+  // Activity messages. The id is null once the activity is deleted; the
+  // snapshot still has what the card shows.
+  final String? sharedActivityId;
+  final Activity? sharedActivity;
+
+  // Location messages.
+  final double? latitude;
+  final double? longitude;
+  final String? locationName;
+  final String? locationAddress;
+
+  bool get isActivityShare => kind == 'activity' && sharedActivity != null;
+
+  bool get isLocation =>
+      kind == 'location' && latitude != null && longitude != null;
 
   factory ChatMessage.fromMap(Map<String, dynamic> map) {
     return ChatMessage(
@@ -122,6 +197,34 @@ class ChatMessage {
       body: map['body'] as String? ?? '',
       createdAt: DateTime.parse(map['created_at'] as String).toLocal(),
       imagePath: map['image_path'] as String?,
+      deletedAt: map['deleted_at'] == null
+          ? null
+          : DateTime.parse(map['deleted_at'] as String).toLocal(),
+      kind: map['kind'] as String? ?? 'text',
+      sharedActivityId: map['shared_activity_id'] as String?,
+      sharedActivity: _activityFromSnapshot(
+        map['shared_activity_id'] as String?,
+        map['shared_activity'],
+      ),
+      latitude: (map['latitude'] as num?)?.toDouble(),
+      longitude: (map['longitude'] as num?)?.toDouble(),
+      locationName: map['location_name'] as String?,
+      locationAddress: map['location_address'] as String?,
+    );
+  }
+
+  static Activity? _activityFromSnapshot(String? id, Object? snapshot) {
+    if (snapshot is! Map || snapshot['starts_at'] == null) return null;
+    final endsAt = snapshot['ends_at'] as String?;
+    return Activity(
+      id: id ?? '',
+      title: snapshot['title'] as String? ?? '',
+      dateTime: DateTime.parse(snapshot['starts_at'] as String).toLocal(),
+      endsAt: endsAt == null ? null : DateTime.parse(endsAt).toLocal(),
+      location: snapshot['location_name'] as String? ?? '',
+      photoUrl: snapshot['photo_url'] as String?,
+      categoryLabel: snapshot['category_label'] as String? ?? '',
+      categoryEmoji: snapshot['category_emoji'] as String? ?? '',
     );
   }
 }
@@ -183,34 +286,45 @@ class ChatModel {
     return rows.reversed.map(ChatMessage.fromMap).toList();
   }
 
-  // Calls [onMessage] for each new message in the chat.
+  // Calls [onMessage] for each new message in the chat, and again when one
+  // is deleted.
   RealtimeChannel listenForMessages(
     String chatId,
     void Function(ChatMessage message) onMessage,
   ) {
+    final filter = PostgresChangeFilter(
+      type: PostgresChangeFilterType.eq,
+      column: 'chat_id',
+      value: chatId,
+    );
+    void deliver(PostgresChangePayload payload) =>
+        onMessage(ChatMessage.fromMap(payload.newRecord));
     return _supabase
         .channel('chat:$chatId')
         .onPostgresChanges(
           event: PostgresChangeEvent.insert,
           schema: 'public',
           table: 'chat_messages',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'chat_id',
-            value: chatId,
-          ),
-          callback: (payload) =>
-              onMessage(ChatMessage.fromMap(payload.newRecord)),
+          filter: filter,
+          callback: deliver,
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.update,
+          schema: 'public',
+          table: 'chat_messages',
+          filter: filter,
+          callback: deliver,
         )
         .subscribe();
   }
 
-  // Calls [onChange] whenever a message arrives in any of the user's chats.
+  // Calls [onChange] whenever a message arrives in, or is deleted from, any
+  // of the user's chats.
   RealtimeChannel listenForAnyMessage(void Function() onChange) {
     return _supabase
         .channel('chats:inbox')
         .onPostgresChanges(
-          event: PostgresChangeEvent.insert,
+          event: PostgresChangeEvent.all,
           schema: 'public',
           table: 'chat_messages',
           callback: (_) => onChange(),
@@ -275,12 +389,15 @@ class ChatModel {
     };
   }
 
-  // The function's result, e.g. 'sent' or 'finished', and the message when
-  // it was sent. [imagePath] comes from uploadPhoto.
+  // The function's result, e.g. 'sent', 'finished' or 'not_visible_to_all',
+  // and the message when it was sent. Send one of: text, [imagePath] (from
+  // uploadPhoto), [activityId], or [place].
   Future<({String result, ChatMessage? message})> send(
     String chatId,
     String body, {
     String? imagePath,
+    String? activityId,
+    PlaceSuggestion? place,
   }) async {
     final response = await _supabase.rpc(
       'send_chat_message',
@@ -288,6 +405,13 @@ class ChatModel {
         'target_chat_id': chatId,
         'message_body': body,
         'image_path': ?imagePath,
+        'shared_activity_id': ?activityId,
+        if (place != null) ...{
+          'latitude': place.latitude,
+          'longitude': place.longitude,
+          'location_name': place.name,
+          'location_address': place.address,
+        },
       },
     );
     if (response is! Map) return (result: '', message: null);
@@ -298,6 +422,50 @@ class ChatModel {
           )
         : null;
     return (result: result, message: message);
+  }
+
+  // Deletes your message for everyone. True when it was deleted.
+  Future<bool> deleteMessage(String messageId) async {
+    final response = await _supabase.rpc(
+      'delete_chat_message',
+      params: {'target_message_id': messageId},
+    );
+    if (response is! Map || response['result'] != 'deleted') return false;
+    final photo = response['image_path'] as String?;
+    if (photo != null) {
+      try {
+        await _supabase.storage.from(photoBucket).remove([photo]);
+      } catch (_) {
+        // The message is gone either way; the file just stays in storage.
+      }
+    }
+    return true;
+  }
+
+  // Hides one message from you only; others still see it.
+  Future<bool> hideMessage(String messageId) async {
+    final response = await _supabase.rpc(
+      'hide_chat_message',
+      params: {'target_message_id': messageId},
+    );
+    return response is Map && response['result'] == 'hidden';
+  }
+
+  Future<bool> setMuted(String chatId, bool mute) async {
+    final response = await _supabase.rpc(
+      'set_chat_muted',
+      params: {'target_chat_id': chatId, 'mute': mute},
+    );
+    return response is Map && response['result'] == 'ok';
+  }
+
+  // Hides the chat and its history for you only.
+  Future<bool> deleteChatForMe(String chatId) async {
+    final response = await _supabase.rpc(
+      'delete_chat_for_me',
+      params: {'target_chat_id': chatId},
+    );
+    return response is Map && response['result'] == 'deleted';
   }
 
   Future<void> markRead(String chatId) =>

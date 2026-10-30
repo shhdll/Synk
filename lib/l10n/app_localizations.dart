@@ -4445,7 +4445,7 @@ abstract class AppLocalizations {
   /// No description provided for @youBothLike.
   ///
   /// In en, this message translates to:
-  /// **'You both like {interests}.'**
+  /// **'You both like {interests}!'**
   String youBothLike(Object interests);
 
   /// No description provided for @listAnd.
@@ -4472,17 +4472,155 @@ abstract class AppLocalizations {
   /// **'Following'**
   String get following;
 
-  /// No description provided for @sendAPhoto.
-  ///
-  /// In en, this message translates to:
-  /// **'Send a photo'**
-  String get sendAPhoto;
-
   /// No description provided for @youreChattingWithAllYourFriends.
   ///
   /// In en, this message translates to:
   /// **'You already have a chat with all your friends'**
   String get youreChattingWithAllYourFriends;
+
+  /// No description provided for @messageWasDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'This message was deleted'**
+  String get messageWasDeleted;
+
+  /// No description provided for @deleteChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete chat'**
+  String get deleteChat;
+
+  /// No description provided for @deleteThisChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this chat?'**
+  String get deleteThisChat;
+
+  /// No description provided for @chatDeletedOnlyForYou.
+  ///
+  /// In en, this message translates to:
+  /// **'It\'s only deleted for you. If someone sends a new message, the chat comes back.'**
+  String get chatDeletedOnlyForYou;
+
+  /// No description provided for @chatDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat deleted'**
+  String get chatDeleted;
+
+  /// No description provided for @deleteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get deleteLabel;
+
+  /// No description provided for @deleteForEveryone.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete for everyone'**
+  String get deleteForEveryone;
+
+  /// No description provided for @deleteForMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete for me'**
+  String get deleteForMe;
+
+  /// No description provided for @mute.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute'**
+  String get mute;
+
+  /// No description provided for @unmute.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute'**
+  String get unmute;
+
+  /// No description provided for @muted.
+  ///
+  /// In en, this message translates to:
+  /// **'Muted'**
+  String get muted;
+
+  /// No description provided for @sendSomething.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get sendSomething;
+
+  /// No description provided for @sendLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get sendLocation;
+
+  /// No description provided for @sendActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get sendActivity;
+
+  /// No description provided for @sendThisLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Send this location'**
+  String get sendThisLocation;
+
+  /// No description provided for @shareAnActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Share an activity'**
+  String get shareAnActivity;
+
+  /// No description provided for @noUpcomingActivitiesToShare.
+  ///
+  /// In en, this message translates to:
+  /// **'No upcoming activities to share'**
+  String get noUpcomingActivitiesToShare;
+
+  /// No description provided for @joinOrCreateToShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Join or create an activity, then share it here.'**
+  String get joinOrCreateToShare;
+
+  /// No description provided for @activityNotVisibleToAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Some people in this chat can\'t see this activity'**
+  String get activityNotVisibleToAll;
+
+  /// No description provided for @sharedActivityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity: {title}'**
+  String sharedActivityLabel(Object title);
+
+  /// No description provided for @sharedLocationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Location: {name}'**
+  String sharedLocationLabel(Object name);
+
+  /// No description provided for @shareInChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Share in chat'**
+  String get shareInChat;
+
+  /// No description provided for @sentTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to {name}'**
+  String sentTo(Object name);
+
+  /// No description provided for @sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get sent;
 }
 
 class _AppLocalizationsDelegate
