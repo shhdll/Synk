@@ -14,6 +14,7 @@ import '../../widgets/profile_header_banner.dart';
 import '../chats_view.dart';
 import 'friend_action_button.dart';
 import 'friend_options_sheet.dart';
+import 'report_user_sheet.dart';
 
 Future<void> showUserProfileSheet({
   required BuildContext context,
@@ -357,8 +358,8 @@ class _Stat extends StatelessWidget {
   }
 }
 
-// Add friend (or Requested / Accept / Friends), plus a ⋯ menu to unfriend or
-// block. Friends also get Message. A blocked user only gets Unblock.
+// Add friend (or Requested / Accept / Friends), plus a ⋯ menu to unfriend,
+// report or block. Friends also get Message. A blocked user only gets Unblock.
 class _FriendActions extends StatelessWidget {
   const _FriendActions({required this.user, this.showMessageButton = true});
 
@@ -429,6 +430,12 @@ class _FriendActions extends StatelessWidget {
                     value: () => confirmRemoveFriend(context, user),
                     child: Text(context.l10n.removeFriend),
                   ),
+                PopupMenuItem(
+                  value: () => showReportUserSheet(context: context, user: user),
+                  child: Text(
+                    context.l10n.reportName(user.name.split(' ').first),
+                  ),
+                ),
                 PopupMenuItem(
                   value: () => confirmBlockUser(context, user),
                   child: Text(

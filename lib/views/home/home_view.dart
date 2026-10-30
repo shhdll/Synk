@@ -25,6 +25,7 @@ import 'widgets/filter_button.dart';
 import 'widgets/friends_button.dart';
 import 'widgets/notification_bell.dart';
 import 'widgets/synk_filter_chip.dart';
+import 'widgets/top_picks_section.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({
@@ -232,6 +233,7 @@ class _HomeViewState extends State<HomeView> {
                 _buildHeader(),
                 const SizedBox(height: 22),
                 _buildSearchAndFilterRow(),
+                TopPicksSection(controller: _discoveryController, activityStore: widget.activityStore, onActivityTap: _onActivityTap),
               ],
             ),
           ),

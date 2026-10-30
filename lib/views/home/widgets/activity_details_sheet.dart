@@ -1502,6 +1502,59 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
               ),
             ],
           ),
+          if (_currentActivity.setting case final setting?) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Divider(
+                height: 1,
+                color: SynkColors.textSecondary.withValues(alpha: 0.12),
+              ),
+            ),
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: SynkColors.teal.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    setting == ActivitySetting.outdoor
+                        ? Icons.park_rounded
+                        : Icons.home_rounded,
+                    size: 20,
+                    color: SynkColors.teal,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.setting,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: SynkColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        setting.label,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: SynkColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
           if (_currentActivity.hasCoordinates ||
               MapsLauncher.canOpen(_currentActivity)) ...[
             const SizedBox(height: 14),

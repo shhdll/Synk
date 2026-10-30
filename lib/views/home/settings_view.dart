@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../controllers/language_controller.dart';
 import '../../core/constants/synk_colors.dart';
 import '../../l10n/l10n.dart';
+import '../../services/push_notification_service.dart';
 import 'widgets/section_label.dart';
 
 // Opened from the gear on Profile.
@@ -58,14 +59,22 @@ class SettingsView extends StatelessWidget {
                             // Each language is shown in its own name.
                             label: context.l10n.languageEnglish,
                             selected: !language.isArabic,
-                            onTap: () => language.setLocale(const Locale('en')),
+                            onTap: () async {
+                              await language.setLocale(const Locale('en'));
+                              await PushNotificationService.instance
+                                  .registerForCurrentUser();
+                            },
                           ),
                           const SizedBox(height: 10),
                           _LanguageOption(
                             badge: 'ع',
                             label: context.l10n.languageArabic,
                             selected: language.isArabic,
-                            onTap: () => language.setLocale(const Locale('ar')),
+                            onTap: () async {
+                              await language.setLocale(const Locale('ar'));
+                              await PushNotificationService.instance
+                                  .registerForCurrentUser();
+                            },
                           ),
                         ],
                       ),

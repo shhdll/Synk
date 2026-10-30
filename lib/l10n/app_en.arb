@@ -210,6 +210,18 @@
   },
   "searchActivitiesOrLocations": "Search activities or locations...",
   "upcomingPlans": "Upcoming plans",
+  "topPicksTitle": "Top 5 picks for you",
+  "topPickLikesIndoor": "You like indoor plans",
+  "topPickLikesOutdoor": "You like outdoor plans",
+  "topPickYouLike": "You like {interest}",
+  "@topPickYouLike": {"placeholders": {"interest": {}}},
+  "topPickPopularNearYou": "Popular near you",
+  "topPickDistanceKm": "{km} km",
+  "@topPickDistanceKm": {"placeholders": {"km": {}}},
+  "topPickDistanceAway": "{km} km away",
+  "@topPickDistanceAway": {"placeholders": {"km": {}}},
+  "topPickSemanticLabel": "Pick {rank}: {details}",
+  "@topPickSemanticLabel": {"placeholders": {"rank": {}, "details": {}}},
   "clearFilters": "Clear filters",
   "noPlansMatchQuery": "No plans match \"{q}\"",
   "@noPlansMatchQuery": {
@@ -493,6 +505,10 @@
   "anyoneCanFindAndJoin": "Anyone can find and join",
   "private": "Private",
   "joinByCodeYouApprove": "Join by code, you approve",
+  "setting": "Setting",
+  "settingIndoor": "Indoor",
+  "settingOutdoor": "Outdoor",
+  "chooseIndoorOrOutdoor": "Choose indoor or outdoor",
   "whenLabel": "When",
   "whereLabel": "Where",
   "people": "People",
@@ -560,6 +576,26 @@
   "@notifRequestReceived": {
     "placeholders": {
       "title": {"type": "String"}
+    }
+  },
+  "notifActivityFull": "{title} is full! Every spot has been taken.",
+  "@notifActivityFull": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "friendRequestNotificationTitle": "New friend request",
+  "notifFriendRequestReceived": "{name} sent you a friend request.",
+  "@notifFriendRequestReceived": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "friendRequestAcceptedNotificationTitle": "Friend request accepted",
+  "notifFriendRequestAccepted": "{name} accepted your friend request. You're now friends!",
+  "@notifFriendRequestAccepted": {
+    "placeholders": {
+      "name": {"type": "String"}
     }
   },
   "notifHostAssigned": "You're now the host of {title}.",
@@ -989,6 +1025,19 @@
   "searchByNameOrUsername": "Search by name or @username",
   "friendRequestsTab": "Requests",
   "receivedRequests": "Received",
+  "friendRequests": "Friend requests",
+  "seeAll": "See all",
+  "markAllRead": "Mark all read",
+  "markAsRead": "Mark as read",
+  "notificationsLast7Days": "Last 7 days",
+  "notificationsEarlier": "Earlier",
+  "delete": "Delete",
+  "notificationsUnread": "Unread",
+  "showMoreCount": "Show {n} more",
+  "@showMoreCount": {"placeholders": {"n": {}}},
+  "showLess": "Show less",
+  "allCaughtUp": "You're all caught up",
+  "notificationDeleted": "Notification deleted",
   "sentRequests": "Sent",
   "blockedUsers": "Blocked users",
   "addFriend": "Add friend",
@@ -1011,6 +1060,29 @@
   "blockUserMessage": "They won't be able to find you or send you friend requests. This also removes them from your friends. They won't be told.",
   "block": "Block",
   "unblock": "Unblock",
+  "reportName": "Report {name}",
+  "@reportName": {"placeholders": {"name": {}}},
+  "reportTitle": "Report",
+  "reportWhyName": "Why are you reporting {name}?",
+  "@reportWhyName": {"placeholders": {"name": {}}},
+  "back": "Back",
+  "reportUserMessage": "{name} won't know you reported them.",
+  "@reportUserMessage": {"placeholders": {"name": {}}},
+  "reportReasonHarassment": "Harassment or bullying",
+  "reportReasonSpam": "Spam",
+  "reportReasonFakeProfile": "Fake profile",
+  "reportReasonInappropriateContent": "Inappropriate content",
+  "reportReasonOther": "Something else",
+  "reportDetailsHint": "Add anything that would help us review this. This is optional.",
+  "reportDetailsRequiredHint": "Tell us what happened",
+  "reportAndBlockName": "Send report & block {name}",
+  "@reportAndBlockName": {"placeholders": {"name": {}}},
+  "submitReport": "Send report",
+  "reportSent": "Report sent",
+  "reportedAndBlockedName": "Reported and blocked {name}",
+  "@reportedAndBlockedName": {"placeholders": {"name": {}}},
+  "alreadyReportedName": "You already reported {name}",
+  "@alreadyReportedName": {"placeholders": {"name": {}}},
   "blockedUsersInfo": "Blocked users can't find you or send you friend requests. They aren't told they're blocked.",
   "noBlockedUsers": "No blocked users",
   "peopleYouBlockShowUpHere": "People you block will show up here.",
