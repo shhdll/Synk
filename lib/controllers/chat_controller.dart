@@ -128,7 +128,6 @@ class ChatController extends ChangeNotifier {
     await refresh();
     return ok;
   }
-
   // Removes the chat from your list straight away; false when it failed, and
   // the reload puts it back.
   Future<bool> deleteChatForMe(String chatId) async {
@@ -143,7 +142,6 @@ class ChatController extends ChangeNotifier {
     await refresh();
     return ok;
   }
-
   // The chat id with a friend, or null when it can't be opened.
   Future<String?> openDirectChat(String userId) async {
     final existing = directChatWith(userId);

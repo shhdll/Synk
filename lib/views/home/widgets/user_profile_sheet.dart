@@ -358,6 +358,7 @@ class _Stat extends StatelessWidget {
   }
 }
 
+
 // Add friend (or Requested / Accept / Friends), plus a ⋯ menu to unfriend,
 // report or block. Friends also get Message. A blocked user only gets Unblock.
 class _FriendActions extends StatelessWidget {
