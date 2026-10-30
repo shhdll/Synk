@@ -9,13 +9,9 @@ import '../../../utils/custom_widgets/synk_feedback.dart';
 import '../chats_view.dart';
 import 'user_avatar.dart';
 import 'user_profile_sheet.dart';
-
-// The ⋮ menu on a friend: message, view profile, remove friend, block.
 import 'report_user_sheet.dart';
-import 'user_avatar.dart';
-import 'user_profile_sheet.dart';
 
-// The ⋮ menu on a friend: view profile, remove friend, report, block.
+// The ⋮ menu on a friend: view profile, message, remove friend, report, block.
 Future<void> showFriendOptionsSheet({
   required BuildContext context,
   required FriendUser friend,

@@ -23,6 +23,7 @@ import '../../widgets/schedule_conflict_text.dart';
 import 'activity_thumbnail.dart';
 import 'activity_status_chip.dart';
 import 'overlapping_activity_notice.dart';
+import 'chat_share_sheets.dart';
 import 'host_transfer_sheet.dart';
 import 'user_profile_sheet.dart';
 
@@ -1239,7 +1240,8 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
           ),
         ),
 
-        // Top controls: Close button
+        // Top controls: Close, and Share in chat for upcoming public
+        // activities (friends can't open private ones).
         Positioned(
           top: 20,
           left: 16,
@@ -1247,29 +1249,17 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              GestureDetector(
+              _buildHeaderButton(
+                icon: Icons.close_rounded,
+                tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                 onTap: () => Navigator.of(context).pop(),
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.92),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: SynkColors.orangeDark.withValues(alpha: 0.12),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.close_rounded,
-                    color: SynkColors.textPrimary,
-                    size: 20,
-                  ),
-                ),
               ),
+              if (_currentActivity.isPublic && !_currentActivity.isPast)
+                _buildHeaderButton(
+                  icon: Icons.ios_share_rounded,
+                  tooltip: context.l10n.shareInChat,
+                  onTap: () => showShareToChatSheet(context, _currentActivity),
+                ),
             ],
           ),
         ),
@@ -1315,6 +1305,35 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildHeaderButton({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onTap,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.92),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: SynkColors.orangeDark.withValues(alpha: 0.12),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Icon(icon, color: SynkColors.textPrimary, size: 20),
+        ),
+      ),
     );
   }
 

@@ -102,12 +102,14 @@ class FriendActionButton extends StatelessWidget {
     String? tooltip,
     VoidCallback? onTap,
   }) {
+    // Pill-shaped on the profile; compact in lists.
+    final radius = BorderRadius.circular(compact ? 12 : 26);
     final button = Material(
       color: background,
-      borderRadius: BorderRadius.circular(compact ? 12 : 16),
+      borderRadius: radius,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(compact ? 12 : 16),
+        borderRadius: radius,
         child: Container(
           height: compact ? 38 : 52,
           padding: EdgeInsets.symmetric(horizontal: compact ? 14 : 18),

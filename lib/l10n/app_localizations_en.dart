@@ -2667,7 +2667,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String youBothLike(Object interests) {
-    return 'You both like $interests.';
+    return 'You both like $interests!';
   }
 
   @override
@@ -2688,9 +2688,87 @@ class AppLocalizationsEn extends AppLocalizations {
   String get following => 'Following';
 
   @override
-  String get sendAPhoto => 'Send a photo';
-
-  @override
   String get youreChattingWithAllYourFriends =>
       'You already have a chat with all your friends';
+
+  @override
+  String get messageWasDeleted => 'This message was deleted';
+
+  @override
+  String get deleteChat => 'Delete chat';
+
+  @override
+  String get deleteThisChat => 'Delete this chat?';
+
+  @override
+  String get chatDeletedOnlyForYou =>
+      'It\'s only deleted for you. If someone sends a new message, the chat comes back.';
+
+  @override
+  String get chatDeleted => 'Chat deleted';
+
+  @override
+  String get deleteLabel => 'Delete';
+
+  @override
+  String get deleteForEveryone => 'Delete for everyone';
+
+  @override
+  String get deleteForMe => 'Delete for me';
+
+  @override
+  String get mute => 'Mute';
+
+  @override
+  String get unmute => 'Unmute';
+
+  @override
+  String get muted => 'Muted';
+
+  @override
+  String get sendSomething => 'Send';
+
+  @override
+  String get sendLocation => 'Location';
+
+  @override
+  String get sendActivity => 'Activity';
+
+  @override
+  String get sendThisLocation => 'Send this location';
+
+  @override
+  String get shareAnActivity => 'Share an activity';
+
+  @override
+  String get noUpcomingActivitiesToShare => 'No upcoming activities to share';
+
+  @override
+  String get joinOrCreateToShare =>
+      'Join or create an activity, then share it here.';
+
+  @override
+  String get activityNotVisibleToAll =>
+      'Some people in this chat can\'t see this activity';
+
+  @override
+  String sharedActivityLabel(Object title) {
+    return 'Activity: $title';
+  }
+
+  @override
+  String sharedLocationLabel(Object name) {
+    return 'Location: $name';
+  }
+
+  @override
+  String get shareInChat => 'Share in chat';
+
+  @override
+  String sentTo(Object name) {
+    return 'Sent to $name';
+  }
+
+  @override
+  String get sent => 'Sent';
 }
