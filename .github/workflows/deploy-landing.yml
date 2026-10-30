@@ -1,0 +1,44 @@
+# Deploys the static landing pages (landing/) to Vercel production. Vercel's
+# own Git integration is meant to be disconnected once this works, so teammate
+# PR branches no longer trigger failed Vercel deployments.
+#
+# Required repository secrets (Settings > Secrets and variables > Actions):
+#   VERCEL_TOKEN       - from vercel.com/account/tokens
+#   VERCEL_ORG_ID      - "orgId" in .vercel/project.json after `vercel link`
+#   VERCEL_PROJECT_ID  - "projectId" in .vercel/project.json after `vercel link`
+name: Deploy landing page
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'landing/**'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-landing
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      # Run from the repo root: the Vercel project's Root Directory setting
+      # already points to landing/, so running inside it would double the path.
+      - name: Pull Vercel settings
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
