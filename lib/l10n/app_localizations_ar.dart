@@ -2494,4 +2494,125 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get othersGroup => 'الآخرون';
+
+  @override
+  String get chat => 'المحادثات';
+
+  @override
+  String get chats => 'المحادثات';
+
+  @override
+  String get activityChats => 'محادثات الأنشطة';
+
+  @override
+  String activeChatsCount(int n) {
+    return '$n نشطة';
+  }
+
+  @override
+  String get searchChats => 'ابحث في المحادثات';
+
+  @override
+  String get newChat => 'محادثة جديدة';
+
+  @override
+  String membersCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n عضو',
+      few: '$n أعضاء',
+      two: 'عضوان',
+      one: 'عضو واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String youSaid(Object message) {
+    return 'أنت: $message';
+  }
+
+  @override
+  String personSaid(Object name, Object message) {
+    return '$name: $message';
+  }
+
+  @override
+  String get noMessagesYet => 'لا توجد رسائل بعد';
+
+  @override
+  String get noChatsYet => 'لا توجد محادثات بعد';
+
+  @override
+  String get chatsShowUpHere => 'انضم إلى نشاط أو راسل صديقا لبدء المحادثة';
+
+  @override
+  String get noChatsMatchYourSearch => 'لا توجد محادثات تطابق بحثك';
+
+  @override
+  String get messageHint => 'رسالة';
+
+  @override
+  String get send => 'إرسال';
+
+  @override
+  String get messageNotSent => 'تعذر إرسال رسالتك';
+
+  @override
+  String get canOnlyMessageFriends => 'يمكنك مراسلة أصدقائك فقط';
+
+  @override
+  String get couldntOpenChat => 'تعذر فتح هذه المحادثة';
+
+  @override
+  String get yesterday => 'أمس';
+
+  @override
+  String get messageAFriend => 'راسل صديقا';
+
+  @override
+  String get message => 'مراسلة';
+
+  @override
+  String get chatClosed => 'تم إغلاق هذه المحادثة';
+
+  @override
+  String get chatClosedActivityFinished => 'انتهى النشاط، لذلك أغلقت محادثته';
+
+  @override
+  String get listSeparator => '، ';
+
+  @override
+  String sayHiToName(Object name) {
+    return 'ألق التحية على $name';
+  }
+
+  @override
+  String youBothLike(Object interests) {
+    return 'تحبان $interests';
+  }
+
+  @override
+  String listAnd(Object rest, Object last) {
+    return '$rest و$last';
+  }
+
+  @override
+  String planActivityTogether(Object title) {
+    return 'خططوا معا لـ $title';
+  }
+
+  @override
+  String get sortOutTheDetails =>
+      'رحبوا ببعض واتفقوا على التفاصيل مع المشاركين';
+
+  @override
+  String get following => 'متابع';
+
+  @override
+  String get sendAPhoto => 'أرسل صورة';
+
+  @override
+  String get youreChattingWithAllYourFriends => 'لديك محادثة مع جميع أصدقائك';
 }

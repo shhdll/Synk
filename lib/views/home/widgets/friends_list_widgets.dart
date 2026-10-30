@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/synk_colors.dart';
 import '../../../l10n/l10n.dart';
 import '../../../models/friends_model.dart';
+import '../../../utils/text_direction.dart';
 import 'user_avatar.dart';
 
 // Pieces shared by the friends, find people and blocked users screens.
@@ -33,6 +34,8 @@ class FriendsSearchField extends StatelessWidget {
         controller: controller,
         onChanged: onChanged,
         autofocus: autofocus,
+        // Follows the search's language; screens rebuild it on change.
+        textDirection: textDirectionOf(controller.text),
         textInputAction: TextInputAction.search,
         style: const TextStyle(
           fontSize: 14,

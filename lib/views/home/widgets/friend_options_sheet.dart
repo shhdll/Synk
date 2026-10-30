@@ -6,6 +6,11 @@ import '../../../l10n/l10n.dart';
 import '../../../models/friends_model.dart';
 import '../../../utils/custom_widgets/synk_dialog.dart';
 import '../../../utils/custom_widgets/synk_feedback.dart';
+import '../chats_view.dart';
+import 'user_avatar.dart';
+import 'user_profile_sheet.dart';
+
+// The ⋮ menu on a friend: message, view profile, remove friend, block.
 import 'report_user_sheet.dart';
 import 'user_avatar.dart';
 import 'user_profile_sheet.dart';
@@ -95,6 +100,15 @@ Future<void> showFriendOptionsSheet({
                     child: Column(
                       children: [
                         _OptionTile(
+                          icon: Icons.chat_bubble_outline_rounded,
+                          label: l10n.message,
+                          onTap: () {
+                            Navigator.pop(sheetContext);
+                            openDirectChatWith(context, friend);
+                          },
+                        ),
+                        const _OptionDivider(),
+                        _OptionTile(
                           icon: Icons.person_outline_rounded,
                           label: l10n.viewProfile,
                           onTap: () {
@@ -143,7 +157,11 @@ Future<void> showFriendOptionsSheet({
   );
 }
 
-Future<void> openFriendProfile(BuildContext context, FriendUser user) {
+Future<void> openFriendProfile(
+  BuildContext context,
+  FriendUser user, {
+  bool showMessageButton = true,
+}) {
   return showUserProfileSheet(
     context: context,
     userId: user.id,
@@ -151,6 +169,7 @@ Future<void> openFriendProfile(BuildContext context, FriendUser user) {
     username: user.username,
     avatarUrl: user.avatarUrl,
     gender: user.gender,
+    showMessageButton: showMessageButton,
   );
 }
 

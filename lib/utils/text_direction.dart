@@ -22,3 +22,7 @@ TextDirection? textDirectionOf(String text) {
   }
   return null;
 }
+
+/// Wraps [text] so its direction doesn't spill into the text around it, e.g.
+/// an Arabic message after "You: " keeps its punctuation in place.
+String bidiIsolate(String text) => '\u2068$text\u2069';
