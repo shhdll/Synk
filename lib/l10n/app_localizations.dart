@@ -5372,24 +5372,6 @@ abstract class AppLocalizations {
   /// **'{speed} km/h wind'**
   String windSpeed(int speed);
 
-  /// No description provided for @weatherClear.
-  ///
-  /// In en, this message translates to:
-  /// **'Clear'**
-  String get weatherClear;
-
-  /// No description provided for @weatherPartlyCloudy.
-  ///
-  /// In en, this message translates to:
-  /// **'Partly cloudy'**
-  String get weatherPartlyCloudy;
-
-  /// No description provided for @weatherCloudy.
-  ///
-  /// In en, this message translates to:
-  /// **'Cloudy'**
-  String get weatherCloudy;
-
   /// No description provided for @weatherFog.
   ///
   /// In en, this message translates to:

@@ -2980,15 +2980,6 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get weatherClear => 'صاف';
-
-  @override
-  String get weatherPartlyCloudy => 'غائم جزئيا';
-
-  @override
-  String get weatherCloudy => 'غائم';
-
-  @override
   String get weatherFog => 'ضباب';
 
   @override

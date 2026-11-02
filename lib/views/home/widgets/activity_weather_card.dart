@@ -82,30 +82,11 @@ class _ActivityWeatherCardState extends State<ActivityWeatherCard> {
           }
 
           final weather = snapshot.data!;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _row(
-                icon: _icon(weather.condition),
-                title: '${weather.temperature.round()}°',
-                subtitle: _label(l10n, weather.condition),
-                large: true,
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  _Chip(
-                    icon: Icons.water_drop_outlined,
-                    label: l10n.rainChance(weather.rainChance),
-                  ),
-                  const SizedBox(width: 8),
-                  _Chip(
-                    icon: Icons.air_rounded,
-                    label: l10n.windSpeed(weather.windSpeed.round()),
-                  ),
-                ],
-              ),
-            ],
+          return _row(
+            icon: _icon(weather.condition),
+            title: '${weather.temperature.round()}°C',
+            subtitle: _note(l10n, weather),
+            large: true,
           );
         },
       ),
@@ -115,7 +96,7 @@ class _ActivityWeatherCardState extends State<ActivityWeatherCard> {
   Widget _row({
     required IconData icon,
     required String title,
-    required String subtitle,
+    String? subtitle,
     bool muted = false,
     bool large = false,
   }) {
@@ -147,14 +128,15 @@ class _ActivityWeatherCardState extends State<ActivityWeatherCard> {
                   color: SynkColors.textPrimary,
                 ),
               ),
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: SynkColors.textSecondary,
+              if (subtitle != null)
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: SynkColors.textSecondary,
+                  ),
                 ),
-              ),
             ],
           ),
         ),
@@ -173,48 +155,20 @@ class _ActivityWeatherCardState extends State<ActivityWeatherCard> {
     WeatherCondition.storm => Icons.thunderstorm_rounded,
   };
 
-  static String _label(AppLocalizations l10n, WeatherCondition condition) =>
-      switch (condition) {
-        WeatherCondition.clear => l10n.weatherClear,
-        WeatherCondition.partlyCloudy => l10n.weatherPartlyCloudy,
-        WeatherCondition.cloudy => l10n.weatherCloudy,
-        WeatherCondition.fog => l10n.weatherFog,
-        WeatherCondition.drizzle => l10n.weatherDrizzle,
-        WeatherCondition.rain => l10n.weatherRain,
-        WeatherCondition.snow => l10n.weatherSnow,
+  // Only weather worth knowing about; a clear or cloudy day shows nothing.
+  static String? _note(AppLocalizations l10n, ActivityWeather weather) {
+    final notes = <String>[
+      ?switch (weather.condition) {
         WeatherCondition.storm => l10n.weatherStorm,
-      };
-}
-
-class _Chip extends StatelessWidget {
-  const _Chip({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: SynkColors.textSecondary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: SynkColors.textSecondary),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w600,
-              color: SynkColors.textPrimary,
-            ),
-          ),
-        ],
-      ),
-    );
+        WeatherCondition.rain => l10n.weatherRain,
+        WeatherCondition.drizzle => l10n.weatherDrizzle,
+        WeatherCondition.snow => l10n.weatherSnow,
+        WeatherCondition.fog => l10n.weatherFog,
+        _ when weather.rainChance >= 40 => l10n.rainChance(weather.rainChance),
+        _ => null,
+      },
+      if (weather.windSpeed >= 30) l10n.windSpeed(weather.windSpeed.round()),
+    ];
+    return notes.isEmpty ? null : notes.join(' · ');
   }
 }

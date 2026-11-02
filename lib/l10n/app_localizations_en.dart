@@ -3060,15 +3060,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get weatherClear => 'Clear';
-
-  @override
-  String get weatherPartlyCloudy => 'Partly cloudy';
-
-  @override
-  String get weatherCloudy => 'Cloudy';
-
-  @override
   String get weatherFog => 'Foggy';
 
   @override
