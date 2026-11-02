@@ -120,7 +120,7 @@ class BottomBar extends StatelessWidget {
                       onTap: () => onSelect(HomeTab.map),
                     ),
                     NavItem(
-                      image: const AssetImage('assets/chat_icon.png'),
+                      icon: Icons.sms_outlined,
                       label: context.l10n.chat,
                       selected: selected == HomeTab.chat,
                       badgeCount: chatBadge,

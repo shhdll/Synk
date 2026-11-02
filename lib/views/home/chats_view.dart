@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../controllers/chat_controller.dart';
@@ -45,10 +46,17 @@ Future<void> openDirectChatWith(BuildContext context, FriendUser friend) async {
 
 // A chat bubble with a small plus at its top-right corner.
 class NewChatIcon extends StatelessWidget {
-  const NewChatIcon({super.key, required this.color, this.size = 24});
+  const NewChatIcon({
+    super.key,
+    required this.color,
+    this.size = 24,
+    this.plusColor = Colors.white,
+  });
 
   final Color color;
   final double size;
+  // Set it apart from a white [color], or the plus disappears.
+  final Color plusColor;
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +77,7 @@ class NewChatIcon extends StatelessWidget {
               child: Icon(
                 Icons.add_rounded,
                 size: badge * 0.85,
-                color: Colors.white,
+                color: plusColor,
               ),
             ),
           ),
@@ -78,6 +86,8 @@ class NewChatIcon extends StatelessWidget {
     );
   }
 }
+
+enum _ChatFilter { all, activities, friends }
 
 // The Chat tab: activity group chats first, then chats with friends.
 class ChatsView extends StatefulWidget {
@@ -93,6 +103,8 @@ class ChatsView extends StatefulWidget {
 class _ChatsViewState extends State<ChatsView> {
   final ChatController _chats = ChatController.instance;
   final TextEditingController _search = TextEditingController();
+  _ChatFilter _filter = _ChatFilter.all;
+  bool _searchOpen = false;
 
   static const double _gutter = 16;
 
@@ -120,6 +132,11 @@ class _ChatsViewState extends State<ChatsView> {
         .toList();
   }
 
+  void _closeSearch() => setState(() {
+    _searchOpen = false;
+    _search.clear();
+  });
+
   void _openNewChatSheet() {
     unawaited(FriendsController.instance.refresh());
     showModalBottomSheet<void>(
@@ -140,32 +157,65 @@ class _ChatsViewState extends State<ChatsView> {
 
   @override
   Widget build(BuildContext context) {
+    // MainShell's bar is this page's bottom padding; clear it and its fade.
+    final fabBottom = MediaQuery.paddingOf(context).bottom + 40;
+
     return Scaffold(
       backgroundColor: SynkColors.background,
-      body: SafeArea(
-        bottom: false,
-        child: RefreshIndicator(
-          color: SynkColors.orangeDark,
-          backgroundColor: Colors.white,
-          onRefresh: _chats.refresh,
-          child: ListenableBuilder(
-            listenable: _chats,
-            builder: (context, _) => _buildList(),
+      body: Stack(
+        children: [
+          SafeArea(
+            bottom: false,
+            // A tap outside the search field (not on a chat) closes it.
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: _searchOpen ? _closeSearch : null,
+              child: RefreshIndicator(
+                color: SynkColors.orangeDark,
+                backgroundColor: Colors.white,
+                onRefresh: _chats.refresh,
+                child: ListenableBuilder(
+                  listenable: _chats,
+                  builder: (context, _) => _buildList(fabBottom + 72),
+                ),
+              ),
+            ),
           ),
-        ),
+          PositionedDirectional(
+            end: _gutter,
+            bottom: fabBottom,
+            child: FloatingActionButton(
+              tooltip: context.l10n.newChat,
+              onPressed: _openNewChatSheet,
+              backgroundColor: SynkColors.orangeDark,
+              elevation: 4,
+              shape: const CircleBorder(),
+              child: const NewChatIcon(
+                color: Colors.white,
+                plusColor: SynkColors.orangeDark,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildList() {
+  Widget _buildList(double bottomPadding) {
     final me = Supabase.instance.client.auth.currentUser?.id;
-    final activityChats = _matching(_chats.activityChats);
-    final directChats = _matching(_chats.directChats);
+    final showActivities = _filter != _ChatFilter.friends;
+    final showFriends = _filter != _ChatFilter.activities;
+    final activityChats = showActivities
+        ? _matching(_chats.activityChats)
+        : <ChatSummary>[];
+    final directChats = showFriends
+        ? _matching(_chats.directChats)
+        : <ChatSummary>[];
     final searching = _search.text.trim().isNotEmpty;
     final nothingYet =
         _chats.hasLoaded &&
-        _chats.activityChats.isEmpty &&
-        _chats.directChats.isEmpty;
+        (!showActivities || _chats.activityChats.isEmpty) &&
+        (!showFriends || _chats.directChats.isEmpty);
 
     // Swipe toward the start to show Mute and Delete.
     Widget tile(ChatSummary chat) => Slidable(
@@ -207,41 +257,72 @@ class _ChatsViewState extends State<ChatsView> {
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
-        // Bottom room for MainShell's bar, which this tab extends behind.
-        padding: const EdgeInsets.fromLTRB(_gutter, 20, _gutter, 140),
+        // Bottom room for MainShell's bar and the new chat button.
+        padding: EdgeInsets.fromLTRB(_gutter, 20, _gutter, bottomPadding),
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  context.l10n.chats,
-                  style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.w900,
-                    // Spacing pulls joined Arabic letters apart.
-                    letterSpacing: hasArabic(context.l10n.chats) ? 0 : -0.8,
-                    color: SynkColors.textPrimary,
+          SizedBox(
+            height: 48,
+            child: Row(
+              children: [
+                Expanded(
+                  // The search button opens a field in place of the title.
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    layoutBuilder: (current, previous) => Stack(
+                      alignment: AlignmentDirectional.centerStart,
+                      children: [...previous, ?current],
+                    ),
+                    child: _searchOpen
+                        ? FriendsSearchField(
+                            key: const ValueKey('search'),
+                            controller: _search,
+                            hint: context.l10n.searchChats,
+                            autofocus: true,
+                            borderRadius: 24,
+                            onChanged: (_) => setState(() {}),
+                          )
+                        // Shrinks to stay on one line beside the button.
+                        : FittedBox(
+                            key: const ValueKey('title'),
+                            fit: BoxFit.scaleDown,
+                            alignment: AlignmentDirectional.centerStart,
+                            child: Text(
+                              context.l10n.catchUpWithFriends,
+                              maxLines: 1,
+                              // Matches Home's "Top 5 picks for you".
+                              style: GoogleFonts.leagueSpartan(
+                                fontSize: 26,
+                                fontWeight: FontWeight.w800,
+                                color: SynkColors.ink,
+                              ),
+                            ),
+                          ),
                   ),
                 ),
-              ),
-              Material(
-                color: Colors.white,
-                shape: const CircleBorder(),
-                elevation: 1,
-                shadowColor: Colors.black12,
-                child: IconButton(
-                  tooltip: context.l10n.newChat,
-                  onPressed: _openNewChatSheet,
-                  icon: const NewChatIcon(color: SynkColors.textPrimary),
-                ),
-              ),
-            ],
+                if (!_searchOpen) ...[
+                  const SizedBox(width: 10),
+                  Material(
+                    color: Colors.white,
+                    shape: const CircleBorder(),
+                    elevation: 1,
+                    shadowColor: Colors.black12,
+                    child: IconButton(
+                      tooltip: context.l10n.searchChats,
+                      onPressed: () => setState(() => _searchOpen = true),
+                      icon: const Icon(
+                        Icons.search_rounded,
+                        color: SynkColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
           const SizedBox(height: 18),
-          FriendsSearchField(
-            controller: _search,
-            hint: context.l10n.searchChats,
-            onChanged: (_) => setState(() {}),
+          _FilterTabs(
+            selected: _filter,
+            onChanged: (filter) => setState(() => _filter = filter),
           ),
           if (_chats.isLoading && !_chats.hasLoaded)
             const Padding(
@@ -268,8 +349,8 @@ class _ChatsViewState extends State<ChatsView> {
                 icon: Icons.chat_bubble_outline_rounded,
                 title: context.l10n.noChatsYet,
                 message: context.l10n.chatsShowUpHere,
-                actionLabel: context.l10n.messageAFriend,
-                onAction: _openNewChatSheet,
+                actionLabel: showFriends ? context.l10n.messageAFriend : null,
+                onAction: showFriends ? _openNewChatSheet : null,
               ),
             )
           else if (searching && activityChats.isEmpty && directChats.isEmpty)
@@ -282,10 +363,7 @@ class _ChatsViewState extends State<ChatsView> {
             )
           else ...[
             if (activityChats.isNotEmpty) ...[
-              _SectionHeader(
-                title: context.l10n.activityChats,
-                trailing: context.l10n.activeChatsCount(activityChats.length),
-              ),
+              _SectionHeader(title: context.l10n.activities),
               FriendsListCard(
                 children: [for (final c in activityChats) tile(c)],
               ),
@@ -301,40 +379,93 @@ class _ChatsViewState extends State<ChatsView> {
   }
 }
 
+class _FilterTabs extends StatelessWidget {
+  const _FilterTabs({required this.selected, required this.onChanged});
+
+  final _ChatFilter selected;
+  final ValueChanged<_ChatFilter> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    const duration = Duration(milliseconds: 220);
+
+    Widget segment(String label, _ChatFilter filter) {
+      final isSelected = selected == filter;
+      return Expanded(
+        child: GestureDetector(
+          onTap: () => onChanged(filter),
+          behavior: HitTestBehavior.opaque,
+          child: Center(
+            child: AnimatedDefaultTextStyle(
+              duration: duration,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: isSelected ? Colors.white : SynkColors.textSecondary,
+              ),
+              child: Text(label),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.all(4),
+      decoration: const ShapeDecoration(
+        color: Colors.white,
+        shape: StadiumBorder(),
+      ),
+      child: Stack(
+        children: [
+          // The orange oval slides under the selected label.
+          AnimatedAlign(
+            duration: duration,
+            curve: Curves.easeOutCubic,
+            alignment: AlignmentDirectional(selected.index - 1.0, 0),
+            child: const FractionallySizedBox(
+              widthFactor: 1 / 3,
+              heightFactor: 1,
+              child: DecoratedBox(
+                decoration: ShapeDecoration(
+                  color: SynkColors.orangeDark,
+                  shape: StadiumBorder(),
+                ),
+              ),
+            ),
+          ),
+          Row(
+            children: [
+              segment(context.l10n.all, _ChatFilter.all),
+              segment(context.l10n.activities, _ChatFilter.activities),
+              segment(context.l10n.friends, _ChatFilter.friends),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title, this.trailing});
+  const _SectionHeader({required this.title});
 
   final String title;
-  final String? trailing;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(4, 24, 4, 10),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              title.toUpperCase(),
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                // Spacing pulls joined Arabic letters apart.
-                letterSpacing: hasArabic(title) ? 0 : 0.8,
-                color: SynkColors.labelGrey,
-              ),
-            ),
-          ),
-          if (trailing != null)
-            Text(
-              trailing!,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: SynkColors.textSecondary,
-              ),
-            ),
-        ],
+      child: Text(
+        title.toUpperCase(),
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w800,
+          // Spacing pulls joined Arabic letters apart.
+          letterSpacing: hasArabic(title) ? 0 : 0.8,
+          color: SynkColors.labelGrey,
+        ),
       ),
     );
   }
@@ -432,7 +563,7 @@ class _NewChatSheetState extends State<_NewChatSheet> {
                   child: EmptyState(
                     icon: Icons.mark_chat_read_outlined,
                     title: context.l10n.youreChattingWithAllYourFriends,
-                    message: context.l10n.findPeopleYouKnow,
+                    message: context.l10n.findNewFriendsToChatWith,
                     actionLabel: context.l10n.findPeople,
                     onAction: openFindPeople,
                   ),

@@ -1217,6 +1217,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photo => 'Photo';
 
   @override
+  String get photos => 'Photos';
+
+  @override
+  String get camera => 'Camera';
+
+  @override
   String get addAPhoto => 'Add a photo';
 
   @override
@@ -2635,12 +2641,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chats => 'Chats';
 
   @override
-  String get activityChats => 'Activity chats';
+  String get catchUpWithFriends => 'Catch up with friends!';
 
   @override
-  String activeChatsCount(int n) {
-    return '$n active';
-  }
+  String get activityChats => 'Activity chats';
 
   @override
   String get searchChats => 'Search chats';
@@ -2746,6 +2750,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get youreChattingWithAllYourFriends =>
       'You already have a chat with all your friends';
+
+  @override
+  String get findNewFriendsToChatWith => 'Find new friends to chat with!';
 
   @override
   String get messageWasDeleted => 'This message was deleted';

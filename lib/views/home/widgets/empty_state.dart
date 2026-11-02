@@ -38,6 +38,7 @@ class EmptyState extends StatelessWidget {
             const SizedBox(height: 18),
             Text(
               title,
+              textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
