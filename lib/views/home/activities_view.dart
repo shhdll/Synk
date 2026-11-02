@@ -319,12 +319,18 @@ class _ActivitiesViewState extends State<ActivitiesView> {
               padding: const EdgeInsets.all(14),
               child: Row(
                 children: [
-                  const Icon(Icons.warning_amber_rounded, color: SynkColors.orangeDark),
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: SynkColors.orangeDark,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       '${_scheduleConflicts.length} unresolved schedule conflict${_scheduleConflicts.length == 1 ? '' : 's'} · Tap to review',
-                      style: const TextStyle(fontWeight: FontWeight.w700, color: SynkColors.textPrimary),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: SynkColors.textPrimary,
+                      ),
                     ),
                   ),
                   const Icon(Icons.chevron_right_rounded),
@@ -433,27 +439,23 @@ class _Segmented extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const duration = Duration(milliseconds: 220);
+
     Widget segment(String label, bool past) {
       final selected = showPast == past;
       return Expanded(
         child: GestureDetector(
           onTap: () => onChanged(past),
           behavior: HitTestBehavior.opaque,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            height: 40,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: selected ? SynkColors.orangeDark : Colors.transparent,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              label,
+          child: Center(
+            child: AnimatedDefaultTextStyle(
+              duration: duration,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
                 color: selected ? Colors.white : SynkColors.textSecondary,
               ),
+              child: Text(label),
             ),
           ),
         ),
@@ -461,15 +463,38 @@ class _Segmented extends StatelessWidget {
     }
 
     return Container(
+      height: 48,
       padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
+      decoration: const ShapeDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        shape: StadiumBorder(),
       ),
-      child: Row(
+      child: Stack(
         children: [
-          segment(context.l10n.upcoming, false),
-          segment(context.l10n.past, true),
+          // The orange oval slides under the selected label.
+          AnimatedAlign(
+            duration: duration,
+            curve: Curves.easeOutCubic,
+            alignment: showPast
+                ? AlignmentDirectional.centerEnd
+                : AlignmentDirectional.centerStart,
+            child: const FractionallySizedBox(
+              widthFactor: 0.5,
+              heightFactor: 1,
+              child: DecoratedBox(
+                decoration: ShapeDecoration(
+                  color: SynkColors.orangeDark,
+                  shape: StadiumBorder(),
+                ),
+              ),
+            ),
+          ),
+          Row(
+            children: [
+              segment(context.l10n.upcoming, false),
+              segment(context.l10n.past, true),
+            ],
+          ),
         ],
       ),
     );

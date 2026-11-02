@@ -2502,12 +2502,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chats => 'المحادثات';
 
   @override
-  String get activityChats => 'محادثات الأنشطة';
+  String get catchUpWithFriends => 'تواصل مع أصدقائك!';
 
   @override
-  String activeChatsCount(int n) {
-    return '$n نشطة';
-  }
+  String get activityChats => 'محادثات الأنشطة';
 
   @override
   String get searchChats => 'ابحث في المحادثات';
@@ -2612,6 +2610,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get youreChattingWithAllYourFriends => 'لديك محادثة مع جميع أصدقائك';
+
+  @override
+  String get findNewFriendsToChatWith => 'ابحث عن أصدقاء جدد للدردشة معهم!';
 
   @override
   String get messageWasDeleted => 'تم حذف هذه الرسالة';

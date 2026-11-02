@@ -4580,17 +4580,17 @@ abstract class AppLocalizations {
   /// **'Chats'**
   String get chats;
 
+  /// No description provided for @catchUpWithFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Catch up with friends!'**
+  String get catchUpWithFriends;
+
   /// No description provided for @activityChats.
   ///
   /// In en, this message translates to:
   /// **'Activity chats'**
   String get activityChats;
-
-  /// No description provided for @activeChatsCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{n} active'**
-  String activeChatsCount(int n);
 
   /// No description provided for @searchChats.
   ///
@@ -4753,6 +4753,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You already have a chat with all your friends'**
   String get youreChattingWithAllYourFriends;
+
+  /// No description provided for @findNewFriendsToChatWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Find new friends to chat with!'**
+  String get findNewFriendsToChatWith;
 
   /// No description provided for @messageWasDeleted.
   ///

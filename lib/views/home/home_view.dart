@@ -233,7 +233,11 @@ class _HomeViewState extends State<HomeView> {
                 _buildHeader(),
                 const SizedBox(height: 22),
                 _buildSearchAndFilterRow(),
-                TopPicksSection(controller: _discoveryController, activityStore: widget.activityStore, onActivityTap: _onActivityTap),
+                TopPicksSection(
+                  controller: _discoveryController,
+                  activityStore: widget.activityStore,
+                  onActivityTap: _onActivityTap,
+                ),
               ],
             ),
           ),
@@ -411,11 +415,11 @@ class _HomeViewState extends State<HomeView> {
                 fillColor: Colors.white,
                 contentPadding: EdgeInsets.zero,
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(24),
                   borderSide: border,
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(24),
                   borderSide: const BorderSide(color: SynkColors.orange),
                 ),
               ),

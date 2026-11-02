@@ -15,12 +15,14 @@ class FriendsSearchField extends StatelessWidget {
     required this.hint,
     required this.onChanged,
     this.autofocus = false,
+    this.borderRadius = 14,
   });
 
   final TextEditingController controller;
   final String hint;
   final ValueChanged<String> onChanged;
   final bool autofocus;
+  final double borderRadius;
 
   @override
   Widget build(BuildContext context) {
@@ -71,11 +73,11 @@ class FriendsSearchField extends StatelessWidget {
           fillColor: Colors.white,
           contentPadding: EdgeInsets.zero,
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(borderRadius),
             borderSide: border,
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(borderRadius),
             borderSide: const BorderSide(color: SynkColors.orange),
           ),
         ),
