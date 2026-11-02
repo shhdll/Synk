@@ -199,9 +199,9 @@ async function sendToToken(
               }
               : event.event_type === "activity_reminder"
               ? {
-                title: language === "ar" ? "يبدأ قريبًا" : "Starting soon",
+                title: language === "ar" ? "يبدأ قريبا" : "Starting soon",
                 body: language === "ar"
-                  ? `يبدأ ${event.activity_title} خلال ساعة.`
+                  ? `يبدأ ${event.activity_title} خلال ساعة`
                   : `${event.activity_title} starts in an hour.`,
               }
               : event.event_type === "host_assigned"
