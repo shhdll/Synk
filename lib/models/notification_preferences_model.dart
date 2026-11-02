@@ -8,6 +8,7 @@ enum NotificationKind {
   activityUpdates('activity_updates'),
   reminders('reminders'),
   friendRequests('friend_requests'),
+  chats('chats'),
   marketing('marketing');
 
   const NotificationKind(this.column);
@@ -21,22 +22,23 @@ class NotificationPreferencesModel {
 
   final SupabaseClient _supabase;
 
-  Future<Map<NotificationKind, bool>> fetch() async {
+  Future<({Map<NotificationKind, bool> values, String? ntfyTopic})>
+  fetch() async {
     final userId = _supabase.auth.currentUser?.id;
     final values = {for (final kind in NotificationKind.values) kind: true};
-    if (userId == null) return values;
+    if (userId == null) return (values: values, ntfyTopic: null);
 
     final row = await _supabase
         .from('notification_preferences')
         .select()
         .eq('user_id', userId)
         .maybeSingle();
-    if (row == null) return values;
+    if (row == null) return (values: values, ntfyTopic: null);
 
     for (final kind in NotificationKind.values) {
       values[kind] = row[kind.column] != false;
     }
-    return values;
+    return (values: values, ntfyTopic: row['ntfy_topic'] as String?);
   }
 
   Future<void> save(NotificationKind kind, bool enabled) async {
@@ -46,6 +48,18 @@ class NotificationPreferencesModel {
     await _supabase.from('notification_preferences').upsert({
       'user_id': userId,
       kind.column: enabled,
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+    });
+  }
+
+  // ntfy topic for iPhones without native push. Null turns it off.
+  Future<void> saveNtfyTopic(String? topic) async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) throw AuthSessionMissingException();
+
+    await _supabase.from('notification_preferences').upsert({
+      'user_id': userId,
+      'ntfy_topic': topic,
       'updated_at': DateTime.now().toUtc().toIso8601String(),
     });
   }

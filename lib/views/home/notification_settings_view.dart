@@ -5,6 +5,7 @@ import '../../core/constants/synk_colors.dart';
 import '../../l10n/l10n.dart';
 import '../../models/notification_preferences_model.dart';
 import '../../utils/custom_widgets/synk_feedback.dart';
+import 'ntfy_settings_view.dart';
 import 'widgets/settings_row.dart';
 
 class NotificationSettingsView extends StatefulWidget {
@@ -137,6 +138,13 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                             l10n.notifPrefFriendRequests,
                             l10n.notifPrefFriendRequestsHint,
                           ),
+                          row(
+                            NotificationKind.chats,
+                            Icons.chat_bubble_rounded,
+                            SynkColors.orangeDark,
+                            l10n.notifPrefChats,
+                            l10n.notifPrefChatsHint,
+                          ),
                         ],
                       ),
                       const SizedBox(height: 24),
@@ -149,6 +157,23 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                             SynkColors.textSecondary,
                             l10n.notifPrefMarketing,
                             l10n.notifPrefMarketingHint,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      SettingsGroup(
+                        title: l10n.notifPrefIphone,
+                        children: [
+                          SettingsRow(
+                            icon: Icons.phone_iphone_rounded,
+                            iconColor: SynkColors.orangeDark,
+                            title: l10n.ntfyPageTitle,
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    NtfySettingsView(controller: _controller),
+                              ),
+                            ),
                           ),
                         ],
                       ),
