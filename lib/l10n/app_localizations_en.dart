@@ -2954,6 +2954,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifPrefFriendRequestsHint => 'New requests and accepted ones';
 
   @override
+  String get notifPrefChats => 'Messages';
+
+  @override
+  String get notifPrefChatsHint => 'New messages in your chats';
+
+  @override
   String get notifPrefOther => 'Other';
 
   @override
@@ -2961,6 +2967,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifPrefMarketingHint => 'New features and things to try';
+
+  @override
+  String get notifPrefIphone => 'iPhone';
+
+  @override
+  String get notifPrefNtfy => 'Send to ntfy';
+
+  @override
+  String get notifPrefNtfyHint => 'Your Synk notifications go to ntfy';
+
+  @override
+  String get notifPrefNtfyTopic => 'Your topic';
+
+  @override
+  String get notifPrefNtfyCopied => 'Topic copied';
+
+  @override
+  String get ntfyPageTitle => 'iPhone notifications';
+
+  @override
+  String get ntfyIntro =>
+      'This is for iPhone only. Synk sends iPhone notifications through ntfy, a free app. On Android you get them already.';
+
+  @override
+  String get ntfyStepsTitle => 'How to set it up';
+
+  @override
+  String get ntfyStep1 => 'Get ntfy from the App Store';
+
+  @override
+  String get ntfyStep2 => 'Turn on Send to ntfy below';
+
+  @override
+  String get ntfyStep3 => 'Tap your topic to copy it';
+
+  @override
+  String get ntfyStep4 => 'In ntfy, tap +, paste the topic and tap Subscribe';
+
+  @override
+  String get ntfyGetApp => 'Get ntfy';
+
+  @override
+  String get ntfyGetAppHint => 'Free on the App Store';
 
   @override
   String get contactSupport => 'Contact support';

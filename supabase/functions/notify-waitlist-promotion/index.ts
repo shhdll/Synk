@@ -8,6 +8,8 @@ const SUPABASE_SERVICE_ROLE_KEY = SUPABASE_SECRET_KEYS
 const PROMOTION_WEBHOOK_SECRET = Deno.env.get("PROMOTION_WEBHOOK_SECRET");
 const FCM_SERVICE_ACCOUNT_JSON = Deno.env.get("FCM_SERVICE_ACCOUNT_JSON");
 const FCM_SCOPE = "https://www.googleapis.com/auth/firebase.messaging";
+const NTFY_URL = "https://ntfy.sh";
+const NTFY_LOGO_URL = "https://www.synk.cc/logo.png";
 
 type PromotionEvent = {
   id: string;
@@ -20,7 +22,12 @@ type PromotionEvent = {
   schedule_changed?: boolean;
   starts_at?: string;
   ends_at?: string;
-  event_type?: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received" | "friend_request_received" | "friend_request_accepted" | "host_assigned" | "activity_conflict" | "activity_full" | "activity_reminder";
+  chat_id?: string;
+  sender_name?: string;
+  is_group?: boolean;
+  message_kind?: string;
+  preview?: string;
+  event_type?: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received" | "friend_request_received" | "friend_request_accepted" | "host_assigned" | "activity_conflict" | "activity_full" | "activity_reminder" | "chat_message";
 };
 
 type FcmCredentials = {
@@ -135,6 +142,96 @@ function formatScheduleTime(value: string): string {
   });
 }
 
+function notificationContent(
+  event: PromotionEvent,
+  language: string,
+): { title: string; body: string } {
+  if (event.event_type === "chat_message") {
+    const text = event.message_kind === "photo" && !event.preview
+      ? (language === "ar" ? "📷 صورة" : "📷 Photo")
+      : event.message_kind === "activity"
+      ? (language === "ar" ? "شارك نشاطا" : "Shared an activity")
+      : event.message_kind === "location"
+      ? (language === "ar" ? "📍 شارك موقعا" : "📍 Shared a location")
+      : event.preview ?? "";
+    return {
+      title: event.activity_title,
+      body: event.is_group ? `${event.sender_name}: ${text}` : text,
+    };
+  }
+  return event.event_type === "join_request_accepted"
+    ? {
+      title: "Request accepted",
+      body: `Your request to join ${event.activity_title} was accepted. You're in!`,
+    }
+    : event.event_type === "join_request_rejected"
+    ? {
+      title: "Request declined",
+      body: `Your request to join ${event.activity_title} was declined by the host.`,
+    }
+    : event.event_type === "join_request_received"
+    ? {
+      title: "New join request",
+      body: `Someone requested to join ${event.activity_title}. Review their request.`,
+    }
+    : event.event_type === "activity_full"
+    ? {
+      title: language === "ar"
+        ? "اكتمل النشاط! 🎉"
+        : "Activity full! 🎉",
+      body: language === "ar"
+        ? `وصل نشاط ${event.activity_title} إلى الحد الأقصى للمشاركين.`
+        : `${event.activity_title} has reached its participant limit.`,
+    }
+    : event.event_type === "friend_request_received"
+    ? {
+      title: language === "ar" ? "طلب صداقة جديد" : "New friend request",
+      body: language === "ar"
+        ? `${event.activity_title} أرسل إليك طلب صداقة.`
+        : `${event.activity_title} sent you a friend request.`,
+    }
+    : event.event_type === "friend_request_accepted"
+    ? {
+      title: language === "ar" ? "تم قبول طلب الصداقة" : "Friend request accepted",
+      body: language === "ar"
+        ? `قبل ${event.activity_title} طلب صداقتك. أصبحتما صديقين الآن.`
+        : `${event.activity_title} accepted your friend request. You're now friends!`,
+    }
+    : event.event_type === "activity_reminder"
+    ? {
+      title: language === "ar" ? "يبدأ قريبا" : "Starting soon",
+      body: language === "ar"
+        ? `يبدأ ${event.activity_title} خلال ساعة`
+        : `${event.activity_title} starts in an hour.`,
+    }
+    : event.event_type === "host_assigned"
+    ? {
+      title: "You're Now the Host! \u{1F389}",
+      body: `You've been assigned as the new host of ${event.activity_title}.`,
+    }
+    : event.event_type === "activity_conflict"
+    ? {
+      title: "Scheduling Conflict Detected",
+      body: `${event.activity_title} was rescheduled${event.starts_at ? ` to ${formatScheduleTime(event.starts_at)}` : ""} and now overlaps another activity. Tap to resolve.`,
+    }
+    : event.event_type === "activity_deleted"
+    ? {
+      title: "Activity canceled",
+      body: `${event.activity_title} was deleted by the host.`,
+    }
+    : event.event_type === "activity_updated"
+    ? {
+      title: event.schedule_changed ? "Activity Schedule Updated" : "Activity updated",
+      body: event.schedule_changed && event.starts_at
+        ? `${event.activity_title} has been rescheduled to ${formatScheduleTime(event.starts_at)}.`
+        : `${event.activity_title} has new details. Tap to review the changes.`,
+    }
+    : {
+      title: "You're In! \u{1F389}",
+      body: `A spot opened up! You've been moved from the waiting list and successfully joined ${event.activity_title}.`,
+    };
+}
+
 async function sendToToken(
   token: string,
   event: PromotionEvent,
@@ -159,81 +256,12 @@ async function sendToToken(
         body: JSON.stringify({
           message: {
             token,
-            notification: event.event_type === "join_request_accepted"
-              ? {
-                title: "Request accepted",
-                body: `Your request to join ${event.activity_title} was accepted. You're in!`,
-              }
-              : event.event_type === "join_request_rejected"
-              ? {
-                title: "Request declined",
-                body: `Your request to join ${event.activity_title} was declined by the host.`,
-              }
-              : event.event_type === "join_request_received"
-              ? {
-                title: "New join request",
-                body: `Someone requested to join ${event.activity_title}. Review their request.`,
-              }
-              : event.event_type === "activity_full"
-              ? {
-                title: language === "ar"
-                  ? "اكتمل النشاط! 🎉"
-                  : "Activity full! 🎉",
-                body: language === "ar"
-                  ? `وصل نشاط ${event.activity_title} إلى الحد الأقصى للمشاركين.`
-                  : `${event.activity_title} has reached its participant limit.`,
-              }
-              : event.event_type === "friend_request_received"
-              ? {
-                title: language === "ar" ? "طلب صداقة جديد" : "New friend request",
-                body: language === "ar"
-                  ? `${event.activity_title} أرسل إليك طلب صداقة.`
-                  : `${event.activity_title} sent you a friend request.`,
-              }
-              : event.event_type === "friend_request_accepted"
-              ? {
-                title: language === "ar" ? "تم قبول طلب الصداقة" : "Friend request accepted",
-                body: language === "ar"
-                  ? `قبل ${event.activity_title} طلب صداقتك. أصبحتما صديقين الآن.`
-                  : `${event.activity_title} accepted your friend request. You're now friends!`,
-              }
-              : event.event_type === "activity_reminder"
-              ? {
-                title: language === "ar" ? "يبدأ قريبا" : "Starting soon",
-                body: language === "ar"
-                  ? `يبدأ ${event.activity_title} خلال ساعة`
-                  : `${event.activity_title} starts in an hour.`,
-              }
-              : event.event_type === "host_assigned"
-              ? {
-                title: "You're Now the Host! \u{1F389}",
-                body: `You've been assigned as the new host of ${event.activity_title}.`,
-              }
-              : event.event_type === "activity_conflict"
-              ? {
-                title: "Scheduling Conflict Detected",
-                body: `${event.activity_title} was rescheduled${event.starts_at ? ` to ${formatScheduleTime(event.starts_at)}` : ""} and now overlaps another activity. Tap to resolve.`,
-              }
-              : event.event_type === "activity_deleted"
-              ? {
-                title: "Activity canceled",
-                body: `${event.activity_title} was deleted by the host.`,
-              }
-              : event.event_type === "activity_updated"
-              ? {
-                title: event.schedule_changed ? "Activity Schedule Updated" : "Activity updated",
-                body: event.schedule_changed && event.starts_at
-                  ? `${event.activity_title} has been rescheduled to ${formatScheduleTime(event.starts_at)}.`
-                  : `${event.activity_title} has new details. Tap to review the changes.`,
-              }
-              : {
-                title: "You're In! \u{1F389}",
-                body: `A spot opened up! You've been moved from the waiting list and successfully joined ${event.activity_title}.`,
-              },
+            notification: notificationContent(event, language),
             data: {
               type: event.event_type ?? "waitlist_promotion",
               event_id: event.id,
               ...(event.activity_id ? { activity_id: event.activity_id } : {}),
+              ...(event.chat_id ? { chat_id: event.chat_id } : {}),
               ...(event.event_type === "friend_request_received"
                 ? { requester_name: event.activity_title }
                 : event.event_type === "friend_request_accepted"
@@ -253,7 +281,8 @@ async function sendToToken(
                     event.event_type === "activity_full" ||
                     event.event_type === "friend_request_received" ||
                     event.event_type === "friend_request_accepted" ||
-                    event.event_type === "activity_reminder"
+                    event.event_type === "activity_reminder" ||
+                    event.event_type === "chat_message"
                   ? "activity_updates"
                   : "waitlist_promotions",
                 tag: `${event.event_type ?? "waitlist_promotion"}_${event.id}`,
@@ -286,6 +315,38 @@ async function sendToToken(
   }
 }
 
+// Sends a copy to the user's ntfy topic, for iPhones without native push.
+// JSON publishing keeps Arabic text and emoji intact.
+async function sendToNtfy(
+  topic: string,
+  event: PromotionEvent,
+  language: string,
+): Promise<boolean> {
+  const { title, body } = notificationContent(event, language);
+  try {
+    const response = await fetch(NTFY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        topic,
+        title,
+        message: body,
+        attach: NTFY_LOGO_URL,
+      }),
+    });
+    if (!response.ok) {
+      console.error("ntfy rejected notification delivery", {
+        httpStatus: response.status,
+      });
+    }
+    return response.ok;
+  } catch {
+    // Avoid logging the topic, which works like a password.
+    console.error("ntfy delivery failed");
+    return false;
+  }
+}
+
 function preferenceColumn(eventType: NonNullable<PromotionEvent["event_type"]>): string {
   switch (eventType) {
     case "waitlist_promotion":
@@ -299,6 +360,8 @@ function preferenceColumn(eventType: NonNullable<PromotionEvent["event_type"]>):
       return "friend_requests";
     case "activity_reminder":
       return "reminders";
+    case "chat_message":
+      return "chats";
     default:
       return "activity_updates";
   }
@@ -320,7 +383,7 @@ Deno.serve(async (request: Request) => {
   }
 
   let eventId: string;
-  let eventType: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received" | "friend_request_received" | "friend_request_accepted" | "host_assigned" | "activity_conflict" | "activity_full" | "activity_reminder";
+  let eventType: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received" | "friend_request_received" | "friend_request_accepted" | "host_assigned" | "activity_conflict" | "activity_full" | "activity_reminder" | "chat_message";
   try {
     const body = await request.json();
     eventId = typeof body.event_id === "string" ? body.event_id : "";
@@ -334,7 +397,8 @@ Deno.serve(async (request: Request) => {
         body.event_type === "activity_full" ||
         body.event_type === "friend_request_received" ||
         body.event_type === "friend_request_accepted" ||
-        body.event_type === "activity_reminder"
+        body.event_type === "activity_reminder" ||
+        body.event_type === "chat_message"
       ? body.event_type
       : "waitlist_promotion";
   } catch {
@@ -366,6 +430,8 @@ Deno.serve(async (request: Request) => {
     ? "activity_full_notification_outbox"
     : eventType === "activity_reminder"
     ? "activity_reminder_notification_outbox"
+    : eventType === "chat_message"
+    ? "chat_message_notification_outbox"
     : "waitlist_promotion_notification_outbox";
   const eventColumns = eventType === "activity_updated"
     ? "id, user_id, activity_id, activity_title, status"
@@ -373,6 +439,8 @@ Deno.serve(async (request: Request) => {
     ? "id, user_id, activity_id, activity_title, status"
     : eventType === "activity_conflict"
     ? "id, user_id, activity_id, activity_title, conflict_id, status"
+    : eventType === "chat_message"
+    ? "id, user_id, chat_id, activity_title, sender_name, is_group, message_kind, preview, status"
     : "id, user_id, activity_id, activity_title, status";
   const { data: event, error: claimError } = await admin
     .from(outboxTable)
@@ -395,9 +463,10 @@ Deno.serve(async (request: Request) => {
 
   // Respect the switches in Settings > Notifications. No row means all on.
   const { data: preferences } = await admin.from("notification_preferences")
-    .select(preferenceColumn(eventType))
+    .select(`${preferenceColumn(eventType)}, ntfy_topic`)
     .eq("user_id", typedEvent.user_id)
     .maybeSingle();
+  const ntfyTopic = (preferences as Record<string, unknown> | null)?.ntfy_topic;
   if (preferences && (preferences as Record<string, unknown>)[preferenceColumn(eventType)] === false) {
     await admin.from(outboxTable)
       .update({ status: "no_tokens", processed_at: new Date().toISOString() })
@@ -474,11 +543,18 @@ Deno.serve(async (request: Request) => {
     return jsonResponse({ error: "recipient_lookup_failed" }, 500);
   }
 
+  const ntfySent = typeof ntfyTopic === "string"
+    ? await sendToNtfy(ntfyTopic, typedEvent, tokens?.[0]?.language ?? "en")
+    : false;
+
   if (!tokens?.length) {
     await admin.from(outboxTable)
-      .update({ status: "no_tokens", processed_at: new Date().toISOString() })
+      .update({
+        status: ntfySent ? "sent" : "no_tokens",
+        processed_at: new Date().toISOString(),
+      })
       .eq("id", eventId);
-    return jsonResponse({ ok: true, sent: 0 });
+    return jsonResponse({ ok: true, sent: ntfySent ? 1 : 0 });
   }
 
   let credentials: FcmCredentials;
@@ -525,7 +601,8 @@ Deno.serve(async (request: Request) => {
         .in("fcm_token", invalidTokens);
     }
 
-    const sent = outcomes.filter((outcome) => outcome.sent).length;
+    const sent = outcomes.filter((outcome) => outcome.sent).length +
+      (ntfySent ? 1 : 0);
     await admin.from(outboxTable)
       .update({
         status: sent > 0 ? "sent" : "failed",
