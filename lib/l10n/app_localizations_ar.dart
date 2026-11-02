@@ -1482,6 +1482,69 @@ class AppLocalizationsAr extends AppLocalizations {
   String get rating => 'التقييم';
 
   @override
+  String streakWeeksInARow(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'أسبوعا متتاليا',
+      few: 'أسابيع متتالية',
+      two: 'أسبوعان متتاليان',
+      one: 'أسبوع متتالي',
+      zero: 'أسبوع متتالي',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String streakBest(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'أفضل سلسلة: $count أسبوعا',
+      few: 'أفضل سلسلة: $count أسابيع',
+      two: 'أفضل سلسلة: أسبوعان',
+      one: 'أفضل سلسلة: أسبوع',
+      zero: 'أفضل سلسلة: 0',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String streakDaysLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'باقي $count يوما',
+      few: 'باقي $count أيام',
+      two: 'باقي يومان',
+      one: 'آخر يوم',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get streakDone => 'تم ✓';
+
+  @override
+  String get streakKeptThisWeek => 'حافظت على سلسلتك هذا الأسبوع 🎉';
+
+  @override
+  String get streakKeepGoing => 'احضر نشاطا هذا الأسبوع لتحافظ على سلسلتك';
+
+  @override
+  String get streakStart => 'احضر نشاطا هذا الأسبوع لتبدأ سلسلتك';
+
+  @override
+  String get streakTitle => 'السلسلة الأسبوعية';
+
+  @override
+  String get streakThisWeek => 'هذا الأسبوع';
+
+  @override
+  String get streakHowItWorks =>
+      'احضر نشاطا واحدا على الأقل كل أسبوع لتكبر سلسلتك';
+
+  @override
   String get interests => 'الاهتمامات';
 
   @override
