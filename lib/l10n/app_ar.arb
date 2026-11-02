@@ -815,5 +815,21 @@
   "sharedLocationLabel": "موقع: {name}",
   "shareInChat": "شارك في المحادثة",
   "sentTo": "أرسل إلى {name}",
-  "sent": "تم الإرسال"
+  "sent": "تم الإرسال",
+  "rateActivityTitle": "كيف كانت تجربتك في {title}؟",
+  "rateActivitySubtitle": "قيم الأشخاص اللي شاركوك النشاط، التقييم اختياري ولن يعرفوا من قيمهم",
+  "tapToRate": "اضغط لإضافة تقييم",
+  "starsOutOfFive": "{stars} من 5 نجوم",
+  "submitRatings": "إرسال التقييم",
+  "ratingsSavedTitle": "شكرا لتقييمك!",
+  "ratingsSavedMessage": "تم حفظ تقييماتك بنجاح",
+  "ratingNotEnded": "يمكنك التقييم بعد انتهاء النشاط",
+  "ratingNotEligible": "يمكنك تقييم من شاركوك هذا النشاط فقط",
+  "ratingAlreadyRated": "سبق أن قيمت هذا الشخص في هذا النشاط",
+  "ratingInvalid": "اختر من 0.5 إلى 5 نجوم",
+  "ratingActivityUnavailable": "هذا النشاط لم يعد متاحا",
+  "recentActivities": "الأنشطة الأخيرة",
+  "userActivitiesTitle": "أنشطة {name}",
+  "noCompletedActivitiesYet": "لا توجد أنشطة منتهية حتى الآن",
+  "couldNotLoadActivities": "تعذر تحميل الأنشطة"
 }

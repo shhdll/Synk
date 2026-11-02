@@ -4897,6 +4897,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sent'**
   String get sent;
+
+  /// No description provided for @rateActivityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How was {title}?'**
+  String rateActivityTitle(Object title);
+
+  /// No description provided for @rateActivitySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate the people who joined you. It\'s optional, and they won\'t see who rated them.'**
+  String get rateActivitySubtitle;
+
+  /// No description provided for @tapToRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to rate'**
+  String get tapToRate;
+
+  /// No description provided for @starsOutOfFive.
+  ///
+  /// In en, this message translates to:
+  /// **'{stars} out of 5 stars'**
+  String starsOutOfFive(Object stars);
+
+  /// No description provided for @submitRatings.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit'**
+  String get submitRatings;
+
+  /// No description provided for @ratingsSavedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks for rating!'**
+  String get ratingsSavedTitle;
+
+  /// No description provided for @ratingsSavedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your ratings were saved.'**
+  String get ratingsSavedMessage;
+
+  /// No description provided for @ratingNotEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'You can rate once the activity has ended.'**
+  String get ratingNotEnded;
+
+  /// No description provided for @ratingNotEligible.
+  ///
+  /// In en, this message translates to:
+  /// **'You can only rate people who joined this activity with you.'**
+  String get ratingNotEligible;
+
+  /// No description provided for @ratingAlreadyRated.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve already rated this person for this activity.'**
+  String get ratingAlreadyRated;
+
+  /// No description provided for @ratingInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose between 0.5 and 5 stars.'**
+  String get ratingInvalid;
+
+  /// No description provided for @ratingActivityUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This activity is no longer available.'**
+  String get ratingActivityUnavailable;
+
+  /// No description provided for @recentActivities.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent activities'**
+  String get recentActivities;
+
+  /// No description provided for @userActivitiesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s activities'**
+  String userActivitiesTitle(Object name);
+
+  /// No description provided for @noCompletedActivitiesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No completed activities yet'**
+  String get noCompletedActivitiesYet;
+
+  /// No description provided for @couldNotLoadActivities.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load activities.'**
+  String get couldNotLoadActivities;
 }
 
 class _AppLocalizationsDelegate
