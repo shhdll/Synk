@@ -683,6 +683,37 @@
   },
   "friends": "Friends",
   "rating": "Rating",
+  "streakWeeksInARow": "{count, plural, =1{week in a row} other{weeks in a row}}",
+  "@streakWeeksInARow": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streakBest": "{count, plural, =1{Best streak: 1 week} other{Best streak: {count} weeks}}",
+  "@streakBest": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streakDaysLeft": "{count, plural, =1{Last day} other{{count} days left}}",
+  "@streakDaysLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streakDone": "Done ✓",
+  "streakKeptThisWeek": "You kept your streak this week 🎉",
+  "streakKeepGoing": "Attend an activity this week to keep your streak",
+  "streakStart": "Attend an activity this week to start a streak",
+  "streakTitle": "Weekly streak",
+  "streakThisWeek": "This week",
+  "streakHowItWorks": "Attend at least one activity every week to grow your streak",
   "interests": "Interests",
   "preferences": "Preferences",
   "about": "About",

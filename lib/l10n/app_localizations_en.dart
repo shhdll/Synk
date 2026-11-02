@@ -1530,6 +1530,62 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rating => 'Rating';
 
   @override
+  String streakWeeksInARow(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'weeks in a row',
+      one: 'week in a row',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String streakBest(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Best streak: $count weeks',
+      one: 'Best streak: 1 week',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String streakDaysLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days left',
+      one: 'Last day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get streakDone => 'Done ✓';
+
+  @override
+  String get streakKeptThisWeek => 'You kept your streak this week 🎉';
+
+  @override
+  String get streakKeepGoing =>
+      'Attend an activity this week to keep your streak';
+
+  @override
+  String get streakStart => 'Attend an activity this week to start a streak';
+
+  @override
+  String get streakTitle => 'Weekly streak';
+
+  @override
+  String get streakThisWeek => 'This week';
+
+  @override
+  String get streakHowItWorks =>
+      'Attend at least one activity every week to grow your streak';
+
+  @override
   String get interests => 'Interests';
 
   @override

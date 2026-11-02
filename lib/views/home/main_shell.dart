@@ -14,6 +14,7 @@ import '../../models/activity_participation_model.dart';
 import '../../models/activity_rating_model.dart';
 import '../../models/auth_model.dart';
 import '../../models/home_tab.dart';
+import '../../models/streak_intro.dart';
 import '../../services/push_notification_service.dart';
 import '../create_activity/create_activity_view.dart';
 import 'activities_view.dart';
@@ -23,6 +24,7 @@ import 'map_view.dart';
 import 'schedule_conflict_resolution_view.dart';
 import 'widgets/activity_rating_sheet.dart';
 import 'widgets/bottom_bar.dart';
+import 'widgets/streak_widgets.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key, this.initialTab = HomeTab.home});
@@ -84,6 +86,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     unawaited(PushNotificationService.instance.registerForCurrentUser());
     unawaited(_authModel.refreshIfEmailChangePending());
 
+    // Loads hosted, participating, and public activities, then greets the
+    // user with their streak.
+    unawaited(_loadActivities().then((_) => _showStreakOnOpen()));
     // Loads hosted, participating, and public activities.
     unawaited(_loadActivities().then((_) => _offerActivityRating()));
 
@@ -163,6 +168,19 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     await _requireScheduleConflictResolution();
   }
 
+  // Set once each list has loaded, so the streak is never shown from
+  // half-loaded data.
+  bool _mineLoaded = false;
+  bool _participatingLoaded = false;
+
+  // Pops up the streak sheet once a day when the app opens.
+  Future<void> _showStreakOnOpen() async {
+    if (!mounted || !_mineLoaded || !_participatingLoaded) return;
+    if (!await StreakIntro.takeTurn(_activityStore.currentUserId)) return;
+    if (!mounted) return;
+    await showStreakSheet(context, _activityStore);
+  }
+
   Future<void> _requireScheduleConflictResolution() async {
     if (_checkingScheduleConflicts || !mounted) return;
     _checkingScheduleConflicts = true;
@@ -213,6 +231,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       if (!mounted) return;
 
       _activityStore.setMine(activities);
+      _mineLoaded = true;
     } catch (_) {
       // Keep the current list when loading fails.
     }
@@ -226,6 +245,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       if (!mounted) return;
 
       _activityStore.setParticipating(activities);
+      _participatingLoaded = true;
     } catch (_) {
       // Keep the current list when loading fails.
     }
