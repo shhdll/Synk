@@ -2720,6 +2720,66 @@ abstract class AppLocalizations {
   /// **'Rating'**
   String get rating;
 
+  /// No description provided for @streakWeeksInARow.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{week in a row} other{weeks in a row}}'**
+  String streakWeeksInARow(int count);
+
+  /// No description provided for @streakBest.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Best streak: 1 week} other{Best streak: {count} weeks}}'**
+  String streakBest(int count);
+
+  /// No description provided for @streakDaysLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Last day} other{{count} days left}}'**
+  String streakDaysLeft(int count);
+
+  /// No description provided for @streakDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done ✓'**
+  String get streakDone;
+
+  /// No description provided for @streakKeptThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'You kept your streak this week 🎉'**
+  String get streakKeptThisWeek;
+
+  /// No description provided for @streakKeepGoing.
+  ///
+  /// In en, this message translates to:
+  /// **'Attend an activity this week to keep your streak'**
+  String get streakKeepGoing;
+
+  /// No description provided for @streakStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Attend an activity this week to start a streak'**
+  String get streakStart;
+
+  /// No description provided for @streakTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly streak'**
+  String get streakTitle;
+
+  /// No description provided for @streakThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get streakThisWeek;
+
+  /// No description provided for @streakHowItWorks.
+  ///
+  /// In en, this message translates to:
+  /// **'Attend at least one activity every week to grow your streak'**
+  String get streakHowItWorks;
+
   /// No description provided for @interests.
   ///
   /// In en, this message translates to:

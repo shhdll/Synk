@@ -24,6 +24,7 @@ import 'widgets/filter_bottom_sheet.dart';
 import 'widgets/filter_button.dart';
 import 'widgets/friends_button.dart';
 import 'widgets/notification_bell.dart';
+import 'widgets/streak_widgets.dart';
 import 'widgets/synk_filter_chip.dart';
 import 'widgets/top_picks_section.dart';
 
@@ -319,18 +320,26 @@ class _HomeViewState extends State<HomeView> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textDirection: textDirectionOf(name),
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              // Spacing pulls joined Arabic letters apart.
-                              letterSpacing: hasArabic(name) ? 0 : -0.3,
-                              color: SynkColors.textPrimary,
-                            ),
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textDirection: textDirectionOf(name),
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w800,
+                                    // Spacing pulls joined Arabic letters apart.
+                                    letterSpacing: hasArabic(name) ? 0 : -0.3,
+                                    color: SynkColors.textPrimary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              StreakChip(activityStore: widget.activityStore),
+                            ],
                           ),
                           if (username.isNotEmpty && username != name)
                             Text(

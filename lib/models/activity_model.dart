@@ -1,6 +1,9 @@
 import 'package:flutter/foundation.dart';
 
 import '../l10n/l10n.dart';
+import 'weekly_streak.dart';
+
+export 'weekly_streak.dart';
 
 // Whether people can still join an activity, from how many spots are open.
 enum ActivityAvailability {
@@ -356,13 +359,35 @@ class ActivityStore extends ChangeNotifier {
 
   // Activities the user hosted or was accepted into whose time has passed.
   // Pending and waitlisted requests don't count.
-  int get completedCount => _personalActivities
-      .where(
-        (activity) =>
-            activity.isPast &&
-            (activity.isHostedBy(_currentUserId) || activity.isJoined),
-      )
-      .length;
+  int get completedCount => _attended.length;
+
+  // Weeks in a row with at least one attended activity, by the same rule as
+  // [completedCount].
+  WeeklyStreak get weeklyStreak =>
+      WeeklyStreak.from(_attended.map((activity) => activity.dateTime));
+
+  // Start times of attended activities, for the streak sheet.
+  List<DateTime> get attendedTimes =>
+      _attended.map((activity) => activity.dateTime).toList();
+
+  // True near the end of the week when the streak will break unless the
+  // user books something. Pending and waitlisted requests aren't bookings.
+  bool get streakFading => WeeklyStreak.isFading(
+    weeklyStreak,
+    _personalActivities
+        .where(
+          (activity) =>
+              !activity.isPast &&
+              (activity.isHostedBy(_currentUserId) || activity.isJoined),
+        )
+        .map((activity) => activity.dateTime),
+  );
+
+  Iterable<Activity> get _attended => _personalActivities.where(
+    (activity) =>
+        activity.isPast &&
+        (activity.isHostedBy(_currentUserId) || activity.isJoined),
+  );
 
   List<Activity> get feedUpcoming =>
       _feed.where((activity) => !activity.isPast).toList()
