@@ -5186,6 +5186,18 @@ abstract class AppLocalizations {
   /// **'New requests and accepted ones'**
   String get notifPrefFriendRequestsHint;
 
+  /// No description provided for @notifPrefChats.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get notifPrefChats;
+
+  /// No description provided for @notifPrefChatsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'New messages in your chats'**
+  String get notifPrefChatsHint;
+
   /// No description provided for @notifPrefOther.
   ///
   /// In en, this message translates to:
@@ -5203,6 +5215,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New features and things to try'**
   String get notifPrefMarketingHint;
+
+  /// No description provided for @notifPrefIphone.
+  ///
+  /// In en, this message translates to:
+  /// **'iPhone'**
+  String get notifPrefIphone;
+
+  /// No description provided for @notifPrefNtfy.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to ntfy'**
+  String get notifPrefNtfy;
+
+  /// No description provided for @notifPrefNtfyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Synk notifications go to ntfy'**
+  String get notifPrefNtfyHint;
+
+  /// No description provided for @notifPrefNtfyTopic.
+  ///
+  /// In en, this message translates to:
+  /// **'Your topic'**
+  String get notifPrefNtfyTopic;
+
+  /// No description provided for @notifPrefNtfyCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Topic copied'**
+  String get notifPrefNtfyCopied;
+
+  /// No description provided for @ntfyPageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'iPhone notifications'**
+  String get ntfyPageTitle;
+
+  /// No description provided for @ntfyIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'This is for iPhone only. Synk sends iPhone notifications through ntfy, a free app. On Android you get them already.'**
+  String get ntfyIntro;
+
+  /// No description provided for @ntfyStepsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How to set it up'**
+  String get ntfyStepsTitle;
+
+  /// No description provided for @ntfyStep1.
+  ///
+  /// In en, this message translates to:
+  /// **'Get ntfy from the App Store'**
+  String get ntfyStep1;
+
+  /// No description provided for @ntfyStep2.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on Send to ntfy below'**
+  String get ntfyStep2;
+
+  /// No description provided for @ntfyStep3.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap your topic to copy it'**
+  String get ntfyStep3;
+
+  /// No description provided for @ntfyStep4.
+  ///
+  /// In en, this message translates to:
+  /// **'In ntfy, tap +, paste the topic and tap Subscribe'**
+  String get ntfyStep4;
+
+  /// No description provided for @ntfyGetApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Get ntfy'**
+  String get ntfyGetApp;
+
+  /// No description provided for @ntfyGetAppHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Free on the App Store'**
+  String get ntfyGetAppHint;
 
   /// No description provided for @contactSupport.
   ///

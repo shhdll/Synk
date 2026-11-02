@@ -2879,6 +2879,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notifPrefFriendRequestsHint => 'الطلبات الجديدة والمقبولة';
 
   @override
+  String get notifPrefChats => 'الرسائل';
+
+  @override
+  String get notifPrefChatsHint => 'الرسائل الجديدة في محادثاتك';
+
+  @override
   String get notifPrefOther => 'أخرى';
 
   @override
@@ -2886,6 +2892,49 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notifPrefMarketingHint => 'ميزات جديدة وأفكار للتجربة';
+
+  @override
+  String get notifPrefIphone => 'آيفون';
+
+  @override
+  String get notifPrefNtfy => 'الإرسال إلى ntfy';
+
+  @override
+  String get notifPrefNtfyHint => 'تصلك إشعارات Synk عبر ntfy';
+
+  @override
+  String get notifPrefNtfyTopic => 'الموضوع الخاص بك';
+
+  @override
+  String get notifPrefNtfyCopied => 'تم نسخ الموضوع';
+
+  @override
+  String get ntfyPageTitle => 'إشعارات الآيفون';
+
+  @override
+  String get ntfyIntro =>
+      'هذه الخطوات للآيفون فقط. يرسل Synk إشعارات الآيفون عبر تطبيق ntfy المجاني. على أندرويد تصلك الإشعارات بدونها.';
+
+  @override
+  String get ntfyStepsTitle => 'طريقة التفعيل';
+
+  @override
+  String get ntfyStep1 => 'حمّل ntfy من App Store';
+
+  @override
+  String get ntfyStep2 => 'فعّل الإرسال إلى ntfy في الأسفل';
+
+  @override
+  String get ntfyStep3 => 'اضغط على الموضوع لنسخه';
+
+  @override
+  String get ntfyStep4 => 'في ntfy، اضغط +، الصق الموضوع ثم اضغط Subscribe';
+
+  @override
+  String get ntfyGetApp => 'حمّل ntfy';
+
+  @override
+  String get ntfyGetAppHint => 'مجاني على App Store';
 
   @override
   String get contactSupport => 'تواصل مع الدعم';
