@@ -496,6 +496,8 @@
   "description": "Description",
   "activityDescriptionHint": "Beginners welcome, bring water",
   "photo": "Photo",
+  "photos": "Photos",
+  "camera": "Camera",
   "addAPhoto": "Add a photo",
   "photoAdded": "Photo added",
   "changePhoto": "Change photo",

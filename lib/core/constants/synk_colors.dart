@@ -9,6 +9,10 @@ class SynkColors {
   static const Color orangeDark = Color(0xFFFF7A36);
   static const Color teal = Color(0xFF4FA89B);
   static const Color backgroundLight = Color(0xFFFFF5EF);
+
+  // A step darker than background, for headers that sit on it. Matches
+  // textSecondary at 12% over background, like the chat's + button.
+  static const Color backgroundDark = Color(0xFFE5E2DA);
   static const Color beige = Color(0xFFE8D2B0);
   static const Color beigeDark = Color(0xFFC7A06B);
 

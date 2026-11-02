@@ -20,90 +20,131 @@ import 'user_avatar.dart';
 // Sheets for sending things other than text in a chat: the + menu, picking
 // an activity, and sharing an activity into chats from its details.
 
-enum ChatAttachment { photo, location, activity }
+enum ChatAttachment { photo, camera, location, activity }
 
-// The chat's + button: what to send.
-Future<ChatAttachment?> showAttachmentSheet(BuildContext context) {
-  return showModalBottomSheet<ChatAttachment>(
+// The chat's + button: what to send, in a menu that opens upward from
+// [anchor], the button's rect on screen.
+Future<ChatAttachment?> showAttachmentMenu(BuildContext context, Rect anchor) {
+  return showGeneralDialog<ChatAttachment>(
     context: context,
-    backgroundColor: SynkColors.background,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
-    builder: (sheetContext) {
-      final l10n = sheetContext.l10n;
-      Widget option(ChatAttachment value, IconData icon, String label) {
-        return Expanded(
-          child: InkWell(
-            onTap: () => Navigator.pop(sheetContext, value),
-            borderRadius: BorderRadius.circular(18),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Column(
-                children: [
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: const BoxDecoration(
-                      color: SynkColors.orangeLight,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(icon, size: 28, color: SynkColors.orangeDeep),
+    barrierDismissible: true,
+    barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+    barrierColor: Colors.transparent,
+    // Keeps the keyboard up, so the + button stays under the menu.
+    requestFocus: false,
+    transitionDuration: const Duration(milliseconds: 180),
+    pageBuilder: (menuContext, _, _) {
+      final l10n = menuContext.l10n;
+      final screen = MediaQuery.sizeOf(menuContext);
+      final isRtl = Directionality.of(menuContext) == TextDirection.rtl;
+
+      // Each option gets its own color: a pale circle, a deeper icon.
+      Widget option(
+        ChatAttachment value,
+        IconData icon,
+        String label,
+        Color color,
+      ) {
+        return InkWell(
+          onTap: () => Navigator.pop(menuContext, value),
+          child: Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(12, 8, 20, 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.14),
+                    shape: BoxShape.circle,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: SynkColors.textPrimary,
-                    ),
+                  child: Icon(icon, size: 20, color: color),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: SynkColors.textPrimary,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );
       }
 
-      return SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const _Handle(),
-              const SizedBox(height: 14),
-              Text(
-                l10n.sendSomething,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: SynkColors.textPrimary,
+      return Stack(
+        children: [
+          Positioned(
+            left: isRtl ? null : anchor.left,
+            right: isRtl ? screen.width - anchor.right : null,
+            bottom: screen.height - anchor.top + 8,
+            child: Material(
+              color: Colors.white,
+              elevation: 8,
+              shadowColor: Colors.black26,
+              clipBehavior: Clip.antiAlias,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: IntrinsicWidth(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      option(
+                        ChatAttachment.activity,
+                        Icons.event_outlined,
+                        l10n.sendActivity,
+                        SynkColors.orangeDeep,
+                      ),
+                      option(
+                        ChatAttachment.location,
+                        Icons.location_on_outlined,
+                        l10n.sendLocation,
+                        SynkColors.tealText,
+                      ),
+                      option(
+                        ChatAttachment.camera,
+                        Icons.photo_camera_outlined,
+                        l10n.camera,
+                        const Color(0xFFC2416F),
+                      ),
+                      option(
+                        ChatAttachment.photo,
+                        Icons.photo_library_outlined,
+                        l10n.photos,
+                        const Color(0xFF3F64C8),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  option(
-                    ChatAttachment.photo,
-                    Icons.photo_outlined,
-                    l10n.photo,
-                  ),
-                  option(
-                    ChatAttachment.location,
-                    Icons.location_on_outlined,
-                    l10n.sendLocation,
-                  ),
-                  option(
-                    ChatAttachment.activity,
-                    Icons.event_outlined,
-                    l10n.sendActivity,
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
+        ],
+      );
+    },
+    // Grows up out of the + button.
+    transitionBuilder: (menuContext, animation, _, child) {
+      final curved = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutCubic,
+      );
+      return FadeTransition(
+        opacity: curved,
+        child: ScaleTransition(
+          scale: Tween<double>(begin: 0.85, end: 1).animate(curved),
+          alignment: Alignment(
+            (anchor.center.dx / MediaQuery.sizeOf(menuContext).width) * 2 - 1,
+            (anchor.top / MediaQuery.sizeOf(menuContext).height) * 2 - 1,
+          ),
+          child: child,
         ),
       );
     },

@@ -357,6 +357,8 @@
   "description": "الوصف",
   "activityDescriptionHint": "المبتدئون مرحب بهم، أحضر الماء",
   "photo": "الصورة",
+  "photos": "الصور",
+  "camera": "الكاميرا",
   "addAPhoto": "أضف صورة",
   "photoAdded": "تمت إضافة الصورة",
   "changePhoto": "تغيير الصورة",

@@ -2240,6 +2240,18 @@ abstract class AppLocalizations {
   /// **'Photo'**
   String get photo;
 
+  /// No description provided for @photos.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos'**
+  String get photos;
+
+  /// No description provided for @camera.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get camera;
+
   /// No description provided for @addAPhoto.
   ///
   /// In en, this message translates to:
