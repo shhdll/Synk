@@ -11,6 +11,7 @@ import '../../core/constants/synk_colors.dart';
 import '../../models/activities_model.dart';
 import '../../models/activity_model.dart';
 import '../../models/activity_participation_model.dart';
+import '../../models/activity_rating_model.dart';
 import '../../models/auth_model.dart';
 import '../../models/home_tab.dart';
 import '../../services/push_notification_service.dart';
@@ -20,6 +21,7 @@ import 'chats_view.dart';
 import 'home_view.dart';
 import 'map_view.dart';
 import 'schedule_conflict_resolution_view.dart';
+import 'widgets/activity_rating_sheet.dart';
 import 'widgets/bottom_bar.dart';
 
 class MainShell extends StatefulWidget {
@@ -41,6 +43,11 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   static const _requestPollInterval = Duration(minutes: 1);
   Timer? _requestPoll;
   bool _checkingScheduleConflicts = false;
+
+  final ActivityRatingModel _ratingModel = ActivityRatingModel();
+  // At most one rating prompt per app opening or resume.
+  bool _ratingOffered = false;
+  bool _offeringRating = false;
 
   late final HomeDiscoveryController _discoveryController =
       HomeDiscoveryController(activitiesModel: _activitiesModel);
@@ -78,7 +85,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     unawaited(_authModel.refreshIfEmailChangePending());
 
     // Loads hosted, participating, and public activities.
-    _loadActivities();
+    unawaited(_loadActivities().then((_) => _offerActivityRating()));
 
     WidgetsBinding.instance.addObserver(this);
     _requestPoll = Timer.periodic(
@@ -105,7 +112,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      unawaited(_loadActivities());
+      _ratingOffered = false;
+      unawaited(_loadActivities().then((_) => _offerActivityRating()));
       unawaited(_discoveryController.loadFeed(isSilent: true));
       _loadPendingRequestCount();
       unawaited(_notifications.refresh());
@@ -167,6 +175,25 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       // A failed conflict lookup should not prevent the rest of the app loading.
     } finally {
       _checkingScheduleConflicts = false;
+    }
+  }
+
+  // Offers one ended activity to rate, after activities and any schedule
+  // conflict prompt have loaded. Never covers another screen or sheet.
+  Future<void> _offerActivityRating() async {
+    if (_ratingOffered || _offeringRating || !mounted) return;
+    _offeringRating = true;
+    try {
+      final pending = await _ratingModel.fetchPending();
+      if (pending.isEmpty || !mounted) return;
+      if (ModalRoute.of(context)?.isCurrent != true) return;
+
+      _ratingOffered = true;
+      await showActivityRatingSheet(context: context, pending: pending.first);
+    } catch (_) {
+      // Rating is optional; a failed lookup is retried on the next opening.
+    } finally {
+      _offeringRating = false;
     }
   }
 

@@ -109,6 +109,30 @@ class ActivitiesModel {
     return (response as num?)?.toInt() ?? 0;
   }
 
+  // A page of a user's ended activities, newest first. Only the user and
+  // their friends get results; locations are never included.
+  Future<UserActivityHistoryPage> fetchUserRecentActivities({
+    required String userId,
+    int limit = 10,
+    int offset = 0,
+  }) async {
+    final response = await _supabase.rpc(
+      'get_user_recent_activities',
+      params: {
+        'target_user_id': userId,
+        'p_limit': limit,
+        'p_offset': offset,
+      },
+    );
+    final map = Map<String, dynamic>.from(response as Map);
+
+    return UserActivityHistoryPage(
+      allowed: map['allowed'] as bool? ?? false,
+      activities: _mapRows(map['activities'] as List? ?? const []),
+      hasMore: map['has_more'] as bool? ?? false,
+    );
+  }
+
   // Kept temporarily for callers that still use the previous method name.
   Future<List<Activity>> fetchJoined() {
     return fetchParticipating();
@@ -466,4 +490,18 @@ class ActivitiesModel {
   List<Activity> _mapRows(List<dynamic> rows) {
     return rows.cast<Map<String, dynamic>>().map(Activity.fromMap).toList();
   }
+}
+
+// One page of another user's activity history.
+class UserActivityHistoryPage {
+  const UserActivityHistoryPage({
+    required this.allowed,
+    required this.activities,
+    required this.hasMore,
+  });
+
+  // False when the viewer may not see this user's history.
+  final bool allowed;
+  final List<Activity> activities;
+  final bool hasMore;
 }
