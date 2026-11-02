@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../controllers/support_controller.dart';
@@ -54,48 +53,62 @@ class _SupportViewState extends State<SupportView> {
     return Scaffold(
       backgroundColor: SynkColors.background,
       body: SafeArea(
-        child: Column(
-          children: [
-            SettingsHeader(title: l10n.contactSupport),
-            Expanded(
-              child: ListenableBuilder(
-                listenable: _controller,
-                builder: (context, _) => ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        child: ListenableBuilder(
+          listenable: _controller,
+          builder: (context, _) => Column(
+            children: [
+              SettingsHeader(title: l10n.contactSupport),
+              Expanded(
+                child: ListView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
                   children: [
                     Text(
-                      l10n.supportIntro,
+                      l10n.supportTitle,
                       style: const TextStyle(
-                        fontSize: 15,
-                        height: 1.4,
-                        fontWeight: FontWeight.w500,
-                        color: SynkColors.textSecondary,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.6,
+                        color: SynkColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: CupertinoSlidingSegmentedControl<SupportCategory>(
-                        groupValue: _controller.category,
-                        backgroundColor: SynkColors.textSecondary.withValues(
-                          alpha: 0.10,
-                        ),
-                        thumbColor: Colors.white,
-                        padding: const EdgeInsets.all(3),
-                        onValueChanged: (value) {
-                          if (value != null) _controller.setCategory(value);
-                        },
-                        children: {
-                          SupportCategory.problem: _Segment(l10n.supportProblem),
-                          SupportCategory.feedback: _Segment(
+                    Row(
+                      children: [
+                        for (final (category, icon, label) in [
+                          (
+                            SupportCategory.problem,
+                            Icons.bug_report_outlined,
+                            l10n.supportProblem,
+                          ),
+                          (
+                            SupportCategory.feedback,
+                            Icons.lightbulb_outline_rounded,
                             l10n.supportFeedback,
                           ),
-                          SupportCategory.other: _Segment(l10n.supportOther),
-                        },
-                      ),
+                          (
+                            SupportCategory.other,
+                            Icons.waving_hand_outlined,
+                            l10n.supportOther,
+                          ),
+                        ]) ...[
+                          if (category != SupportCategory.problem)
+                            const SizedBox(width: 10),
+                          Expanded(
+                            child: _CategoryCard(
+                              icon: icon,
+                              label: label,
+                              selected: _controller.category == category,
+                              onTap: () => _controller.setCategory(category),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     const SizedBox(height: 16),
                     Container(
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.85),
                         borderRadius: BorderRadius.circular(18),
@@ -105,12 +118,11 @@ class _SupportViewState extends State<SupportView> {
                           ),
                         ),
                       ),
-                      padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
                       child: TextField(
                         controller: _field,
                         onChanged: _controller.setMessage,
-                        minLines: 7,
-                        maxLines: 12,
+                        minLines: 6,
+                        maxLines: null,
                         maxLength: SupportModel.maxLength,
                         textCapitalization: TextCapitalization.sentences,
                         style: const TextStyle(
@@ -121,10 +133,7 @@ class _SupportViewState extends State<SupportView> {
                         ),
                         decoration: InputDecoration(
                           border: InputBorder.none,
-                          hintText: _controller.category ==
-                                  SupportCategory.feedback
-                              ? l10n.supportFeedbackHint
-                              : l10n.supportProblemHint,
+                          hintText: l10n.supportIntro,
                           hintStyle: const TextStyle(
                             fontSize: 15,
                             color: Color(0xFF9CA3AF),
@@ -136,19 +145,30 @@ class _SupportViewState extends State<SupportView> {
                         ),
                       ),
                     ),
+                  ],
+                ),
+              ),
+              // Pinned to the bottom, and lifted above the keyboard.
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
                     if (_controller.email != null) ...[
-                      const SizedBox(height: 12),
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Icon(
                             Icons.mail_outline_rounded,
-                            size: 16,
+                            size: 15,
                             color: SynkColors.textSecondary,
                           ),
                           const SizedBox(width: 6),
-                          Expanded(
+                          Flexible(
                             child: Text(
                               l10n.supportReplyTo(_controller.email!),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
@@ -158,39 +178,81 @@ class _SupportViewState extends State<SupportView> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 10),
                     ],
-                    const SizedBox(height: 28),
                     SettingsButton(
                       label: l10n.send,
                       busy: _controller.isSending,
-                      onPressed: _controller.canSend ? _send : null,
+                      onPressed: _controller.hasText ? _send : null,
                     ),
                   ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _Segment extends StatelessWidget {
-  const _Segment(this.label);
+class _CategoryCard extends StatelessWidget {
+  const _CategoryCard({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
+  final IconData icon;
   final String label;
+  final bool selected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w700,
-          color: SynkColors.textPrimary,
+    final color = selected ? SynkColors.orangeDark : SynkColors.textSecondary;
+
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: Material(
+        color: selected
+            ? SynkColors.orange.withValues(alpha: 0.14)
+            : Colors.white.withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: selected
+                    ? SynkColors.orangeDark
+                    : SynkColors.textSecondary.withValues(alpha: 0.10),
+                width: selected ? 1.4 : 1,
+              ),
+            ),
+            child: Column(
+              children: [
+                Icon(icon, size: 22, color: color),
+                const SizedBox(height: 6),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                    color: selected
+                        ? SynkColors.orangeDark
+                        : SynkColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

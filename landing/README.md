@@ -10,6 +10,7 @@ it with `verifyOTP` (see `lib/models/auth_deep_link_handler.dart`).
 | `reset-password.html` | Reset password | `io.supabase.synk://reset-password?token=…`               |
 | `change-email.html`   | Change email   | `io.supabase.synk://login-callback?token=…&type=email_change` |
 | `expired.html`        | (any, when Supabase reports an expired or used link) | `io.supabase.synk://login-callback` |
+| `support-reply.html`  | Support message (team inbox) | Not opened in the app; sends a reply through the `reply-support` function |
 
 Sign-up, magic link and email change links are confirmed on the page itself
 (Supabase `/auth/v1/verify`, using `config.js`), so it can show the real

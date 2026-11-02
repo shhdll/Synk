@@ -2830,7 +2830,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get theTeam => 'الفريق';
 
   @override
-  String get madeInRiyadh => 'صُنع في الرياض';
+  String get madeInRiyadh => 'صنع في الرياض';
 
   @override
   String appVersion(Object version, Object build) {
@@ -2884,23 +2884,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get contactSupport => 'تواصل مع الدعم';
 
   @override
-  String get supportIntro => 'أخبرنا بالمشكلة أو بما تود رؤيته. نقرأ كل رسالة.';
+  String get supportIntro =>
+      'مشكلة، فكرة أو مجرد سلام. شخص حقيقي يقرأ كل رسالة';
 
   @override
   String get supportProblem => 'مشكلة';
 
   @override
-  String get supportFeedback => 'اقتراح';
+  String get supportFeedback => 'فكرة';
 
   @override
   String get supportOther => 'أخرى';
-
-  @override
-  String get supportProblemHint =>
-      'ماذا حدث؟ خطوات الوصول للمشكلة تساعدنا كثيرًا.';
-
-  @override
-  String get supportFeedbackHint => 'ما الذي يجعل Synk أفضل لك؟';
 
   @override
   String supportReplyTo(Object email) {
@@ -2908,13 +2902,13 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get supportSentTitle => 'تم إرسال رسالتك';
+  String get supportSentTitle => 'وصلتنا رسالتك';
 
   @override
-  String get supportSentMessage => 'سنرد عليك عبر البريد الإلكتروني.';
+  String get supportSentMessage => 'راقب بريدك، سنرد قريبا';
 
   @override
-  String get supportRateLimited => 'أرسلت عدة رسائل اليوم. حاول مرة أخرى غدًا.';
+  String get supportRateLimited => 'رسائل كثيرة ليوم واحد. حاول مرة أخرى غدا';
 
   @override
   String get account => 'الحساب';
@@ -2939,7 +2933,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deleteAccountItemFriends => 'الأصدقاء والتقييمات وقائمة الحظر';
 
   @override
-  String get deleteAccountCantUndo => 'لا يمكن التراجع عن ذلك.';
+  String get deleteAccountCantUndo => 'لا يمكن التراجع عن ذلك';
 
   @override
   String get enterPasswordToContinue => 'أدخل كلمة المرور للمتابعة';
@@ -2948,7 +2942,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deleteAccountConfirmTitle => 'حذف حسابك؟';
 
   @override
-  String get deleteAccountConfirmMessage => 'سيتم حذف كل شيء نهائيًا.';
+  String get deleteAccountConfirmMessage => 'سيتم حذف كل شيء نهائيا';
 
   @override
   String get keepAccount => 'الإبقاء على حسابي';
@@ -2960,13 +2954,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get weather => 'الطقس';
 
   @override
-  String get loadingForecast => 'جارٍ تحميل التوقعات…';
+  String get loadingForecast => 'جار تحميل التوقعات…';
 
   @override
-  String get forecastTooFarAhead => 'تظهر التوقعات قبل الموعد بأسبوعين تقريبًا';
+  String get forecastTooFarAhead => 'تظهر التوقعات قبل الموعد بأسبوعين تقريبا';
 
   @override
-  String get weatherUnavailable => 'الطقس غير متاح حاليًا';
+  String get weatherUnavailable => 'الطقس غير متاح حاليا';
 
   @override
   String rainChance(int percent) {
@@ -2979,10 +2973,10 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get weatherClear => 'صافٍ';
+  String get weatherClear => 'صاف';
 
   @override
-  String get weatherPartlyCloudy => 'غائم جزئيًا';
+  String get weatherPartlyCloudy => 'غائم جزئيا';
 
   @override
   String get weatherCloudy => 'غائم';
@@ -3001,4 +2995,15 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get weatherStorm => 'عاصفة رعدية';
+
+  @override
+  String get notificationSettings => 'إعدادات الإشعارات';
+
+  @override
+  String notifActivityReminder(Object title) {
+    return 'يبدأ $title خلال ساعة';
+  }
+
+  @override
+  String get supportTitle => 'كلنا آذان صاغية';
 }

@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Reply · Synk Support</title>
+    <link rel="icon" type="image/png" href="logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .content.reply {
+        max-width: 520px;
+        justify-content: flex-start;
+        text-align: left;
+        align-items: stretch;
+      }
+
+      .card {
+        margin-top: 20px;
+        padding: 22px;
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: 0 10px 30px rgba(45, 42, 50, 0.08);
+      }
+
+      .meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .tag {
+        padding: 3px 12px;
+        border-radius: 999px;
+        background: #fce3d4;
+        color: #ca602f;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .tag.feedback {
+        background: #dcefec;
+        color: #2a6f65;
+      }
+
+      .tag.other {
+        background: #ecedef;
+        color: #5f6672;
+      }
+
+      .who {
+        margin: 12px 0 2px;
+        font-size: 18px;
+        font-weight: 800;
+      }
+
+      .quote {
+        margin-top: 14px;
+        padding: 14px 16px;
+        border-left: 4px solid var(--coral);
+        border-radius: 12px;
+        background: #fff5ef;
+        font-size: 15px;
+        line-height: 1.55;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .label {
+        margin: 22px 0 8px;
+        font-size: 13px;
+        font-weight: 800;
+        color: var(--muted);
+      }
+
+      textarea.field {
+        min-height: 160px;
+        border-radius: 18px;
+        border-color: rgba(107, 114, 128, 0.15);
+        resize: vertical;
+        line-height: 1.5;
+      }
+
+      .previous {
+        margin-top: 14px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: #eef6f3;
+        font-size: 13px;
+        color: #2a6f65;
+        white-space: pre-wrap;
+      }
+
+      .card .button {
+        max-width: none;
+        margin-top: 14px;
+      }
+
+      .done {
+        text-align: center;
+        align-items: center;
+        display: flex;
+        flex-direction: column;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="orbs" aria-hidden="true">
+      <div class="orb teal"></div>
+      <div class="orb sand"></div>
+      <div class="orb peach"></div>
+    </div>
+
+    <header class="brand"><img src="logo.png" alt="" />Synk</header>
+
+    <main class="content reply">
+      <h1 id="title">Reply</h1>
+      <p id="status" class="subtitle">Loading the message…</p>
+
+      <section id="ticket" class="card" hidden>
+        <div class="meta">
+          <span id="tag" class="tag"></span>
+          <span id="date"></span>
+        </div>
+        <p id="who" class="who"></p>
+        <p id="email" class="hint"></p>
+        <div id="message" class="quote"></div>
+        <div id="previous" class="previous" hidden></div>
+
+        <form id="form" novalidate>
+          <p class="label">Your reply</p>
+          <textarea id="reply" class="field" maxlength="5000" aria-label="Your reply"></textarea>
+          <p id="error" class="form-error" role="alert" hidden></p>
+          <button id="send" class="button" type="submit" disabled>Send reply</button>
+        </form>
+      </section>
+
+      <section id="done" class="card done" hidden>
+        <div class="badge">
+          <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+        </div>
+        <p id="done-text" class="who"></p>
+        <p class="hint">They'll see your reply with their message quoted under it.</p>
+      </section>
+    </main>
+
+    <script src="config.js"></script>
+    <script>
+      (function () {
+        var params = new URLSearchParams(location.search);
+        var ticket = params.get("ticket") || "";
+        var token = params.get("token") || "";
+        var labels = { problem: "Bug", feedback: "Idea", other: "Other" };
+        var name = "";
+
+        var $ = function (id) {
+          return document.getElementById(id);
+        };
+
+        function call(body) {
+          body.ticket = ticket;
+          body.token = token;
+          return fetch(window.SYNK_SUPABASE.url + "/functions/v1/reply-support", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: window.SYNK_SUPABASE.anonKey,
+            },
+            body: JSON.stringify(body),
+          }).then(function (response) {
+            return response.json().then(function (data) {
+              if (!response.ok) throw new Error(data.error || "failed");
+              return data;
+            });
+          });
+        }
+
+        function fail(text) {
+          $("title").textContent = "Hmm";
+          $("status").textContent = text;
+        }
+
+        if (!ticket || !token) {
+          fail("This link is missing something. Open it from the support email.");
+          return;
+        }
+
+        call({ action: "get" })
+          .then(function (data) {
+            name = data.name;
+            var first = name.split(" ")[0];
+            $("title").textContent = "Reply to " + first;
+            $("status").hidden = true;
+            $("tag").textContent = labels[data.category] || "Other";
+            $("tag").className = "tag " + data.category;
+            $("date").textContent = new Date(data.created_at).toLocaleString();
+            $("who").textContent = name;
+            $("email").textContent = data.email;
+            $("message").textContent = data.message;
+            $("send").textContent = "Send reply to " + first;
+            if (data.reply) {
+              $("previous").hidden = false;
+              $("previous").textContent =
+                "Already replied on " +
+                new Date(data.replied_at).toLocaleString() +
+                ":\n" +
+                data.reply;
+            }
+            $("ticket").hidden = false;
+            $("reply").focus();
+          })
+          .catch(function (error) {
+            fail(
+              error.message === "not_found"
+                ? "We couldn't find this message. The link may be wrong."
+                : "Couldn't load the message. Try again in a moment."
+            );
+          });
+
+        $("reply").addEventListener("input", function () {
+          $("send").disabled = $("reply").value.trim().length === 0;
+          $("error").hidden = true;
+        });
+
+        $("form").addEventListener("submit", function (event) {
+          event.preventDefault();
+          var text = $("reply").value.trim();
+          if (!text) return;
+          $("send").disabled = true;
+          $("send").textContent = "Sending…";
+          call({ action: "send", reply: text })
+            .then(function () {
+              $("ticket").hidden = true;
+              $("title").hidden = true;
+              $("done-text").textContent = "Sent to " + name.split(" ")[0] + "!";
+              $("done").hidden = false;
+            })
+            .catch(function () {
+              $("error").textContent = "Couldn't send it. Try again.";
+              $("error").hidden = false;
+              $("send").disabled = false;
+              $("send").textContent = "Send reply to " + name.split(" ")[0];
+            });
+        });
+      })();
+    </script>
+  </body>
+</html>

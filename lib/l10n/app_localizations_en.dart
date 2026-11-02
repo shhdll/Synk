@@ -2960,23 +2960,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get supportIntro =>
-      'Tell us what went wrong or what you\'d like to see. We read every message.';
+      'Bugs, ideas or a quick hello. A real human reads every one.';
 
   @override
-  String get supportProblem => 'Problem';
+  String get supportProblem => 'Bug';
 
   @override
-  String get supportFeedback => 'Feedback';
+  String get supportFeedback => 'Idea';
 
   @override
   String get supportOther => 'Other';
-
-  @override
-  String get supportProblemHint =>
-      'What happened? Steps to get there help a lot.';
-
-  @override
-  String get supportFeedbackHint => 'What would make Synk better for you?';
 
   @override
   String supportReplyTo(Object email) {
@@ -2984,14 +2977,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get supportSentTitle => 'Message sent';
+  String get supportSentTitle => 'Message sent!';
 
   @override
-  String get supportSentMessage => 'We\'ll get back to you by email.';
+  String get supportSentMessage => 'Keep an eye on your inbox.';
 
   @override
   String get supportRateLimited =>
-      'You\'ve sent a few messages today. Try again tomorrow.';
+      'That\'s a lot of messages for one day. Try again tomorrow.';
 
   @override
   String get account => 'Account';
@@ -3082,4 +3075,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get weatherStorm => 'Thunderstorm';
+
+  @override
+  String get notificationSettings => 'Notification settings';
+
+  @override
+  String notifActivityReminder(Object title) {
+    return '$title starts in an hour.';
+  }
+
+  @override
+  String get supportTitle => 'We\'re all ears';
 }

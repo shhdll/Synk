@@ -5195,19 +5195,19 @@ abstract class AppLocalizations {
   /// No description provided for @supportIntro.
   ///
   /// In en, this message translates to:
-  /// **'Tell us what went wrong or what you\'d like to see. We read every message.'**
+  /// **'Bugs, ideas or a quick hello. A real human reads every one.'**
   String get supportIntro;
 
   /// No description provided for @supportProblem.
   ///
   /// In en, this message translates to:
-  /// **'Problem'**
+  /// **'Bug'**
   String get supportProblem;
 
   /// No description provided for @supportFeedback.
   ///
   /// In en, this message translates to:
-  /// **'Feedback'**
+  /// **'Idea'**
   String get supportFeedback;
 
   /// No description provided for @supportOther.
@@ -5215,18 +5215,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Other'**
   String get supportOther;
-
-  /// No description provided for @supportProblemHint.
-  ///
-  /// In en, this message translates to:
-  /// **'What happened? Steps to get there help a lot.'**
-  String get supportProblemHint;
-
-  /// No description provided for @supportFeedbackHint.
-  ///
-  /// In en, this message translates to:
-  /// **'What would make Synk better for you?'**
-  String get supportFeedbackHint;
 
   /// No description provided for @supportReplyTo.
   ///
@@ -5237,19 +5225,19 @@ abstract class AppLocalizations {
   /// No description provided for @supportSentTitle.
   ///
   /// In en, this message translates to:
-  /// **'Message sent'**
+  /// **'Message sent!'**
   String get supportSentTitle;
 
   /// No description provided for @supportSentMessage.
   ///
   /// In en, this message translates to:
-  /// **'We\'ll get back to you by email.'**
+  /// **'Keep an eye on your inbox.'**
   String get supportSentMessage;
 
   /// No description provided for @supportRateLimited.
   ///
   /// In en, this message translates to:
-  /// **'You\'ve sent a few messages today. Try again tomorrow.'**
+  /// **'That\'s a lot of messages for one day. Try again tomorrow.'**
   String get supportRateLimited;
 
   /// No description provided for @account.
@@ -5413,6 +5401,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Thunderstorm'**
   String get weatherStorm;
+
+  /// No description provided for @notificationSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification settings'**
+  String get notificationSettings;
+
+  /// No description provided for @notifActivityReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'{title} starts in an hour.'**
+  String notifActivityReminder(Object title);
+
+  /// No description provided for @supportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'re all ears'**
+  String get supportTitle;
 }
 
 class _AppLocalizationsDelegate

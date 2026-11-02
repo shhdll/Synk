@@ -17,7 +17,6 @@ class SupportModel {
   SupportModel({SupabaseClient? client})
     : _supabase = client ?? Supabase.instance.client;
 
-  static const int minLength = 10;
   static const int maxLength = 2000;
 
   final SupabaseClient _supabase;

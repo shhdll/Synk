@@ -24,3 +24,8 @@ verify_jwt = false
 enabled = true
 # Checks the user token itself.
 verify_jwt = false
+
+[functions.reply-support]
+enabled = true
+# Checks the ticket's reply token itself.
+verify_jwt = false

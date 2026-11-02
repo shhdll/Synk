@@ -16,7 +16,6 @@ import 'edit_profile_view.dart';
 import 'friends_view.dart';
 import 'logout_view.dart';
 import 'settings_view.dart';
-import 'widgets/app_header.dart';
 import 'widgets/field_editor_sheet.dart';
 import 'widgets/option_picker_sheet.dart';
 import 'widgets/profile_info_row.dart';
@@ -248,23 +247,17 @@ class _ProfileViewState extends State<ProfileView> {
                   ),
                   const SizedBox(width: 4),
                 ],
-                const Expanded(child: AppHeader()),
-                Material(
-                  color: Colors.white,
-                  shape: const CircleBorder(),
-                  elevation: 1,
-                  shadowColor: Colors.black12,
-                  child: IconButton(
-                    tooltip: context.l10n.settings,
-                    onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const SettingsView(),
-                      ),
+                const Spacer(),
+                IconButton(
+                  tooltip: context.l10n.settings,
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const SettingsView(),
                     ),
-                    icon: const Icon(
-                      Icons.settings_rounded,
-                      color: SynkColors.textPrimary,
-                    ),
+                  ),
+                  icon: const Icon(
+                    Icons.settings_outlined,
+                    color: SynkColors.textPrimary,
                   ),
                 ),
               ],

@@ -341,17 +341,6 @@ class _HomeViewState extends State<HomeView> {
                               StreakChip(activityStore: widget.activityStore),
                             ],
                           ),
-                          if (username.isNotEmpty && username != name)
-                            Text(
-                              '@$username',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: SynkColors.textSecondary,
-                              ),
-                            ),
                         ],
                       ),
                     ),

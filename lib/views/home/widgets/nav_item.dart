@@ -14,6 +14,7 @@ class NavItem extends StatelessWidget {
     required this.selected,
     required this.onTap,
     this.badgeCount = 0,
+    this.iconSize = 32,
   });
 
   final IconData? icon;
@@ -22,6 +23,9 @@ class NavItem extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
   final int badgeCount;
+
+  // Some icons fill more of their box; they're drawn smaller to look even.
+  final double iconSize;
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +56,12 @@ class NavItem extends StatelessWidget {
                         child: ImageIcon(image, size: 26, color: color),
                       ),
                     )
-                  : Icon(icon, size: 32, color: color),
+                  : SizedBox.square(
+                      dimension: 32,
+                      child: Center(
+                        child: Icon(icon, size: iconSize, color: color),
+                      ),
+                    ),
             ),
           ),
         ),

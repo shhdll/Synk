@@ -16,10 +16,7 @@ class SupportController extends ChangeNotifier {
   bool get isSending => _isSending;
   String? get email => _model.userEmail;
   int get length => _message.trim().length;
-  bool get canSend =>
-      !_isSending &&
-      length >= SupportModel.minLength &&
-      length <= SupportModel.maxLength;
+  bool get hasText => length > 0;
 
   void setCategory(SupportCategory value) {
     _category = value;
