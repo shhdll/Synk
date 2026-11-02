@@ -348,8 +348,8 @@ class ChatModel {
   }
 
   // Opens the photo picker; null when the user cancels.
-  Future<XFile?> pickPhoto() => _picker.pickImage(
-    source: ImageSource.gallery,
+  Future<XFile?> pickPhoto({bool fromCamera = false}) => _picker.pickImage(
+    source: fromCamera ? ImageSource.camera : ImageSource.gallery,
     maxWidth: 1600,
     imageQuality: 85,
   );

@@ -2240,6 +2240,18 @@ abstract class AppLocalizations {
   /// **'Photo'**
   String get photo;
 
+  /// No description provided for @photos.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos'**
+  String get photos;
+
+  /// No description provided for @camera.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get camera;
+
   /// No description provided for @addAPhoto.
   ///
   /// In en, this message translates to:
@@ -4640,17 +4652,17 @@ abstract class AppLocalizations {
   /// **'Chats'**
   String get chats;
 
+  /// No description provided for @catchUpWithFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Catch up with friends!'**
+  String get catchUpWithFriends;
+
   /// No description provided for @activityChats.
   ///
   /// In en, this message translates to:
   /// **'Activity chats'**
   String get activityChats;
-
-  /// No description provided for @activeChatsCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{n} active'**
-  String activeChatsCount(int n);
 
   /// No description provided for @searchChats.
   ///
@@ -4813,6 +4825,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You already have a chat with all your friends'**
   String get youreChattingWithAllYourFriends;
+
+  /// No description provided for @findNewFriendsToChatWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Find new friends to chat with!'**
+  String get findNewFriendsToChatWith;
 
   /// No description provided for @messageWasDeleted.
   ///

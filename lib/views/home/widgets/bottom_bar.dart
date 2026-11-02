@@ -120,8 +120,7 @@ class BottomBar extends StatelessWidget {
                       onTap: () => onSelect(HomeTab.map),
                     ),
                     NavItem(
-                      icon: Icons.chat_rounded,
-                      iconSize: 27,
+                      icon: Icons.sms_outlined,
                       label: context.l10n.chat,
                       selected: selected == HomeTab.chat,
                       badgeCount: chatBadge,

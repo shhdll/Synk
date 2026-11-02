@@ -211,13 +211,15 @@ class _ChatRoomViewState extends State<ChatRoomView> {
   }
 
   // The + button: a photo, a location or an activity.
-  Future<void> _sendAttachment() async {
+  Future<void> _sendAttachment(Rect button) async {
     if (_isSending) return;
-    final choice = await showAttachmentSheet(context);
+    final choice = await showAttachmentMenu(context, button);
     if (!mounted || choice == null) return;
     switch (choice) {
       case ChatAttachment.photo:
         await _sendPhoto();
+      case ChatAttachment.camera:
+        await _sendPhoto(fromCamera: true);
       case ChatAttachment.location:
         await _sendLocation();
       case ChatAttachment.activity:
@@ -248,10 +250,10 @@ class _ChatRoomViewState extends State<ChatRoomView> {
     await _deliver(activityId: activity.id);
   }
 
-  Future<void> _sendPhoto() async {
+  Future<void> _sendPhoto({bool fromCamera = false}) async {
     final XFile? file;
     try {
-      file = await _model.pickPhoto();
+      file = await _model.pickPhoto(fromCamera: fromCamera);
     } catch (error) {
       debugPrint('SYNK: photo picker failed: $error');
       return;
@@ -534,10 +536,19 @@ class _ChatRoomViewState extends State<ChatRoomView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: SynkColors.background,
+      // Darker beige with a hairline and soft shadow, to lift it off the
+      // messages.
       appBar: AppBar(
-        backgroundColor: SynkColors.background,
-        elevation: 0,
+        backgroundColor: SynkColors.backgroundDark,
+        elevation: 3,
+        scrolledUnderElevation: 3,
+        shadowColor: Colors.black26,
         surfaceTintColor: Colors.transparent,
+        shape: Border(
+          bottom: BorderSide(
+            color: SynkColors.textSecondary.withValues(alpha: 0.14),
+          ),
+        ),
         titleSpacing: 0,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
@@ -823,20 +834,30 @@ class _ChatRoomViewState extends State<ChatRoomView> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            IconButton.filled(
-              tooltip: context.l10n.sendSomething,
-              onPressed: _isSending ? null : _sendAttachment,
-              style: IconButton.styleFrom(
-                backgroundColor: SynkColors.textSecondary.withValues(
-                  alpha: 0.12,
+            Builder(
+              builder: (buttonContext) => IconButton.filled(
+                tooltip: context.l10n.sendSomething,
+                onPressed: _isSending
+                    ? null
+                    : () {
+                        final box =
+                            buttonContext.findRenderObject() as RenderBox;
+                        _sendAttachment(
+                          box.localToGlobal(Offset.zero) & box.size,
+                        );
+                      },
+                style: IconButton.styleFrom(
+                  backgroundColor: SynkColors.textSecondary.withValues(
+                    alpha: 0.12,
+                  ),
+                  disabledBackgroundColor: SynkColors.textSecondary.withValues(
+                    alpha: 0.06,
+                  ),
+                  foregroundColor: SynkColors.textPrimary,
+                  fixedSize: const Size(46, 46),
                 ),
-                disabledBackgroundColor: SynkColors.textSecondary.withValues(
-                  alpha: 0.06,
-                ),
-                foregroundColor: SynkColors.textPrimary,
-                fixedSize: const Size(46, 46),
+                icon: const Icon(Icons.add_rounded, size: 26),
               ),
-              icon: const Icon(Icons.add_rounded, size: 26),
             ),
             const SizedBox(width: 6),
             Expanded(
@@ -1198,7 +1219,13 @@ class _MessageBubble extends StatelessWidget {
           : const EdgeInsets.fromLTRB(12, 8, 12, 6),
       decoration: BoxDecoration(
         color: isMine ? SynkColors.orangeDark : Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        // The corner nearest the sender is pulled in, like a tail.
+        borderRadius: BorderRadiusDirectional.only(
+          topStart: const Radius.circular(18),
+          topEnd: const Radius.circular(18),
+          bottomStart: Radius.circular(isMine ? 18 : 4),
+          bottomEnd: Radius.circular(isMine ? 4 : 18),
+        ),
         border: isMine
             ? null
             : Border.all(
