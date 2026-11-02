@@ -14,3 +14,18 @@ entrypoint = "./functions/places-proxy/index.ts"
 enabled = true
 # The function validates a random webhook secret from Supabase Vault itself.
 verify_jwt = false
+
+[functions.submit-support]
+enabled = true
+# Checks the user token itself.
+verify_jwt = false
+
+[functions.delete-account]
+enabled = true
+# Checks the user token itself.
+verify_jwt = false
+
+[functions.reply-support]
+enabled = true
+# Checks the ticket's reply token itself.
+verify_jwt = false

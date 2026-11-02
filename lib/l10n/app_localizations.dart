@@ -5071,6 +5071,354 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t load activities.'**
   String get couldNotLoadActivities;
+
+  /// No description provided for @privacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get privacy;
+
+  /// No description provided for @support.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get support;
+
+  /// No description provided for @aboutSynk.
+  ///
+  /// In en, this message translates to:
+  /// **'About Synk'**
+  String get aboutSynk;
+
+  /// No description provided for @ourStory.
+  ///
+  /// In en, this message translates to:
+  /// **'Our story'**
+  String get ourStory;
+
+  /// No description provided for @ourStoryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'[Our story goes here.]'**
+  String get ourStoryBody;
+
+  /// No description provided for @theTeam.
+  ///
+  /// In en, this message translates to:
+  /// **'The team'**
+  String get theTeam;
+
+  /// No description provided for @madeInRiyadh.
+  ///
+  /// In en, this message translates to:
+  /// **'Made in Riyadh'**
+  String get madeInRiyadh;
+
+  /// No description provided for @appVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version} ({build})'**
+  String appVersion(Object version, Object build);
+
+  /// No description provided for @notifPrefReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get notifPrefReminders;
+
+  /// No description provided for @notifPrefRemindersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'An hour before an activity you joined'**
+  String get notifPrefRemindersHint;
+
+  /// No description provided for @notifPrefActivityUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity updates'**
+  String get notifPrefActivityUpdates;
+
+  /// No description provided for @notifPrefActivityUpdatesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes, cancellations and full activities'**
+  String get notifPrefActivityUpdatesHint;
+
+  /// No description provided for @notifPrefJoinRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Join requests'**
+  String get notifPrefJoinRequests;
+
+  /// No description provided for @notifPrefJoinRequestsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'New requests and replies to yours'**
+  String get notifPrefJoinRequestsHint;
+
+  /// No description provided for @notifPrefWaitlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Waitlist'**
+  String get notifPrefWaitlist;
+
+  /// No description provided for @notifPrefWaitlistHint.
+  ///
+  /// In en, this message translates to:
+  /// **'When a spot opens up for you'**
+  String get notifPrefWaitlistHint;
+
+  /// No description provided for @notifPrefPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get notifPrefPeople;
+
+  /// No description provided for @notifPrefFriendRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend requests'**
+  String get notifPrefFriendRequests;
+
+  /// No description provided for @notifPrefFriendRequestsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'New requests and accepted ones'**
+  String get notifPrefFriendRequestsHint;
+
+  /// No description provided for @notifPrefOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get notifPrefOther;
+
+  /// No description provided for @notifPrefMarketing.
+  ///
+  /// In en, this message translates to:
+  /// **'News and tips'**
+  String get notifPrefMarketing;
+
+  /// No description provided for @notifPrefMarketingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'New features and things to try'**
+  String get notifPrefMarketingHint;
+
+  /// No description provided for @contactSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact support'**
+  String get contactSupport;
+
+  /// No description provided for @supportIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Bugs, ideas or a quick hello. A real human reads every one.'**
+  String get supportIntro;
+
+  /// No description provided for @supportProblem.
+  ///
+  /// In en, this message translates to:
+  /// **'Bug'**
+  String get supportProblem;
+
+  /// No description provided for @supportFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Idea'**
+  String get supportFeedback;
+
+  /// No description provided for @supportOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get supportOther;
+
+  /// No description provided for @supportReplyTo.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll reply to {email}'**
+  String supportReplyTo(Object email);
+
+  /// No description provided for @supportSentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Message sent!'**
+  String get supportSentTitle;
+
+  /// No description provided for @supportSentMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep an eye on your inbox.'**
+  String get supportSentMessage;
+
+  /// No description provided for @supportRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s a lot of messages for one day. Try again tomorrow.'**
+  String get supportRateLimited;
+
+  /// No description provided for @account.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get account;
+
+  /// No description provided for @deleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get deleteAccount;
+
+  /// No description provided for @deleteAccountIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting your account removes everything tied to it:'**
+  String get deleteAccountIntro;
+
+  /// No description provided for @deleteAccountItemProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile, photos and interests'**
+  String get deleteAccountItemProfile;
+
+  /// No description provided for @deleteAccountItemActivities.
+  ///
+  /// In en, this message translates to:
+  /// **'Activities you host and your spots in others'**
+  String get deleteAccountItemActivities;
+
+  /// No description provided for @deleteAccountItemChats.
+  ///
+  /// In en, this message translates to:
+  /// **'Your chats and messages'**
+  String get deleteAccountItemChats;
+
+  /// No description provided for @deleteAccountItemFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends, ratings and blocks'**
+  String get deleteAccountItemFriends;
+
+  /// No description provided for @deleteAccountCantUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'This can\'t be undone.'**
+  String get deleteAccountCantUndo;
+
+  /// No description provided for @enterPasswordToContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your password to continue'**
+  String get enterPasswordToContinue;
+
+  /// No description provided for @deleteAccountConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete your account?'**
+  String get deleteAccountConfirmTitle;
+
+  /// No description provided for @deleteAccountConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything will be removed for good.'**
+  String get deleteAccountConfirmMessage;
+
+  /// No description provided for @keepAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep my account'**
+  String get keepAccount;
+
+  /// No description provided for @couldNotDeleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t delete your account. Please try again.'**
+  String get couldNotDeleteAccount;
+
+  /// No description provided for @weather.
+  ///
+  /// In en, this message translates to:
+  /// **'Weather'**
+  String get weather;
+
+  /// No description provided for @loadingForecast.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading forecast…'**
+  String get loadingForecast;
+
+  /// No description provided for @forecastTooFarAhead.
+  ///
+  /// In en, this message translates to:
+  /// **'The forecast shows up about 2 weeks before'**
+  String get forecastTooFarAhead;
+
+  /// No description provided for @weatherUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Weather isn\'t available right now'**
+  String get weatherUnavailable;
+
+  /// No description provided for @rainChance.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% rain'**
+  String rainChance(int percent);
+
+  /// No description provided for @windSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'{speed} km/h wind'**
+  String windSpeed(int speed);
+
+  /// No description provided for @weatherFog.
+  ///
+  /// In en, this message translates to:
+  /// **'Foggy'**
+  String get weatherFog;
+
+  /// No description provided for @weatherDrizzle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drizzle'**
+  String get weatherDrizzle;
+
+  /// No description provided for @weatherRain.
+  ///
+  /// In en, this message translates to:
+  /// **'Rain'**
+  String get weatherRain;
+
+  /// No description provided for @weatherSnow.
+  ///
+  /// In en, this message translates to:
+  /// **'Snow'**
+  String get weatherSnow;
+
+  /// No description provided for @weatherStorm.
+  ///
+  /// In en, this message translates to:
+  /// **'Thunderstorm'**
+  String get weatherStorm;
+
+  /// No description provided for @notificationSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification settings'**
+  String get notificationSettings;
+
+  /// No description provided for @notifActivityReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'{title} starts in an hour.'**
+  String notifActivityReminder(Object title);
+
+  /// No description provided for @supportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'re all ears'**
+  String get supportTitle;
 }
 
 class _AppLocalizationsDelegate

@@ -301,7 +301,8 @@ class PushNotificationService {
         type != 'friend_request_accepted' &&
         type != 'host_assigned' &&
         type != 'activity_conflict' &&
-        type != 'activity_full') return;
+        type != 'activity_full' &&
+        type != 'activity_reminder') return;
     final activityId = message.data['activity_id'] as String?;
     final isFriendRequest = type == 'friend_request_received';
     final isFriendAccepted = type == 'friend_request_accepted';
@@ -320,7 +321,8 @@ class PushNotificationService {
         isFriendAccepted ||
         type == 'host_assigned' ||
         type == 'activity_conflict' ||
-        type == 'activity_full';
+        type == 'activity_full' ||
+        type == 'activity_reminder';
     final channelId = activityUpdate
         ? _activityUpdatesChannelId
         : _channelId;

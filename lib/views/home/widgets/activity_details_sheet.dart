@@ -21,6 +21,7 @@ import '../../widgets/anonymous_avatar.dart';
 import '../../widgets/crown_icon.dart';
 import '../../widgets/schedule_conflict_text.dart';
 import 'activity_thumbnail.dart';
+import 'activity_weather_card.dart';
 import 'activity_status_chip.dart';
 import 'overlapping_activity_notice.dart';
 import 'chat_share_sheets.dart';
@@ -496,6 +497,15 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                               _buildTitleAndBadges(),
                               const SizedBox(height: 18),
                               _buildScheduleAndLocationSection(),
+                              if (_currentActivity.hasCoordinates &&
+                                  !_currentActivity.isPast) ...[
+                                const SizedBox(height: 12),
+                                ActivityWeatherCard(
+                                  latitude: _currentActivity.latitude!,
+                                  longitude: _currentActivity.longitude!,
+                                  startsAt: _currentActivity.dateTime,
+                                ),
+                              ],
                               if (_currentActivity.description.isNotEmpty) ...[
                                 const SizedBox(height: 20),
                                 _buildDescriptionSection(),

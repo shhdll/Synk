@@ -2817,4 +2817,191 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get couldNotLoadActivities => 'تعذر تحميل الأنشطة';
+
+  @override
+  String get privacy => 'الخصوصية';
+
+  @override
+  String get support => 'الدعم';
+
+  @override
+  String get aboutSynk => 'عن Synk';
+
+  @override
+  String get ourStory => 'قصتنا';
+
+  @override
+  String get ourStoryBody => '[قصتنا هنا.]';
+
+  @override
+  String get theTeam => 'الفريق';
+
+  @override
+  String get madeInRiyadh => 'صنع في الرياض';
+
+  @override
+  String appVersion(Object version, Object build) {
+    return 'الإصدار $version ($build)';
+  }
+
+  @override
+  String get notifPrefReminders => 'التذكيرات';
+
+  @override
+  String get notifPrefRemindersHint => 'قبل ساعة من نشاط انضممت إليه';
+
+  @override
+  String get notifPrefActivityUpdates => 'تحديثات الأنشطة';
+
+  @override
+  String get notifPrefActivityUpdatesHint =>
+      'التغييرات والإلغاء واكتمال الأنشطة';
+
+  @override
+  String get notifPrefJoinRequests => 'طلبات الانضمام';
+
+  @override
+  String get notifPrefJoinRequestsHint => 'الطلبات الجديدة والردود على طلباتك';
+
+  @override
+  String get notifPrefWaitlist => 'قائمة الانتظار';
+
+  @override
+  String get notifPrefWaitlistHint => 'عندما يتوفر لك مكان';
+
+  @override
+  String get notifPrefPeople => 'الأشخاص';
+
+  @override
+  String get notifPrefFriendRequests => 'طلبات الصداقة';
+
+  @override
+  String get notifPrefFriendRequestsHint => 'الطلبات الجديدة والمقبولة';
+
+  @override
+  String get notifPrefOther => 'أخرى';
+
+  @override
+  String get notifPrefMarketing => 'الأخبار والنصائح';
+
+  @override
+  String get notifPrefMarketingHint => 'ميزات جديدة وأفكار للتجربة';
+
+  @override
+  String get contactSupport => 'تواصل مع الدعم';
+
+  @override
+  String get supportIntro =>
+      'مشكلة، فكرة أو مجرد سلام. شخص حقيقي يقرأ كل رسالة';
+
+  @override
+  String get supportProblem => 'مشكلة';
+
+  @override
+  String get supportFeedback => 'فكرة';
+
+  @override
+  String get supportOther => 'أخرى';
+
+  @override
+  String supportReplyTo(Object email) {
+    return 'سنرد عليك على $email';
+  }
+
+  @override
+  String get supportSentTitle => 'وصلتنا رسالتك';
+
+  @override
+  String get supportSentMessage => 'راقب بريدك، سنرد قريبا';
+
+  @override
+  String get supportRateLimited => 'رسائل كثيرة ليوم واحد. حاول مرة أخرى غدا';
+
+  @override
+  String get account => 'الحساب';
+
+  @override
+  String get deleteAccount => 'حذف الحساب';
+
+  @override
+  String get deleteAccountIntro => 'حذف حسابك يزيل كل ما يرتبط به:';
+
+  @override
+  String get deleteAccountItemProfile => 'ملفك الشخصي وصورك واهتماماتك';
+
+  @override
+  String get deleteAccountItemActivities =>
+      'الأنشطة التي تستضيفها ومشاركاتك في غيرها';
+
+  @override
+  String get deleteAccountItemChats => 'محادثاتك ورسائلك';
+
+  @override
+  String get deleteAccountItemFriends => 'الأصدقاء والتقييمات وقائمة الحظر';
+
+  @override
+  String get deleteAccountCantUndo => 'لا يمكن التراجع عن ذلك';
+
+  @override
+  String get enterPasswordToContinue => 'أدخل كلمة المرور للمتابعة';
+
+  @override
+  String get deleteAccountConfirmTitle => 'حذف حسابك؟';
+
+  @override
+  String get deleteAccountConfirmMessage => 'سيتم حذف كل شيء نهائيا';
+
+  @override
+  String get keepAccount => 'الإبقاء على حسابي';
+
+  @override
+  String get couldNotDeleteAccount => 'تعذر حذف حسابك، حاول مرة أخرى';
+
+  @override
+  String get weather => 'الطقس';
+
+  @override
+  String get loadingForecast => 'جار تحميل التوقعات…';
+
+  @override
+  String get forecastTooFarAhead => 'تظهر التوقعات قبل الموعد بأسبوعين تقريبا';
+
+  @override
+  String get weatherUnavailable => 'الطقس غير متاح حاليا';
+
+  @override
+  String rainChance(int percent) {
+    return 'احتمال مطر $percent%';
+  }
+
+  @override
+  String windSpeed(int speed) {
+    return 'رياح $speed كم/س';
+  }
+
+  @override
+  String get weatherFog => 'ضباب';
+
+  @override
+  String get weatherDrizzle => 'رذاذ';
+
+  @override
+  String get weatherRain => 'مطر';
+
+  @override
+  String get weatherSnow => 'ثلج';
+
+  @override
+  String get weatherStorm => 'عاصفة رعدية';
+
+  @override
+  String get notificationSettings => 'إعدادات الإشعارات';
+
+  @override
+  String notifActivityReminder(Object title) {
+    return 'يبدأ $title خلال ساعة';
+  }
+
+  @override
+  String get supportTitle => 'كلنا آذان صاغية';
 }

@@ -79,6 +79,22 @@ class AuthModel {
     await _supabase.auth.signOut();
   }
 
+  // Deletes the account and all its data (supabase/functions/delete-account),
+  // then clears the session on this device.
+  Future<void> deleteAccount() async {
+    if (PushNotificationService.instance.isInitialized) {
+      await PushNotificationService.instance.unregisterCurrentDevice(
+        client: _supabase,
+      );
+    }
+    await _supabase.functions.invoke('delete-account');
+    try {
+      await _supabase.auth.signOut(scope: SignOutScope.local);
+    } catch (_) {
+      // The user no longer exists on the server; the local session is gone.
+    }
+  }
+
   // Listens for authentication state changes, including password recovery.
   Stream<AuthState> get authStateChanges => _supabase.auth.onAuthStateChange;
 

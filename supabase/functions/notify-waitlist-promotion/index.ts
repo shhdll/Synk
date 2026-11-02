@@ -20,7 +20,7 @@ type PromotionEvent = {
   schedule_changed?: boolean;
   starts_at?: string;
   ends_at?: string;
-  event_type?: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received" | "friend_request_received" | "friend_request_accepted" | "host_assigned" | "activity_conflict" | "activity_full";
+  event_type?: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received" | "friend_request_received" | "friend_request_accepted" | "host_assigned" | "activity_conflict" | "activity_full" | "activity_reminder";
 };
 
 type FcmCredentials = {
@@ -197,6 +197,13 @@ async function sendToToken(
                   ? `قبل ${event.activity_title} طلب صداقتك. أصبحتما صديقين الآن.`
                   : `${event.activity_title} accepted your friend request. You're now friends!`,
               }
+              : event.event_type === "activity_reminder"
+              ? {
+                title: language === "ar" ? "يبدأ قريبا" : "Starting soon",
+                body: language === "ar"
+                  ? `يبدأ ${event.activity_title} خلال ساعة`
+                  : `${event.activity_title} starts in an hour.`,
+              }
               : event.event_type === "host_assigned"
               ? {
                 title: "You're Now the Host! \u{1F389}",
@@ -245,7 +252,8 @@ async function sendToToken(
                     event.event_type === "activity_conflict" ||
                     event.event_type === "activity_full" ||
                     event.event_type === "friend_request_received" ||
-                    event.event_type === "friend_request_accepted"
+                    event.event_type === "friend_request_accepted" ||
+                    event.event_type === "activity_reminder"
                   ? "activity_updates"
                   : "waitlist_promotions",
                 tag: `${event.event_type ?? "waitlist_promotion"}_${event.id}`,
@@ -278,6 +286,24 @@ async function sendToToken(
   }
 }
 
+function preferenceColumn(eventType: NonNullable<PromotionEvent["event_type"]>): string {
+  switch (eventType) {
+    case "waitlist_promotion":
+      return "waitlist";
+    case "join_request_accepted":
+    case "join_request_rejected":
+    case "join_request_received":
+      return "join_requests";
+    case "friend_request_received":
+    case "friend_request_accepted":
+      return "friend_requests";
+    case "activity_reminder":
+      return "reminders";
+    default:
+      return "activity_updates";
+  }
+}
+
 Deno.serve(async (request: Request) => {
   if (request.method !== "POST") {
     return jsonResponse({ error: "method_not_allowed" }, 405);
@@ -294,7 +320,7 @@ Deno.serve(async (request: Request) => {
   }
 
   let eventId: string;
-  let eventType: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received" | "friend_request_received" | "friend_request_accepted" | "host_assigned" | "activity_conflict" | "activity_full";
+  let eventType: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received" | "friend_request_received" | "friend_request_accepted" | "host_assigned" | "activity_conflict" | "activity_full" | "activity_reminder";
   try {
     const body = await request.json();
     eventId = typeof body.event_id === "string" ? body.event_id : "";
@@ -307,7 +333,8 @@ Deno.serve(async (request: Request) => {
         body.event_type === "activity_conflict" ||
         body.event_type === "activity_full" ||
         body.event_type === "friend_request_received" ||
-        body.event_type === "friend_request_accepted"
+        body.event_type === "friend_request_accepted" ||
+        body.event_type === "activity_reminder"
       ? body.event_type
       : "waitlist_promotion";
   } catch {
@@ -337,6 +364,8 @@ Deno.serve(async (request: Request) => {
     ? "friend_request_accepted_notification_outbox"
     : eventType === "activity_full"
     ? "activity_full_notification_outbox"
+    : eventType === "activity_reminder"
+    ? "activity_reminder_notification_outbox"
     : "waitlist_promotion_notification_outbox";
   const eventColumns = eventType === "activity_updated"
     ? "id, user_id, activity_id, activity_title, status"
@@ -363,6 +392,18 @@ Deno.serve(async (request: Request) => {
   }
 
   const typedEvent = { ...(event as PromotionEvent), event_type: eventType };
+
+  // Respect the switches in Settings > Notifications. No row means all on.
+  const { data: preferences } = await admin.from("notification_preferences")
+    .select(preferenceColumn(eventType))
+    .eq("user_id", typedEvent.user_id)
+    .maybeSingle();
+  if (preferences && (preferences as Record<string, unknown>)[preferenceColumn(eventType)] === false) {
+    await admin.from(outboxTable)
+      .update({ status: "no_tokens", processed_at: new Date().toISOString() })
+      .eq("id", eventId);
+    return jsonResponse({ ok: true, sent: 0, skipped: "muted" });
+  }
   if (eventType === "activity_updated" || eventType === "activity_deleted") {
     const metadataColumn = eventType === "activity_updated"
       ? "schedule_changed"

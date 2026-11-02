@@ -54,3 +54,4 @@ app.*.map.json
 # Supabase local development files
 supabase/.temp/
 .vercel
+.env*

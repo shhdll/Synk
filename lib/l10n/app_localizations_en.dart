@@ -2892,4 +2892,196 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get couldNotLoadActivities => 'Couldn\'t load activities.';
+
+  @override
+  String get privacy => 'Privacy';
+
+  @override
+  String get support => 'Support';
+
+  @override
+  String get aboutSynk => 'About Synk';
+
+  @override
+  String get ourStory => 'Our story';
+
+  @override
+  String get ourStoryBody => '[Our story goes here.]';
+
+  @override
+  String get theTeam => 'The team';
+
+  @override
+  String get madeInRiyadh => 'Made in Riyadh';
+
+  @override
+  String appVersion(Object version, Object build) {
+    return 'Version $version ($build)';
+  }
+
+  @override
+  String get notifPrefReminders => 'Reminders';
+
+  @override
+  String get notifPrefRemindersHint => 'An hour before an activity you joined';
+
+  @override
+  String get notifPrefActivityUpdates => 'Activity updates';
+
+  @override
+  String get notifPrefActivityUpdatesHint =>
+      'Changes, cancellations and full activities';
+
+  @override
+  String get notifPrefJoinRequests => 'Join requests';
+
+  @override
+  String get notifPrefJoinRequestsHint => 'New requests and replies to yours';
+
+  @override
+  String get notifPrefWaitlist => 'Waitlist';
+
+  @override
+  String get notifPrefWaitlistHint => 'When a spot opens up for you';
+
+  @override
+  String get notifPrefPeople => 'People';
+
+  @override
+  String get notifPrefFriendRequests => 'Friend requests';
+
+  @override
+  String get notifPrefFriendRequestsHint => 'New requests and accepted ones';
+
+  @override
+  String get notifPrefOther => 'Other';
+
+  @override
+  String get notifPrefMarketing => 'News and tips';
+
+  @override
+  String get notifPrefMarketingHint => 'New features and things to try';
+
+  @override
+  String get contactSupport => 'Contact support';
+
+  @override
+  String get supportIntro =>
+      'Bugs, ideas or a quick hello. A real human reads every one.';
+
+  @override
+  String get supportProblem => 'Bug';
+
+  @override
+  String get supportFeedback => 'Idea';
+
+  @override
+  String get supportOther => 'Other';
+
+  @override
+  String supportReplyTo(Object email) {
+    return 'We\'ll reply to $email';
+  }
+
+  @override
+  String get supportSentTitle => 'Message sent!';
+
+  @override
+  String get supportSentMessage => 'Keep an eye on your inbox.';
+
+  @override
+  String get supportRateLimited =>
+      'That\'s a lot of messages for one day. Try again tomorrow.';
+
+  @override
+  String get account => 'Account';
+
+  @override
+  String get deleteAccount => 'Delete account';
+
+  @override
+  String get deleteAccountIntro =>
+      'Deleting your account removes everything tied to it:';
+
+  @override
+  String get deleteAccountItemProfile => 'Your profile, photos and interests';
+
+  @override
+  String get deleteAccountItemActivities =>
+      'Activities you host and your spots in others';
+
+  @override
+  String get deleteAccountItemChats => 'Your chats and messages';
+
+  @override
+  String get deleteAccountItemFriends => 'Friends, ratings and blocks';
+
+  @override
+  String get deleteAccountCantUndo => 'This can\'t be undone.';
+
+  @override
+  String get enterPasswordToContinue => 'Enter your password to continue';
+
+  @override
+  String get deleteAccountConfirmTitle => 'Delete your account?';
+
+  @override
+  String get deleteAccountConfirmMessage =>
+      'Everything will be removed for good.';
+
+  @override
+  String get keepAccount => 'Keep my account';
+
+  @override
+  String get couldNotDeleteAccount =>
+      'We couldn\'t delete your account. Please try again.';
+
+  @override
+  String get weather => 'Weather';
+
+  @override
+  String get loadingForecast => 'Loading forecast…';
+
+  @override
+  String get forecastTooFarAhead =>
+      'The forecast shows up about 2 weeks before';
+
+  @override
+  String get weatherUnavailable => 'Weather isn\'t available right now';
+
+  @override
+  String rainChance(int percent) {
+    return '$percent% rain';
+  }
+
+  @override
+  String windSpeed(int speed) {
+    return '$speed km/h wind';
+  }
+
+  @override
+  String get weatherFog => 'Foggy';
+
+  @override
+  String get weatherDrizzle => 'Drizzle';
+
+  @override
+  String get weatherRain => 'Rain';
+
+  @override
+  String get weatherSnow => 'Snow';
+
+  @override
+  String get weatherStorm => 'Thunderstorm';
+
+  @override
+  String get notificationSettings => 'Notification settings';
+
+  @override
+  String notifActivityReminder(Object title) {
+    return '$title starts in an hour.';
+  }
+
+  @override
+  String get supportTitle => 'We\'re all ears';
 }
