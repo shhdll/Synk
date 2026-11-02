@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '../core/constants/activity_categories.dart';
 import '../l10n/l10n.dart';
+import '../utils/fuzzy_search.dart';
 import 'activity_model.dart';
 
 export '../l10n/l10n.dart' show formatMonthDay, formatShortDate;
@@ -282,7 +283,10 @@ class ActivityFilters {
     final range = dateRange(now ?? DateTime.now());
     final from = userLocation;
     final maxKm = from == null ? null : distance.maxKm;
-    final query = search.trim().toLowerCase();
+    final query = search.trim();
+
+    // How closely each activity matches the search; lower is better.
+    final searchScores = <String, int>{};
 
     final distances = <String, double>{};
     double? kmTo(Activity activity) {
@@ -294,7 +298,11 @@ class ActivityFilters {
     }
 
     final result = activities.where((activity) {
-      if (query.isNotEmpty && !matchesSearch(activity, query)) return false;
+      if (query.isNotEmpty) {
+        final score = searchScore(activity, query);
+        if (score == null) return false;
+        searchScores[activity.id] = score;
+      }
 
       final start = activity.dateTime;
       if (range != null &&
@@ -351,6 +359,12 @@ class ActivityFilters {
       });
     }
 
+    // While searching with no sort picked, the closest matches come first.
+    if (query.isNotEmpty && sort == null) {
+      sortBy((a) => searchScores[a.id]);
+      return result;
+    }
+
     switch (sort ?? SortOption.soonest) {
       case SortOption.soonest:
         result.sort(bySoonest);
@@ -369,15 +383,16 @@ class ActivityFilters {
     return result;
   }
 
-  static bool matchesSearch(Activity activity, String lowerQuery) {
-    final searchable = [
-      activity.title,
-      activity.description,
-      activity.location,
-      activity.locationAddress ?? '',
-      activity.categoryLabel,
-    ];
-    return searchable.any((field) => field.toLowerCase().contains(lowerQuery));
+  // How well [activity] matches a search, forgiving typos and unfinished
+  // words; null when it doesn't match. Lower is better.
+  static int? searchScore(Activity activity, String query) {
+    return FuzzySearch.score(
+      query,
+      title: activity.title,
+      primary: [activity.location, activity.categoryLabel],
+      secondary: [activity.locationAddress ?? ''],
+      loose: [activity.description],
+    );
   }
 
   // No stored category yet, so match keywords in the title/description.
