@@ -2827,4 +2827,62 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sent => 'Sent';
+
+  @override
+  String rateActivityTitle(Object title) {
+    return 'How was $title?';
+  }
+
+  @override
+  String get rateActivitySubtitle =>
+      'Rate the people who joined you. It\'s optional, and they won\'t see who rated them.';
+
+  @override
+  String get tapToRate => 'Tap to rate';
+
+  @override
+  String starsOutOfFive(Object stars) {
+    return '$stars out of 5 stars';
+  }
+
+  @override
+  String get submitRatings => 'Submit';
+
+  @override
+  String get ratingsSavedTitle => 'Thanks for rating!';
+
+  @override
+  String get ratingsSavedMessage => 'Your ratings were saved.';
+
+  @override
+  String get ratingNotEnded => 'You can rate once the activity has ended.';
+
+  @override
+  String get ratingNotEligible =>
+      'You can only rate people who joined this activity with you.';
+
+  @override
+  String get ratingAlreadyRated =>
+      'You\'ve already rated this person for this activity.';
+
+  @override
+  String get ratingInvalid => 'Choose between 0.5 and 5 stars.';
+
+  @override
+  String get ratingActivityUnavailable =>
+      'This activity is no longer available.';
+
+  @override
+  String get recentActivities => 'Recent activities';
+
+  @override
+  String userActivitiesTitle(Object name) {
+    return '$name\'s activities';
+  }
+
+  @override
+  String get noCompletedActivitiesYet => 'No completed activities yet';
+
+  @override
+  String get couldNotLoadActivities => 'Couldn\'t load activities.';
 }

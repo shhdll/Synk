@@ -14,6 +14,7 @@ import '../../widgets/profile_header_banner.dart';
 import '../chats_view.dart';
 import 'friend_action_button.dart';
 import 'friend_options_sheet.dart';
+import 'recent_activities_section.dart';
 import 'report_user_sheet.dart';
 
 Future<void> showUserProfileSheet({
@@ -314,6 +315,19 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
                   ),
                 ),
               ],
+              if (widget.userId !=
+                  Supabase.instance.client.auth.currentUser?.id)
+                // Reloads when the friendship changes.
+                ListenableBuilder(
+                  listenable: FriendsController.instance,
+                  builder: (context, _) => RecentActivitiesSection(
+                    key: ValueKey(
+                      FriendsController.instance.statusFor(widget.userId),
+                    ),
+                    userId: widget.userId,
+                    userName: name,
+                  ),
+                ),
             ],
           ),
         ),

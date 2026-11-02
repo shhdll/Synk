@@ -2755,4 +2755,59 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get sent => 'تم الإرسال';
+
+  @override
+  String rateActivityTitle(Object title) {
+    return 'كيف كانت تجربتك في $title؟';
+  }
+
+  @override
+  String get rateActivitySubtitle =>
+      'قيم الأشخاص اللي شاركوك النشاط، التقييم اختياري ولن يعرفوا من قيمهم';
+
+  @override
+  String get tapToRate => 'اضغط لإضافة تقييم';
+
+  @override
+  String starsOutOfFive(Object stars) {
+    return '$stars من 5 نجوم';
+  }
+
+  @override
+  String get submitRatings => 'إرسال التقييم';
+
+  @override
+  String get ratingsSavedTitle => 'شكرا لتقييمك!';
+
+  @override
+  String get ratingsSavedMessage => 'تم حفظ تقييماتك بنجاح';
+
+  @override
+  String get ratingNotEnded => 'يمكنك التقييم بعد انتهاء النشاط';
+
+  @override
+  String get ratingNotEligible => 'يمكنك تقييم من شاركوك هذا النشاط فقط';
+
+  @override
+  String get ratingAlreadyRated => 'سبق أن قيمت هذا الشخص في هذا النشاط';
+
+  @override
+  String get ratingInvalid => 'اختر من 0.5 إلى 5 نجوم';
+
+  @override
+  String get ratingActivityUnavailable => 'هذا النشاط لم يعد متاحا';
+
+  @override
+  String get recentActivities => 'الأنشطة الأخيرة';
+
+  @override
+  String userActivitiesTitle(Object name) {
+    return 'أنشطة $name';
+  }
+
+  @override
+  String get noCompletedActivitiesYet => 'لا توجد أنشطة منتهية حتى الآن';
+
+  @override
+  String get couldNotLoadActivities => 'تعذر تحميل الأنشطة';
 }
