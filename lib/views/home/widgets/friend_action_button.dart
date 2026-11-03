@@ -5,9 +5,11 @@ import '../../../core/constants/synk_colors.dart';
 import '../../../l10n/l10n.dart';
 import '../../../models/friends_model.dart';
 import '../../../utils/custom_widgets/synk_feedback.dart';
+import 'friend_options_sheet.dart';
 
-// Add / Requested / Accept / Friends, depending on where the signed-in user
-// stands with [user]. [compact] is the small version used in lists.
+// Add / Requested / Accept / Following, depending on where the signed-in
+// user stands with [user]. Tapping Following asks to remove the friend.
+// [compact] is the small version used in lists.
 class FriendActionButton extends StatelessWidget {
   const FriendActionButton({
     super.key,
@@ -78,8 +80,10 @@ class FriendActionButton extends StatelessWidget {
           FriendshipStatus.friends => _button(
             label: l10n.following,
             icon: Icons.check_rounded,
-            background: SynkColors.orangeLight,
-            foreground: SynkColors.orangeDeep,
+            background: SynkColors.textSecondary.withValues(alpha: 0.10),
+            foreground: SynkColors.textPrimary,
+            tooltip: l10n.removeFriend,
+            onTap: () => confirmRemoveFriend(context, user),
           ),
           FriendshipStatus.blocked => const SizedBox.shrink(),
         };
@@ -102,8 +106,8 @@ class FriendActionButton extends StatelessWidget {
     String? tooltip,
     VoidCallback? onTap,
   }) {
-    // Pill-shaped on the profile; compact in lists.
-    final radius = BorderRadius.circular(compact ? 12 : 26);
+    // Same corners as the buttons beside it on the profile.
+    final radius = BorderRadius.circular(compact ? 12 : 16);
     final button = Material(
       color: background,
       borderRadius: radius,

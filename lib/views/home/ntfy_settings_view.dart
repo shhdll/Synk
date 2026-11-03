@@ -37,7 +37,12 @@ class NtfySettingsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final steps = [l10n.ntfyStep1, l10n.ntfyStep2, l10n.ntfyStep3, l10n.ntfyStep4];
+    final steps = [
+      l10n.ntfyStep1,
+      l10n.ntfyStep2,
+      l10n.ntfyStep3,
+      l10n.ntfyStep4,
+    ];
 
     return Scaffold(
       backgroundColor: SynkColors.background,
@@ -54,36 +59,8 @@ class NtfySettingsView extends StatelessWidget {
                   return ListView(
                     padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: SynkColors.orangeLight,
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Icon(
-                              Icons.phone_iphone_rounded,
-                              size: 22,
-                              color: SynkColors.orangeDeep,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                l10n.ntfyIntro,
-                                style: const TextStyle(
-                                  fontSize: 14.5,
-                                  height: 1.45,
-                                  fontWeight: FontWeight.w600,
-                                  color: SynkColors.textPrimary,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
+                      const _IphoneOnlyBanner(),
+                      const SizedBox(height: 32),
                       SettingsGroup(
                         title: l10n.ntfyStepsTitle,
                         children: [
@@ -138,6 +115,44 @@ class NtfySettingsView extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// One line saying this page is only for iPhone users.
+class _IphoneOnlyBanner extends StatelessWidget {
+  const _IphoneOnlyBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const SizedBox(height: 18),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.apple, size: 22, color: Colors.black),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                context.l10n.ntfyIphoneOnly,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 22),
+        Divider(
+          height: 1,
+          thickness: 1,
+          color: SynkColors.textSecondary.withValues(alpha: 0.18),
+        ),
+      ],
     );
   }
 }

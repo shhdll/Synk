@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Join on Synk</title>
+    <link rel="icon" type="image/png" href="logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="orbs" aria-hidden="true">
+      <div class="orb teal"></div>
+      <div class="orb sand"></div>
+      <div class="orb peach"></div>
+    </div>
+
+    <header class="brand"><img src="logo.png" alt="" />Synk</header>
+
+    <main class="content">
+      <h1 id="title">You're invited</h1>
+      <p id="message" class="subtitle">Open the activity in Synk to see the details and join.</p>
+      <a id="open-app" class="button" href="io.supabase.synk://activity"><img class="button-logo" src="logo.png" alt="" /><span>Open in Synk</span></a>
+    </main>
+
+    <script>
+      // synk.cc/activity.html?id=<activity id> opens the activity in the app.
+      (function () {
+        var id = new URLSearchParams(window.location.search).get("id") || "";
+        var valid = /^[0-9a-f-]{36}$/i.test(id);
+        var button = document.getElementById("open-app");
+        if (!valid) {
+          document.getElementById("title").textContent = "This link doesn't work";
+          document.getElementById("message").textContent = "Ask your friend to share it again.";
+          button.hidden = true;
+          return;
+        }
+        var url = "io.supabase.synk://activity?id=" + encodeURIComponent(id);
+        button.href = url;
+        // Android opens the app straight away; iPhone needs the tap.
+        if (/android/i.test(navigator.userAgent)) window.location.href = url;
+      })();
+    </script>
+  </body>
+</html>

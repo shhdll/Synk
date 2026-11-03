@@ -220,6 +220,7 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Widget _buildScrollView() {
+    final searching = _discoveryController.searchQuery.isNotEmpty;
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(
         parent: BouncingScrollPhysics(),
@@ -234,40 +235,52 @@ class _HomeViewState extends State<HomeView> {
                 _buildHeader(),
                 const SizedBox(height: 22),
                 _buildSearchAndFilterRow(),
-                TopPicksSection(
-                  controller: _discoveryController,
-                  activityStore: widget.activityStore,
-                  onActivityTap: _onActivityTap,
-                ),
+                if (!searching)
+                  TopPicksSection(
+                    controller: _discoveryController,
+                    activityStore: widget.activityStore,
+                    onActivityTap: _onActivityTap,
+                  ),
               ],
             ),
           ),
         ),
-        if (_discoveryController.feedCategories.isNotEmpty)
+        // While searching, the results sit right under the search bar.
+        if (!searching && _discoveryController.feedCategories.isNotEmpty)
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.only(top: 14),
               child: _buildCategoryChipsBar(),
             ),
           ),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.only(top: 14),
-            child: DayStrip(
-              filters: _discoveryController.filters,
-              countsByDay: _discoveryController.activityCountsByDay,
-              onDayTap: _discoveryController.selectDay,
-              padding: const EdgeInsets.symmetric(horizontal: _gutter),
+        if (!searching)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 14),
+              child: DayStrip(
+                filters: _discoveryController.filters,
+                countsByDay: _discoveryController.activityCountsByDay,
+                onDayTap: _discoveryController.selectDay,
+                padding: const EdgeInsets.symmetric(horizontal: _gutter),
+              ),
             ),
           ),
-        ),
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(_gutter, 18, _gutter, 0),
-          sliver: SliverToBoxAdapter(child: _buildListTitle()),
-        ),
-        _buildFeedContent(),
+        if (!searching)
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(_gutter, 18, _gutter, 0),
+            sliver: SliverToBoxAdapter(child: _buildListTitle()),
+          ),
+        _buildFeedContent(searching: searching),
       ],
     );
+  }
+
+  // Good morning until noon, afternoon until 5, then evening.
+  String _greeting() {
+    final hour = DateTime.now().hour;
+    if (hour >= 5 && hour < 12) return context.l10n.goodMorning;
+    if (hour >= 12 && hour < 17) return context.l10n.goodAfternoon;
+    return context.l10n.goodEvening;
   }
 
   Widget _buildHeader() {
@@ -324,6 +337,14 @@ class _HomeViewState extends State<HomeView> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          Text(
+                            _greeting(),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: SynkColors.textSecondary,
+                            ),
+                          ),
                           Row(
                             children: [
                               Flexible(
@@ -542,9 +563,14 @@ class _HomeViewState extends State<HomeView> {
         .trim();
   }
 
-  Widget _buildFeedContent() {
+  Widget _buildFeedContent({bool searching = false}) {
     // Bottom room so the code bubble never covers the last card.
-    const padding = EdgeInsets.fromLTRB(_gutter, 22, _gutter, 120);
+    final padding = EdgeInsets.fromLTRB(
+      _gutter,
+      searching ? 16 : 22,
+      _gutter,
+      120,
+    );
 
     if (_discoveryController.isLoading) {
       return SliverPadding(
@@ -601,15 +627,60 @@ class _HomeViewState extends State<HomeView> {
     return SliverPadding(
       padding: padding,
       sliver: SliverList.separated(
-        itemCount: activities.length,
+        // One more for the "Couldn't find your thing?" footer.
+        itemCount: activities.length + 1,
         separatorBuilder: (_, _) => const SizedBox(height: 14),
         itemBuilder: (context, index) {
+          if (index == activities.length) {
+            return _FeedFooter(onCreate: widget.onCreateActivity);
+          }
           final activity = activities[index];
           return DiscoveryActivityCard(
             activity: activity,
             onTap: () => _onActivityTap(activity),
           );
         },
+      ),
+    );
+  }
+}
+
+// Under the last activity: a nudge to make your own.
+class _FeedFooter extends StatelessWidget {
+  const _FeedFooter({this.onCreate});
+
+  final VoidCallback? onCreate;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Column(
+        children: [
+          Text(
+            context.l10n.couldntFindYourThing,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.leagueSpartan(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: SynkColors.ink,
+            ),
+          ),
+          if (onCreate != null)
+            TextButton(
+              onPressed: onCreate,
+              style: TextButton.styleFrom(
+                foregroundColor: SynkColors.orangeDark,
+              ),
+              child: Text(
+                context.l10n.createOne,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

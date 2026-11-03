@@ -846,8 +846,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get leaveActivityTitle => 'Leave activity?';
 
   @override
-  String get confirmLeaveActivity =>
-      'Are you sure you want to leave this activity?';
+  String get confirmLeaveActivity => 'Leave this activity?';
 
   @override
   String get stay => 'Stay';
@@ -863,8 +862,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get leaveWaitlistTitle => 'Leave waitlist?';
 
   @override
-  String get confirmLeaveWaitlist =>
-      'Are you sure you want to leave the waitlist for this activity?';
+  String get confirmLeaveWaitlist => 'Leave the waitlist?';
 
   @override
   String get stayOnWaitlist => 'Stay on Waitlist';
@@ -883,8 +881,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancelRequestTitle => 'Cancel request?';
 
   @override
-  String get confirmCancelRequest =>
-      'Are you sure you want to cancel your request to join this activity?';
+  String get confirmCancelRequest => 'Cancel your request?';
 
   @override
   String get keepRequest => 'Keep Request';
@@ -907,7 +904,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String transferHostMessage(Object name) {
-    return '$name will become the host of this activity. You will no longer be able to manage it.';
+    return '$name becomes the host.';
   }
 
   @override
@@ -979,8 +976,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteActivityTitle => 'Delete activity?';
 
   @override
-  String get thisActionCannotBeUndoneThe =>
-      'This action cannot be undone. The activity will be removed for everyone.';
+  String get thisActionCannotBeUndoneThe => 'It\'ll be gone for everyone.';
 
   @override
   String get keepActivity => 'Keep Activity';
@@ -2452,7 +2448,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String removeFriendMessage(Object name) {
-    return '$name will be removed from your friends list. You can send a new friend request any time.';
+    return 'You can add $name again later.';
   }
 
   @override
@@ -2470,7 +2466,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get blockUserMessage =>
-      'They won\'t be able to find you or send you friend requests. This also removes them from your friends. They won\'t be told.';
+      'They can\'t find or add you. They won\'t know.';
 
   @override
   String get block => 'Block';
@@ -2764,8 +2760,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteThisChat => 'Delete this chat?';
 
   @override
-  String get chatDeletedOnlyForYou =>
-      'It\'s only deleted for you. If someone sends a new message, the chat comes back.';
+  String get chatDeletedOnlyForYou => 'Only for you.';
 
   @override
   String get chatDeleted => 'Chat deleted';
@@ -2987,10 +2982,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ntfyPageTitle => 'iPhone notifications';
 
   @override
-  String get ntfyIntro =>
-      'This is for iPhone only. Synk sends iPhone notifications through ntfy, a free app. On Android you get them already.';
-
-  @override
   String get ntfyStepsTitle => 'How to set it up';
 
   @override
@@ -3133,4 +3124,140 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get supportTitle => 'We\'re all ears';
+
+  @override
+  String get reply => 'Reply';
+
+  @override
+  String get copy => 'Copy';
+
+  @override
+  String get messageCopied => 'Copied';
+
+  @override
+  String replyingTo(Object name) {
+    return 'Replying to $name';
+  }
+
+  @override
+  String get originalMessageUnavailable => 'Original message';
+
+  @override
+  String get seen => 'Seen';
+
+  @override
+  String get seenByEveryone => 'Seen by everyone';
+
+  @override
+  String seenByCount(int count) {
+    return 'Seen by $count';
+  }
+
+  @override
+  String friendsOfName(Object name) {
+    return '$name\'s friends';
+  }
+
+  @override
+  String reviewsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reviews',
+      one: '1 review',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get goodMorning => 'Good morning';
+
+  @override
+  String get goodAfternoon => 'Good afternoon';
+
+  @override
+  String get goodEvening => 'Good evening';
+
+  @override
+  String get couldntFindYourThing => 'Couldn\'t find your thing?';
+
+  @override
+  String get rateActivityFun => 'Give your crew some stars';
+
+  @override
+  String get ratingsSentToast => 'Thanks! Ratings sent';
+
+  @override
+  String get ntfyIphoneOnly => 'Only for iPhone users';
+
+  @override
+  String get supportSubtitle => 'We read every message.';
+
+  @override
+  String get supportBugHint => 'What went wrong?';
+
+  @override
+  String get supportIdeaHint => 'What would you like to see?';
+
+  @override
+  String get supportOtherHint => 'Say anything, big or small.';
+
+  @override
+  String get supportAddScreenshot => 'Add screenshot (optional)';
+
+  @override
+  String get supportChange => 'Change';
+
+  @override
+  String get supportChangeEmailTitle => 'Where should we reply?';
+
+  @override
+  String get supportInvalidEmail => 'Enter a valid email';
+
+  @override
+  String get supportThanksTitle => 'Thanks! We got it.';
+
+  @override
+  String get supportThanksMessage => 'We\'ll get back to you by email.';
+
+  @override
+  String get backToHome => 'Back to home';
+
+  @override
+  String get shareLink => 'Share link';
+
+  @override
+  String shareLinkMessage(Object title, Object date, Object link) {
+    return 'Want to join us for $title?\n📅 $date\n\n$link';
+  }
+
+  @override
+  String get filter => 'Filter';
+
+  @override
+  String get role => 'Role';
+
+  @override
+  String get thisWeek => 'This week';
+
+  @override
+  String shareLinkCodeMessage(
+    Object title,
+    Object date,
+    Object link,
+    Object code,
+  ) {
+    return 'Want to join us for $title?\n📅 $date\n\n$link\n\nOr enter the code in Synk: $code';
+  }
+
+  @override
+  String friendsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count friends',
+      one: '1 friend',
+    );
+    return '$_temp0';
+  }
 }

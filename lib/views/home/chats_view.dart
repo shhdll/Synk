@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../controllers/chat_controller.dart';
@@ -13,12 +12,12 @@ import '../../models/activity_model.dart';
 import '../../models/chat_model.dart';
 import '../../models/friends_model.dart';
 import '../../utils/custom_widgets/synk_feedback.dart';
-import '../../utils/text_direction.dart';
 import 'chat_room_view.dart';
 import 'find_people_view.dart';
 import 'widgets/chat_list_tile.dart';
 import 'widgets/empty_state.dart';
 import 'widgets/friends_list_widgets.dart';
+import '../widgets/synk_blob_background.dart';
 
 // Opens the chat with a friend, creating it the first time.
 Future<void> openDirectChatWith(BuildContext context, FriendUser friend) async {
@@ -60,16 +59,24 @@ class NewChatIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final badge = size * 0.5;
+    // Both the bubble and the plus stay inside the box, so the icon
+    // centres like any other icon.
+    final badge = size * 0.46;
     return SizedBox.square(
       dimension: size,
       child: Stack(
-        clipBehavior: Clip.none,
         children: [
-          Icon(Icons.chat_bubble_outline_rounded, size: size, color: color),
+          Align(
+            alignment: AlignmentDirectional.bottomStart,
+            child: Icon(
+              Icons.chat_bubble_outline_rounded,
+              size: size * 0.86,
+              color: color,
+            ),
+          ),
           PositionedDirectional(
-            top: -badge * 0.3,
-            end: -badge * 0.3,
+            top: 0,
+            end: 0,
             child: Container(
               width: badge,
               height: badge,
@@ -89,7 +96,7 @@ class NewChatIcon extends StatelessWidget {
 
 enum _ChatFilter { all, activities, friends }
 
-// The Chat tab: activity group chats first, then chats with friends.
+// The Chat tab: activity group chats and friend chats in one list.
 class ChatsView extends StatefulWidget {
   const ChatsView({super.key, this.activityStore});
 
@@ -164,6 +171,7 @@ class _ChatsViewState extends State<ChatsView> {
       backgroundColor: SynkColors.background,
       body: Stack(
         children: [
+          const Positioned.fill(child: SynkBlobBackground()),
           SafeArea(
             bottom: false,
             // A tap outside the search field (not on a chat) closes it.
@@ -211,6 +219,9 @@ class _ChatsViewState extends State<ChatsView> {
     final directChats = showFriends
         ? _matching(_chats.directChats)
         : <ChatSummary>[];
+    // Activities and friends in one list, latest message first.
+    final mixed = [...activityChats, ...directChats]
+      ..sort((a, b) => b.sortTime.compareTo(a.sortTime));
     final searching = _search.text.trim().isNotEmpty;
     final nothingYet =
         _chats.hasLoaded &&
@@ -289,11 +300,12 @@ class _ChatsViewState extends State<ChatsView> {
                             child: Text(
                               context.l10n.catchUpWithFriends,
                               maxLines: 1,
-                              // Matches Home's "Top 5 picks for you".
-                              style: GoogleFonts.leagueSpartan(
-                                fontSize: 26,
-                                fontWeight: FontWeight.w800,
-                                color: SynkColors.ink,
+                              // Matches the Activities tab title.
+                              style: const TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -0.8,
+                                color: SynkColors.textPrimary,
                               ),
                             ),
                           ),
@@ -362,16 +374,8 @@ class _ChatsViewState extends State<ChatsView> {
               ),
             )
           else ...[
-            if (activityChats.isNotEmpty) ...[
-              _SectionHeader(title: context.l10n.activities),
-              FriendsListCard(
-                children: [for (final c in activityChats) tile(c)],
-              ),
-            ],
-            if (directChats.isNotEmpty) ...[
-              _SectionHeader(title: context.l10n.friends),
-              FriendsListCard(children: [for (final c in directChats) tile(c)]),
-            ],
+            const SizedBox(height: 20),
+            FriendsListCard(children: [for (final c in mixed) tile(c)]),
           ],
         ],
       ),
@@ -443,29 +447,6 @@ class _FilterTabs extends StatelessWidget {
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsetsDirectional.fromSTEB(4, 24, 4, 10),
-      child: Text(
-        title.toUpperCase(),
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w800,
-          // Spacing pulls joined Arabic letters apart.
-          letterSpacing: hasArabic(title) ? 0 : 0.8,
-          color: SynkColors.labelGrey,
-        ),
       ),
     );
   }
@@ -599,11 +580,13 @@ class _NewChatSheetState extends State<_NewChatSheet> {
                         FriendsPersonRow(
                           user: friend,
                           onTap: () => widget.onPick(friend),
-                          trailing: const Padding(
-                            padding: EdgeInsetsDirectional.only(end: 6),
-                            child: NewChatIcon(
-                              size: 20,
-                              color: SynkColors.orangeDark,
+                          trailing: const SizedBox.square(
+                            dimension: 40,
+                            child: Center(
+                              child: NewChatIcon(
+                                size: 22,
+                                color: SynkColors.orangeDark,
+                              ),
                             ),
                           ),
                         ),

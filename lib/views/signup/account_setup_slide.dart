@@ -39,134 +39,127 @@ class _AccountSetupSlideState extends State<AccountSetupSlide> {
   Widget build(BuildContext context) {
     final signupController = widget.signupController;
 
-    return SafeArea(
-      child: BottomFade(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            28,
-            0,
-            28,
-            BottomFade.scrollPadding,
-          ),
-          child: ListenableBuilder(
-            listenable: signupController,
-            builder: (context, _) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 8),
-                  Text(
-                    context.l10n.createYourAccount,
-                    style: TextStyle(
-                      fontSize: 34,
-                      fontWeight: FontWeight.w900,
-                      height: 1.05,
-                      letterSpacing: -1.3,
-                      color: SynkColors.textPrimary,
+    // The onboarding page adds the side padding, like the other steps.
+    return BottomFade(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.only(bottom: BottomFade.scrollPadding),
+        child: ListenableBuilder(
+          listenable: signupController,
+          builder: (context, _) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 8),
+                Text(
+                  context.l10n.createYourAccount,
+                  style: TextStyle(
+                    fontSize: 34,
+                    fontWeight: FontWeight.w900,
+                    height: 1.05,
+                    letterSpacing: -1.3,
+                    color: SynkColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 18),
+
+                // Username
+                _buildField(
+                  controller: signupController.usernameController,
+                  focusNode: signupController.usernameFocusNode,
+                  label: context.l10n.username,
+                  hint: context.l10n.username,
+                  icon: Icons.alternate_email_rounded,
+                  keyboardType: TextInputType.text,
+                  errorText: signupController.usernameError,
+                  onChanged: (_) => signupController.onUsernameChanged(),
+                ),
+                const SizedBox(height: 10),
+
+                // Email
+                _buildField(
+                  controller: signupController.emailController,
+                  focusNode: signupController.emailFocusNode,
+                  label: context.l10n.email,
+                  hint: context.l10n.emailAddress,
+                  icon: Icons.email_outlined,
+                  keyboardType: TextInputType.emailAddress,
+                  errorText: signupController.emailError,
+                  onChanged: (_) => signupController.onEmailChanged(),
+                ),
+                const SizedBox(height: 10),
+
+                // Password
+                _buildField(
+                  controller: signupController.passwordController,
+                  focusNode: signupController.passwordFocusNode,
+                  label: context.l10n.password,
+                  hint: '••••••••',
+                  icon: Icons.lock_outline_rounded,
+                  obscureText: _obscurePassword,
+                  errorText: signupController.passwordError,
+                  onChanged: (_) {
+                    signupController.clearPasswordError();
+                    setState(() {});
+                  },
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      size: 20,
+                    ),
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                // Confirm Password
+                _buildField(
+                  controller: signupController.confirmPasswordController,
+                  focusNode: signupController.confirmPasswordFocusNode,
+                  label: context.l10n.confirmPassword,
+                  hint: context.l10n.reTypePassword,
+                  icon: Icons.lock_outline_rounded,
+                  obscureText: _obscureConfirmPassword,
+                  errorText: signupController.confirmPasswordError,
+                  onChanged: (_) {
+                    signupController.clearConfirmPasswordError();
+                    setState(() {});
+                  },
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscureConfirmPassword
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      size: 20,
+                    ),
+                    onPressed: () => setState(
+                      () => _obscureConfirmPassword = !_obscureConfirmPassword,
                     ),
                   ),
-                  const SizedBox(height: 18),
+                ),
+                const SizedBox(height: 8),
+                PasswordRequirements(
+                  password: signupController.passwordController.text,
+                ),
 
-                  // Username
-                  _buildField(
-                    controller: signupController.usernameController,
-                    focusNode: signupController.usernameFocusNode,
-                    label: context.l10n.username,
-                    hint: context.l10n.username,
-                    icon: Icons.alternate_email_rounded,
-                    keyboardType: TextInputType.text,
-                    errorText: signupController.usernameError,
-                    onChanged: (_) => signupController.onUsernameChanged(),
-                  ),
-                  const SizedBox(height: 10),
-
-                  // Email
-                  _buildField(
-                    controller: signupController.emailController,
-                    focusNode: signupController.emailFocusNode,
-                    label: context.l10n.email,
-                    hint: context.l10n.emailAddress,
-                    icon: Icons.email_outlined,
-                    keyboardType: TextInputType.emailAddress,
-                    errorText: signupController.emailError,
-                    onChanged: (_) => signupController.onEmailChanged(),
-                  ),
-                  const SizedBox(height: 10),
-
-                  // Password
-                  _buildField(
-                    controller: signupController.passwordController,
-                    focusNode: signupController.passwordFocusNode,
-                    label: context.l10n.password,
-                    hint: '••••••••',
-                    icon: Icons.lock_outline_rounded,
-                    obscureText: _obscurePassword,
-                    errorText: signupController.passwordError,
-                    onChanged: (_) {
-                      signupController.clearPasswordError();
-                      setState(() {});
-                    },
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off_outlined
-                            : Icons.visibility_outlined,
-                        size: 20,
-                      ),
-                      onPressed: () =>
-                          setState(() => _obscurePassword = !_obscurePassword),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-
-                  // Confirm Password
-                  _buildField(
-                    controller: signupController.confirmPasswordController,
-                    focusNode: signupController.confirmPasswordFocusNode,
-                    label: context.l10n.confirmPassword,
-                    hint: context.l10n.reTypePassword,
-                    icon: Icons.lock_outline_rounded,
-                    obscureText: _obscureConfirmPassword,
-                    errorText: signupController.confirmPasswordError,
-                    onChanged: (_) {
-                      signupController.clearConfirmPasswordError();
-                      setState(() {});
-                    },
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscureConfirmPassword
-                            ? Icons.visibility_off_outlined
-                            : Icons.visibility_outlined,
-                        size: 20,
-                      ),
-                      onPressed: () => setState(
-                        () =>
-                            _obscureConfirmPassword = !_obscureConfirmPassword,
+                if (signupController.generalError != null) ...[
+                  const SizedBox(height: 12),
+                  Center(
+                    child: Text(
+                      signupController.generalError!,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFFE53935),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  PasswordRequirements(
-                    password: signupController.passwordController.text,
-                  ),
-
-                  if (signupController.generalError != null) ...[
-                    const SizedBox(height: 12),
-                    Center(
-                      child: Text(
-                        signupController.generalError!,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFFE53935),
-                        ),
-                      ),
-                    ),
-                  ],
                 ],
-              );
-            },
-          ),
+              ],
+            );
+          },
         ),
       ),
     );

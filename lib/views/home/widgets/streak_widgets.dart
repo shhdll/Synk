@@ -5,15 +5,9 @@ import '../../../core/constants/synk_colors.dart';
 import '../../../l10n/l10n.dart';
 import '../../../models/activity_model.dart';
 
-const _flameGradient = LinearGradient(
-  begin: Alignment.topCenter,
-  end: Alignment.bottomCenter,
-  colors: [Color(0xFFFFC23D), SynkColors.orangeDark, Color(0xFFFF5E7E)],
-);
-
-// Small 🔥 chip with the streak, shown next to the user's name in the home
-// header. It turns grey when the week is nearly over and nothing is booked.
-// Tapping opens the sheet.
+// Small flame chip with the streak, shown next to the user's name in the
+// home header. It turns grey when the week is nearly over and nothing is
+// booked. Tapping opens the sheet.
 class StreakChip extends StatelessWidget {
   const StreakChip({super.key, required this.activityStore});
 
@@ -38,23 +32,30 @@ class StreakChip extends StatelessWidget {
               key: ValueKey(active ? 'streak-lit' : 'streak-grey'),
               padding: const EdgeInsets.fromLTRB(6, 3, 9, 3),
               decoration: BoxDecoration(
-                color: active
-                    ? SynkColors.orangeLight
-                    : SynkColors.textSecondary.withValues(alpha: 0.10),
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: SynkColors.textSecondary.withValues(alpha: 0.12),
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _Flame(size: 16, lit: active),
-                  const SizedBox(width: 2),
+                  Icon(
+                    Icons.local_fire_department_rounded,
+                    size: 15,
+                    color: active
+                        ? SynkColors.orangeDark
+                        : SynkColors.labelGrey,
+                  ),
+                  const SizedBox(width: 3),
                   Text(
                     '${streak.weeks}',
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w800,
                       color: active
-                          ? SynkColors.orangeDeep
+                          ? SynkColors.textPrimary
                           : SynkColors.textSecondary,
                     ),
                   ),
@@ -124,12 +125,8 @@ class StreakSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 18),
-            _Hero(weeks: streak.weeks, lit: active),
-            if (best > 0) ...[
-              const SizedBox(height: 12),
-              _BestChip(best: best),
-            ],
-            const SizedBox(height: 20),
+            _Summary(weeks: streak.weeks, best: best, lit: active),
+            const SizedBox(height: 12),
             _ThisWeekCard(
               days: WeeklyStreak.daysThisWeek(attendedAt, now: today),
               today: today,
@@ -153,112 +150,71 @@ class StreakSheet extends StatelessWidget {
   }
 }
 
-// Glowing flame that pops in, with the count rolling up beneath it.
-class _Hero extends StatelessWidget {
-  const _Hero({required this.weeks, required this.lit});
+// The count next to a plain flame, with the best streak under it.
+class _Summary extends StatelessWidget {
+  const _Summary({required this.weeks, required this.best, required this.lit});
 
   final int weeks;
+  final int best;
   final bool lit;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0.4, end: 1),
-          duration: const Duration(milliseconds: 800),
-          curve: Curves.elasticOut,
-          builder: (context, scale, child) =>
-              Transform.scale(scale: scale, child: child),
-          child: Container(
-            width: 108,
-            height: 108,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: lit
-                  ? RadialGradient(
-                      colors: [
-                        const Color(0xFFFFD27A).withValues(alpha: 0.6),
-                        SynkColors.orange.withValues(alpha: 0.0),
-                      ],
-                    )
-                  : null,
-              color: lit
-                  ? null
-                  : SynkColors.textSecondary.withValues(alpha: 0.08),
-            ),
-            child: Center(child: _Flame(size: 76, lit: lit)),
-          ),
-        ),
-        TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0, end: weeks.toDouble()),
-          duration: const Duration(milliseconds: 900),
-          curve: Curves.easeOutCubic,
-          builder: (context, value, _) {
-            final text = Text(
-              '${value.round()}',
-              style: TextStyle(
-                fontSize: 56,
-                height: 1.05,
-                fontWeight: FontWeight.w900,
-                color: lit ? Colors.white : SynkColors.textSecondary,
-              ),
-            );
-            if (!lit) return text;
-            return ShaderMask(
-              blendMode: BlendMode.srcIn,
-              shaderCallback: (bounds) => const LinearGradient(
-                colors: [SynkColors.orange, SynkColors.orangeDark],
-              ).createShader(bounds),
-              child: text,
-            );
-          },
-        ),
-        Text(
-          context.l10n.streakWeeksInARow(weeks),
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-            color: SynkColors.textPrimary,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _BestChip extends StatelessWidget {
-  const _BestChip({required this.best});
-
-  final int best;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: SynkColors.orangeLight,
-        borderRadius: BorderRadius.circular(999),
-      ),
+    return _Card(
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.emoji_events_rounded,
-            size: 16,
-            color: SynkColors.orangeDeep,
+          Icon(
+            Icons.local_fire_department_rounded,
+            size: 44,
+            color: lit ? SynkColors.orangeDark : SynkColors.labelGrey,
           ),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              context.l10n.streakBest(best),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w800,
-                color: SynkColors.orangeDeep,
-              ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      '$weeks',
+                      style: const TextStyle(
+                        fontSize: 34,
+                        height: 1.1,
+                        fontWeight: FontWeight.w900,
+                        color: SynkColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        context.l10n.streakWeeksInARow(weeks),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: SynkColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (best > 0) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    context.l10n.streakBest(best),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: SynkColors.labelGrey,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ],
@@ -267,7 +223,26 @@ class _BestChip extends StatelessWidget {
   }
 }
 
-// This week's seven days, Sunday first, with a flame on each attended day.
+class _Card extends StatelessWidget {
+  const _Card({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: child,
+    );
+  }
+}
+
+// This week's seven days, Sunday first; attended days are filled.
 class _ThisWeekCard extends StatelessWidget {
   const _ThisWeekCard({
     required this.days,
@@ -291,15 +266,7 @@ class _ThisWeekCard extends StatelessWidget {
       Localizations.localeOf(context).languageCode,
     );
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.75),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: SynkColors.textSecondary.withValues(alpha: 0.10),
-        ),
-      ),
+    return _Card(
       child: Column(
         children: [
           Row(
@@ -317,7 +284,17 @@ class _ThisWeekCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              _StatusPill(done: done, daysLeft: daysLeft),
+              Text(
+                done
+                    ? context.l10n.streakDone
+                    : context.l10n.streakDaysLeft(daysLeft),
+                maxLines: 1,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: done ? SynkColors.tealText : SynkColors.orangeDark,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 14),
@@ -337,61 +314,17 @@ class _ThisWeekCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          Row(
-            children: [
-              Icon(
-                done
-                    ? Icons.check_circle_rounded
-                    : Icons.local_fire_department_rounded,
-                size: 18,
-                color: done ? SynkColors.teal : SynkColors.orangeDark,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  message,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: SynkColors.textPrimary,
-                    height: 1.3,
-                  ),
-                ),
-              ),
-            ],
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: SynkColors.textSecondary,
+              height: 1.3,
+            ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _StatusPill extends StatelessWidget {
-  const _StatusPill({required this.done, required this.daysLeft});
-
-  final bool done;
-  final int daysLeft;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = done ? SynkColors.tealText : SynkColors.orangeDeep;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: done
-            ? SynkColors.teal.withValues(alpha: 0.12)
-            : SynkColors.orangeLight,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        done ? context.l10n.streakDone : context.l10n.streakDaysLeft(daysLeft),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          fontSize: 11.5,
-          fontWeight: FontWeight.w800,
-          color: color,
-        ),
       ),
     );
   }
@@ -413,28 +346,14 @@ class _Day extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final BoxDecoration decoration;
-    Widget? icon;
     if (attended) {
-      decoration = BoxDecoration(
+      decoration = const BoxDecoration(
         shape: BoxShape.circle,
-        gradient: _flameGradient,
-        boxShadow: [
-          BoxShadow(
-            color: SynkColors.orangeDark.withValues(alpha: 0.35),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      );
-      icon = const Icon(
-        Icons.local_fire_department_rounded,
-        color: Colors.white,
-        size: 20,
+        color: SynkColors.orangeDark,
       );
     } else if (isToday) {
       decoration = BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white,
         border: Border.all(color: SynkColors.orangeDark, width: 2),
       );
     } else {
@@ -446,44 +365,24 @@ class _Day extends StatelessWidget {
 
     return Column(
       children: [
-        Container(width: 36, height: 36, decoration: decoration, child: icon),
+        Container(
+          width: 30,
+          height: 30,
+          decoration: decoration,
+          child: attended
+              ? const Icon(Icons.check_rounded, color: Colors.white, size: 17)
+              : null,
+        ),
         const SizedBox(height: 6),
         Text(
           letter,
           style: TextStyle(
             fontSize: 12,
-            fontWeight: isToday ? FontWeight.w900 : FontWeight.w600,
-            color: isToday ? SynkColors.orangeDeep : SynkColors.textSecondary,
+            fontWeight: isToday ? FontWeight.w800 : FontWeight.w600,
+            color: isToday ? SynkColors.textPrimary : SynkColors.textSecondary,
           ),
         ),
       ],
-    );
-  }
-}
-
-class _Flame extends StatelessWidget {
-  const _Flame({required this.size, required this.lit});
-
-  final double size;
-  final bool lit;
-
-  @override
-  Widget build(BuildContext context) {
-    if (!lit) {
-      return Icon(
-        Icons.local_fire_department_rounded,
-        size: size,
-        color: SynkColors.textSecondary.withValues(alpha: 0.45),
-      );
-    }
-    return ShaderMask(
-      blendMode: BlendMode.srcIn,
-      shaderCallback: (bounds) => _flameGradient.createShader(bounds),
-      child: Icon(
-        Icons.local_fire_department_rounded,
-        size: size,
-        color: Colors.white,
-      ),
     );
   }
 }

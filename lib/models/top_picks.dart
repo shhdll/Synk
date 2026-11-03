@@ -97,7 +97,11 @@ List<TopPick> rankTopPicks({
       continue;
     }
 
-    final friends = friendsGoing[activity.id] ?? const <FriendUser>[];
+    // The host already shows as the host, not as a friend who's going.
+    final friends = [
+      for (final f in friendsGoing[activity.id] ?? const <FriendUser>[])
+        if (f.id != activity.hostId) f,
+    ];
     final shared = [
       for (final interest in wanted)
         if (ActivityFilters.matchesCategory(activity, interest)) interest,

@@ -19,6 +19,11 @@ const SUPPORT_REPLY_URL = Deno.env.get("SUPPORT_REPLY_URL") ??
 
 const DAILY_LIMIT = 5;
 const CATEGORIES = ["problem", "feedback", "other"];
+const SCREENSHOT_BUCKET = "support-screenshots";
+const MAX_SCREENSHOTS = 3;
+// Links in the email work for 30 days.
+const SCREENSHOT_LINK_SECONDS = 60 * 60 * 24 * 30;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const admin = SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY
   ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
@@ -58,6 +63,7 @@ function supportEmailHtml(ticket: {
   shortId: string;
   replyToken: string;
   message: string;
+  screenshots: string[];
 }): string {
   const tag = CATEGORY_LABELS[ticket.category] ?? CATEGORY_LABELS.other;
   const name = escapeHtml(ticket.name);
@@ -81,6 +87,7 @@ function supportEmailHtml(ticket: {
         <h1 style="margin:14px 0 4px;font-size:20px;line-height:1.3;color:#1E1C24">New message from ${name}</h1>
         <p style="margin:0 0 20px;font-size:14px;color:#6B7280">${email}</p>
         <div style="background:#FFF5EF;border-left:4px solid #FF7A36;border-radius:12px;padding:16px 18px;font-size:15px;line-height:1.55;color:#1E1C24;white-space:pre-wrap">${escapeHtml(ticket.message)}</div>
+        ${screenshotsHtml(ticket.screenshots)}
         <table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0 0">
           <tr><td style="border-radius:12px;background:#FF7A36">
             <a href="${replyLink}" style="display:inline-block;padding:12px 22px;font-size:14px;font-weight:700;color:#FFFFFF;text-decoration:none">Reply to ${name}</a>
@@ -98,6 +105,15 @@ function supportEmailHtml(ticket: {
 </table>
 </body>
 </html>`;
+}
+
+// Small linked thumbnails, one per screenshot.
+function screenshotsHtml(links: string[]): string {
+  if (links.length === 0) return "";
+  const cells = links.map((link) =>
+    `<td style="padding:0 8px 0 0"><a href="${escapeHtml(link)}"><img src="${escapeHtml(link)}" width="120" alt="Screenshot" style="display:block;width:120px;border-radius:10px;border:1px solid #EFE8DA"></a></td>`
+  ).join("");
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:16px 0 0"><tr>${cells}</tr></table>`;
 }
 
 Deno.serve(async (request: Request) => {
@@ -121,8 +137,25 @@ Deno.serve(async (request: Request) => {
   let category: string;
   let message: string;
   let appVersion: string | null;
+  let screenshotPaths: string[];
+  let replyTo: string;
   try {
     const body = await request.json();
+    // Only files in the user's own folder.
+    screenshotPaths = Array.isArray(body.screenshots)
+      ? body.screenshots
+        .filter((path: unknown): path is string =>
+          typeof path === "string" && path.startsWith(`${user.id}/`) &&
+          !path.includes("..")
+        )
+        .slice(0, MAX_SCREENSHOTS)
+      : [];
+    const wanted = typeof body.reply_to === "string"
+      ? body.reply_to.trim()
+      : "";
+    replyTo = wanted.length <= 254 && EMAIL_PATTERN.test(wanted)
+      ? wanted
+      : user.email;
     category = typeof body.category === "string" ? body.category : "";
     message = typeof body.message === "string" ? body.message.trim() : "";
     appVersion = typeof body.app_version === "string"
@@ -162,12 +195,23 @@ Deno.serve(async (request: Request) => {
       category,
       message,
       app_version: appVersion,
+      screenshot_paths: screenshotPaths,
+      reply_to: replyTo === user.email ? null : replyTo,
     })
     .select("id, reply_token")
     .single();
   if (insertError || !ticket) {
     console.error("Could not save support ticket:", insertError?.message);
     return jsonResponse({ error: "save_failed" }, 500);
+  }
+
+  let screenshotLinks: string[] = [];
+  if (screenshotPaths.length > 0) {
+    const { data: signed } = await admin.storage.from(SCREENSHOT_BUCKET)
+      .createSignedUrls(screenshotPaths, SCREENSHOT_LINK_SECONDS);
+    screenshotLinks = (signed ?? [])
+      .map((item) => item.signedUrl)
+      .filter((link): link is string => !!link);
   }
 
   const shortId = (ticket.id as string).slice(0, 8);
@@ -180,19 +224,20 @@ Deno.serve(async (request: Request) => {
     body: JSON.stringify({
       from: SUPPORT_FROM_EMAIL,
       to: [SUPPORT_INBOX_EMAIL],
-      reply_to: user.email,
+      reply_to: replyTo,
       subject: `[${(CATEGORY_LABELS[category] ?? CATEGORY_LABELS.other).label}] ${name} (#${shortId})`,
-      text: `${message}\n\n---\nFrom: ${name} <${user.email}>\nUser ID: ${user.id}\nApp: ${appVersion ?? "unknown"}\nTicket: ${ticket.id}`,
+      text: `${message}\n\n${screenshotLinks.map((link, i) => `Screenshot ${i + 1}: ${link}\n`).join("")}---\nFrom: ${name} <${replyTo}>\nUser ID: ${user.id}\nApp: ${appVersion ?? "unknown"}\nTicket: ${ticket.id}`,
       html: supportEmailHtml({
         category,
         name,
-        email: user.email,
+        email: replyTo,
         userId: user.id,
         appVersion,
         ticketId: ticket.id as string,
         shortId,
         replyToken: ticket.reply_token as string,
         message,
+        screenshots: screenshotLinks,
       }),
     }),
   }).catch(() => null);

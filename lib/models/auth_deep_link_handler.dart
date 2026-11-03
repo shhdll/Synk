@@ -9,10 +9,16 @@ import '../core/constants/auth_constants.dart';
 enum AuthLinkOutcome { verified, emailChangePartial, failed }
 
 class AuthDeepLinkHandler {
-  AuthDeepLinkHandler({required this.onResult, AppLinks? appLinks})
-    : _appLinks = appLinks ?? AppLinks();
+  AuthDeepLinkHandler({
+    required this.onResult,
+    this.onActivityLink,
+    AppLinks? appLinks,
+  }) : _appLinks = appLinks ?? AppLinks();
 
   final void Function(OtpType type, AuthLinkOutcome outcome) onResult;
+
+  // A shared activity link, io.supabase.synk://activity?id=...
+  final void Function(String activityId)? onActivityLink;
   final AppLinks _appLinks;
 
   StreamSubscription<Uri>? _subscription;
@@ -76,6 +82,12 @@ class AuthDeepLinkHandler {
   Future<void> _handle(Uri uri) async {
     if (uri.scheme != AuthConstants.appScheme) {
       _log('ignored: scheme is not ${AuthConstants.appScheme}');
+      return;
+    }
+
+    if (uri.host == 'activity') {
+      final id = uri.queryParameters['id'];
+      if (id != null && id.isNotEmpty) onActivityLink?.call(id);
       return;
     }
 

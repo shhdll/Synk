@@ -11,6 +11,7 @@ import '../../../models/activity_model.dart';
 import '../../../models/chat_model.dart';
 import '../../../models/friends_model.dart';
 import '../../../utils/custom_widgets/synk_feedback.dart';
+import '../../../utils/share_activity.dart';
 import 'activity_thumbnail.dart';
 import 'discovery_activity_card.dart';
 import 'empty_state.dart';
@@ -375,7 +376,7 @@ class _ShareToChatSheetState extends State<_ShareToChatSheet> {
               const _Handle(),
               const SizedBox(height: 16),
               Text(
-                context.l10n.shareInChat,
+                context.l10n.share,
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
@@ -383,6 +384,55 @@ class _ShareToChatSheetState extends State<_ShareToChatSheet> {
                 ),
               ),
               const SizedBox(height: 14),
+              // Outside Synk: the phone's share menu with a link.
+              Builder(
+                builder: (buttonContext) => Material(
+                  color: SynkColors.orangeDark.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(14),
+                  child: InkWell(
+                    onTap: () =>
+                        shareActivityLink(buttonContext, widget.activity),
+                    borderRadius: BorderRadius.circular(14),
+                    // Same height as the search field below it.
+                    child: Container(
+                      height: 48,
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.link_rounded,
+                            size: 20,
+                            color: SynkColors.orangeDark,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              context.l10n.shareLink,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: SynkColors.orangeDark,
+                              ),
+                            ),
+                          ),
+                          const Icon(
+                            Icons.ios_share_rounded,
+                            size: 18,
+                            color: SynkColors.orangeDark,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Divider(
+                height: 1,
+                thickness: 1,
+                color: SynkColors.textSecondary.withValues(alpha: 0.15),
+              ),
+              const SizedBox(height: 16),
               FriendsSearchField(
                 controller: _search,
                 hint: context.l10n.searchChats,

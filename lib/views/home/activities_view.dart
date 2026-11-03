@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../controllers/activity_delete_controller.dart';
+import '../../controllers/chat_controller.dart';
 import '../../core/constants/synk_colors.dart';
 import '../../l10n/l10n.dart';
 import '../../models/activities_model.dart';
@@ -12,35 +13,14 @@ import '../../utils/custom_widgets/synk_feedback.dart';
 import '../widgets/synk_blob_background.dart';
 import 'activity_code_join_sheet.dart';
 import 'activity_join_requests_view.dart';
+import 'chat_room_view.dart';
 import 'schedule_conflict_resolution_view.dart';
+import 'widgets/activities_filter_sheet.dart';
 import 'widgets/activity_details_sheet.dart';
 import 'widgets/code_bubble.dart';
 import 'widgets/empty_state.dart';
 import 'widgets/my_activity_card.dart';
-import 'widgets/synk_filter_chip.dart';
 import '../create_activity/create_activity_view.dart';
-
-enum _RoleFilter {
-  all,
-  hosting,
-  joined,
-  requested;
-
-  String get label => switch (this) {
-    all => appL10n.all,
-    hosting => appL10n.hosting,
-    joined => appL10n.joined,
-    requested => appL10n.requested,
-  };
-
-  bool matches(MyActivityRole role) => switch (this) {
-    all => true,
-    hosting => role == MyActivityRole.hosting,
-    joined => role == MyActivityRole.joined,
-    requested =>
-      role == MyActivityRole.pending || role == MyActivityRole.waitlisted,
-  };
-}
 
 class ActivitiesView extends StatefulWidget {
   const ActivitiesView({super.key, required this.activityStore});
@@ -57,7 +37,8 @@ class _ActivitiesViewState extends State<ActivitiesView> {
   late final Listenable _changes;
 
   bool _showPast = false;
-  _RoleFilter _filter = _RoleFilter.all;
+  ActivityRoleFilter _filter = ActivityRoleFilter.all;
+  ActivityVisibility _visibility = ActivityVisibility.all;
   bool _codeBubbleExpanded = true;
   List<Map<String, dynamic>> _scheduleConflicts = const [];
   bool _loadingScheduleConflicts = false;
@@ -72,7 +53,11 @@ class _ActivitiesViewState extends State<ActivitiesView> {
   void initState() {
     super.initState();
     _deleteController = ActivityDeleteController();
-    _changes = Listenable.merge([_store, _deleteController]);
+    _changes = Listenable.merge([
+      _store,
+      _deleteController,
+      ChatController.instance,
+    ]);
     _store.addListener(_loadMissingPeople);
     _store.addListener(_takeDetailsFocus);
     _loadMissingPeople();
@@ -93,7 +78,8 @@ class _ActivitiesViewState extends State<ActivitiesView> {
     if (focus == null) return;
     setState(() {
       _showPast = false;
-      _filter = _RoleFilter.all;
+      _filter = ActivityRoleFilter.all;
+      _visibility = ActivityVisibility.all;
     });
     // After the tab switch has been drawn.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -161,6 +147,26 @@ class _ActivitiesViewState extends State<ActivitiesView> {
         builder: (_) => ActivityJoinRequestsView(activityStore: _store),
       ),
     );
+  }
+
+  // The activity's group chat; loads the chats first if it isn't there yet.
+  Future<void> _openChat(Activity activity) async {
+    final chats = ChatController.instance;
+    var chat = chats.activityChatFor(activity.id);
+    if (chat == null) {
+      await chats.refresh();
+      chat = chats.activityChatFor(activity.id);
+    }
+    if (!mounted) return;
+    if (chat == null) {
+      SynkFeedback.showToast(
+        context,
+        title: context.l10n.couldntOpenChat,
+        success: false,
+      );
+      return;
+    }
+    await openChatRoom(context, chat, activityStore: widget.activityStore);
   }
 
   void _openActivity(Activity activity) {
@@ -280,23 +286,30 @@ class _ActivitiesViewState extends State<ActivitiesView> {
     final userId = _store.currentUserId;
     final inTab = _showPast ? _store.past : _store.upcoming;
     final roles = {for (final a in inTab) a.id: MyActivityRole.of(a, userId)};
+    final chats = ChatController.instance;
 
-    int countOf(_RoleFilter f) =>
-        inTab.where((a) => f.matches(roles[a.id]!)).length;
+    int countFor(ActivityFilterChoice f) => inTab
+        .where((a) => f.role.matches(roles[a.id]!) && f.visibility.matches(a))
+        .length;
 
-    final filters = [
-      for (final f in _RoleFilter.values)
-        if (f == _RoleFilter.all || countOf(f) > 0) f,
-    ];
-    final filter = filters.contains(_filter) ? _filter : _RoleFilter.all;
-    final shown = inTab.where((a) => filter.matches(roles[a.id]!)).toList();
+    final choice = (role: _filter, visibility: _visibility);
+    final filtered =
+        _filter != ActivityRoleFilter.all ||
+        _visibility != ActivityVisibility.all;
+    final shown = inTab
+        .where((a) => _filter.matches(roles[a.id]!) && _visibility.matches(a))
+        .toList();
 
-    final hostsPrivate = _store.mine.any((a) => !a.isPublic);
-    final showRequests = hostsPrivate || _store.pendingRequestCount > 0;
+    bool isMember(Activity a) {
+      final role = roles[a.id];
+      return role == MyActivityRole.hosting || role == MyActivityRole.joined;
+    }
 
     final header = <Widget>[
-      Padding(
-        padding: EdgeInsets.symmetric(horizontal: 4),
+      // Same height and place as the Chats title.
+      Container(
+        height: 48,
+        alignment: AlignmentDirectional.centerStart,
         child: Text(
           context.l10n.activities,
           style: TextStyle(
@@ -341,49 +354,99 @@ class _ActivitiesViewState extends State<ActivitiesView> {
         ),
       ],
       const SizedBox(height: 16),
-      if (showRequests) ...[
+      if (_store.pendingRequestCount > 0) ...[
         _JoinRequestsRow(
           count: _store.pendingRequestCount,
           onTap: _openJoinRequests,
         ),
         const SizedBox(height: 14),
       ],
-      _Segmented(
-        showPast: _showPast,
-        onChanged: (past) => setState(() {
-          _showPast = past;
-          _filter = _RoleFilter.all;
-        }),
+      Row(
+        children: [
+          Expanded(
+            child: _Segmented(
+              showPast: _showPast,
+              onChanged: (past) => setState(() {
+                _showPast = past;
+                _filter = ActivityRoleFilter.all;
+                _visibility = ActivityVisibility.all;
+              }),
+            ),
+          ),
+          const SizedBox(width: 10),
+          _FilterButton(
+            active: filtered,
+            onTap: () async {
+              final picked = await showActivitiesFilterSheet(
+                context: context,
+                initial: choice,
+                countFor: countFor,
+              );
+              if (picked == null || !mounted) return;
+              setState(() {
+                _filter = picked.role;
+                _visibility = picked.visibility;
+              });
+            },
+          ),
+        ],
       ),
-      if (filters.length > 2) ...[
+      if (filtered) ...[
         const SizedBox(height: 12),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              for (final f in filters) ...[
-                SynkFilterChip(
-                  label: '${f.label}  ${countOf(f)}',
-                  selected: f == filter,
-                  onTap: () => setState(() => _filter = f),
-                ),
-                const SizedBox(width: 8),
-              ],
-            ],
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: _FilterSummary(
+            label: [
+              if (_filter != ActivityRoleFilter.all) _filter.label,
+              if (_visibility != ActivityVisibility.all) _visibility.label,
+            ].join(' · '),
+            onClear: _clearFilters,
           ),
         ),
       ],
       const SizedBox(height: 16),
     ];
 
-    // Room for the floating bottom bar.
-    final bottomPadding = bottomInset + 120;
+    // Room for the bottom bar, the + button and the code bubble.
+    final bottomPadding = bottomInset + 140;
+
+    final now = DateTime.now();
+    final items = <Widget>[];
+    String? lastGroup;
+    for (final activity in shown) {
+      final group = _groupLabel(activity.dateTime, now);
+      if (group != lastGroup) {
+        items.add(_GroupHeader(label: group, first: lastGroup == null));
+        lastGroup = group;
+      }
+      final role = roles[activity.id]!;
+      final chat = chats.activityChatFor(activity.id);
+      final member = isMember(activity);
+      items
+        ..add(
+          MyActivityCard(
+            activity: activity,
+            role: role,
+            participants: _people[activity.id],
+            anonymous: role == MyActivityRole.pending,
+            onTap: () => _openActivity(activity),
+            // Past activities keep their chat if it's still there.
+            onChat: member && (!activity.isPast || chat != null)
+                ? () => _openChat(activity)
+                : null,
+            unreadCount: chat?.unreadCount ?? 0,
+            showCode: role == MyActivityRole.hosting && !activity.isPast,
+            canShare: member && !activity.isPast,
+          ),
+        )
+        ..add(const SizedBox(height: 12));
+    }
 
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
           sliver: SliverList(delegate: SliverChildListDelegate(header)),
         ),
         if (shown.isEmpty)
@@ -393,7 +456,14 @@ class _ActivitiesViewState extends State<ActivitiesView> {
             child: Padding(
               padding: EdgeInsets.only(bottom: bottomPadding),
               child: Center(
-                child: _showPast
+                child: filtered
+                    ? EmptyState(
+                        icon: Icons.tune_rounded,
+                        title: context.l10n.noMatchesTryFewerFilters,
+                        actionLabel: context.l10n.clearFilters,
+                        onAction: _clearFilters,
+                      )
+                    : _showPast
                     ? EmptyState(
                         icon: Icons.history_rounded,
                         title: context.l10n.noPastActivities,
@@ -410,23 +480,138 @@ class _ActivitiesViewState extends State<ActivitiesView> {
         else
           SliverPadding(
             padding: EdgeInsets.fromLTRB(16, 0, 16, bottomPadding),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                for (final activity in shown) ...[
-                  MyActivityCard(
-                    activity: activity,
-                    role: roles[activity.id]!,
-                    participants: _people[activity.id],
-                    anonymous: roles[activity.id] == MyActivityRole.pending,
-                    onTap: () => _openActivity(activity),
-                    showCode: !activity.isPast,
-                  ),
-                  const SizedBox(height: 12),
-                ],
-              ]),
-            ),
+            sliver: SliverList(delegate: SliverChildListDelegate(items)),
           ),
       ],
+    );
+  }
+
+  void _clearFilters() => setState(() {
+    _filter = ActivityRoleFilter.all;
+    _visibility = ActivityVisibility.all;
+  });
+
+  // Today, Tomorrow / Yesterday, This week, then the month.
+  static String _groupLabel(DateTime date, DateTime now) {
+    final days = DateUtils.dateOnly(date)
+        .difference(DateUtils.dateOnly(now))
+        .inDays;
+    if (days == 0) return appL10n.today;
+    if (days == 1) return appL10n.tomorrow;
+    if (days == -1) return appL10n.yesterday;
+    if (days.abs() < 7) return appL10n.thisWeek;
+    final month = monthName(date.month);
+    return date.year == now.year ? month : '$month ${date.year}';
+  }
+}
+
+class _GroupHeader extends StatelessWidget {
+  const _GroupHeader({required this.label, required this.first});
+
+  final String label;
+  final bool first;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsetsDirectional.fromSTEB(4, first ? 0 : 8, 4, 8),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: SynkColors.textSecondary,
+        ),
+      ),
+    );
+  }
+}
+
+class _FilterButton extends StatelessWidget {
+  const _FilterButton({required this.active, required this.onTap});
+
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Tooltip(
+          message: context.l10n.filter,
+          child: SizedBox(
+            width: 48,
+            height: 48,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                const Icon(Icons.tune_rounded, size: 22, color: SynkColors.ink),
+                if (active)
+                  PositionedDirectional(
+                    top: 10,
+                    end: 10,
+                    child: Container(
+                      width: 9,
+                      height: 9,
+                      decoration: BoxDecoration(
+                        color: SynkColors.orangeDark,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 1.5),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FilterSummary extends StatelessWidget {
+  const _FilterSummary({required this.label, required this.onClear});
+
+  final String label;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 34,
+      padding: const EdgeInsetsDirectional.only(start: 14),
+      decoration: const ShapeDecoration(
+        color: Colors.white,
+        shape: StadiumBorder(),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: SynkColors.orangeDeep,
+            ),
+          ),
+          IconButton(
+            tooltip: context.l10n.clearFilters,
+            onPressed: onClear,
+            constraints: const BoxConstraints.tightFor(width: 36, height: 34),
+            padding: EdgeInsets.zero,
+            icon: const Icon(
+              Icons.close_rounded,
+              size: 16,
+              color: SynkColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -551,7 +736,7 @@ class _JoinRequestsRow extends StatelessWidget {
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: SynkColors.badge,
+                    color: SynkColors.orangeDark,
                     borderRadius: BorderRadius.circular(11),
                   ),
                   child: Text(

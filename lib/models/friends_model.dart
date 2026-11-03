@@ -70,6 +70,18 @@ class FriendsModel {
 
   Future<List<FriendUser>> fetchFriends() => _fetchUsers('get_my_friends');
 
+  // Someone else's friends, for their profile.
+  Future<List<FriendUser>> fetchFriendsOf(String userId) async {
+    final response = await _supabase.rpc(
+      'get_user_friends',
+      params: {'target_user_id': userId},
+    );
+    if (response is! List) return const [];
+    return response
+        .map((row) => FriendUser.fromMap(row as Map<String, dynamic>))
+        .toList();
+  }
+
   Future<List<FriendUser>> fetchBlocked() =>
       _fetchUsers('get_my_blocked_users');
 
