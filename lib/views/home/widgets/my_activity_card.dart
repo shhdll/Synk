@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart' show Bidi;
 
 import '../../../core/constants/synk_colors.dart';
 import '../../../l10n/l10n.dart';
 import '../../../models/activity_model.dart';
 import '../../../models/avatar_uploader.dart';
 import '../../widgets/anonymous_avatar.dart';
-import '../../../utils/share_activity.dart';
+import '../../../utils/custom_widgets/synk_feedback.dart';
 import 'activity_thumbnail.dart';
+import 'chat_share_sheets.dart';
 import 'discovery_activity_card.dart';
 
 enum MyActivityRole {
@@ -42,7 +44,10 @@ class MyActivityCard extends StatelessWidget {
     required this.role,
     required this.participants,
     required this.onTap,
+    this.onChat,
+    this.unreadCount = 0,
     this.showCode = false,
+    this.canShare = false,
     this.anonymous = false,
   });
 
@@ -53,14 +58,24 @@ class MyActivityCard extends StatelessWidget {
   // null while loading
   final List<Map<String, dynamic>>? participants;
   final VoidCallback onTap;
+  // null hides the Chat button.
+  final VoidCallback? onChat;
+  final int unreadCount;
   final bool showCode;
+  final bool canShare;
 
   @override
   Widget build(BuildContext context) {
     const radius = BorderRadius.all(Radius.circular(20));
     final hasLocation = activity.location.trim().isNotEmpty;
+    final title = activity.title.trim().isEmpty
+        ? context.l10n.untitledActivity
+        : activity.title;
 
-    return DecoratedBox(
+    final code = showCode && activity.hasActivityCode
+        ? activity.activityCode!
+        : null;
+    final card = DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: radius,
         boxShadow: [
@@ -78,7 +93,7 @@ class MyActivityCard extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -93,13 +108,9 @@ class MyActivityCard extends StatelessWidget {
                         children: [
                           Row(
                             children: [
-                              Expanded(
-                                child: Text(
-                                  activity.title.trim().isEmpty
-                                      ? context.l10n.untitledActivity
-                                      : activity.title,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                              Flexible(
+                                child: _BidiText(
+                                  title,
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w700,
@@ -112,7 +123,7 @@ class MyActivityCard extends StatelessWidget {
                                 const SizedBox(width: 6),
                                 const Icon(
                                   Icons.lock_rounded,
-                                  size: 15,
+                                  size: 14,
                                   color: SynkColors.textSecondary,
                                 ),
                               ],
@@ -139,32 +150,43 @@ class MyActivityCard extends StatelessWidget {
                         ],
                       ),
                     ),
+                    const SizedBox(width: 8),
+                    _RoleBadge(role: role),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
                 Row(
                   children: [
                     Expanded(child: _buildPeople()),
-                    const SizedBox(width: 8),
-                    _RolePill(role: role),
+                    if (onChat != null) ...[
+                      const SizedBox(width: 8),
+                      _ChatPill(unreadCount: unreadCount, onTap: onChat!),
+                    ],
                   ],
                 ),
-                if (showCode && activity.hasActivityCode) ...[
-                  const SizedBox(height: 10),
-                  _CodeStrip(
-                    activity: activity,
-                    code: activity.activityCode!,
-                    // Only people who are in can invite others.
-                    canShare:
-                        role == MyActivityRole.hosting ||
-                        role == MyActivityRole.joined,
-                  ),
-                ],
               ],
             ),
           ),
         ),
       ),
+    );
+    if (code == null && !canShare) return card;
+
+    // The code and share sit on a strip that peeks out from under the card.
+    return Stack(
+      children: [
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: _CardStrip.height + 20,
+          child: _CardStrip(activity: activity, code: code, canShare: canShare),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: _CardStrip.height),
+          child: card,
+        ),
+      ],
     );
   }
 
@@ -179,6 +201,7 @@ class MyActivityCard extends StatelessWidget {
     final faces = anonymous
         ? List.filled((going - 1).clamp(0, 4), const <String, dynamic>{})
         : people?.take(4).toList() ?? const [];
+    final full = going >= activity.maxParticipants;
 
     return Row(
       children: [
@@ -190,8 +213,8 @@ class MyActivityCard extends StatelessWidget {
             child: Stack(
               children: [
                 for (final (i, p) in faces.indexed)
-                  Positioned(
-                    left: i * 16.0,
+                  PositionedDirectional(
+                    start: i * 16.0,
                     child: _Face(
                       avatarUrl: p['avatar_url'] as String?,
                       gender: p['gender'] as String?,
@@ -212,13 +235,15 @@ class MyActivityCard extends StatelessWidget {
         ],
         Flexible(
           child: Text(
-            appL10n.joinedOfMaxGoing(going, activity.maxParticipants),
+            full
+                ? appL10n.full
+                : appL10n.joinedOfMaxGoing(going, activity.maxParticipants),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: SynkColors.textPrimary,
+              color: full ? SynkColors.textSecondary : SynkColors.textPrimary,
             ),
           ),
         ),
@@ -227,89 +252,193 @@ class MyActivityCard extends StatelessWidget {
   }
 }
 
-class _CodeStrip extends StatelessWidget {
-  const _CodeStrip({
+class _CardStrip extends StatelessWidget {
+  const _CardStrip({
     required this.activity,
     required this.code,
     required this.canShare,
   });
 
+  // The part that shows under the card.
+  static const double height = 40;
+
   final Activity activity;
-  final String code;
+  final String? code;
   final bool canShare;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: SynkColors.orangeDark.withValues(alpha: 0.08),
-      borderRadius: BorderRadius.circular(10),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10),
-        onTap: () async {
-          await Clipboard.setData(ClipboardData(text: code));
-          if (!context.mounted) return;
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(content: Text(context.l10n.activityCodeCopied)),
-            );
-        },
+    const color = SynkColors.tealText;
+    final code = this.code;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Material(
+        color: const Color(0xFFDDEDE9),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+        clipBehavior: Clip.antiAlias,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          // The top 20 is under the card.
+          padding: const EdgeInsets.only(top: 20),
           child: Row(
             children: [
-              const Icon(
-                Icons.password_rounded,
-                size: 14,
-                color: SynkColors.orangeDark,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                context.l10n.code,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: SynkColors.textSecondary,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                code,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.5,
-                  color: SynkColors.orangeDark,
-                ),
-              ),
-              const Spacer(),
-              const Icon(
-                Icons.copy_rounded,
-                size: 14,
-                color: SynkColors.orangeDark,
-              ),
-              if (canShare) ...[
-                const SizedBox(width: 4),
-                Builder(
-                  builder: (buttonContext) => IconButton(
-                    tooltip: context.l10n.shareCode,
-                    onPressed: () =>
-                        shareActivityCode(buttonContext, activity, code),
-                    visualDensity: VisualDensity.compact,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints.tightFor(
-                      width: 32,
-                      height: 28,
-                    ),
-                    icon: const Icon(
-                      Icons.share_rounded,
-                      size: 15,
-                      color: SynkColors.orangeDark,
+              if (code != null)
+                InkWell(
+                  onTap: () async {
+                    await Clipboard.setData(ClipboardData(text: code));
+                    if (!context.mounted) return;
+                    SynkFeedback.showToast(
+                      context,
+                      title: context.l10n.activityCodeCopied,
+                    );
+                  },
+                  child: Semantics(
+                    label: context.l10n.copyCode,
+                    button: true,
+                    child: Padding(
+                      padding: const EdgeInsetsDirectional.fromSTEB(
+                        14,
+                        0,
+                        12,
+                        0,
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            context.l10n.code,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: color,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            code,
+                            textDirection: TextDirection.ltr,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 2,
+                              color: color,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(
+                            Icons.copy_rounded,
+                            size: 15,
+                            color: color,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ],
+              const Spacer(),
+              if (canShare)
+                Builder(
+                  builder: (buttonContext) => InkWell(
+                    onTap: () => showShareToChatSheet(buttonContext, activity),
+                    child: Padding(
+                      padding: const EdgeInsetsDirectional.fromSTEB(
+                        12,
+                        0,
+                        14,
+                        0,
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.ios_share_rounded,
+                            size: 16,
+                            color: color,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            context.l10n.share,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: color,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ChatPill extends StatelessWidget {
+  const _ChatPill({required this.unreadCount, required this.onTap});
+
+  final int unreadCount;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    // Unread shows as the orange count, not a different pill.
+    final unread = unreadCount > 0;
+    const foreground = SynkColors.orangeDeep;
+
+    return Material(
+      color: SynkColors.orangeLight,
+      shape: const StadiumBorder(),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const StadiumBorder(),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 44),
+          child: Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(14, 0, 16, 0),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.chat_bubble_outline_rounded,
+                  size: 18,
+                  color: foreground,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  context.l10n.chat,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: foreground,
+                  ),
+                ),
+                if (unread) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    constraints: const BoxConstraints(minWidth: 20),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: SynkColors.orangeDark,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      unreadCount > 99 ? '99+' : '$unreadCount',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
         ),
       ),
@@ -357,34 +486,58 @@ class _Face extends StatelessWidget {
   }
 }
 
-class _RolePill extends StatelessWidget {
-  const _RolePill({required this.role});
+// Hosting in orange; Joined and Requested in muted gray.
+class _RoleBadge extends StatelessWidget {
+  const _RoleBadge({required this.role});
 
   final MyActivityRole role;
 
   @override
   Widget build(BuildContext context) {
+    final hosting = role == MyActivityRole.hosting;
+    final color = hosting ? SynkColors.orangeDeep : SynkColors.textSecondary;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
-        color: role.color.withValues(alpha: 0.12),
+        color: hosting
+            ? SynkColors.orangeDark.withValues(alpha: 0.12)
+            : SynkColors.textSecondary.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(role.icon, size: 13, color: role.color),
-          const SizedBox(width: 5),
-          Text(
-            role.label,
-            style: TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w700,
-              color: role.color,
-            ),
-          ),
-        ],
+      child: Text(
+        role.label,
+        style: TextStyle(
+          fontSize: 11.5,
+          fontWeight: FontWeight.w700,
+          color: color,
+        ),
       ),
+    );
+  }
+}
+
+// One line that ends in "…", laid out in the text's own direction, so
+// Arabic and English mixed together reads right.
+class _BidiText extends StatelessWidget {
+  const _BidiText(this.text, {required this.style});
+
+  final String text;
+  final TextStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    final rtl = Bidi.detectRtlDirectionality(text);
+    final uiRtl = Directionality.of(context) == TextDirection.rtl;
+
+    return Text(
+      text,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
+      // Still lined up with the rest of the card.
+      textAlign: uiRtl ? TextAlign.right : TextAlign.left,
+      style: style,
     );
   }
 }
@@ -407,10 +560,8 @@ class _MetaLine extends StatelessWidget {
         Icon(icon, size: 14, color: color),
         const SizedBox(width: 5),
         Expanded(
-          child: Text(
+          child: _BidiText(
             text,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
