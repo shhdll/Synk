@@ -39,12 +39,16 @@ class TopPick {
     required this.activity,
     required this.reason,
     this.distanceKm,
+    this.score = 0,
   });
 
   // 1 to [rankTopPicks]'s limit.
   final int rank;
   final Activity activity;
   final TopPickReason reason;
+
+  // How well it matches the user; 0 for popular fill-ins.
+  final int score;
 
   // Null without the user's location or the activity's coordinates.
   final double? distanceKm;
@@ -165,6 +169,7 @@ List<TopPick> rankTopPicks({
         activity: picked[i].activity,
         reason: picked[i].reason ?? const PopularNearYou(),
         distanceKm: picked[i].distance,
+        score: picked[i].score,
       ),
   ];
 }

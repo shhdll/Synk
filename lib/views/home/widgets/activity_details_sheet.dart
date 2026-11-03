@@ -11,6 +11,7 @@ import '../../../models/activities_model.dart';
 import '../../../models/activity_model.dart';
 import '../../../models/activity_participation_model.dart';
 import '../../../models/avatar_uploader.dart';
+import '../../../models/friends_model.dart';
 import '../../../models/user_profile_model.dart';
 import '../../../utils/custom_widgets/synk_dialog.dart';
 import '../../../utils/custom_widgets/synk_feedback.dart';
@@ -1652,7 +1653,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          context.l10n.aboutThisActivity,
+          context.l10n.about,
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w800,
@@ -1841,6 +1842,10 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     required bool isHost,
   }) {
     final canOpen = userId != null && userId != _viewerId;
+    final following =
+        canOpen &&
+        FriendsController.instance.statusFor(userId) ==
+            FriendshipStatus.friends;
 
     return InkWell(
       onTap: canOpen
@@ -1856,11 +1861,42 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
       borderRadius: BorderRadius.circular(12),
       child: Row(
         children: [
-          _buildAvatar(
-            userId: userId,
-            avatarUrl: avatarUrl,
-            gender: gender,
-            size: 38,
+          // A small badge on the photo of people the viewer follows.
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              _buildAvatar(
+                userId: userId,
+                avatarUrl: avatarUrl,
+                gender: gender,
+                size: 38,
+              ),
+              if (following)
+                PositionedDirectional(
+                  top: -3,
+                  end: -3,
+                  child: Semantics(
+                    label: context.l10n.following,
+                    child: Container(
+                      width: 18,
+                      height: 18,
+                      decoration: BoxDecoration(
+                        color: Color.alphaBlend(
+                          SynkColors.teal.withValues(alpha: 0.22),
+                          Colors.white,
+                        ),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 1.5),
+                      ),
+                      child: const Icon(
+                        Icons.how_to_reg_rounded,
+                        size: 11,
+                        color: SynkColors.tealText,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1906,26 +1942,11 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
               ),
             ),
           if (isHost)
-            Container(
-              padding: const EdgeInsetsDirectional.fromSTEB(6, 3, 8, 3),
-              decoration: BoxDecoration(
-                color: SynkColors.orangeDark.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CrownIcon(size: 14, color: SynkColors.orangeDark),
-                  SizedBox(width: 4),
-                  Text(
-                    context.l10n.host,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: SynkColors.orangeDark,
-                    ),
-                  ),
-                ],
+            Semantics(
+              label: context.l10n.host,
+              child: const Padding(
+                padding: EdgeInsetsDirectional.only(end: 4),
+                child: HostCrownBadge(),
               ),
             ),
         ],

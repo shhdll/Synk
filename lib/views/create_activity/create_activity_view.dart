@@ -22,10 +22,18 @@ class CreateActivityOutcome {
 // The Create Activity wizard shell.
 
 class CreateActivityView extends StatefulWidget {
-  const CreateActivityView({super.key, this.store, this.activity});
+  const CreateActivityView({
+    super.key,
+    this.store,
+    this.activity,
+    this.initialTitle,
+  });
 
   final ActivityStore? store;
   final Activity? activity;
+
+  // New activities only, e.g. what the user searched for on Home.
+  final String? initialTitle;
 
   @override
   State<CreateActivityView> createState() => _CreateActivityViewState();
@@ -50,6 +58,10 @@ class _CreateActivityViewState extends State<CreateActivityView> {
       activity: widget.activity,
       store: widget.store,
     );
+    final title = widget.initialTitle?.trim();
+    if (widget.activity == null && title != null && title.isNotEmpty) {
+      _controller.titleController.text = title;
+    }
     _controller.addListener(_onControllerChanged);
     unawaited(_controller.refreshConfirmedParticipantCount());
   }

@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import '../../controllers/friends_controller.dart';
 import '../../core/constants/synk_colors.dart';
 import '../../l10n/l10n.dart';
+import '../../models/recent_searches.dart';
 import 'find_people_view.dart';
 import 'widgets/empty_state.dart';
 import 'widgets/friend_options_sheet.dart';
 import 'widgets/friends_list_widgets.dart';
+import 'widgets/recent_searches_list.dart';
 
 // The user's friends. Friend requests live in the notification center.
 class FriendsView extends StatefulWidget {
@@ -19,12 +21,37 @@ class FriendsView extends StatefulWidget {
 class _FriendsViewState extends State<FriendsView> {
   final FriendsController _friends = FriendsController.instance;
   final TextEditingController _search = TextEditingController();
+  final FocusNode _searchFocus = FocusNode();
+  final RecentSearches _recentSearches = const RecentSearches(
+    'friends_recent_searches',
+  );
+  List<String> _recent = const [];
 
   @override
   void initState() {
     super.initState();
     _friends.addListener(_refresh);
     _friends.refresh();
+    _searchFocus.addListener(_refresh);
+    _recentSearches.load().then((recent) {
+      if (mounted) setState(() => _recent = recent);
+    });
+  }
+
+  Future<void> _saveRecent(String query) async {
+    final recent = await _recentSearches.add(query);
+    if (mounted) setState(() => _recent = recent);
+  }
+
+  Future<void> _removeRecent(String query) async {
+    final recent = await _recentSearches.remove(query);
+    if (mounted) setState(() => _recent = recent);
+  }
+
+  void _runRecent(String query) {
+    _search.text = query;
+    _search.selection = TextSelection.collapsed(offset: query.length);
+    _saveRecent(query);
   }
 
   void _refresh() {
@@ -35,6 +62,7 @@ class _FriendsViewState extends State<FriendsView> {
   void dispose() {
     _friends.removeListener(_refresh);
     _search.dispose();
+    _searchFocus.dispose();
     super.dispose();
   }
 
@@ -118,10 +146,22 @@ class _FriendsViewState extends State<FriendsView> {
       children: [
         FriendsSearchField(
           controller: _search,
+          focusNode: _searchFocus,
           hint: context.l10n.searchFriends,
           onChanged: (_) => setState(() {}),
+          onSubmitted: _saveRecent,
         ),
         const SizedBox(height: 16),
+        if (_searchFocus.hasFocus &&
+            _search.text.trim().isEmpty &&
+            _recent.isNotEmpty) ...[
+          RecentSearchesList(
+            recent: _recent,
+            onTap: _runRecent,
+            onRemove: _removeRecent,
+          ),
+          const SizedBox(height: 12),
+        ],
         if (shown.isEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 32),
@@ -140,7 +180,12 @@ class _FriendsViewState extends State<FriendsView> {
               for (final friend in shown)
                 FriendsPersonRow(
                   user: friend,
-                  onTap: () => openFriendProfile(context, friend),
+                  onTap: () {
+                    if (_search.text.trim().isNotEmpty) {
+                      _saveRecent(_search.text);
+                    }
+                    openFriendProfile(context, friend);
+                  },
                   trailing: IconButton(
                     tooltip: context.l10n.friendOptions,
                     onPressed: () => showFriendOptionsSheet(

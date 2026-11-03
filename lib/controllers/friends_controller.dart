@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/friends_model.dart';
+import '../utils/fuzzy_search.dart';
 
 // Friends, friend requests and blocked users for the signed-in user.
 //
@@ -102,16 +103,16 @@ class FriendsController extends ChangeNotifier {
     return FriendshipStatus.none;
   }
 
+  // Forgives typos and unfinished words; best matches first.
   List<FriendUser> searchFriends(String query) {
-    final q = query.trim().toLowerCase();
-    if (q.isEmpty) return friends;
-    return _friends
-        .where(
-          (u) =>
-              u.name.toLowerCase().contains(q) ||
-              (u.username?.toLowerCase().contains(q) ?? false),
-        )
-        .toList();
+    if (query.trim().isEmpty) return friends;
+    final scored = [
+      for (final u in _friends)
+        if (FuzzySearch.score(query, title: u.name, primary: [?u.username])
+            case final score?)
+          (u, score),
+    ]..sort((a, b) => a.$2.compareTo(b.$2));
+    return [for (final (u, _) in scored) u];
   }
 
   // Friends who host or joined an activity, for the home feed card.

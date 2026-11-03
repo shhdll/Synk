@@ -1106,18 +1106,6 @@ abstract class AppLocalizations {
   /// **'Search activities or locations...'**
   String get searchActivitiesOrLocations;
 
-  /// No description provided for @upcomingPlans.
-  ///
-  /// In en, this message translates to:
-  /// **'Upcoming plans'**
-  String get upcomingPlans;
-
-  /// No description provided for @topPicksTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Top 5 picks for you'**
-  String get topPicksTitle;
-
   /// No description provided for @topPickLikesIndoor.
   ///
   /// In en, this message translates to:
@@ -1147,18 +1135,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{km} km'**
   String topPickDistanceKm(Object km);
-
-  /// No description provided for @topPickDistanceAway.
-  ///
-  /// In en, this message translates to:
-  /// **'{km} km away'**
-  String topPickDistanceAway(Object km);
-
-  /// No description provided for @topPickSemanticLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Pick {rank}: {details}'**
-  String topPickSemanticLabel(Object rank, Object details);
 
   /// No description provided for @clearFilters.
   ///
@@ -1495,12 +1471,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t open Google Maps.'**
   String get couldntOpenGoogleMaps;
-
-  /// No description provided for @aboutThisActivity.
-  ///
-  /// In en, this message translates to:
-  /// **'About This Activity'**
-  String get aboutThisActivity;
 
   /// No description provided for @participants.
   ///
@@ -2423,13 +2393,13 @@ abstract class AppLocalizations {
   /// No description provided for @noNotificationsYet.
   ///
   /// In en, this message translates to:
-  /// **'No notifications yet'**
+  /// **'Nothing yet'**
   String get noNotificationsYet;
 
   /// No description provided for @noNotificationsHint.
   ///
   /// In en, this message translates to:
-  /// **'Updates about your activities will show up here.'**
+  /// **'Join or create an activity to get updates here.'**
   String get noNotificationsHint;
 
   /// No description provided for @couldntLoadNotifications.
@@ -2741,7 +2711,7 @@ abstract class AppLocalizations {
   /// No description provided for @streakBest.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{Best streak: 1 week} other{Best streak: {count} weeks}}'**
+  /// **'{count, plural, =1{Best: 1 week} other{Best: {count} weeks}}'**
   String streakBest(int count);
 
   /// No description provided for @streakDaysLeft.
@@ -2750,28 +2720,22 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{Last day} other{{count} days left}}'**
   String streakDaysLeft(int count);
 
-  /// No description provided for @streakDone.
-  ///
-  /// In en, this message translates to:
-  /// **'Done ✓'**
-  String get streakDone;
-
   /// No description provided for @streakKeptThisWeek.
   ///
   /// In en, this message translates to:
-  /// **'You kept your streak this week 🎉'**
+  /// **'Nice, this week\'s done. See you next week'**
   String get streakKeptThisWeek;
 
   /// No description provided for @streakKeepGoing.
   ///
   /// In en, this message translates to:
-  /// **'Attend an activity this week to keep your streak'**
+  /// **'One activity this week keeps it going'**
   String get streakKeepGoing;
 
   /// No description provided for @streakStart.
   ///
   /// In en, this message translates to:
-  /// **'Attend an activity this week to start a streak'**
+  /// **'Join one activity this week to get it going'**
   String get streakStart;
 
   /// No description provided for @streakTitle.
@@ -2786,11 +2750,23 @@ abstract class AppLocalizations {
   /// **'This week'**
   String get streakThisWeek;
 
-  /// No description provided for @streakHowItWorks.
+  /// No description provided for @streakLastWeek.
   ///
   /// In en, this message translates to:
-  /// **'Attend at least one activity every week to grow your streak'**
-  String get streakHowItWorks;
+  /// **'Last week'**
+  String get streakLastWeek;
+
+  /// No description provided for @streakEarlierWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier week'**
+  String get streakEarlierWeek;
+
+  /// No description provided for @streakLaterWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Later week'**
+  String get streakLaterWeek;
 
   /// No description provided for @interests.
   ///
@@ -4232,23 +4208,11 @@ abstract class AppLocalizations {
   /// **'See all'**
   String get seeAll;
 
-  /// No description provided for @markAllRead.
+  /// No description provided for @notificationsNew.
   ///
   /// In en, this message translates to:
-  /// **'Mark all read'**
-  String get markAllRead;
-
-  /// No description provided for @markAsRead.
-  ///
-  /// In en, this message translates to:
-  /// **'Mark as read'**
-  String get markAsRead;
-
-  /// No description provided for @notificationsLast7Days.
-  ///
-  /// In en, this message translates to:
-  /// **'Last 7 days'**
-  String get notificationsLast7Days;
+  /// **'New'**
+  String get notificationsNew;
 
   /// No description provided for @notificationsEarlier.
   ///
@@ -4262,35 +4226,137 @@ abstract class AppLocalizations {
   /// **'Delete'**
   String get delete;
 
-  /// No description provided for @notificationsUnread.
-  ///
-  /// In en, this message translates to:
-  /// **'Unread'**
-  String get notificationsUnread;
-
-  /// No description provided for @showMoreCount.
-  ///
-  /// In en, this message translates to:
-  /// **'Show {n} more'**
-  String showMoreCount(Object n);
-
-  /// No description provided for @showLess.
-  ///
-  /// In en, this message translates to:
-  /// **'Show less'**
-  String get showLess;
-
-  /// No description provided for @allCaughtUp.
-  ///
-  /// In en, this message translates to:
-  /// **'You\'re all caught up'**
-  String get allCaughtUp;
-
   /// No description provided for @notificationDeleted.
   ///
   /// In en, this message translates to:
   /// **'Notification deleted'**
   String get notificationDeleted;
+
+  /// No description provided for @loadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get loadMore;
+
+  /// No description provided for @undo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get undo;
+
+  /// No description provided for @decline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get decline;
+
+  /// No description provided for @requestAcceptedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted'**
+  String get requestAcceptedLabel;
+
+  /// No description provided for @requestDeclinedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Declined'**
+  String get requestDeclinedLabel;
+
+  /// No description provided for @hiName.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi, {name}'**
+  String hiName(Object name);
+
+  /// No description provided for @forYou.
+  ///
+  /// In en, this message translates to:
+  /// **'For you'**
+  String get forYou;
+
+  /// No description provided for @deckCounter.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} of {total}'**
+  String deckCounter(int n, int total);
+
+  /// No description provided for @joinShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get joinShort;
+
+  /// No description provided for @youJoinedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You joined {title}'**
+  String youJoinedTitle(Object title);
+
+  /// No description provided for @spotsLeftShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} left'**
+  String spotsLeftShort(int n);
+
+  /// No description provided for @seeAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'See again'**
+  String get seeAgain;
+
+  /// No description provided for @nextActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Next activity'**
+  String get nextActivity;
+
+  /// No description provided for @previousActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous activity'**
+  String get previousActivity;
+
+  /// No description provided for @explore.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore'**
+  String get explore;
+
+  /// No description provided for @recentSearches.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get recentSearches;
+
+  /// No description provided for @removeRecentSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get removeRecentSearch;
+
+  /// No description provided for @activitiesForQuery.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 activity for \"{query}\"} other{{n} activities for \"{query}\"}}'**
+  String activitiesForQuery(int n, Object query);
+
+  /// No description provided for @bestMatchForYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Best match for you'**
+  String get bestMatchForYou;
+
+  /// No description provided for @nothingForQueryYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing for \"{query}\" yet'**
+  String nothingForQueryYet(Object query);
+
+  /// No description provided for @createQuery.
+  ///
+  /// In en, this message translates to:
+  /// **'Create \"{query}\"'**
+  String createQuery(Object query);
 
   /// No description provided for @sentRequests.
   ///
@@ -5569,24 +5635,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 review} other{{count} reviews}}'**
   String reviewsCount(int count);
-
-  /// No description provided for @goodMorning.
-  ///
-  /// In en, this message translates to:
-  /// **'Good morning'**
-  String get goodMorning;
-
-  /// No description provided for @goodAfternoon.
-  ///
-  /// In en, this message translates to:
-  /// **'Good afternoon'**
-  String get goodAfternoon;
-
-  /// No description provided for @goodEvening.
-  ///
-  /// In en, this message translates to:
-  /// **'Good evening'**
-  String get goodEvening;
 
   /// No description provided for @couldntFindYourThing.
   ///

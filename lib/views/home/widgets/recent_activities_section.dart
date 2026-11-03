@@ -4,10 +4,9 @@ import '../../../core/constants/synk_colors.dart';
 import '../../../l10n/l10n.dart';
 import '../../../models/activities_model.dart';
 import '../../../models/activity_model.dart';
-import '../user_activity_history_view.dart';
 import 'activity_thumbnail.dart';
 
-// A friend's latest ended activities in a horizontal list, with See all.
+// A friend's latest ended activities, three to a row, in a card that folds.
 // Hidden while loading, on errors, and when nothing is visible to the viewer.
 class RecentActivitiesSection extends StatefulWidget {
   const RecentActivitiesSection({
@@ -29,7 +28,7 @@ class RecentActivitiesSection extends StatefulWidget {
 }
 
 class _RecentActivitiesSectionState extends State<RecentActivitiesSection> {
-  static const int _previewCount = 10;
+  static const int _previewCount = 12;
 
   List<Activity> _activities = const [];
 
@@ -53,83 +52,105 @@ class _RecentActivitiesSectionState extends State<RecentActivitiesSection> {
     }
   }
 
-  void _openHistory() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => UserActivityHistoryView(
-          userId: widget.userId,
-          userName: widget.userName,
-          activitiesModel: widget.activitiesModel,
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_activities.isEmpty) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.only(top: 12),
-      // Same card style as the profile's About and Interests.
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsetsDirectional.fromSTEB(16, 6, 6, 16),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.7),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: SynkColors.textSecondary.withValues(alpha: 0.10),
-          ),
+      child: FoldCard(
+        title: context.l10n.recentActivities,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            const gap = 12.0;
+            final width = (constraints.maxWidth - gap * 2) / 3;
+            return Wrap(
+              spacing: gap,
+              runSpacing: gap,
+              children: [
+                for (final activity in _activities)
+                  RecentActivityTile(activity: activity, width: width),
+              ],
+            );
+          },
         ),
+      ),
+    );
+  }
+}
+
+// The profile's card style; tapping the title folds it away.
+class FoldCard extends StatefulWidget {
+  const FoldCard({super.key, required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  State<FoldCard> createState() => _FoldCardState();
+}
+
+class _FoldCardState extends State<FoldCard> {
+  bool _open = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: SynkColors.textSecondary.withValues(alpha: 0.10),
+        ),
+      ),
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        alignment: Alignment.topCenter,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    context.l10n.recentActivities,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: SynkColors.textSecondary,
-                    ),
+            Semantics(
+              button: true,
+              expanded: _open,
+              child: InkWell(
+                onTap: () => setState(() => _open = !_open),
+                borderRadius: BorderRadius.circular(12),
+                child: SizedBox(
+                  height: 44,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          widget.title,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: SynkColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                      AnimatedRotation(
+                        turns: _open ? 0.5 : 0,
+                        duration: const Duration(milliseconds: 200),
+                        child: const Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          size: 22,
+                          color: SynkColors.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                TextButton(
-                  onPressed: _openHistory,
-                  style: TextButton.styleFrom(
-                    foregroundColor: SynkColors.orangeDark,
-                    minimumSize: const Size(44, 32),
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: Text(
-                    context.l10n.seeAll,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            SizedBox(
-              height: 160,
-              // Starts from the reading direction, so Arabic scrolls from
-              // the right.
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsetsDirectional.only(end: 8),
-                itemCount: _activities.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 12),
-                itemBuilder: (context, index) {
-                  return RecentActivityTile(activity: _activities[index]);
-                },
               ),
             ),
+            if (_open) ...[
+              const SizedBox(height: 4),
+              widget.child,
+              const SizedBox(height: 12),
+            ],
           ],
         ),
       ),
@@ -139,11 +160,14 @@ class _RecentActivitiesSectionState extends State<RecentActivitiesSection> {
 
 // Image, title and date of one ended activity.
 class RecentActivityTile extends StatelessWidget {
-  const RecentActivityTile({super.key, required this.activity});
-
-  static const double width = 104;
+  const RecentActivityTile({
+    super.key,
+    required this.activity,
+    this.width = 104,
+  });
 
   final Activity activity;
+  final double width;
 
   @override
   Widget build(BuildContext context) {

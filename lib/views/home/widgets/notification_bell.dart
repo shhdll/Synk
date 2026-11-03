@@ -53,27 +53,18 @@ class NotificationBell extends StatelessWidget {
                 ),
               ),
             ),
+            // A small dot when there's something new.
             if (count > 0)
               PositionedDirectional(
-                top: -2,
-                end: -2,
+                top: 6,
+                end: 6,
                 child: Container(
-                  constraints: const BoxConstraints(minWidth: 20),
-                  height: 20,
-                  padding: const EdgeInsets.symmetric(horizontal: 5),
-                  alignment: Alignment.center,
+                  width: 11,
+                  height: 11,
                   decoration: BoxDecoration(
-                    color: SynkColors.badge,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: SynkColors.background, width: 2),
-                  ),
-                  child: Text(
-                    count > 9 ? '9+' : '$count',
-                    style: const TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                    ),
+                    color: SynkColors.orangeDark,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
                   ),
                 ),
               ),

@@ -16,6 +16,8 @@ class FriendsSearchField extends StatelessWidget {
     required this.onChanged,
     this.autofocus = false,
     this.borderRadius = 14,
+    this.focusNode,
+    this.onSubmitted,
   });
 
   final TextEditingController controller;
@@ -23,6 +25,8 @@ class FriendsSearchField extends StatelessWidget {
   final ValueChanged<String> onChanged;
   final bool autofocus;
   final double borderRadius;
+  final FocusNode? focusNode;
+  final ValueChanged<String>? onSubmitted;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +38,9 @@ class FriendsSearchField extends StatelessWidget {
       height: 48,
       child: TextField(
         controller: controller,
+        focusNode: focusNode,
         onChanged: onChanged,
+        onSubmitted: onSubmitted,
         autofocus: autofocus,
         // Follows the search's language; screens rebuild it on change.
         textDirection: textDirectionOf(controller.text),

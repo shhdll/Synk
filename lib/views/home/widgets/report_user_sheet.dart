@@ -218,9 +218,10 @@ class _ReportUserSheetState extends State<ReportUserSheet> {
                 controller: _details,
                 enabled: !_isSubmitting,
                 autofocus: _detailsRequired,
-                minLines: 5,
-                maxLines: 8,
+                minLines: 6,
+                maxLines: null,
                 maxLength: _maxDetailsLength,
+                keyboardType: TextInputType.multiline,
                 textCapitalization: TextCapitalization.sentences,
                 style: const TextStyle(
                   fontSize: 15,
@@ -229,7 +230,7 @@ class _ReportUserSheetState extends State<ReportUserSheet> {
                 ),
                 cursorColor: SynkColors.orangeDark,
                 decoration: InputDecoration(
-                  counterText: '',
+                  counterStyle: _noteStyle,
                   filled: true,
                   fillColor: Colors.white.withValues(alpha: 0.78),
                   contentPadding: const EdgeInsets.all(14),

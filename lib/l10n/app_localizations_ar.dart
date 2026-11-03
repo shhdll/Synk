@@ -550,12 +550,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get searchActivitiesOrLocations => 'ابحث عن نشاط أو مكان...';
 
   @override
-  String get upcomingPlans => 'الخطط القادمة';
-
-  @override
-  String get topPicksTitle => 'أفضل 5 اختيارات لك';
-
-  @override
   String get topPickLikesIndoor => 'تحب الأنشطة الداخلية';
 
   @override
@@ -572,16 +566,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String topPickDistanceKm(Object km) {
     return '$km كم';
-  }
-
-  @override
-  String topPickDistanceAway(Object km) {
-    return 'على بعد $km كم';
-  }
-
-  @override
-  String topPickSemanticLabel(Object rank, Object details) {
-    return 'الاختيار $rank: $details';
   }
 
   @override
@@ -769,9 +753,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get couldntOpenGoogleMaps => 'تعذر فتح خرائط Google';
-
-  @override
-  String get aboutThisActivity => 'عن النشاط';
 
   @override
   String get participants => 'المشاركون';
@@ -1281,10 +1262,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notifications => 'الإشعارات';
 
   @override
-  String get noNotificationsYet => 'لا توجد إشعارات بعد';
+  String get noNotificationsYet => 'لا شيء بعد';
 
   @override
-  String get noNotificationsHint => 'ستظهر هنا التحديثات الخاصة بأنشطتك';
+  String get noNotificationsHint =>
+      'انضم إلى نشاط أو أنشئ نشاطا لتصلك التحديثات هنا';
 
   @override
   String get couldntLoadNotifications =>
@@ -1505,11 +1487,11 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'أفضل سلسلة: $count أسبوعا',
-      few: 'أفضل سلسلة: $count أسابيع',
-      two: 'أفضل سلسلة: أسبوعان',
-      one: 'أفضل سلسلة: أسبوع',
-      zero: 'أفضل سلسلة: 0',
+      other: 'الأفضل: $count أسبوعا',
+      few: 'الأفضل: $count أسابيع',
+      two: 'الأفضل: أسبوعان',
+      one: 'الأفضل: أسبوع',
+      zero: 'الأفضل: 0',
     );
     return '$_temp0';
   }
@@ -1528,16 +1510,13 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get streakDone => 'تم ✓';
+  String get streakKeptThisWeek => 'حلو، خلصت هذا الأسبوع. نشوفك الأسبوع الجاي';
 
   @override
-  String get streakKeptThisWeek => 'حافظت على سلسلتك هذا الأسبوع 🎉';
+  String get streakKeepGoing => 'نشاط واحد هذا الأسبوع وتكمل';
 
   @override
-  String get streakKeepGoing => 'احضر نشاطا هذا الأسبوع لتحافظ على سلسلتك';
-
-  @override
-  String get streakStart => 'احضر نشاطا هذا الأسبوع لتبدأ سلسلتك';
+  String get streakStart => 'انضم لنشاط واحد هذا الأسبوع وتبدأ';
 
   @override
   String get streakTitle => 'السلسلة الأسبوعية';
@@ -1546,8 +1525,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get streakThisWeek => 'هذا الأسبوع';
 
   @override
-  String get streakHowItWorks =>
-      'احضر نشاطا واحدا على الأقل كل أسبوع لتكبر سلسلتك';
+  String get streakLastWeek => 'الأسبوع الماضي';
+
+  @override
+  String get streakEarlierWeek => 'الأسبوع السابق';
+
+  @override
+  String get streakLaterWeek => 'الأسبوع التالي';
 
   @override
   String get interests => 'الاهتمامات';
@@ -2313,13 +2297,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get seeAll => 'عرض الكل';
 
   @override
-  String get markAllRead => 'تحديد الكل كمقروء';
-
-  @override
-  String get markAsRead => 'تحديد كمقروء';
-
-  @override
-  String get notificationsLast7Days => 'آخر 7 أيام';
+  String get notificationsNew => 'جديد';
 
   @override
   String get notificationsEarlier => 'أقدم';
@@ -2328,21 +2306,92 @@ class AppLocalizationsAr extends AppLocalizations {
   String get delete => 'حذف';
 
   @override
-  String get notificationsUnread => 'غير المقروءة';
+  String get notificationDeleted => 'تم حذف الإشعار';
 
   @override
-  String showMoreCount(Object n) {
-    return 'عرض $n أخرى';
+  String get loadMore => 'عرض المزيد';
+
+  @override
+  String get undo => 'تراجع';
+
+  @override
+  String get decline => 'رفض';
+
+  @override
+  String get requestAcceptedLabel => 'تم القبول';
+
+  @override
+  String get requestDeclinedLabel => 'تم الرفض';
+
+  @override
+  String hiName(Object name) {
+    return 'أهلا، $name';
   }
 
   @override
-  String get showLess => 'عرض أقل';
+  String get forYou => 'لك';
 
   @override
-  String get allCaughtUp => 'لا توجد إشعارات جديدة';
+  String deckCounter(int n, int total) {
+    return '$n من $total';
+  }
 
   @override
-  String get notificationDeleted => 'تم حذف الإشعار';
+  String get joinShort => 'انضم';
+
+  @override
+  String youJoinedTitle(Object title) {
+    return 'انضممت إلى $title';
+  }
+
+  @override
+  String spotsLeftShort(int n) {
+    return 'متبقي $n';
+  }
+
+  @override
+  String get seeAgain => 'شاهدها مجددا';
+
+  @override
+  String get nextActivity => 'النشاط التالي';
+
+  @override
+  String get previousActivity => 'النشاط السابق';
+
+  @override
+  String get explore => 'استكشف';
+
+  @override
+  String get recentSearches => 'عمليات البحث الأخيرة';
+
+  @override
+  String get removeRecentSearch => 'إزالة';
+
+  @override
+  String activitiesForQuery(int n, Object query) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n نشاط لـ \"$query\"',
+      few: '$n أنشطة لـ \"$query\"',
+      two: 'نشاطان لـ \"$query\"',
+      one: 'نشاط واحد لـ \"$query\"',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bestMatchForYou => 'الأنسب لك';
+
+  @override
+  String nothingForQueryYet(Object query) {
+    return 'لا شيء لـ \"$query\" بعد';
+  }
+
+  @override
+  String createQuery(Object query) {
+    return 'أنشئ \"$query\"';
+  }
 
   @override
   String get sentRequests => 'المرسلة';
@@ -3092,15 +3141,6 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get goodMorning => 'صباح الخير';
-
-  @override
-  String get goodAfternoon => 'مساء الخير';
-
-  @override
-  String get goodEvening => 'مساء الخير';
 
   @override
   String get couldntFindYourThing => 'ما لقيت اللي يناسبك؟';

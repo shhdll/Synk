@@ -7,6 +7,7 @@ import '../../../l10n/l10n.dart';
 import '../../../models/activity_model.dart';
 import '../../../models/avatar_uploader.dart';
 import '../../widgets/anonymous_avatar.dart';
+import '../../widgets/crown_icon.dart';
 import '../../../utils/custom_widgets/synk_feedback.dart';
 import 'activity_thumbnail.dart';
 import 'chat_share_sheets.dart';
@@ -486,7 +487,7 @@ class _Face extends StatelessWidget {
   }
 }
 
-// Hosting in orange; Joined and Requested in muted gray.
+// Hosting as a crown; Joined and Requested in muted gray.
 class _RoleBadge extends StatelessWidget {
   const _RoleBadge({required this.role});
 
@@ -496,6 +497,11 @@ class _RoleBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final hosting = role == MyActivityRole.hosting;
     final color = hosting ? SynkColors.orangeDeep : SynkColors.textSecondary;
+
+    // Hosting is just the crown.
+    if (hosting) {
+      return Semantics(label: role.label, child: const HostCrownBadge());
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),

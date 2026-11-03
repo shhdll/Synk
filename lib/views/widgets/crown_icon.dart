@@ -19,6 +19,27 @@ class CrownIcon extends StatelessWidget {
   }
 }
 
+// The host's mark: a small yellow crown on a soft yellow circle.
+class HostCrownBadge extends StatelessWidget {
+  const HostCrownBadge({super.key});
+
+  static const _yellow = Color(0xFFE0A800);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 22,
+      height: 22,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: _yellow.withValues(alpha: 0.16),
+        shape: BoxShape.circle,
+      ),
+      child: CrownIcon(size: 13, color: _yellow.withValues(alpha: 0.85)),
+    );
+  }
+}
+
 class _CrownPainter extends CustomPainter {
   _CrownPainter(this.color);
 
