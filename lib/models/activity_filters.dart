@@ -115,6 +115,7 @@ class ActivityFilters {
     this.categories = const {},
     this.distance = DistanceOption.any,
     this.spots = SpotsOption.any,
+    this.setting,
   });
 
   static const ActivityFilters defaults = ActivityFilters();
@@ -132,6 +133,8 @@ class ActivityFilters {
   final Set<String> categories;
   final DistanceOption distance;
   final SpotsOption spots;
+  // Indoor or outdoor only; null = both.
+  final ActivitySetting? setting;
 
   ActivityFilters copyWith({
     SortOption? sort,
@@ -149,6 +152,7 @@ class ActivityFilters {
       categories: categories ?? this.categories,
       distance: distance ?? this.distance,
       spots: spots ?? this.spots,
+      setting: setting,
     );
   }
 
@@ -164,6 +168,7 @@ class ActivityFilters {
       categories: categories,
       distance: distance,
       spots: spots,
+      setting: setting,
     );
   }
 
@@ -183,6 +188,7 @@ class ActivityFilters {
       categories: categories,
       distance: distance,
       spots: spots,
+      setting: setting,
     );
   }
 
@@ -197,6 +203,23 @@ class ActivityFilters {
       categories: categories,
       distance: distance,
       spots: spots,
+      setting: setting,
+    );
+  }
+
+  // Unlike copyWith, this can clear it back to both.
+  ActivityFilters withSetting(ActivitySetting? setting) {
+    return ActivityFilters(
+      sort: sort,
+      date: date,
+      customDate: customDate,
+      customEndDate: customEndDate,
+      daySlot: daySlot,
+      fromMinute: fromMinute,
+      categories: categories,
+      distance: distance,
+      spots: spots,
+      setting: setting,
     );
   }
 
@@ -216,6 +239,7 @@ class ActivityFilters {
     if (categories.isNotEmpty) count++;
     if (distance != defaults.distance) count++;
     if (spots != defaults.spots) count++;
+    if (setting != null) count++;
     return count;
   }
 
@@ -339,6 +363,8 @@ class ActivityFilters {
       if (sort == SortOption.almostFull && activity.spotsOpen < 1) {
         return false;
       }
+
+      if (setting != null && activity.setting != setting) return false;
 
       return true;
     }).toList();

@@ -14,6 +14,7 @@ import '../../utils/custom_widgets/synk_feedback.dart';
 import 'widgets/activity_details_sheet.dart';
 import 'widgets/activity_map_marker.dart';
 import 'widgets/activity_thumbnail.dart';
+import 'widgets/activity_weather_card.dart';
 import 'widgets/filter_bottom_sheet.dart';
 import 'widgets/filter_button.dart';
 
@@ -381,7 +382,7 @@ class _MapViewState extends State<MapView> {
                 myLocationButtonEnabled: false,
                 mapToolbarEnabled: false,
                 zoomControlsEnabled: false,
-                compassEnabled: true,
+                compassEnabled: false,
                 padding: EdgeInsets.only(
                   top: topInset + 145,
                   bottom: selected == null ? bottomInset + 8 : 265,
@@ -469,6 +470,20 @@ class _MapViewState extends State<MapView> {
                   ],
                 ),
               ),
+              // Weather near you right now, under the category chips.
+              if (_location.locationMessage == null)
+                PositionedDirectional(
+                  top: topInset + 128,
+                  end: 16,
+                  child: MapWeatherPill(
+                    latitude:
+                        (_location.userLocation ?? _location.initialCenter)
+                            .latitude,
+                    longitude:
+                        (_location.userLocation ?? _location.initialCenter)
+                            .longitude,
+                  ),
+                ),
               if (_location.locationMessage != null)
                 Positioned(
                   top: topInset + 132,

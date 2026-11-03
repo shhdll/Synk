@@ -122,7 +122,12 @@ class DiscoveryActivityCard extends StatelessWidget {
 
   // Host on the left and the count on the right; friends who are going get
   // a line underneath with their photos and who is going.
-  Widget _buildFooter(List<FriendUser> friendsGoing) {
+  Widget _buildFooter(List<FriendUser> going) {
+    // The host already has their own row, so they aren't "going" too.
+    final friendsGoing = [
+      for (final f in going)
+        if (f.id != activity.hostId) f,
+    ];
     final handle = activity.hostUsername?.trim();
     final hostLabel = handle != null && handle.isNotEmpty
         ? '@$handle'
@@ -172,17 +177,17 @@ class DiscoveryActivityCard extends StatelessWidget {
         const SizedBox(height: 10),
         Row(
           children: [
-            FriendAvatarStack(friends: friendsGoing, size: 28),
-            const SizedBox(width: 8),
+            FriendAvatarStack(friends: friendsGoing, size: 22),
+            const SizedBox(width: 6),
             Flexible(
               child: Text(
                 friendsGoingText(friendsGoing),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: SynkColors.tealText,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: SynkColors.textSecondary,
                 ),
               ),
             ),

@@ -5,6 +5,7 @@ import '../../../controllers/home_discovery_controller.dart';
 import '../../../core/constants/synk_colors.dart';
 import '../../../l10n/l10n.dart';
 import '../../../models/activity_filters.dart';
+import '../../../models/activity_model.dart';
 import '../../widgets/synk_date_picker.dart';
 import 'synk_filter_chip.dart';
 
@@ -198,6 +199,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                       _buildDistance(hasLocation),
                       const SizedBox(height: 14),
                       _buildSpots(),
+                      const SizedBox(height: 14),
+                      _buildSetting(),
                     ],
                   ),
                 ),
@@ -426,6 +429,28 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                       spots: _draft.spots == option ? SpotsOption.any : option,
                     ),
                   ),
+          ),
+      ],
+    );
+  }
+
+  // Indoor / Outdoor; tapping the picked one again shows both.
+  Widget _buildSetting() {
+    return _Section(
+      label: context.l10n.setting,
+      columns: 2,
+      children: [
+        for (final (option, icon) in [
+          (ActivitySetting.indoor, Icons.home_work_outlined),
+          (ActivitySetting.outdoor, Icons.park_outlined),
+        ])
+          SynkFilterChip(
+            label: option.label,
+            icon: icon,
+            selected: _draft.setting == option,
+            onTap: () => _update(
+              _draft.withSetting(_draft.setting == option ? null : option),
+            ),
           ),
       ],
     );

@@ -112,24 +112,31 @@ class _OnboardingViewState extends State<OnboardingView>
               Positioned.fill(child: _buildAnimatedBackground()),
               Positioned.fill(
                 child: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 18),
-                        _buildHeader(),
-                        const SizedBox(height: 34),
-                        // The arrows float over the pages, so content scrolls
-                        // under them and fades out instead of stopping at a bar.
-                        Expanded(
-                          child: Stack(
-                            children: [
-                              Positioned.fill(
-                                child: PageView(
-                                  controller: _pageController,
-                                  physics: const BouncingScrollPhysics(),
-                                  onPageChanged: _onPageChanged,
-                                  children: [
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 18),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: _sidePadding,
+                        ),
+                        child: _buildHeader(),
+                      ),
+                      const SizedBox(height: 34),
+                      // The arrows float over the pages, so content scrolls
+                      // under them and fades out instead of stopping at a bar.
+                      Expanded(
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              // Full width, so a step slides out at the
+                              // screen edge. Each step clips to its own page
+                              // so nothing shows on the one next to it.
+                              child: PageView(
+                                controller: _pageController,
+                                physics: const BouncingScrollPhysics(),
+                                onPageChanged: _onPageChanged,
+                                children: [
+                                  for (final step in [
                                     _buildInterestsStep(),
                                     _buildActivityTypeStep(),
                                     _buildLocationStep(),
@@ -140,23 +147,31 @@ class _OnboardingViewState extends State<OnboardingView>
                                       signupController: _signupController,
                                       onboardingController: _controller,
                                     ),
-                                  ],
-                                ),
+                                  ])
+                                    ClipRect(
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: _sidePadding,
+                                        ),
+                                        child: step,
+                                      ),
+                                    ),
+                                ],
                               ),
-                              // Hidden while typing so the arrows don't cover
-                              // the fields above the keyboard.
-                              if (!keyboardOpen)
-                                PositionedDirectional(
-                                  start: 0,
-                                  end: 0,
-                                  bottom: 20,
-                                  child: _buildNavigation(),
-                                ),
-                            ],
-                          ),
+                            ),
+                            // Hidden while typing so the arrows don't cover
+                            // the fields above the keyboard.
+                            if (!keyboardOpen)
+                              PositionedDirectional(
+                                start: _sidePadding,
+                                end: _sidePadding,
+                                bottom: 20,
+                                child: _buildNavigation(),
+                              ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -844,6 +859,7 @@ class _OnboardingViewState extends State<OnboardingView>
   // PROGRESS
   // ---------------------------------------------------------------------------
   static const _stepCount = 5;
+  static const double _sidePadding = 28;
 
   Widget _buildProgress() {
     return Row(

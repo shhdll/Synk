@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../controllers/activity_rating_controller.dart';
 import '../../../core/constants/synk_colors.dart';
 import '../../../l10n/l10n.dart';
+import '../../../models/activity_model.dart';
 import '../../../models/activity_rating_model.dart';
 import '../../../models/avatar_uploader.dart';
 import '../../../utils/custom_widgets/synk_feedback.dart';
@@ -25,11 +26,7 @@ Future<void> showActivityRatingSheet({
   );
 
   if (saved == true && context.mounted) {
-    await SynkFeedback.showSuccessDialog(
-      context,
-      title: context.l10n.ratingsSavedTitle,
-      message: context.l10n.ratingsSavedMessage,
-    );
+    SynkFeedback.showToast(context, title: context.l10n.ratingsSentToast);
   }
 }
 
@@ -75,7 +72,7 @@ class _ActivityRatingSheetState extends State<ActivityRatingSheet> {
   @override
   Widget build(BuildContext context) {
     final activity = widget.pending.activity;
-    final maxListHeight = MediaQuery.sizeOf(context).height * 0.45;
+    final maxListHeight = MediaQuery.sizeOf(context).height * 0.38;
 
     return SafeArea(
       bottom: false,
@@ -99,31 +96,33 @@ class _ActivityRatingSheetState extends State<ActivityRatingSheet> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    ActivityThumbnail(activity: activity, size: 52),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        context.l10n.rateActivityTitle(activity.title),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: SynkColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ],
+                // The activity's photo, big, to bring the memory back.
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(22),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 170,
+                    child: _buildPhoto(activity),
+                  ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 16),
                 Text(
-                  context.l10n.rateActivitySubtitle,
+                  context.l10n.rateActivityTitle(activity.title),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 13,
-                    height: 1.4,
-                    color: SynkColors.textSecondary,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: SynkColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  context.l10n.rateActivityFun,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: SynkColors.orangeDark,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -167,89 +166,86 @@ class _ActivityRatingSheetState extends State<ActivityRatingSheet> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(18),
       ),
-      child: Row(
+      child: Column(
         children: [
-          _buildAvatar(participant),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          Row(
+            children: [
+              _buildAvatar(participant),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Flexible(
-                      child: Text(
-                        name == null || name.isEmpty
-                            ? context.l10n.communityMember
-                            : name,
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            name == null || name.isEmpty
+                                ? context.l10n.communityMember
+                                : name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: SynkColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                        if (participant.isHost) ...[
+                          const SizedBox(width: 6),
+                          _buildHostChip(),
+                        ],
+                      ],
+                    ),
+                    if (username != null && username.isNotEmpty)
+                      Text(
+                        '@$username',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: SynkColors.textPrimary,
+                          fontSize: 12,
+                          color: SynkColors.textSecondary,
                         ),
                       ),
-                    ),
-                    if (participant.isHost) ...[
-                      const SizedBox(width: 6),
-                      _buildHostChip(),
-                    ],
                   ],
                 ),
-                if (username != null && username.isNotEmpty)
-                  Text(
-                    '@$username',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: SynkColors.textSecondary,
-                    ),
-                  ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    HalfStarRatingInput(
-                      halfStars: halfStars,
-                      enabled: !_controller.isBusy,
-                      starSize: 28,
-                      onChanged: (value) => _controller.setHalfStars(
-                        participant.userId,
-                        value,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Flexible(
-                      child: Text(
-                        halfStars == 0
-                            ? context.l10n.tapToRate
-                            : formatHalfStars(halfStars),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: halfStars == 0 ? 12 : 14,
-                          fontWeight: halfStars == 0
-                              ? FontWeight.w500
-                              : FontWeight.w800,
-                          color: halfStars == 0
-                              ? SynkColors.textSecondary
-                              : SynkColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Center(
+            child: HalfStarRatingInput(
+              halfStars: halfStars,
+              enabled: !_controller.isBusy,
+              starSize: 40,
+              onChanged: (value) =>
+                  _controller.setHalfStars(participant.userId, value),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  // The activity's photo, or its icon tile when it has none.
+  Widget _buildPhoto(Activity activity) {
+    final url = activity.photoUrl;
+    final tile = ActivityVisualTile(activity: activity, iconSize: 64);
+    if (url == null || url.isEmpty) return tile;
+    return Image.network(
+      url,
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) => tile,
+      frameBuilder: (_, child, frame, wasSynchronouslyLoaded) {
+        if (wasSynchronouslyLoaded || frame != null) return child;
+        return const ColoredBox(color: SynkColors.backgroundLight);
+      },
     );
   }
 
@@ -273,7 +269,7 @@ class _ActivityRatingSheetState extends State<ActivityRatingSheet> {
 
   // Uploaded photo, or the app's default avatar for the participant.
   Widget _buildAvatar(RatingParticipant participant) {
-    const size = 42.0;
+    const size = 46.0;
     final fallback = AvatarUploader.defaultImageForGender(participant.gender);
     final url = participant.avatarUrl?.trim();
     final photo = url != null && url.startsWith('http')
