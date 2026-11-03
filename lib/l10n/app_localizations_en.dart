@@ -560,12 +560,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchActivitiesOrLocations => 'Search activities or locations...';
 
   @override
-  String get upcomingPlans => 'Upcoming plans';
-
-  @override
-  String get topPicksTitle => 'Top 5 picks for you';
-
-  @override
   String get topPickLikesIndoor => 'You like indoor plans';
 
   @override
@@ -582,16 +576,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String topPickDistanceKm(Object km) {
     return '$km km';
-  }
-
-  @override
-  String topPickDistanceAway(Object km) {
-    return '$km km away';
-  }
-
-  @override
-  String topPickSemanticLabel(Object rank, Object details) {
-    return 'Pick $rank: $details';
   }
 
   @override
@@ -781,9 +765,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get couldntOpenGoogleMaps => 'Couldn\'t open Google Maps.';
-
-  @override
-  String get aboutThisActivity => 'About This Activity';
 
   @override
   String get participants => 'Participants';
@@ -1312,11 +1293,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifications => 'Notifications';
 
   @override
-  String get noNotificationsYet => 'No notifications yet';
+  String get noNotificationsYet => 'Nothing yet';
 
   @override
   String get noNotificationsHint =>
-      'Updates about your activities will show up here.';
+      'Join or create an activity to get updates here.';
 
   @override
   String get couldntLoadNotifications =>
@@ -1547,8 +1528,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Best streak: $count weeks',
-      one: 'Best streak: 1 week',
+      other: 'Best: $count weeks',
+      one: 'Best: 1 week',
     );
     return '$_temp0';
   }
@@ -1565,17 +1546,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get streakDone => 'Done ✓';
+  String get streakKeptThisWeek => 'Nice, this week\'s done. See you next week';
 
   @override
-  String get streakKeptThisWeek => 'You kept your streak this week 🎉';
+  String get streakKeepGoing => 'One activity this week keeps it going';
 
   @override
-  String get streakKeepGoing =>
-      'Attend an activity this week to keep your streak';
-
-  @override
-  String get streakStart => 'Attend an activity this week to start a streak';
+  String get streakStart => 'Join one activity this week to get it going';
 
   @override
   String get streakTitle => 'Weekly streak';
@@ -1584,8 +1561,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get streakThisWeek => 'This week';
 
   @override
-  String get streakHowItWorks =>
-      'Attend at least one activity every week to grow your streak';
+  String get streakLastWeek => 'Last week';
+
+  @override
+  String get streakEarlierWeek => 'Earlier week';
+
+  @override
+  String get streakLaterWeek => 'Later week';
 
   @override
   String get interests => 'Interests';
@@ -2380,13 +2362,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get seeAll => 'See all';
 
   @override
-  String get markAllRead => 'Mark all read';
-
-  @override
-  String get markAsRead => 'Mark as read';
-
-  @override
-  String get notificationsLast7Days => 'Last 7 days';
+  String get notificationsNew => 'New';
 
   @override
   String get notificationsEarlier => 'Earlier';
@@ -2395,21 +2371,90 @@ class AppLocalizationsEn extends AppLocalizations {
   String get delete => 'Delete';
 
   @override
-  String get notificationsUnread => 'Unread';
+  String get notificationDeleted => 'Notification deleted';
 
   @override
-  String showMoreCount(Object n) {
-    return 'Show $n more';
+  String get loadMore => 'Load more';
+
+  @override
+  String get undo => 'Undo';
+
+  @override
+  String get decline => 'Decline';
+
+  @override
+  String get requestAcceptedLabel => 'Accepted';
+
+  @override
+  String get requestDeclinedLabel => 'Declined';
+
+  @override
+  String hiName(Object name) {
+    return 'Hi, $name';
   }
 
   @override
-  String get showLess => 'Show less';
+  String get forYou => 'For you';
 
   @override
-  String get allCaughtUp => 'You\'re all caught up';
+  String deckCounter(int n, int total) {
+    return '$n of $total';
+  }
 
   @override
-  String get notificationDeleted => 'Notification deleted';
+  String get joinShort => 'Join';
+
+  @override
+  String youJoinedTitle(Object title) {
+    return 'You joined $title';
+  }
+
+  @override
+  String spotsLeftShort(int n) {
+    return '$n left';
+  }
+
+  @override
+  String get seeAgain => 'See again';
+
+  @override
+  String get nextActivity => 'Next activity';
+
+  @override
+  String get previousActivity => 'Previous activity';
+
+  @override
+  String get explore => 'Explore';
+
+  @override
+  String get recentSearches => 'Recent';
+
+  @override
+  String get removeRecentSearch => 'Remove';
+
+  @override
+  String activitiesForQuery(int n, Object query) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n activities for \"$query\"',
+      one: '1 activity for \"$query\"',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bestMatchForYou => 'Best match for you';
+
+  @override
+  String nothingForQueryYet(Object query) {
+    return 'Nothing for \"$query\" yet';
+  }
+
+  @override
+  String createQuery(Object query) {
+    return 'Create \"$query\"';
+  }
 
   @override
   String get sentRequests => 'Sent';
@@ -3168,15 +3213,6 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get goodMorning => 'Good morning';
-
-  @override
-  String get goodAfternoon => 'Good afternoon';
-
-  @override
-  String get goodEvening => 'Good evening';
 
   @override
   String get couldntFindYourThing => 'Couldn\'t find your thing?';

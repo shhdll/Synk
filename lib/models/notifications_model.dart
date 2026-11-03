@@ -9,6 +9,10 @@ class AppNotification {
     required this.activityTitle,
     required this.createdAt,
     required this.isUnread,
+    this.photoUrl,
+    this.categoryLabel = '',
+    this.participationId,
+    this.requestPending = false,
   });
 
   final String id;
@@ -17,6 +21,12 @@ class AppNotification {
   final String activityTitle;
   final DateTime createdAt;
   final bool isUnread;
+  final String? photoUrl;
+  final String categoryLabel;
+
+  // Join requests only: the request, and whether it still waits for an answer.
+  final String? participationId;
+  final bool requestPending;
 
   AppNotification asRead() => AppNotification(
     id: id,
@@ -25,6 +35,10 @@ class AppNotification {
     activityTitle: activityTitle,
     createdAt: createdAt,
     isUnread: false,
+    photoUrl: photoUrl,
+    categoryLabel: categoryLabel,
+    participationId: participationId,
+    requestPending: requestPending,
   );
 
   factory AppNotification.fromMap(Map<String, dynamic> map) {
@@ -35,6 +49,10 @@ class AppNotification {
       activityTitle: (map['activity_title'] as String?) ?? '',
       createdAt: DateTime.parse(map['created_at'] as String).toLocal(),
       isUnread: map['is_unread'] == true,
+      photoUrl: map['activity_photo_url'] as String?,
+      categoryLabel: (map['activity_category_label'] as String?) ?? '',
+      participationId: map['participation_id'] as String?,
+      requestPending: map['request_pending'] == true,
     );
   }
 }

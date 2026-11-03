@@ -50,7 +50,7 @@ class NotificationCenterController extends ChangeNotifier {
     }
   }
 
-  // "Mark all read": everything in the list counts as read.
+  // Opening the list marks everything in it as read.
   Future<void> markAllSeen() async {
     if (_unreadCount == 0) return;
     _unreadCount = 0;
