@@ -149,6 +149,7 @@ class ChatMessage {
     this.longitude,
     this.locationName,
     this.locationAddress,
+    this.replyToId,
   });
 
   final String id;
@@ -184,6 +185,9 @@ class ChatMessage {
   final String? locationName;
   final String? locationAddress;
 
+  // The message this one replies to; null once that message is gone.
+  final String? replyToId;
+
   bool get isActivityShare => kind == 'activity' && sharedActivity != null;
 
   bool get isLocation =>
@@ -210,6 +214,7 @@ class ChatMessage {
       longitude: (map['longitude'] as num?)?.toDouble(),
       locationName: map['location_name'] as String?,
       locationAddress: map['location_address'] as String?,
+      replyToId: map['reply_to_id'] as String?,
     );
   }
 
@@ -225,6 +230,27 @@ class ChatMessage {
       photoUrl: snapshot['photo_url'] as String?,
       categoryLabel: snapshot['category_label'] as String? ?? '',
       categoryEmoji: snapshot['category_emoji'] as String? ?? '',
+    );
+  }
+}
+
+// How far one member has read a chat.
+class ChatReadState {
+  const ChatReadState({
+    required this.userId,
+    required this.joinedAt,
+    required this.lastReadAt,
+  });
+
+  final String userId;
+  final DateTime joinedAt;
+  final DateTime lastReadAt;
+
+  factory ChatReadState.fromMap(Map<String, dynamic> map) {
+    return ChatReadState(
+      userId: map['user_id'] as String,
+      joinedAt: DateTime.parse(map['joined_at'] as String).toLocal(),
+      lastReadAt: DateTime.parse(map['last_read_at'] as String).toLocal(),
     );
   }
 }
@@ -257,6 +283,37 @@ class ChatModel {
     return response
         .map((row) => FriendUser.fromMap(row as Map<String, dynamic>))
         .toList();
+  }
+
+  // How far each member has read the chat.
+  Future<List<ChatReadState>> fetchReadStates(String chatId) async {
+    final rows = await _supabase
+        .from('chat_members')
+        .select('user_id, joined_at, last_read_at')
+        .eq('chat_id', chatId);
+    return rows.map(ChatReadState.fromMap).toList();
+  }
+
+  // Calls [onChange] when a member reads further.
+  RealtimeChannel listenForReadStates(
+    String chatId,
+    void Function(ChatReadState state) onChange,
+  ) {
+    return _supabase
+        .channel('chat-reads:$chatId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.update,
+          schema: 'public',
+          table: 'chat_members',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'chat_id',
+            value: chatId,
+          ),
+          callback: (payload) =>
+              onChange(ChatReadState.fromMap(payload.newRecord)),
+        )
+        .subscribe();
   }
 
   // Each user's interests, keyed by user id.
@@ -391,19 +448,22 @@ class ChatModel {
 
   // The function's result, e.g. 'sent', 'finished' or 'not_visible_to_all',
   // and the message when it was sent. Send one of: text, [imagePath] (from
-  // uploadPhoto), [activityId], or [place].
+  // uploadPhoto), [activityId], or [place]. [replyToId] quotes an earlier
+  // message from the same chat.
   Future<({String result, ChatMessage? message})> send(
     String chatId,
     String body, {
     String? imagePath,
     String? activityId,
     PlaceSuggestion? place,
+    String? replyToId,
   }) async {
     final response = await _supabase.rpc(
       'send_chat_message',
       params: {
         'target_chat_id': chatId,
         'message_body': body,
+        'reply_to_id': ?replyToId,
         'image_path': ?imagePath,
         'shared_activity_id': ?activityId,
         if (place != null) ...{

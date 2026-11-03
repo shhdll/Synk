@@ -26,6 +26,7 @@ import 'widgets/chat_share_sheets.dart';
 import 'widgets/discovery_activity_card.dart';
 import 'widgets/friend_options_sheet.dart';
 import 'widgets/user_avatar.dart';
+import '../widgets/chat_wallpaper.dart';
 
 // [activityStore] lets activities open over the chat with the app's own
 // activity data; without it they open on their own page.
@@ -80,15 +81,23 @@ class ChatRoomView extends StatefulWidget {
 class _ChatRoomViewState extends State<ChatRoomView> {
   final ChatController _chats = ChatController.instance;
   final TextEditingController _input = TextEditingController();
+  final FocusNode _inputFocus = FocusNode();
 
   ChatModel get _model => _chats.model;
 
   List<ChatMessage> _messages = [];
   Map<String, FriendUser> _members = {};
   RealtimeChannel? _channel;
+  RealtimeChannel? _readsChannel;
+
+  // How far each member has read, for "Seen".
+  Map<String, ChatReadState> _reads = {};
   bool _isLoading = true;
   bool _failed = false;
   bool _isSending = false;
+
+  // The message the next one replies to, shown above the input.
+  ChatMessage? _replyingTo;
 
   // Temporary links for photo messages, keyed by storage path.
   Map<String, String> _photoLinks = {};
@@ -102,15 +111,22 @@ class _ChatRoomViewState extends State<ChatRoomView> {
   void initState() {
     super.initState();
     _channel = _model.listenForMessages(widget.chat.id, _onMessage);
+    _readsChannel = _model.listenForReadStates(widget.chat.id, (state) {
+      if (mounted) setState(() => _reads = {..._reads, state.userId: state});
+    });
     _load();
+    unawaited(_loadReads());
   }
 
   @override
   void dispose() {
     final channel = _channel;
     if (channel != null) unawaited(_model.removeChannel(channel));
+    final readsChannel = _readsChannel;
+    if (readsChannel != null) unawaited(_model.removeChannel(readsChannel));
     unawaited(_chats.markRead(widget.chat.id));
     _input.dispose();
+    _inputFocus.dispose();
     super.dispose();
   }
 
@@ -161,6 +177,147 @@ class _ChatRoomViewState extends State<ChatRoomView> {
     if (sender != null && !_members.containsKey(sender)) {
       unawaited(_reloadMembers());
     }
+  }
+
+  Future<void> _loadReads() async {
+    try {
+      final reads = await _model.fetchReadStates(widget.chat.id);
+      if (!mounted) return;
+      setState(() => _reads = {for (final r in reads) r.userId: r});
+    } catch (error) {
+      debugPrint('SYNK: read states failed to load: $error');
+    }
+  }
+
+  // Everyone else who was in the chat when [message] was sent, and which
+  // of them have read it.
+  ({List<String> seen, int total}) _seenBy(ChatMessage message) {
+    final others = _reads.values.where(
+      (r) => r.userId != _me && !r.joinedAt.isAfter(message.createdAt),
+    );
+    return (
+      seen: [
+        for (final r in others)
+          if (!r.lastReadAt.isBefore(message.createdAt)) r.userId,
+      ],
+      total: others.length,
+    );
+  }
+
+  Widget _buildSeenLabel(ChatMessage message) {
+    final (:seen, :total) = _seenBy(message);
+    final String label;
+    if (seen.isEmpty) {
+      label = context.l10n.sent;
+    } else if (!widget.chat.isActivity) {
+      label = context.l10n.seen;
+    } else if (seen.length >= total) {
+      label = context.l10n.seenByEveryone;
+    } else {
+      label = context.l10n.seenByCount(seen.length);
+    }
+    final canOpen = widget.chat.isActivity && seen.isNotEmpty;
+
+    return Align(
+      alignment: AlignmentDirectional.centerEnd,
+      child: GestureDetector(
+        onTap: canOpen ? () => _showSeenBy(seen) : null,
+        child: Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(8, 3, 4, 2),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (seen.isNotEmpty) ...[
+                const Icon(
+                  Icons.done_all_rounded,
+                  size: 14,
+                  color: SynkColors.tealText,
+                ),
+                const SizedBox(width: 3),
+              ],
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  color: seen.isEmpty
+                      ? SynkColors.textSecondary
+                      : SynkColors.tealText,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Group chats: who has seen your latest message.
+  Future<void> _showSeenBy(List<String> userIds) {
+    final users = [
+      for (final id in userIds)
+        if (_members[id] != null) _members[id]!,
+    ];
+    return showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: SynkColors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                context.l10n.seenByCount(userIds.length),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: SynkColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: [
+                    for (final user in users)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Row(
+                          children: [
+                            UserAvatar(
+                              avatarUrl: user.avatarUrl,
+                              gender: user.gender,
+                              size: 36,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                user.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: SynkColors.textPrimary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _loadPhotoLinks(List<ChatMessage> messages) async {
@@ -282,6 +439,7 @@ class _ChatRoomViewState extends State<ChatRoomView> {
         imagePath: imagePath,
         activityId: activityId,
         place: place,
+        replyToId: _replyingTo?.id,
       );
     } catch (error) {
       debugPrint('SYNK: message failed to send: $error');
@@ -319,6 +477,7 @@ class _ChatRoomViewState extends State<ChatRoomView> {
       );
       return false;
     }
+    setState(() => _replyingTo = null);
     _onMessage(sent);
     unawaited(_chats.refresh());
     return true;
@@ -384,6 +543,7 @@ class _ChatRoomViewState extends State<ChatRoomView> {
     unawaited(HapticFeedback.mediumImpact());
     final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
     final canDeleteForEveryone = message.senderId == _me && !message.isDeleted;
+    final canCopy = !message.isDeleted && message.body.trim().isNotEmpty;
 
     final action = await showMenu<_MessageAction>(
       context: context,
@@ -400,6 +560,14 @@ class _ChatRoomViewState extends State<ChatRoomView> {
         Offset.zero & overlay.size,
       ),
       items: [
+        if (!message.isDeleted)
+          _menuItem(
+            _MessageAction.reply,
+            Icons.reply_rounded,
+            context.l10n.reply,
+          ),
+        if (canCopy)
+          _menuItem(_MessageAction.copy, Icons.copy_rounded, context.l10n.copy),
         if (canDeleteForEveryone)
           _menuItem(
             _MessageAction.deleteForEveryone,
@@ -416,6 +584,13 @@ class _ChatRoomViewState extends State<ChatRoomView> {
     );
     if (!mounted) return;
     switch (action) {
+      case _MessageAction.reply:
+        _startReply(message);
+      case _MessageAction.copy:
+        await Clipboard.setData(ClipboardData(text: message.body));
+        if (mounted) {
+          SynkFeedback.showToast(context, title: context.l10n.messageCopied);
+        }
       case _MessageAction.deleteForEveryone:
         await _deleteForEveryone(message);
       case _MessageAction.deleteForMe:
@@ -423,6 +598,33 @@ class _ChatRoomViewState extends State<ChatRoomView> {
       case null:
         break;
     }
+  }
+
+  void _startReply(ChatMessage message) {
+    if (message.isDeleted) return;
+    unawaited(HapticFeedback.selectionClick());
+    setState(() => _replyingTo = message);
+    _inputFocus.requestFocus();
+  }
+
+  // Who wrote a message, as reply quotes show it.
+  String _authorOf(ChatMessage message) {
+    if (message.senderId == _me) return context.l10n.you;
+    final name = _members[message.senderId]?.name ?? '';
+    return name.isNotEmpty ? name : context.l10n.communityMember;
+  }
+
+  // One line describing a message, for reply quotes.
+  String _previewOf(ChatMessage message) {
+    if (message.isDeleted) return context.l10n.messageWasDeleted;
+    if (message.body.trim().isNotEmpty) return message.body.trim();
+    if (message.isActivityShare) return message.sharedActivity!.title;
+    if (message.isLocation) {
+      final name = message.locationName?.trim() ?? '';
+      return name.isNotEmpty ? name : context.l10n.location;
+    }
+    if (message.hasPhoto) return context.l10n.photo;
+    return '';
   }
 
   PopupMenuItem<_MessageAction> _menuItem(
@@ -584,7 +786,14 @@ class _ChatRoomViewState extends State<ChatRoomView> {
       ),
       body: Column(
         children: [
-          Expanded(child: _buildMessages()),
+          Expanded(
+            child: Stack(
+              children: [
+                const Positioned.fill(child: ChatWallpaper()),
+                _buildMessages(),
+              ],
+            ),
+          ),
           _buildComposer(),
         ],
       ),
@@ -686,6 +895,11 @@ class _ChatRoomViewState extends State<ChatRoomView> {
 
     // Newest at the bottom, and the list starts there.
     final messages = _messages.reversed.toList();
+    final byId = {for (final m in _messages) m.id: m};
+    // "Seen" goes under your latest message only.
+    final myLatest = messages
+        .where((m) => m.senderId == _me && !m.isDeleted)
+        .firstOrNull;
     return ListView.builder(
       reverse: true,
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
@@ -704,10 +918,21 @@ class _ChatRoomViewState extends State<ChatRoomView> {
             newer.senderId != message.senderId ||
             !DateUtils.isSameDay(newer.createdAt, message.createdAt);
 
+        final replyId = message.isDeleted ? null : message.replyToId;
+        final repliedTo = replyId == null ? null : byId[replyId];
         return Column(
           children: [
             if (newDay) _DayDivider(date: message.createdAt),
             _MessageBubble(
+              quote: replyId == null
+                  ? null
+                  : (
+                      author: repliedTo == null ? '' : _authorOf(repliedTo),
+                      text: repliedTo == null
+                          ? context.l10n.originalMessageUnavailable
+                          : _previewOf(repliedTo),
+                    ),
+              onReply: message.isDeleted ? null : () => _startReply(message),
               message: message,
               sender: _members[message.senderId],
               isMine: message.senderId == _me,
@@ -719,6 +944,7 @@ class _ChatRoomViewState extends State<ChatRoomView> {
               onOpenActivity: _openActivity,
               onLongPress: (bubble) => _showMessageMenu(message, bubble),
             ),
+            if (message.id == myLatest?.id) _buildSeenLabel(message),
           ],
         );
       },
@@ -826,121 +1052,193 @@ class _ChatRoomViewState extends State<ChatRoomView> {
     );
   }
 
+  Widget _buildReplyBar(ChatMessage message) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(8, 6, 8, 0),
+      padding: const EdgeInsetsDirectional.fromSTEB(12, 6, 4, 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 3,
+            height: 34,
+            decoration: BoxDecoration(
+              color: SynkColors.orangeDark,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  context.l10n.replyingTo(bidiIsolate(_authorOf(message))),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: SynkColors.orangeDark,
+                  ),
+                ),
+                Text(
+                  _previewOf(message),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: SynkColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: context.l10n.cancel,
+            visualDensity: VisualDensity.compact,
+            onPressed: () => setState(() => _replyingTo = null),
+            icon: const Icon(
+              Icons.close_rounded,
+              size: 18,
+              color: SynkColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildComposer() {
+    final replyingTo = _replyingTo;
     return SafeArea(
       top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 6, 8, 10),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Builder(
-              builder: (buttonContext) => IconButton.filled(
-                tooltip: context.l10n.sendSomething,
-                onPressed: _isSending
-                    ? null
-                    : () {
-                        final box =
-                            buttonContext.findRenderObject() as RenderBox;
-                        _sendAttachment(
-                          box.localToGlobal(Offset.zero) & box.size,
-                        );
-                      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (replyingTo != null) _buildReplyBar(replyingTo),
+          _buildComposerRow(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildComposerRow() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 6, 8, 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Builder(
+            builder: (buttonContext) => IconButton.filled(
+              tooltip: context.l10n.sendSomething,
+              onPressed: _isSending
+                  ? null
+                  : () {
+                      final box = buttonContext.findRenderObject() as RenderBox;
+                      _sendAttachment(
+                        box.localToGlobal(Offset.zero) & box.size,
+                      );
+                    },
+              style: IconButton.styleFrom(
+                backgroundColor: SynkColors.textSecondary.withValues(
+                  alpha: 0.12,
+                ),
+                disabledBackgroundColor: SynkColors.textSecondary.withValues(
+                  alpha: 0.06,
+                ),
+                foregroundColor: SynkColors.textPrimary,
+                fixedSize: const Size(46, 46),
+              ),
+              icon: const Icon(Icons.add_rounded, size: 26),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: ListenableBuilder(
+              listenable: _input,
+              builder: (context, _) => TextField(
+                controller: _input,
+                focusNode: _inputFocus,
+                minLines: 1,
+                maxLines: 5,
+                maxLength: 2000,
+                textCapitalization: TextCapitalization.sentences,
+                textDirection: textDirectionOf(_input.text),
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: SynkColors.textPrimary,
+                ),
+                decoration: InputDecoration(
+                  hintText: context.l10n.messageHint,
+                  counterText: '',
+                  filled: true,
+                  fillColor: Colors.white,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(22),
+                    borderSide: BorderSide(
+                      color: SynkColors.textSecondary.withValues(alpha: 0.14),
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(22),
+                    borderSide: BorderSide(
+                      color: SynkColors.textSecondary.withValues(alpha: 0.14),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(22),
+                    borderSide: const BorderSide(color: SynkColors.orange),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          ListenableBuilder(
+            listenable: _input,
+            builder: (context, _) {
+              final canSend = _input.text.trim().isNotEmpty && !_isSending;
+              return IconButton.filled(
+                tooltip: context.l10n.send,
+                onPressed: canSend ? _send : null,
                 style: IconButton.styleFrom(
-                  backgroundColor: SynkColors.textSecondary.withValues(
-                    alpha: 0.12,
+                  backgroundColor: SynkColors.orangeDark,
+                  disabledBackgroundColor: SynkColors.orangeDark.withValues(
+                    alpha: 0.35,
                   ),
-                  disabledBackgroundColor: SynkColors.textSecondary.withValues(
-                    alpha: 0.06,
-                  ),
-                  foregroundColor: SynkColors.textPrimary,
+                  foregroundColor: Colors.white,
+                  disabledForegroundColor: Colors.white,
                   fixedSize: const Size(46, 46),
                 ),
-                icon: const Icon(Icons.add_rounded, size: 26),
-              ),
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: ListenableBuilder(
-                listenable: _input,
-                builder: (context, _) => TextField(
-                  controller: _input,
-                  minLines: 1,
-                  maxLines: 5,
-                  maxLength: 2000,
-                  textCapitalization: TextCapitalization.sentences,
-                  textDirection: textDirectionOf(_input.text),
-                  style: const TextStyle(
-                    fontSize: 15,
-                    color: SynkColors.textPrimary,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: context.l10n.messageHint,
-                    counterText: '',
-                    filled: true,
-                    fillColor: Colors.white,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(22),
-                      borderSide: BorderSide(
-                        color: SynkColors.textSecondary.withValues(alpha: 0.14),
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(22),
-                      borderSide: BorderSide(
-                        color: SynkColors.textSecondary.withValues(alpha: 0.14),
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(22),
-                      borderSide: const BorderSide(color: SynkColors.orange),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 6),
-            ListenableBuilder(
-              listenable: _input,
-              builder: (context, _) {
-                final canSend = _input.text.trim().isNotEmpty && !_isSending;
-                return IconButton.filled(
-                  tooltip: context.l10n.send,
-                  onPressed: canSend ? _send : null,
-                  style: IconButton.styleFrom(
-                    backgroundColor: SynkColors.orangeDark,
-                    disabledBackgroundColor: SynkColors.orangeDark.withValues(
-                      alpha: 0.35,
-                    ),
-                    foregroundColor: Colors.white,
-                    disabledForegroundColor: Colors.white,
-                    fixedSize: const Size(46, 46),
-                  ),
-                  icon: _isSending
-                      ? const SizedBox.square(
-                          dimension: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(Icons.send_rounded, size: 20),
-                );
-              },
-            ),
-          ],
-        ),
+                icon: _isSending
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.send_rounded, size: 20),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
 }
 
-enum _MessageAction { deleteForEveryone, deleteForMe }
+enum _MessageAction { reply, copy, deleteForEveryone, deleteForMe }
 
 // Shows a chat photo full screen; pinch to zoom, tap to close.
 Future<void> _showPhoto(BuildContext context, String link) {
@@ -997,6 +1295,8 @@ class _MessageBubble extends StatelessWidget {
     this.onSenderTap,
     this.onLongPress,
     this.onOpenActivity,
+    this.quote,
+    this.onReply,
   });
 
   final ChatMessage message;
@@ -1017,6 +1317,12 @@ class _MessageBubble extends StatelessWidget {
 
   // Opens a shared activity; null id when it was deleted.
   final ValueChanged<String?>? onOpenActivity;
+
+  // The message this one replies to; an empty author when it isn't loaded.
+  final ({String author, String text})? quote;
+
+  // Swiping the bubble sideways replies to it.
+  final VoidCallback? onReply;
 
   static const double _avatarSize = 28;
   static const double _photoSize = 220;
@@ -1147,6 +1453,70 @@ class _MessageBubble extends StatelessWidget {
     );
   }
 
+  Widget _buildQuote() {
+    final q = quote!;
+    final lineColor = isMine ? Colors.white : SynkColors.orangeDark;
+    return Container(
+      margin: message.hasPhoto || _hasCard
+          ? const EdgeInsets.fromLTRB(0, 0, 0, 6)
+          : const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsetsDirectional.fromSTEB(8, 6, 10, 6),
+      decoration: BoxDecoration(
+        color: isMine
+            ? Colors.white.withValues(alpha: 0.18)
+            : SynkColors.orangeLight.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 3,
+              decoration: BoxDecoration(
+                color: lineColor,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (q.author.isNotEmpty)
+                    Text(
+                      q.author,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: isMine ? Colors.white : SynkColors.orangeDeep,
+                      ),
+                    ),
+                  Text(
+                    q.text,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textDirection: textDirectionOf(q.text),
+                    style: TextStyle(
+                      fontSize: 13,
+                      height: 1.25,
+                      color: isMine
+                          ? Colors.white.withValues(alpha: 0.9)
+                          : SynkColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildDeleted(BuildContext context) {
     final color = isMine
         ? Colors.white.withValues(alpha: 0.85)
@@ -1236,6 +1606,7 @@ class _MessageBubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (quote != null) _buildQuote(),
           if (message.isDeleted) _buildDeleted(context),
           if (message.hasPhoto) _buildPhoto(context),
           if (!message.isDeleted && message.isActivityShare)
@@ -1288,13 +1659,20 @@ class _MessageBubble extends StatelessWidget {
       ),
     );
 
+    final Widget row;
     if (isMine) {
-      return Padding(
+      row = Padding(
         padding: const EdgeInsets.only(top: 3),
         child: Align(alignment: AlignmentDirectional.centerEnd, child: bubble),
       );
+    } else {
+      row = _buildTheirRow(bubble);
     }
+    if (onReply == null) return row;
+    return _SwipeToReply(onReply: onReply!, child: row);
+  }
 
+  Widget _buildTheirRow(Widget bubble) {
     return Padding(
       padding: const EdgeInsets.only(top: 3),
       child: Row(
@@ -1339,6 +1717,101 @@ class _MessageBubble extends StatelessWidget {
                 bubble,
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Drag a message toward the middle of the screen to reply to it. A reply
+// arrow fades in behind it and it springs back on release.
+class _SwipeToReply extends StatefulWidget {
+  const _SwipeToReply({required this.onReply, required this.child});
+
+  final VoidCallback onReply;
+  final Widget child;
+
+  @override
+  State<_SwipeToReply> createState() => _SwipeToReplyState();
+}
+
+class _SwipeToReplyState extends State<_SwipeToReply>
+    with SingleTickerProviderStateMixin {
+  static const double _trigger = 64;
+  static const double _max = 84;
+
+  late final AnimationController _back = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 180),
+  )..addListener(() => setState(() => _offset = _from * (1 - _back.value)));
+
+  double _offset = 0;
+  double _from = 0;
+  bool _armed = false;
+
+  @override
+  void dispose() {
+    _back.dispose();
+    super.dispose();
+  }
+
+  void _onUpdate(DragUpdateDetails details) {
+    // Toward the reading start: right in English, left in Arabic.
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    final delta = rtl ? -details.delta.dx : details.delta.dx;
+    setState(() => _offset = (_offset + delta).clamp(0.0, _max));
+    if (!_armed && _offset >= _trigger) {
+      _armed = true;
+      HapticFeedback.lightImpact();
+    } else if (_armed && _offset < _trigger) {
+      _armed = false;
+    }
+  }
+
+  void _onEnd(DragEndDetails _) {
+    if (_armed) widget.onReply();
+    _armed = false;
+    _from = _offset;
+    _back.forward(from: 0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    final progress = (_offset / _trigger).clamp(0.0, 1.0);
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onHorizontalDragUpdate: _onUpdate,
+      onHorizontalDragEnd: _onEnd,
+      child: Stack(
+        alignment: AlignmentDirectional.centerStart,
+        children: [
+          PositionedDirectional(
+            start: 4,
+            child: Opacity(
+              opacity: progress,
+              child: Transform.scale(
+                scale: 0.6 + 0.4 * progress,
+                child: Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: SynkColors.textSecondary.withValues(alpha: 0.14),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.reply_rounded,
+                    size: 18,
+                    color: SynkColors.textPrimary,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Transform.translate(
+            offset: Offset(rtl ? -_offset : _offset, 0),
+            child: widget.child,
           ),
         ],
       ),

@@ -5,7 +5,6 @@ import '../../../l10n/l10n.dart';
 import '../../../models/chat_model.dart';
 import '../../../utils/text_direction.dart';
 import 'activity_thumbnail.dart';
-import 'discovery_activity_card.dart';
 import 'user_avatar.dart';
 
 // "1:52 PM" today, "Yesterday", the weekday this week, otherwise the date.
@@ -97,22 +96,6 @@ class ChatListTile extends StatelessWidget {
                       ],
                     ],
                   ),
-                  if (activity != null) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      [
-                        DiscoveryActivityCard.formatWhen(activity.dateTime),
-                        context.l10n.membersCount(chat.memberCount),
-                      ].join(' · '),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: SynkColors.textSecondary,
-                      ),
-                    ),
-                  ],
                   const SizedBox(height: 3),
                   Row(
                     children: [
