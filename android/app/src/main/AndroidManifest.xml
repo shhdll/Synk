@@ -82,6 +82,17 @@
                     android:scheme="io.supabase.synk"
                     android:host="login-callback"/>
             </intent-filter>
+            <!-- Shared activity link.
+                 synk.cc/activity.html?id=... opens
+                 io.supabase.synk://activity?id=..., which opens the activity. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data
+                    android:scheme="io.supabase.synk"
+                    android:host="activity"/>
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

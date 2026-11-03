@@ -7,22 +7,26 @@ import '../models/activity_model.dart';
 // Opens the phone's share menu with a ready-made invite in the app's
 // language, so people don't have to type the details themselves.
 // [buttonContext] is the tapped button's context; iPads point the menu at it.
-Future<void> shareActivityCode(
+// The synk.cc page that opens the activity in the app.
+Uri activityLink(Activity activity) =>
+    Uri.https('synk.cc', '/activity.html', {'id': activity.id});
+
+// Opens the phone's share menu with the activity, a link to it and its code.
+Future<void> shareActivityLink(
   BuildContext buttonContext,
   Activity activity,
-  String code,
 ) async {
   final l10n = buttonContext.l10n;
   final title = activity.title.trim();
   final date = activity.dateTime;
-  final message = l10n.shareMessage(
-    title.isEmpty ? l10n.untitledActivity : title,
-    '${formatShortDate(date)} · ${formatTime(date.hour, date.minute)}',
-    activity.location.trim().isNotEmpty
-        ? activity.location.trim()
-        : (activity.locationAddress ?? '').trim(),
-    code,
-  );
+  final name = title.isEmpty ? l10n.untitledActivity : title;
+  final when =
+      '${formatShortDate(date)} · ${formatTime(date.hour, date.minute)}';
+  final link = activityLink(activity).toString();
+  // The code too, when there is one, for people who'd rather type it.
+  final message = activity.hasActivityCode
+      ? l10n.shareLinkCodeMessage(name, when, link, activity.activityCode!)
+      : l10n.shareLinkMessage(name, when, link);
 
   final box = buttonContext.findRenderObject() as RenderBox?;
   final messenger = ScaffoldMessenger.maybeOf(buttonContext);
@@ -41,3 +45,10 @@ Future<void> shareActivityCode(
       ..showSnackBar(SnackBar(content: Text(l10n.couldntOpenTheShareMenu)));
   }
 }
+
+// Same invite as the link, which already has the code.
+Future<void> shareActivityCode(
+  BuildContext buttonContext,
+  Activity activity,
+  String code,
+) => shareActivityLink(buttonContext, activity);

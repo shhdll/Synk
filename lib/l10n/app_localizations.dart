@@ -1601,7 +1601,7 @@ abstract class AppLocalizations {
   /// No description provided for @confirmLeaveActivity.
   ///
   /// In en, this message translates to:
-  /// **'Are you sure you want to leave this activity?'**
+  /// **'Leave this activity?'**
   String get confirmLeaveActivity;
 
   /// No description provided for @stay.
@@ -1631,7 +1631,7 @@ abstract class AppLocalizations {
   /// No description provided for @confirmLeaveWaitlist.
   ///
   /// In en, this message translates to:
-  /// **'Are you sure you want to leave the waitlist for this activity?'**
+  /// **'Leave the waitlist?'**
   String get confirmLeaveWaitlist;
 
   /// No description provided for @stayOnWaitlist.
@@ -1667,7 +1667,7 @@ abstract class AppLocalizations {
   /// No description provided for @confirmCancelRequest.
   ///
   /// In en, this message translates to:
-  /// **'Are you sure you want to cancel your request to join this activity?'**
+  /// **'Cancel your request?'**
   String get confirmCancelRequest;
 
   /// No description provided for @keepRequest.
@@ -1709,7 +1709,7 @@ abstract class AppLocalizations {
   /// No description provided for @transferHostMessage.
   ///
   /// In en, this message translates to:
-  /// **'{name} will become the host of this activity. You will no longer be able to manage it.'**
+  /// **'{name} becomes the host.'**
   String transferHostMessage(Object name);
 
   /// No description provided for @transferAndLeave.
@@ -1835,7 +1835,7 @@ abstract class AppLocalizations {
   /// No description provided for @thisActionCannotBeUndoneThe.
   ///
   /// In en, this message translates to:
-  /// **'This action cannot be undone. The activity will be removed for everyone.'**
+  /// **'It\'ll be gone for everyone.'**
   String get thisActionCannotBeUndoneThe;
 
   /// No description provided for @keepActivity.
@@ -4361,7 +4361,7 @@ abstract class AppLocalizations {
   /// No description provided for @removeFriendMessage.
   ///
   /// In en, this message translates to:
-  /// **'{name} will be removed from your friends list. You can send a new friend request any time.'**
+  /// **'You can add {name} again later.'**
   String removeFriendMessage(Object name);
 
   /// No description provided for @remove.
@@ -4385,7 +4385,7 @@ abstract class AppLocalizations {
   /// No description provided for @blockUserMessage.
   ///
   /// In en, this message translates to:
-  /// **'They won\'t be able to find you or send you friend requests. This also removes them from your friends. They won\'t be told.'**
+  /// **'They can\'t find or add you. They won\'t know.'**
   String get blockUserMessage;
 
   /// No description provided for @block.
@@ -4853,7 +4853,7 @@ abstract class AppLocalizations {
   /// No description provided for @chatDeletedOnlyForYou.
   ///
   /// In en, this message translates to:
-  /// **'It\'s only deleted for you. If someone sends a new message, the chat comes back.'**
+  /// **'Only for you.'**
   String get chatDeletedOnlyForYou;
 
   /// No description provided for @chatDeleted.
@@ -5252,12 +5252,6 @@ abstract class AppLocalizations {
   /// **'iPhone notifications'**
   String get ntfyPageTitle;
 
-  /// No description provided for @ntfyIntro.
-  ///
-  /// In en, this message translates to:
-  /// **'This is for iPhone only. Synk sends iPhone notifications through ntfy, a free app. On Android you get them already.'**
-  String get ntfyIntro;
-
   /// No description provided for @ntfyStepsTitle.
   ///
   /// In en, this message translates to:
@@ -5515,6 +5509,221 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'We\'re all ears'**
   String get supportTitle;
+
+  /// No description provided for @reply.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply'**
+  String get reply;
+
+  /// No description provided for @copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get copy;
+
+  /// No description provided for @messageCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get messageCopied;
+
+  /// No description provided for @replyingTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Replying to {name}'**
+  String replyingTo(Object name);
+
+  /// No description provided for @originalMessageUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Original message'**
+  String get originalMessageUnavailable;
+
+  /// No description provided for @seen.
+  ///
+  /// In en, this message translates to:
+  /// **'Seen'**
+  String get seen;
+
+  /// No description provided for @seenByEveryone.
+  ///
+  /// In en, this message translates to:
+  /// **'Seen by everyone'**
+  String get seenByEveryone;
+
+  /// No description provided for @seenByCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Seen by {count}'**
+  String seenByCount(int count);
+
+  /// No description provided for @friendsOfName.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s friends'**
+  String friendsOfName(Object name);
+
+  /// No description provided for @reviewsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 review} other{{count} reviews}}'**
+  String reviewsCount(int count);
+
+  /// No description provided for @goodMorning.
+  ///
+  /// In en, this message translates to:
+  /// **'Good morning'**
+  String get goodMorning;
+
+  /// No description provided for @goodAfternoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Good afternoon'**
+  String get goodAfternoon;
+
+  /// No description provided for @goodEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Good evening'**
+  String get goodEvening;
+
+  /// No description provided for @couldntFindYourThing.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t find your thing?'**
+  String get couldntFindYourThing;
+
+  /// No description provided for @rateActivityFun.
+  ///
+  /// In en, this message translates to:
+  /// **'Give your crew some stars'**
+  String get rateActivityFun;
+
+  /// No description provided for @ratingsSentToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks! Ratings sent'**
+  String get ratingsSentToast;
+
+  /// No description provided for @ntfyIphoneOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only for iPhone users'**
+  String get ntfyIphoneOnly;
+
+  /// No description provided for @supportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We read every message.'**
+  String get supportSubtitle;
+
+  /// No description provided for @supportBugHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What went wrong?'**
+  String get supportBugHint;
+
+  /// No description provided for @supportIdeaHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What would you like to see?'**
+  String get supportIdeaHint;
+
+  /// No description provided for @supportOtherHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Say anything, big or small.'**
+  String get supportOtherHint;
+
+  /// No description provided for @supportAddScreenshot.
+  ///
+  /// In en, this message translates to:
+  /// **'Add screenshot (optional)'**
+  String get supportAddScreenshot;
+
+  /// No description provided for @supportChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get supportChange;
+
+  /// No description provided for @supportChangeEmailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Where should we reply?'**
+  String get supportChangeEmailTitle;
+
+  /// No description provided for @supportInvalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email'**
+  String get supportInvalidEmail;
+
+  /// No description provided for @supportThanksTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks! We got it.'**
+  String get supportThanksTitle;
+
+  /// No description provided for @supportThanksMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll get back to you by email.'**
+  String get supportThanksMessage;
+
+  /// No description provided for @backToHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to home'**
+  String get backToHome;
+
+  /// No description provided for @shareLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Share link'**
+  String get shareLink;
+
+  /// No description provided for @shareLinkMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Want to join us for {title}?\n📅 {date}\n\n{link}'**
+  String shareLinkMessage(Object title, Object date, Object link);
+
+  /// No description provided for @filter.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter'**
+  String get filter;
+
+  /// No description provided for @role.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get role;
+
+  /// No description provided for @thisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get thisWeek;
+
+  /// No description provided for @shareLinkCodeMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Want to join us for {title}?\n📅 {date}\n\n{link}\n\nOr enter the code in Synk: {code}'**
+  String shareLinkCodeMessage(
+    Object title,
+    Object date,
+    Object link,
+    Object code,
+  );
+
+  /// No description provided for @friendsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 friend} other{{count} friends}}'**
+  String friendsCount(int count);
 }
 
 class _AppLocalizationsDelegate

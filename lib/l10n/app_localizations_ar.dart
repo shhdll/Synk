@@ -837,7 +837,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get leaveActivityTitle => 'مغادرة النشاط؟';
 
   @override
-  String get confirmLeaveActivity => 'هل تريد مغادرة هذا النشاط؟';
+  String get confirmLeaveActivity => 'مغادرة هذا النشاط؟';
 
   @override
   String get stay => 'البقاء';
@@ -852,7 +852,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get leaveWaitlistTitle => 'مغادرة قائمة الانتظار؟';
 
   @override
-  String get confirmLeaveWaitlist => 'هل تريد مغادرة قائمة الانتظار؟';
+  String get confirmLeaveWaitlist => 'مغادرة قائمة الانتظار؟';
 
   @override
   String get stayOnWaitlist => 'البقاء في القائمة';
@@ -870,7 +870,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cancelRequestTitle => 'إلغاء الطلب؟';
 
   @override
-  String get confirmCancelRequest => 'هل تريد إلغاء طلب الانضمام لهذا النشاط؟';
+  String get confirmCancelRequest => 'إلغاء طلبك؟';
 
   @override
   String get keepRequest => 'إبقاء الطلب';
@@ -892,7 +892,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String transferHostMessage(Object name) {
-    return '$name سيصبح منظم النشاط، ولن تتمكن من إدارته';
+    return '$name سيصبح المنظم';
   }
 
   @override
@@ -963,8 +963,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deleteActivityTitle => 'حذف النشاط؟';
 
   @override
-  String get thisActionCannotBeUndoneThe =>
-      'لا يمكن التراجع، سيحذف النشاط للجميع';
+  String get thisActionCannotBeUndoneThe => 'سيحذف للجميع';
 
   @override
   String get keepActivity => 'إبقاء النشاط';
@@ -2382,7 +2381,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String removeFriendMessage(Object name) {
-    return 'ستتم إزالة $name من قائمة أصدقائك. يمكنك إرسال طلب صداقة جديد في أي وقت';
+    return 'تقدر تضيف $name مرة ثانية لاحقا';
   }
 
   @override
@@ -2399,8 +2398,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get blockUserMessage =>
-      'لن يتمكن من العثور عليك أو إرسال طلبات صداقة لك، وستتم إزالته من أصدقائك. لن يتم إشعاره بذلك';
+  String get blockUserMessage => 'لن يجدك أو يضيفك، ولن يعرف بذلك';
 
   @override
   String get block => 'حظر';
@@ -2693,8 +2691,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deleteThisChat => 'حذف هذه المحادثة؟';
 
   @override
-  String get chatDeletedOnlyForYou =>
-      'تحذف لديك فقط، وإذا وصلت رسالة جديدة ستظهر المحادثة مجددا';
+  String get chatDeletedOnlyForYou => 'لديك فقط';
 
   @override
   String get chatDeleted => 'تم حذف المحادثة';
@@ -2912,17 +2909,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get ntfyPageTitle => 'إشعارات الآيفون';
 
   @override
-  String get ntfyIntro =>
-      'هذه الخطوات للآيفون فقط. يرسل Synk إشعارات الآيفون عبر تطبيق ntfy المجاني. على أندرويد تصلك الإشعارات بدونها.';
-
-  @override
   String get ntfyStepsTitle => 'طريقة التفعيل';
 
   @override
-  String get ntfyStep1 => 'حمّل ntfy من App Store';
+  String get ntfyStep1 => 'حمل ntfy من App Store';
 
   @override
-  String get ntfyStep2 => 'فعّل الإرسال إلى ntfy في الأسفل';
+  String get ntfyStep2 => 'فعل الإرسال إلى ntfy في الأسفل';
 
   @override
   String get ntfyStep3 => 'اضغط على الموضوع لنسخه';
@@ -2931,7 +2924,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get ntfyStep4 => 'في ntfy، اضغط +، الصق الموضوع ثم اضغط Subscribe';
 
   @override
-  String get ntfyGetApp => 'حمّل ntfy';
+  String get ntfyGetApp => 'حمل ntfy';
 
   @override
   String get ntfyGetAppHint => 'مجاني على App Store';
@@ -3053,4 +3046,146 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get supportTitle => 'كلنا آذان صاغية';
+
+  @override
+  String get reply => 'رد';
+
+  @override
+  String get copy => 'نسخ';
+
+  @override
+  String get messageCopied => 'تم النسخ';
+
+  @override
+  String replyingTo(Object name) {
+    return 'رد على $name';
+  }
+
+  @override
+  String get originalMessageUnavailable => 'الرسالة الأصلية';
+
+  @override
+  String get seen => 'تمت المشاهدة';
+
+  @override
+  String get seenByEveryone => 'شاهدها الجميع';
+
+  @override
+  String seenByCount(int count) {
+    return 'شاهدها $count';
+  }
+
+  @override
+  String friendsOfName(Object name) {
+    return 'أصدقاء $name';
+  }
+
+  @override
+  String reviewsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count تقييم',
+      few: '$count تقييمات',
+      two: 'تقييمان',
+      one: 'تقييم واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get goodMorning => 'صباح الخير';
+
+  @override
+  String get goodAfternoon => 'مساء الخير';
+
+  @override
+  String get goodEvening => 'مساء الخير';
+
+  @override
+  String get couldntFindYourThing => 'ما لقيت اللي يناسبك؟';
+
+  @override
+  String get rateActivityFun => 'اعط ربعك نجوم';
+
+  @override
+  String get ratingsSentToast => 'شكرا! وصلت تقييماتك';
+
+  @override
+  String get ntfyIphoneOnly => 'لمستخدمي الآيفون فقط';
+
+  @override
+  String get supportSubtitle => 'نقرأ كل رسالة';
+
+  @override
+  String get supportBugHint => 'وش المشكلة؟';
+
+  @override
+  String get supportIdeaHint => 'وش ودك تشوف؟';
+
+  @override
+  String get supportOtherHint => 'قل أي شيء، كبير أو صغير';
+
+  @override
+  String get supportAddScreenshot => 'أضف لقطة شاشة (اختياري)';
+
+  @override
+  String get supportChange => 'تغيير';
+
+  @override
+  String get supportChangeEmailTitle => 'وين نرد عليك؟';
+
+  @override
+  String get supportInvalidEmail => 'أدخل بريدا صحيحا';
+
+  @override
+  String get supportThanksTitle => 'شكرا! وصلتنا';
+
+  @override
+  String get supportThanksMessage => 'بنرد عليك على بريدك';
+
+  @override
+  String get backToHome => 'العودة للرئيسية';
+
+  @override
+  String get shareLink => 'مشاركة الرابط';
+
+  @override
+  String shareLinkMessage(Object title, Object date, Object link) {
+    return 'تبي تنضم لنا في $title؟\n📅 $date\n\n$link';
+  }
+
+  @override
+  String get filter => 'فلتر';
+
+  @override
+  String get role => 'الدور';
+
+  @override
+  String get thisWeek => 'هذا الأسبوع';
+
+  @override
+  String shareLinkCodeMessage(
+    Object title,
+    Object date,
+    Object link,
+    Object code,
+  ) {
+    return 'تبي تنضم لنا في $title؟\n📅 $date\n\n$link\n\nأو اكتب الرمز في Synk: $code';
+  }
+
+  @override
+  String friendsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count صديق',
+      many: '$count صديقا',
+      few: '$count أصدقاء',
+      two: 'صديقان',
+      one: 'صديق واحد',
+      zero: '0 أصدقاء',
+    );
+    return '$_temp0';
+  }
 }

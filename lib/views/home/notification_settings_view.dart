@@ -49,20 +49,24 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
       NotificationKind kind,
       IconData icon,
       Color color,
-      String title,
-      String subtitle,
-    ) {
-      return SettingsRow(
+      String title, {
+      String? subtitle,
+      bool disabled = false,
+    }) {
+      final settingsRow = SettingsRow(
         icon: icon,
         iconColor: color,
         title: title,
         subtitle: subtitle,
         trailing: Switch.adaptive(
-          value: _controller.isEnabled(kind),
+          value: !disabled && _controller.isEnabled(kind),
           activeTrackColor: SynkColors.teal,
-          onChanged: (value) => _toggle(kind, value),
+          onChanged: disabled ? null : (value) => _toggle(kind, value),
         ),
       );
+      return disabled
+          ? IgnorePointer(child: Opacity(opacity: 0.45, child: settingsRow))
+          : settingsRow;
     }
 
     return Scaffold(
@@ -102,28 +106,27 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                             Icons.alarm_rounded,
                             SynkColors.orangeDark,
                             l10n.notifPrefReminders,
-                            l10n.notifPrefRemindersHint,
+                            subtitle: l10n.notifPrefRemindersHint,
                           ),
                           row(
                             NotificationKind.activityUpdates,
                             Icons.event_note_rounded,
                             SynkColors.teal,
                             l10n.notifPrefActivityUpdates,
-                            l10n.notifPrefActivityUpdatesHint,
+                            subtitle: l10n.notifPrefActivityUpdatesHint,
                           ),
                           row(
                             NotificationKind.joinRequests,
                             Icons.how_to_reg_rounded,
                             SynkColors.beigeDark,
                             l10n.notifPrefJoinRequests,
-                            l10n.notifPrefJoinRequestsHint,
                           ),
                           row(
                             NotificationKind.waitlist,
                             Icons.hourglass_bottom_rounded,
                             SynkColors.pink,
                             l10n.notifPrefWaitlist,
-                            l10n.notifPrefWaitlistHint,
+                            subtitle: l10n.notifPrefWaitlistHint,
                           ),
                         ],
                       ),
@@ -136,14 +139,12 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                             Icons.person_add_alt_1_rounded,
                             SynkColors.teal,
                             l10n.notifPrefFriendRequests,
-                            l10n.notifPrefFriendRequestsHint,
                           ),
                           row(
                             NotificationKind.chats,
                             Icons.chat_bubble_rounded,
                             SynkColors.orangeDark,
                             l10n.notifPrefChats,
-                            l10n.notifPrefChatsHint,
                           ),
                         ],
                       ),
@@ -156,7 +157,8 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                             Icons.campaign_rounded,
                             SynkColors.textSecondary,
                             l10n.notifPrefMarketing,
-                            l10n.notifPrefMarketingHint,
+                            // Not sent yet; comes in a later phase.
+                            disabled: true,
                           ),
                         ],
                       ),

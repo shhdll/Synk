@@ -11,7 +11,6 @@ import '../../../models/activities_model.dart';
 import '../../../models/activity_model.dart';
 import '../../../models/activity_participation_model.dart';
 import '../../../models/avatar_uploader.dart';
-import '../../../models/friends_model.dart';
 import '../../../models/user_profile_model.dart';
 import '../../../utils/custom_widgets/synk_dialog.dart';
 import '../../../utils/custom_widgets/synk_feedback.dart';
@@ -138,8 +137,12 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     try {
       final participating = await _activitiesModel.fetchParticipating();
       if (!mounted) return;
-      setState(() => _hasPendingScheduleOverlap =
-          ActivitiesModel.hasPendingOverlap(_currentActivity, participating));
+      setState(
+        () => _hasPendingScheduleOverlap = ActivitiesModel.hasPendingOverlap(
+          _currentActivity,
+          participating,
+        ),
+      );
     } catch (_) {}
   }
 
@@ -265,11 +268,6 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
   void _onFriendsChanged() {
     if (mounted) setState(() {});
   }
-
-  bool _isFriend(String? userId) =>
-      userId != null &&
-      FriendsController.instance.statusFor(userId) == FriendshipStatus.friends;
-
 
   int get _anonymousCount =>
       (_joinedCount - 1).clamp(0, _currentActivity.maxParticipants);
@@ -499,7 +497,6 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                               _buildScheduleAndLocationSection(),
                               if (_currentActivity.hasCoordinates &&
                                   !_currentActivity.isPast) ...[
-                                const SizedBox(height: 12),
                                 ActivityWeatherCard(
                                   latitude: _currentActivity.latitude!,
                                   longitude: _currentActivity.longitude!,
@@ -594,11 +591,10 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
             onPressed: () async {
               await Clipboard.setData(ClipboardData(text: code));
               if (!mounted) return;
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(content: Text(context.l10n.activityCodeCopied)),
-                );
+              SynkFeedback.showToast(
+                context,
+                title: context.l10n.activityCodeCopied,
+              );
             },
             icon: const Icon(
               Icons.copy_rounded,
@@ -1250,8 +1246,8 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
           ),
         ),
 
-        // Top controls: Close, and Share in chat for upcoming public
-        // activities (friends can't open private ones).
+        // Top controls: Close, and Share (in a chat or as a link) for
+        // upcoming public activities (friends can't open private ones).
         Positioned(
           top: 20,
           left: 16,
@@ -1267,7 +1263,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
               if (_currentActivity.isPublic && !_currentActivity.isPast)
                 _buildHeaderButton(
                   icon: Icons.ios_share_rounded,
-                  tooltip: context.l10n.shareInChat,
+                  tooltip: context.l10n.share,
                   onTap: () => showShareToChatSheet(context, _currentActivity),
                 ),
             ],
@@ -1788,43 +1784,19 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
         ],
       ];
     } else {
-      // Friends are grouped first; without friends the list is unchanged.
-      final friendRows = <Widget>[];
-      final otherRows = <Widget>[];
-      (_isFriend(_currentActivity.hostId) ? friendRows : otherRows).add(
+      // The host first, then everyone else.
+      children = withDividers([
         hostRow,
-      );
-      for (final p in _participants) {
-        final userId = p['user_id'] as String?;
-        (_isFriend(userId) ? friendRows : otherRows).add(
+        for (final p in _participants)
           _buildParticipantRow(
             name: (p['full_name'] as String?) ?? context.l10n.communityMember,
             username: p['username'] as String?,
-            userId: userId,
+            userId: p['user_id'] as String?,
             avatarUrl: p['avatar_url'] as String?,
             gender: p['gender'] as String?,
             isHost: false,
           ),
-        );
-      }
-
-      children = friendRows.isEmpty
-          ? withDividers(otherRows)
-          : [
-              _buildGroupLabel(
-                context.l10n.yourFriendsGroup,
-                SynkColors.tealText,
-              ),
-              ...withDividers(friendRows),
-              if (otherRows.isNotEmpty) ...[
-                const SizedBox(height: 14),
-                _buildGroupLabel(
-                  context.l10n.othersGroup,
-                  SynkColors.labelGrey,
-                ),
-                ...withDividers(otherRows),
-              ],
-            ];
+      ]);
     }
 
     return Container(
@@ -1837,24 +1809,6 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
         ),
       ),
       child: Column(children: children),
-    );
-  }
-
-  Widget _buildGroupLabel(String text, Color color) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Align(
-        alignment: AlignmentDirectional.centerStart,
-        child: Text(
-          text.toUpperCase(),
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.7,
-            color: color,
-          ),
-        ),
-      ),
     );
   }
 

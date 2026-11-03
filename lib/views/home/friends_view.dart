@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../controllers/friends_controller.dart';
 import '../../core/constants/synk_colors.dart';
 import '../../l10n/l10n.dart';
-import 'blocked_users_view.dart';
 import 'find_people_view.dart';
 import 'widgets/empty_state.dart';
 import 'widgets/friend_options_sheet.dart';
@@ -55,7 +54,7 @@ class _FriendsViewState extends State<FriendsView> {
           ),
         ),
         title: Text(
-          '${context.l10n.friends} · ${_friends.friends.length}',
+          context.l10n.friendsCount(_friends.friends.length),
           style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w800,
@@ -70,16 +69,6 @@ class _FriendsViewState extends State<FriendsView> {
             ),
             icon: const Icon(
               Icons.person_add_alt_1_rounded,
-              color: SynkColors.textPrimary,
-            ),
-          ),
-          IconButton(
-            tooltip: context.l10n.blockedUsers,
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const BlockedUsersView()),
-            ),
-            icon: const Icon(
-              Icons.block_rounded,
               color: SynkColors.textPrimary,
             ),
           ),

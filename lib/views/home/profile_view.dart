@@ -215,6 +215,7 @@ class _ProfileViewState extends State<ProfileView> {
         avatarImage ?? AvatarUploader.defaultImageForGender(gender);
     final activitiesCount = widget.activityStore?.completedCount ?? 0;
     final ratingValue = profile['rating'];
+    final ratingCount = profile['rating_count'];
     final ratingText = ratingValue is num
         ? ratingValue.toStringAsFixed(1)
         : '—';
@@ -398,7 +399,10 @@ class _ProfileViewState extends State<ProfileView> {
                               child: _StatItem(
                                 icon: Icons.star_rounded,
                                 value: ratingText,
-                                label: context.l10n.rating,
+                                // "12 reviews" under the stars once rated.
+                                label: ratingCount is int && ratingCount > 0
+                                    ? context.l10n.reviewsCount(ratingCount)
+                                    : context.l10n.rating,
                               ),
                             ),
                           ],
@@ -546,7 +550,7 @@ class _ProfileViewState extends State<ProfileView> {
                 onPressed: _openLogout,
                 style: OutlinedButton.styleFrom(
                   foregroundColor: SynkColors.orangeDark,
-                  side: const BorderSide(color: SynkColors.orangeDark),
+                  side: BorderSide.none,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),

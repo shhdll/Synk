@@ -198,8 +198,11 @@ class _MyAppState extends State<MyApp> {
     // A successful verify emits signedIn (picked up by the home
     // StreamBuilder and EmailVerificationScreen) or passwordRecovery
     // (picked up by the listener above).
-    _deepLinkHandler = AuthDeepLinkHandler(onResult: _onAuthLinkResult)
-      ..start();
+    _deepLinkHandler = AuthDeepLinkHandler(
+      onResult: _onAuthLinkResult,
+      // Shared activity links open the same way as a notification.
+      onActivityLink: _openNotificationActivity,
+    )..start();
 
     LanguageController.instance.addListener(_onLanguageChanged);
   }

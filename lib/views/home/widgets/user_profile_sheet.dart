@@ -12,6 +12,7 @@ import '../../../utils/custom_widgets/synk_feedback.dart';
 import '../../widgets/avatar_preview.dart';
 import '../../widgets/profile_header_banner.dart';
 import '../chats_view.dart';
+import '../user_friends_view.dart';
 import 'friend_action_button.dart';
 import 'friend_options_sheet.dart';
 import 'recent_activities_section.dart';
@@ -68,6 +69,7 @@ class UserProfileSheet extends StatefulWidget {
 class _UserProfileSheetState extends State<UserProfileSheet> {
   Map<String, dynamic>? _profile;
   int? _completedCount;
+  List<FriendUser>? _friends;
   bool _loading = true;
 
   @override
@@ -89,11 +91,15 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
       ActivitiesModel()
           .fetchCompletedCount(userId: widget.userId)
           .then<Object?>((count) => count, onError: (_) => null),
+      FriendsModel()
+          .fetchFriendsOf(widget.userId)
+          .then<Object?>((friends) => friends, onError: (_) => null),
     ]);
     if (!mounted) return;
     setState(() {
       _profile = results[0] as Map<String, dynamic>?;
       _completedCount = results[1] as int?;
+      _friends = results[2] as List<FriendUser>?;
       _loading = false;
     });
   }
@@ -114,6 +120,8 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
     final interests =
         (_profile?['interests'] as List?)?.cast<String>() ?? const <String>[];
     final rating = _profile?['rating'];
+    final ratingCount = _profile?['rating_count'];
+    final friends = _friends;
 
     final subtitle = [
       if (username != null && username.isNotEmpty) '@$username',
@@ -218,6 +226,31 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
               Row(
                 children: [
                   Expanded(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: friends == null
+                          ? null
+                          : () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => UserFriendsView(
+                                  name: name,
+                                  friends: friends,
+                                ),
+                              ),
+                            ),
+                      child: _Stat(
+                        icon: Icons.people_alt_rounded,
+                        value: friends?.length.toString() ?? '—',
+                        label: context.l10n.friends,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: 1,
+                    height: 34,
+                    color: SynkColors.textSecondary.withValues(alpha: 0.15),
+                  ),
+                  Expanded(
                     child: _Stat(
                       icon: Icons.local_activity_rounded,
                       value: _completedCount?.toString() ?? '—',
@@ -233,7 +266,10 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
                     child: _Stat(
                       icon: Icons.star_rounded,
                       value: rating is num ? rating.toStringAsFixed(1) : '—',
-                      label: context.l10n.rating,
+                      // "12 reviews" under the stars once rated.
+                      label: ratingCount is int && ratingCount > 0
+                          ? context.l10n.reviewsCount(ratingCount)
+                          : context.l10n.rating,
                     ),
                   ),
                 ],
@@ -372,9 +408,8 @@ class _Stat extends StatelessWidget {
   }
 }
 
-
-// Add friend (or Requested / Accept / Friends), plus a ⋯ menu to unfriend,
-// report or block. Friends also get Message. A blocked user only gets Unblock.
+// Add friend (or Requested / Accept / Following), plus a ⋯ menu to report
+// or block. Friends also get Message. A blocked user only gets Unblock.
 class _FriendActions extends StatelessWidget {
   const _FriendActions({required this.user, this.showMessageButton = true});
 
@@ -440,13 +475,9 @@ class _FriendActions extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
               ),
               itemBuilder: (_) => [
-                if (status == FriendshipStatus.friends)
-                  PopupMenuItem(
-                    value: () => confirmRemoveFriend(context, user),
-                    child: Text(context.l10n.removeFriend),
-                  ),
                 PopupMenuItem(
-                  value: () => showReportUserSheet(context: context, user: user),
+                  value: () =>
+                      showReportUserSheet(context: context, user: user),
                   child: Text(
                     context.l10n.reportName(user.name.split(' ').first),
                   ),
@@ -463,11 +494,8 @@ class _FriendActions extends StatelessWidget {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
+                  color: SynkColors.textSecondary.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: SynkColors.textSecondary.withValues(alpha: 0.30),
-                    width: 1.5,
-                  ),
                 ),
                 child: const Icon(
                   Icons.more_horiz_rounded,
@@ -505,15 +533,13 @@ class _MessageButtonState extends State<_MessageButton> {
 
   @override
   Widget build(BuildContext context) {
-    // White with an orange outline, pill-shaped like Following beside it.
-    final shape = StadiumBorder(
-      side: BorderSide(
-        color: SynkColors.orangeDeep.withValues(alpha: 0.4),
-        width: 1.5,
-      ),
+    // The main action once you're friends: filled, same corners as
+    // Following beside it.
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
     );
     return Material(
-      color: Colors.white,
+      color: SynkColors.orangeDark,
       shape: shape,
       child: InkWell(
         onTap: _open,
@@ -530,13 +556,13 @@ class _MessageButtonState extends State<_MessageButton> {
                       dimension: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: SynkColors.orangeDeep,
+                        color: Colors.white,
                       ),
                     )
                   : const Icon(
-                      Icons.chat_bubble_outline_rounded,
+                      Icons.sms_outlined,
                       size: 20,
-                      color: SynkColors.orangeDeep,
+                      color: Colors.white,
                     ),
               const SizedBox(width: 8),
               Flexible(
@@ -547,7 +573,7 @@ class _MessageButtonState extends State<_MessageButton> {
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
-                    color: SynkColors.orangeDeep,
+                    color: Colors.white,
                   ),
                 ),
               ),
