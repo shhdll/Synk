@@ -43,9 +43,9 @@ class CodeBubble extends StatelessWidget {
             shape: _shape,
             shadows: [
               BoxShadow(
-                color: SynkColors.orangeDark.withValues(alpha: 0.35),
-                blurRadius: 18,
-                offset: const Offset(0, 6),
+                color: SynkColors.orangeDark.withValues(alpha: 0.28),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
@@ -57,8 +57,8 @@ class CodeBubble extends StatelessWidget {
               onTap: onTap,
               child: Padding(
                 padding: EdgeInsets.symmetric(
-                  horizontal: expanded ? 16 : 14,
-                  vertical: 14,
+                  horizontal: expanded ? 12 : 11,
+                  vertical: 10,
                 ),
                 child: AnimatedSize(
                   duration: const Duration(milliseconds: 220),
@@ -69,16 +69,16 @@ class CodeBubble extends StatelessWidget {
                     children: [
                       const Icon(
                         Icons.key_rounded,
-                        size: 20,
+                        size: 17,
                         color: Colors.white,
                       ),
                       if (expanded) ...[
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         Text(
                           context.l10n.haveACode,
                           maxLines: 1,
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 12.5,
                             fontWeight: FontWeight.w700,
                             color: Colors.white,
                           ),

@@ -277,11 +277,11 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  Future<void> _openAddActivity() async {
+  Future<void> _openAddActivity([String? title]) async {
     final outcome = await Navigator.of(context).push<CreateActivityOutcome>(
       MaterialPageRoute(
         builder: (context) {
-          return CreateActivityView(store: _activityStore);
+          return CreateActivityView(store: _activityStore, initialTitle: title);
         },
         fullscreenDialog: true,
       ),
@@ -339,7 +339,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
               unawaited(ChatController.instance.refresh());
             }
           },
-          onAddTap: _openAddActivity,
+          onAddTap: () => _openAddActivity(),
           activitiesBadge: _activityStore.pendingRequestCount,
           chatBadge: ChatController.instance.unreadChatCount,
         ),

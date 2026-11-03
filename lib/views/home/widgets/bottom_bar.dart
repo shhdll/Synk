@@ -61,7 +61,7 @@ class BottomBar extends StatelessWidget {
   }
 
   Widget _buildBar(BuildContext context) {
-    final radius = BorderRadius.circular(24);
+    final radius = BorderRadius.circular(26);
     return Stack(
       clipBehavior: Clip.none,
       alignment: Alignment.topCenter,

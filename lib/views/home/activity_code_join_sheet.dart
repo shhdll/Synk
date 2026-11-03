@@ -281,17 +281,6 @@ class _ActivityCodeJoinSheetState extends State<ActivityCodeJoinSheet> {
                       ],
                     ),
                   ),
-                  IconButton(
-                    onPressed: _controller.isLoading
-                        ? null
-                        : () {
-                            Navigator.pop(context);
-                          },
-                    icon: const Icon(
-                      Icons.close_rounded,
-                      color: SynkColors.textPrimary,
-                    ),
-                  ),
                 ],
               ),
               const SizedBox(height: 24),
