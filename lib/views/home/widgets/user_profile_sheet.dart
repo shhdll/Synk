@@ -8,6 +8,7 @@ import '../../../l10n/l10n.dart';
 import '../../../models/activities_model.dart';
 import '../../../models/avatar_uploader.dart';
 import '../../../models/friends_model.dart';
+import '../../../models/weekly_streak.dart';
 import '../../../utils/custom_widgets/synk_feedback.dart';
 import '../../widgets/avatar_preview.dart';
 import '../../widgets/profile_header_banner.dart';
@@ -17,6 +18,7 @@ import 'friend_action_button.dart';
 import 'friend_options_sheet.dart';
 import 'recent_activities_section.dart';
 import 'report_user_sheet.dart';
+import 'streak_widgets.dart';
 
 Future<void> showUserProfileSheet({
   required BuildContext context,
@@ -31,13 +33,23 @@ Future<void> showUserProfileSheet({
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => UserProfileSheet(
-      userId: userId,
-      name: name,
-      username: username,
-      avatarUrl: avatarUrl,
-      gender: gender,
-      showMessageButton: showMessageButton,
+    // Drag it up to fill the screen; down past half closes it.
+    builder: (_) => DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.85,
+      minChildSize: 0.5,
+      maxChildSize: 1,
+      snap: true,
+      snapSizes: const [0.85],
+      builder: (context, scrollController) => UserProfileSheet(
+        userId: userId,
+        name: name,
+        username: username,
+        avatarUrl: avatarUrl,
+        gender: gender,
+        showMessageButton: showMessageButton,
+        scrollController: scrollController,
+      ),
     ),
   );
 }
@@ -51,6 +63,7 @@ class UserProfileSheet extends StatefulWidget {
     this.avatarUrl,
     this.gender,
     this.showMessageButton = true,
+    this.scrollController,
   });
 
   final String userId;
@@ -62,6 +75,9 @@ class UserProfileSheet extends StatefulWidget {
   // Off when opened from your chat with this person.
   final bool showMessageButton;
 
+  // From the draggable sheet around it.
+  final ScrollController? scrollController;
+
   @override
   State<UserProfileSheet> createState() => _UserProfileSheetState();
 }
@@ -70,6 +86,7 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
   Map<String, dynamic>? _profile;
   int? _completedCount;
   List<FriendUser>? _friends;
+  WeeklyStreak? _streak;
   bool _loading = true;
 
   @override
@@ -94,12 +111,17 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
       FriendsModel()
           .fetchFriendsOf(widget.userId)
           .then<Object?>((friends) => friends, onError: (_) => null),
+      ActivitiesModel()
+          .fetchStreakTimes(widget.userId)
+          .then<Object?>((times) => times, onError: (_) => null),
     ]);
     if (!mounted) return;
     setState(() {
       _profile = results[0] as Map<String, dynamic>?;
       _completedCount = results[1] as int?;
       _friends = results[2] as List<FriendUser>?;
+      final times = results[3] as List<DateTime>?;
+      _streak = times == null ? null : WeeklyStreak.from(times);
       _loading = false;
     });
   }
@@ -122,6 +144,7 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
     final rating = _profile?['rating'];
     final ratingCount = _profile?['rating_count'];
     final friends = _friends;
+    final streak = _streak;
 
     final subtitle = [
       if (username != null && username.isNotEmpty) '@$username',
@@ -133,241 +156,281 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
         ? NetworkImage(avatarUrl)
         : fallback;
 
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.sizeOf(context).height * 0.85,
-      ),
-      decoration: const BoxDecoration(
-        color: SynkColors.background,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: SynkColors.textSecondary.withValues(alpha: 0.25),
-                  borderRadius: BorderRadius.circular(2),
-                ),
+    final media = MediaQuery.of(context);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 0 at the usual height, 1 at full screen: the corners square off
+        // and the content moves below the status bar.
+        final full = ((constraints.maxHeight / media.size.height - 0.85) / 0.15)
+            .clamp(0.0, 1.0);
+        return Container(
+          decoration: BoxDecoration(
+            color: SynkColors.background,
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(28 * (1 - full)),
+            ),
+          ),
+          child: SafeArea(
+            top: false,
+            child: SingleChildScrollView(
+              controller: widget.scrollController,
+              padding: EdgeInsets.fromLTRB(
+                24,
+                12 + media.padding.top * full,
+                24,
+                24,
               ),
-              const SizedBox(height: 16),
-              // Their header, with the photo hanging off its bottom edge.
-              Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.bottomCenter,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Plain while loading, so the default color doesn't flash.
-                  _loading
-                      ? Container(
-                          height: 100,
-                          decoration: BoxDecoration(
-                            color: SynkColors.beige.withValues(alpha: 0.35),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                        )
-                      : ProfileHeaderBanner.forProfile(_profile, height: 100),
-                  Positioned(
-                    bottom: -50,
-                    child: GestureDetector(
-                      onTap: () => showAvatarPreview(context, photo),
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: SynkColors.background,
-                          shape: BoxShape.circle,
-                        ),
-                        child: ClipOval(
-                          child: Image(
-                            image: photo,
-                            width: 92,
-                            height: 92,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => Image(
-                              image: fallback,
-                              width: 92,
-                              height: 92,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                      ),
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: SynkColors.textSecondary.withValues(alpha: 0.25),
+                      borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 62),
-              Text(
-                name,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: SynkColors.textPrimary,
-                ),
-              ),
-              if (subtitle.isNotEmpty) ...[
-                const SizedBox(height: 3),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: SynkColors.textSecondary,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 18),
-              Row(
-                children: [
-                  Expanded(
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(12),
-                      onTap: friends == null
-                          ? null
-                          : () => Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => UserFriendsView(
-                                  name: name,
-                                  friends: friends,
+                  const SizedBox(height: 16),
+                  // Their header, with the photo hanging off its bottom edge.
+                  Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.bottomCenter,
+                    children: [
+                      // Plain while loading, so the default color doesn't flash.
+                      _loading
+                          ? Container(
+                              height: 100,
+                              decoration: BoxDecoration(
+                                color: SynkColors.beige.withValues(alpha: 0.35),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            )
+                          : ProfileHeaderBanner.forProfile(
+                              _profile,
+                              height: 100,
+                            ),
+                      Positioned(
+                        bottom: -50,
+                        child: GestureDetector(
+                          onTap: () => showAvatarPreview(context, photo),
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: SynkColors.background,
+                              shape: BoxShape.circle,
+                            ),
+                            child: ClipOval(
+                              child: Image(
+                                image: photo,
+                                width: 92,
+                                height: 92,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, _, _) => Image(
+                                  image: fallback,
+                                  width: 92,
+                                  height: 92,
+                                  fit: BoxFit.cover,
                                 ),
                               ),
                             ),
-                      child: _Stat(
-                        icon: Icons.people_alt_rounded,
-                        value: friends?.length.toString() ?? '—',
-                        label: context.l10n.friends,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    width: 1,
-                    height: 34,
-                    color: SynkColors.textSecondary.withValues(alpha: 0.15),
-                  ),
-                  Expanded(
-                    child: _Stat(
-                      icon: Icons.local_activity_rounded,
-                      value: _completedCount?.toString() ?? '—',
-                      label: context.l10n.activities,
-                    ),
-                  ),
-                  Container(
-                    width: 1,
-                    height: 34,
-                    color: SynkColors.textSecondary.withValues(alpha: 0.15),
-                  ),
-                  Expanded(
-                    child: _Stat(
-                      icon: Icons.star_rounded,
-                      value: rating is num ? rating.toStringAsFixed(1) : '—',
-                      // "12 reviews" under the stars once rated.
-                      label: ratingCount is int && ratingCount > 0
-                          ? context.l10n.reviewsCount(ratingCount)
-                          : context.l10n.rating,
-                    ),
-                  ),
-                ],
-              ),
-              if (widget.userId !=
-                  Supabase.instance.client.auth.currentUser?.id) ...[
-                const SizedBox(height: 20),
-                _FriendActions(
-                  showMessageButton: widget.showMessageButton,
-                  user: FriendUser(
-                    id: widget.userId,
-                    name: name,
-                    username: username,
-                    avatarUrl: avatarUrl,
-                    gender: gender,
-                  ),
-                ),
-              ],
-              if (_loading) ...[
-                const SizedBox(height: 24),
-                const SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.4,
-                    color: SynkColors.orangeDark,
-                  ),
-                ),
-              ],
-              if (bio != null) ...[
-                const SizedBox(height: 20),
-                _Card(
-                  title: context.l10n.about,
-                  child: Text(
-                    bio,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      height: 1.4,
-                      color: SynkColors.textPrimary,
-                    ),
-                  ),
-                ),
-              ],
-              if (interests.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                _Card(
-                  title: context.l10n.interests,
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final interest in interests)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 7,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(999),
-                            border: Border.all(
-                              color: SynkColors.textSecondary.withValues(
-                                alpha: 0.35,
-                              ),
-                            ),
-                          ),
-                          child: Text(
-                            [
-                              ?kInterestEmojis[interest],
-                              valueLabel(interest),
-                            ].join(' '),
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: SynkColors.textPrimary,
-                            ),
                           ),
                         ),
+                      ),
                     ],
                   ),
-                ),
-              ],
-              if (widget.userId !=
-                  Supabase.instance.client.auth.currentUser?.id)
-                // Reloads when the friendship changes.
-                ListenableBuilder(
-                  listenable: FriendsController.instance,
-                  builder: (context, _) => RecentActivitiesSection(
-                    key: ValueKey(
-                      FriendsController.instance.statusFor(widget.userId),
-                    ),
-                    userId: widget.userId,
-                    userName: name,
+                  const SizedBox(height: 62),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          name,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: SynkColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      // Friends only; the times aren't shared with anyone else.
+                      if (streak != null &&
+                          FriendsController.instance.statusFor(widget.userId) ==
+                              FriendshipStatus.friends) ...[
+                        const SizedBox(width: 8),
+                        Tooltip(
+                          message: context.l10n.streakTitle,
+                          child: StreakPill(
+                            weeks: streak.weeks,
+                            active: streak.weeks > 0,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                ),
-            ],
+                  if (subtitle.isNotEmpty) ...[
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: SynkColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: friends == null
+                              ? null
+                              : () => Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => UserFriendsView(
+                                      name: name,
+                                      friends: friends,
+                                    ),
+                                  ),
+                                ),
+                          child: _Stat(
+                            icon: Icons.people_alt_rounded,
+                            value: friends?.length.toString() ?? '—',
+                            label: context.l10n.friends,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        width: 1,
+                        height: 34,
+                        color: SynkColors.textSecondary.withValues(alpha: 0.15),
+                      ),
+                      Expanded(
+                        child: _Stat(
+                          icon: Icons.local_activity_rounded,
+                          value: _completedCount?.toString() ?? '—',
+                          label: context.l10n.activities,
+                        ),
+                      ),
+                      Container(
+                        width: 1,
+                        height: 34,
+                        color: SynkColors.textSecondary.withValues(alpha: 0.15),
+                      ),
+                      Expanded(
+                        child: _Stat(
+                          icon: Icons.star_rounded,
+                          value: rating is num
+                              ? rating.toStringAsFixed(1)
+                              : '—',
+                          // "12 reviews" under the stars once rated.
+                          label: ratingCount is int && ratingCount > 0
+                              ? context.l10n.reviewsCount(ratingCount)
+                              : context.l10n.rating,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (widget.userId !=
+                      Supabase.instance.client.auth.currentUser?.id) ...[
+                    const SizedBox(height: 20),
+                    _FriendActions(
+                      showMessageButton: widget.showMessageButton,
+                      user: FriendUser(
+                        id: widget.userId,
+                        name: name,
+                        username: username,
+                        avatarUrl: avatarUrl,
+                        gender: gender,
+                      ),
+                    ),
+                  ],
+                  if (_loading) ...[
+                    const SizedBox(height: 24),
+                    const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.4,
+                        color: SynkColors.orangeDark,
+                      ),
+                    ),
+                  ],
+                  if (bio != null) ...[
+                    const SizedBox(height: 20),
+                    _Card(
+                      title: context.l10n.about,
+                      child: Text(
+                        bio,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          height: 1.4,
+                          color: SynkColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                  if (interests.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    FoldCard(
+                      title: context.l10n.interests,
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final interest in interests)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 7,
+                              ),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(999),
+                                border: Border.all(
+                                  color: SynkColors.textSecondary.withValues(
+                                    alpha: 0.35,
+                                  ),
+                                ),
+                              ),
+                              child: Text(
+                                [
+                                  ?kInterestEmojis[interest],
+                                  valueLabel(interest),
+                                ].join(' '),
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: SynkColors.textPrimary,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  if (widget.userId !=
+                      Supabase.instance.client.auth.currentUser?.id)
+                    // Reloads when the friendship changes.
+                    ListenableBuilder(
+                      listenable: FriendsController.instance,
+                      builder: (context, _) => RecentActivitiesSection(
+                        key: ValueKey(
+                          FriendsController.instance.statusFor(widget.userId),
+                        ),
+                        userId: widget.userId,
+                        userName: name,
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -470,6 +533,8 @@ class _FriendActions extends StatelessWidget {
             PopupMenuButton<VoidCallback>(
               tooltip: context.l10n.moreOptions,
               onSelected: (action) => action(),
+              position: PopupMenuPosition.under,
+              offset: const Offset(0, 6),
               color: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),

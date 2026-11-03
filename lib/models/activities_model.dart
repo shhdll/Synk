@@ -109,6 +109,21 @@ class ActivitiesModel {
     return (response as num?)?.toInt() ?? 0;
   }
 
+  // Start times of what a friend attended, for their streak.
+  Future<List<DateTime>> fetchStreakTimes(String userId) async {
+    final response = await _supabase.rpc(
+      'get_user_streak_times',
+      params: {'target_user_id': userId},
+    );
+    // Rows come back as plain values or as {function name: value}.
+    return [
+      for (final row in response as List)
+        DateTime.parse(
+          (row is Map ? row.values.first : row) as String,
+        ).toLocal(),
+    ];
+  }
+
   // A page of a user's ended activities, newest first. Only the user and
   // their friends get results; locations are never included.
   Future<UserActivityHistoryPage> fetchUserRecentActivities({

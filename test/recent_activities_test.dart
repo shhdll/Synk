@@ -81,16 +81,20 @@ void main() {
   tearDown(() => LanguageController.instance.setLocale(const Locale('en')));
 
   group('RecentActivitiesSection', () {
-    testWidgets('shows titles, dates and See all', (tester) async {
+    testWidgets('shows titles and dates, and folds away', (tester) async {
       await _pumpSection(
         tester,
         _FakeActivitiesModel(activities: [_padel, _hiking]),
       );
 
       expect(find.text('Recent activities'), findsOneWidget);
-      expect(find.text('See all'), findsOneWidget);
+      expect(find.text('See all'), findsNothing);
       expect(find.text('Padel'), findsOneWidget);
       expect(find.text(formatShortDate(_padel.dateTime)), findsOneWidget);
+
+      await tester.tap(find.text('Recent activities'));
+      await tester.pumpAndSettle();
+      expect(find.text('Padel'), findsNothing);
     });
 
     testWidgets('is hidden with no visible activities', (tester) async {
@@ -111,18 +115,22 @@ void main() {
       expect(find.text('Recent activities'), findsNothing);
     });
 
-    testWidgets('See all opens the full history', (tester) async {
+    testWidgets('puts a fourth activity on the next row', (tester) async {
       await _pumpSection(
         tester,
-        _FakeActivitiesModel(activities: [_padel, _hiking]),
+        _FakeActivitiesModel(
+          activities: [
+            _padel,
+            _hiking,
+            _activity('a3', 'Chess', DateTime(2026, 10, 10, 18)),
+            _activity('a4', 'Yoga', DateTime(2026, 10, 7, 18)),
+          ],
+        ),
       );
 
-      await tester.tap(find.text('See all'));
-      await tester.pumpAndSettle();
-
-      expect(find.text("Laila's activities"), findsOneWidget);
-      expect(find.byType(UserActivityHistoryView), findsOneWidget);
-      expect(find.text('Hiking'), findsWidgets);
+      final firstRow = tester.getTopLeft(find.text('Padel')).dy;
+      expect(tester.getTopLeft(find.text('Chess')).dy, firstRow);
+      expect(tester.getTopLeft(find.text('Yoga')).dy, greaterThan(firstRow));
     });
   });
 
@@ -136,7 +144,6 @@ void main() {
       );
 
       expect(find.text('الأنشطة الأخيرة'), findsOneWidget);
-      expect(find.text('عرض الكل'), findsOneWidget);
       expect(find.text('الأربعاء، 21 أكتوبر'), findsOneWidget);
 
       final first = tester.getTopLeft(find.text('Padel')).dx;

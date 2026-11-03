@@ -222,10 +222,10 @@ void main() {
 
       expect(find.text('2'), findsOneWidget);
       expect(find.text('weeks in a row'), findsOneWidget);
-      expect(find.text('Best streak: 3 weeks'), findsOneWidget);
+      expect(find.text('Best: 3 weeks'), findsOneWidget);
       expect(find.text('4 days left'), findsOneWidget);
       expect(
-        find.text('Attend an activity this week to keep your streak'),
+        find.text('One activity this week keeps it going'),
         findsOneWidget,
       );
     });
@@ -237,8 +237,11 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('week in a row'), findsOneWidget);
-      expect(find.text('Done ✓'), findsOneWidget);
-      expect(find.text('You kept your streak this week 🎉'), findsOneWidget);
+      expect(find.text('Done'), findsNothing);
+      expect(
+        find.text("Nice, this week's done. See you next week"),
+        findsOneWidget,
+      );
     });
 
     testWidgets('Arabic text', (tester) async {
@@ -258,7 +261,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('أسابيع متتالية'), findsOneWidget);
-      expect(find.text('أفضل سلسلة: 3 أسابيع'), findsOneWidget);
+      expect(find.text('الأفضل: 3 أسابيع'), findsOneWidget);
       expect(find.text('باقي 4 أيام'), findsOneWidget);
       expect(find.text('هذا الأسبوع'), findsOneWidget);
     });
