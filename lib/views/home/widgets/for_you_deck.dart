@@ -97,6 +97,9 @@ class _ForYouDeckState extends State<ForYouDeck>
   // The nudge plays once per app run.
   static bool _nudged = false;
 
+  // Each card's skip is saved once per app run, however often it's swiped.
+  static final Set<String> _skipped = {};
+
   ScaffoldFeatureController<SnackBar, SnackBarClosedReason>? _undoBar;
 
   @override
@@ -185,6 +188,9 @@ class _ForYouDeckState extends State<ForYouDeck>
     if (pick == null || _busy) return;
     _busy = true;
     if (join) HapticFeedback.lightImpact();
+    if (!join && _skipped.add(pick.activity.id)) {
+      _swipes.record(pick.activity.id, SwipeAction.skip);
+    }
     _animateTo(Offset((right ? 1 : -1) * _width * 1.5, _offset.dy + 40));
     _motion.forward(from: 0).then((_) {
       if (!mounted) return;
