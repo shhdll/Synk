@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/synk_colors.dart';
+import '../../l10n/l10n.dart';
 import '../../models/activities_model.dart';
 import '../../models/activity_participation_model.dart';
 import '../../services/push_notification_service.dart';
+import '../../utils/custom_widgets/synk_dialog.dart';
 
 Future<bool?>? _activeConflictDialog;
 
@@ -126,29 +128,19 @@ class _ScheduleConflictResolutionViewState
         .where((activity) => activity['isHost'] != true)
         .toList();
     if (leaving.isNotEmpty) {
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: const Text('Resolve schedule conflicts?'),
-          content: Text([
-            if (hostedToDelete.isNotEmpty)
-              'Delete activities you host: ${hostedToDelete.map((activity) => activity['title']).join(', ')}.',
-            if (joinedToLeave.isNotEmpty)
-              'Leave activities you joined: ${joinedToLeave.map((activity) => activity['title']).join(', ')}.',
-          ].join('\n\n')),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Continue'),
-            ),
-          ],
-        ),
+      final confirmed = await SynkDialog.confirm(
+        context,
+        icon: Icons.event_busy_rounded,
+        title: 'Resolve schedule conflicts?',
+        message: [
+          if (hostedToDelete.isNotEmpty)
+            'Delete activities you host: ${hostedToDelete.map((activity) => activity['title']).join(', ')}.',
+          if (joinedToLeave.isNotEmpty)
+            'Leave activities you joined: ${joinedToLeave.map((activity) => activity['title']).join(', ')}.',
+        ].join('\n\n'),
+        action: context.l10n.continueButton,
       );
-      if (confirmed != true || !mounted) return;
+      if (!confirmed || !mounted) return;
     }
     setState(() {
       _saving = true;

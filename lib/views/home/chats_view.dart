@@ -375,7 +375,10 @@ class _ChatsViewState extends State<ChatsView> {
             )
           else ...[
             const SizedBox(height: 20),
-            FriendsListCard(children: [for (final c in mixed) tile(c)]),
+            FriendsListCard(
+              padding: EdgeInsets.zero,
+              children: [for (final c in mixed) tile(c)],
+            ),
           ],
         ],
       ),

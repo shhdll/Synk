@@ -12,6 +12,9 @@ class NotificationPreferencesController extends ChangeNotifier {
 
   Map<NotificationKind, bool> _values = {};
   String? _ntfyTopic;
+
+  // The user's topic, kept while ntfy is off.
+  String? _savedNtfyTopic;
   bool _isLoading = true;
   bool _loadFailed = false;
 
@@ -28,6 +31,7 @@ class NotificationPreferencesController extends ChangeNotifier {
       final result = await _model.fetch();
       _values = result.values;
       _ntfyTopic = result.ntfyTopic;
+      _savedNtfyTopic = result.savedNtfyTopic ?? result.ntfyTopic;
     } catch (_) {
       _loadFailed = true;
     } finally {
@@ -51,14 +55,18 @@ class NotificationPreferencesController extends ChangeNotifier {
     }
   }
 
-  // Turning ntfy on makes a new random topic, so old subscribers stop
-  // getting this user's notifications.
+  // Each user keeps one topic: turning ntfy on again reuses it, so the ntfy
+  // app stays subscribed. A random one is made the first time.
   Future<bool> setNtfyEnabled(bool enabled) async {
+    // Without the saved topic a new one would replace it.
+    if (_loadFailed) await load();
+    if (_loadFailed) return false;
     final previous = _ntfyTopic;
-    _ntfyTopic = enabled ? _randomTopic() : null;
+    _ntfyTopic = enabled ? (_savedNtfyTopic ?? _randomTopic()) : null;
     notifyListeners();
     try {
       await _model.saveNtfyTopic(_ntfyTopic);
+      _savedNtfyTopic = _ntfyTopic ?? _savedNtfyTopic;
       return true;
     } catch (_) {
       _ntfyTopic = previous;

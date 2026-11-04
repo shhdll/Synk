@@ -252,16 +252,14 @@ class _ActivitiesViewState extends State<ActivitiesView> {
   }
 
   Future<void> _confirmDelete(Activity activity) async {
-    final action = await SynkDialog.destructive(
+    final delete = await SynkDialog.confirm(
+      context,
       icon: Icons.delete_outline_rounded,
       title: context.l10n.deleteActivityTitle,
       message: context.l10n.thisActionCannotBeUndoneThe,
-      primaryLabel: context.l10n.keepActivity,
-      secondaryLabel: context.l10n.deleteActivityButton,
-    ).show(context, barrierDismissible: false);
-
-    // The destructive action is the secondary button.
-    if (action != SynkDialogAction.secondary || !mounted) return;
+      action: context.l10n.deleteLabel,
+    );
+    if (!delete || !mounted) return;
 
     final wasDeleted = await _deleteController.deleteActivity(activity.id);
 

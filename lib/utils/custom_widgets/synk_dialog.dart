@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../../core/constants/synk_colors.dart';
+import '../../l10n/l10n.dart';
 
 // What the user chose in a SynkDialog.
 enum SynkDialogAction { primary, secondary }
@@ -10,9 +11,8 @@ enum SynkDialogAction { primary, secondary }
 // The app's confirmation popup: a centred white card over a dimmed, blurred
 // screen, with one gradient primary button and one secondary button.
 //
-// Two shapes are used by the Create Activity flow:
-//   SynkDialog.success(...)     – "Activity created!"
-//   SynkDialog.destructive(...) – "Discard activity?"
+//   SynkDialog.success(...) – "Activity created!"
+//   SynkDialog.confirm(...) – "Leave activity?", true only for the action
 class SynkDialog extends StatelessWidget {
   const SynkDialog({
     super.key,
@@ -20,11 +20,11 @@ class SynkDialog extends StatelessWidget {
     required this.iconColor,
     required this.iconBackground,
     required this.title,
-    required this.message,
+    this.message,
     required this.primaryLabel,
     required this.secondaryLabel,
-    this.secondaryIsDestructive = false,
     this.showPrimaryArrow = true,
+    this.red = false,
   });
 
   // Teal check in a filled circle. Used for "Activity created!".
@@ -47,39 +47,45 @@ class SynkDialog extends StatelessWidget {
     );
   }
 
-  // Orange icon on a soft orange circle, with a red secondary action.
-  // Used for "Discard activity?" — the primary button is the safe choice.
-  factory SynkDialog.destructive({
-    Key? key,
+  // Asks before an action. The orange button is the action itself and
+  // Cancel sits under it; tapping outside or going back also cancels.
+  // Add [message] only when it says something the title doesn't. [red] is
+  // for the last step of something that can't be undone.
+  static Future<bool> confirm(
+    BuildContext context, {
     required IconData icon,
     required String title,
-    required String message,
-    required String primaryLabel,
-    required String secondaryLabel,
-  }) {
-    return SynkDialog(
-      key: key,
+    String? message,
+    required String action,
+    bool red = false,
+  }) async {
+    final choice = await SynkDialog(
       icon: icon,
-      iconColor: SynkColors.orangeDark,
-      iconBackground: const Color(0x24FF7A36),
+      iconColor: red ? SynkColors.badge : SynkColors.orangeDark,
+      iconBackground: red
+          ? SynkColors.badge.withValues(alpha: 0.14)
+          : const Color(0x24FF7A36),
       title: title,
       message: message,
-      primaryLabel: primaryLabel,
-      secondaryLabel: secondaryLabel,
-      secondaryIsDestructive: true,
+      primaryLabel: action,
+      secondaryLabel: context.l10n.cancel,
       showPrimaryArrow: false,
-    );
+      red: red,
+    ).show(context);
+    return choice == SynkDialogAction.primary;
   }
 
   final IconData icon;
   final Color iconColor;
   final Color iconBackground;
   final String title;
-  final String message;
+  final String? message;
   final String primaryLabel;
   final String secondaryLabel;
-  final bool secondaryIsDestructive;
   final bool showPrimaryArrow;
+
+  // A red action button instead of the orange one.
+  final bool red;
 
   // Shows the dialog and resolves to the chosen action, or null if it was
   // dismissed by tapping outside or with the system back gesture.
@@ -154,30 +160,31 @@ class SynkDialog extends StatelessWidget {
                 color: SynkColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: Text(
-                message,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 15,
-                  height: 1.45,
-                  color: SynkColors.textSecondary,
+            if (message case final message? when message.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    height: 1.45,
+                    color: SynkColors.textSecondary,
+                  ),
                 ),
               ),
-            ),
+            ],
             const SizedBox(height: 22),
             _PrimaryButton(
               label: primaryLabel,
               showArrow: showPrimaryArrow,
-              onTap: () =>
-                  Navigator.of(context).pop(SynkDialogAction.primary),
+              red: red,
+              onTap: () => Navigator.of(context).pop(SynkDialogAction.primary),
             ),
             const SizedBox(height: 8),
             _SecondaryButton(
               label: secondaryLabel,
-              isDestructive: secondaryIsDestructive,
               onTap: () =>
                   Navigator.of(context).pop(SynkDialogAction.secondary),
             ),
@@ -188,17 +195,20 @@ class SynkDialog extends StatelessWidget {
   }
 }
 
-// Gradient orange pill, matching the Create Activity flow's main button.
+// Gradient orange pill, matching the Create Activity flow's main button,
+// or red.
 class _PrimaryButton extends StatelessWidget {
   const _PrimaryButton({
     required this.label,
     required this.showArrow,
     required this.onTap,
+    this.red = false,
   });
 
   final String label;
   final bool showArrow;
   final VoidCallback onTap;
+  final bool red;
 
   @override
   Widget build(BuildContext context) {
@@ -208,14 +218,18 @@ class _PrimaryButton extends StatelessWidget {
         height: 56,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(28),
-          gradient: const LinearGradient(
-            colors: [SynkColors.orange, SynkColors.orangeDark],
+          gradient: LinearGradient(
+            colors: red
+                ? const [Color(0xFFF0595B), SynkColors.badge]
+                : const [SynkColors.orange, SynkColors.orangeDark],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           boxShadow: [
             BoxShadow(
-              color: SynkColors.orange.withValues(alpha: 0.40),
+              color: (red ? SynkColors.badge : SynkColors.orange).withValues(
+                alpha: 0.40,
+              ),
               blurRadius: 18,
               offset: const Offset(0, 6),
             ),
@@ -247,16 +261,11 @@ class _PrimaryButton extends StatelessWidget {
   }
 }
 
-// Outlined white pill, or plain red text when the action is destructive.
+// Outlined white pill.
 class _SecondaryButton extends StatelessWidget {
-  const _SecondaryButton({
-    required this.label,
-    required this.isDestructive,
-    required this.onTap,
-  });
+  const _SecondaryButton({required this.label, required this.onTap});
 
   final String label;
-  final bool isDestructive;
   final VoidCallback onTap;
 
   @override
@@ -265,25 +274,21 @@ class _SecondaryButton extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        height: isDestructive ? 52 : 56,
-        decoration: isDestructive
-            ? null
-            : BoxDecoration(
-                borderRadius: BorderRadius.circular(28),
-                color: Colors.white.withValues(alpha: 0.85),
-                border: Border.all(
-                  color: SynkColors.textPrimary.withValues(alpha: 0.15),
-                  width: 1.5,
-                ),
-              ),
+        height: 56,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(28),
+          color: Colors.white.withValues(alpha: 0.85),
+          border: Border.all(
+            color: SynkColors.textPrimary.withValues(alpha: 0.15),
+            width: 1.5,
+          ),
+        ),
         child: Center(
           child: Text(
             label,
-            style: TextStyle(
-              color: isDestructive
-                  ? const Color(0xFFE53935)
-                  : SynkColors.textPrimary,
-              fontSize: isDestructive ? 16 : 17,
+            style: const TextStyle(
+              color: SynkColors.textPrimary,
+              fontSize: 17,
               fontWeight: FontWeight.bold,
             ),
           ),

@@ -4,8 +4,10 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/synk_colors.dart';
 import '../../../l10n/l10n.dart';
 import '../../../models/activity_model.dart';
+import '../../../models/friends_model.dart';
 import 'activity_thumbnail.dart';
 import 'for_you_deck.dart';
+import 'friends_going.dart';
 
 class ExploreHeader extends StatelessWidget {
   const ExploreHeader({super.key, required this.open, required this.onToggle});
@@ -29,11 +31,15 @@ class ExploreTile extends StatelessWidget {
     required this.activity,
     required this.distanceKm,
     required this.onTap,
+    this.friends = const [],
   });
 
   final Activity activity;
   final double? distanceKm;
   final VoidCallback onTap;
+
+  // Friends hosting or going, shown as small photos in the corner.
+  final List<FriendUser> friends;
 
   static const double height = 200;
 
@@ -68,7 +74,11 @@ class ExploreTile extends StatelessWidget {
 
     return Semantics(
       button: true,
-      label: '$title, $line',
+      label: [
+        title,
+        line,
+        if (friends.isNotEmpty) friendsGoingText(friends),
+      ].join(', '),
       excludeSemantics: true,
       child: Material(
         color: Colors.white,
@@ -125,6 +135,12 @@ class ExploreTile extends StatelessWidget {
                   ),
                 ),
               ),
+              if (friends.isNotEmpty)
+                PositionedDirectional(
+                  top: 8,
+                  end: 8,
+                  child: FriendAvatarStack(friends: friends, size: 20),
+                ),
               PositionedDirectional(
                 start: 10,
                 end: 10,

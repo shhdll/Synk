@@ -22,23 +22,37 @@ class NotificationPreferencesModel {
 
   final SupabaseClient _supabase;
 
-  Future<({Map<NotificationKind, bool> values, String? ntfyTopic})>
+  Future<
+    ({
+      Map<NotificationKind, bool> values,
+      String? ntfyTopic,
+      String? savedNtfyTopic,
+    })
+  >
   fetch() async {
     final userId = _supabase.auth.currentUser?.id;
     final values = {for (final kind in NotificationKind.values) kind: true};
-    if (userId == null) return (values: values, ntfyTopic: null);
+    if (userId == null) {
+      return (values: values, ntfyTopic: null, savedNtfyTopic: null);
+    }
 
     final row = await _supabase
         .from('notification_preferences')
         .select()
         .eq('user_id', userId)
         .maybeSingle();
-    if (row == null) return (values: values, ntfyTopic: null);
+    if (row == null) {
+      return (values: values, ntfyTopic: null, savedNtfyTopic: null);
+    }
 
     for (final kind in NotificationKind.values) {
       values[kind] = row[kind.column] != false;
     }
-    return (values: values, ntfyTopic: row['ntfy_topic'] as String?);
+    return (
+      values: values,
+      ntfyTopic: row['ntfy_topic'] as String?,
+      savedNtfyTopic: row['ntfy_saved_topic'] as String?,
+    );
   }
 
   Future<void> save(NotificationKind kind, bool enabled) async {
@@ -52,7 +66,8 @@ class NotificationPreferencesModel {
     });
   }
 
-  // ntfy topic for iPhones without native push. Null turns it off.
+  // ntfy topic for iPhones without native push. Null turns it off; a topic
+  // is also kept as the saved one, for turning it on again.
   Future<void> saveNtfyTopic(String? topic) async {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) throw AuthSessionMissingException();
@@ -60,6 +75,7 @@ class NotificationPreferencesModel {
     await _supabase.from('notification_preferences').upsert({
       'user_id': userId,
       'ntfy_topic': topic,
+      'ntfy_saved_topic': ?topic,
       'updated_at': DateTime.now().toUtc().toIso8601String(),
     });
   }

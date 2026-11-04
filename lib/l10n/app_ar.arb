@@ -981,5 +981,9 @@
   "weatherTipNice": "الجو حلو، استمتع!",
   "weatherTipCool": "فيه برودة خفيفة، خذ معك جاكيت",
   "weatherTipCold": "الجو بارد، تدفى زين",
-  "yourRatings": "تقييماتك"
+  "yourRatings": "تقييماتك",
+  "discard": "تجاهل",
+  "leave": "مغادرة",
+  "withdraw": "سحب",
+  "withdrawRequestTitle": "سحب طلبك؟"
 }

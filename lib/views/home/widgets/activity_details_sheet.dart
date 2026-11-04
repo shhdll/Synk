@@ -943,8 +943,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
   ({
     IconData icon,
     String title,
-    String message,
-    String stay,
+    String confirm,
     String action,
     String successTitle,
     String successMessage,
@@ -954,17 +953,15 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
       'waitlisted' => (
         icon: SynkIcons.logout,
         title: context.l10n.leaveWaitlistTitle,
-        message: context.l10n.confirmLeaveWaitlist,
-        stay: context.l10n.stayOnWaitlist,
+        confirm: context.l10n.leave,
         action: context.l10n.leaveWaitlist,
         successTitle: context.l10n.youLeftTheWaitlist,
         successMessage: context.l10n.youHaveBeenRemovedFromThe,
       ),
       'pending' => (
         icon: Icons.close_rounded,
-        title: context.l10n.cancelRequestTitle,
-        message: context.l10n.confirmCancelRequest,
-        stay: context.l10n.keepRequest,
+        title: context.l10n.withdrawRequestTitle,
+        confirm: context.l10n.withdraw,
         action: context.l10n.cancelRequest,
         successTitle: context.l10n.requestCancelled,
         successMessage: context.l10n.yourJoinRequestHasBeenCancelled,
@@ -972,8 +969,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
       _ => (
         icon: SynkIcons.logout,
         title: context.l10n.leaveActivityTitle,
-        message: context.l10n.confirmLeaveActivity,
-        stay: context.l10n.stay,
+        confirm: context.l10n.leave,
         action: context.l10n.leaveActivity,
         successTitle: context.l10n.youLeftTheActivity,
         successMessage: context.l10n.youHaveSuccessfullyLeftThisActivity,
@@ -1003,16 +999,13 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     final isPublic = _currentActivity.isPublic;
     final copy = _leaveCopy(status);
 
-    final action = await SynkDialog.destructive(
+    final leave = await SynkDialog.confirm(
+      context,
       icon: copy.icon,
       title: copy.title,
-      message: copy.message,
-      primaryLabel: copy.stay,
-      secondaryLabel: copy.action,
-    ).show(context, barrierDismissible: false);
-
-    // The withdrawal is the secondary button.
-    if (action != SynkDialogAction.secondary || !mounted) return;
+      action: copy.confirm,
+    );
+    if (!leave || !mounted) return;
 
     setState(() {
       _isLeaving = true;
@@ -1106,15 +1099,14 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
 
     if (candidate == null || !mounted) return;
 
-    final action = await SynkDialog.destructive(
+    final transfer = await SynkDialog.confirm(
+      context,
       icon: Icons.swap_horiz_rounded,
       title: context.l10n.transferHostingAndLeave,
       message: context.l10n.transferHostMessage(candidate.name),
-      primaryLabel: context.l10n.stay,
-      secondaryLabel: context.l10n.transferAndLeave,
-    ).show(context, barrierDismissible: false);
-
-    if (action != SynkDialogAction.secondary || !mounted) return;
+      action: context.l10n.transferAndLeave,
+    );
+    if (!transfer || !mounted) return;
 
     setState(() => _isLeaving = true);
 

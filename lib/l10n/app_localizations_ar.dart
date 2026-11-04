@@ -3290,4 +3290,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get yourRatings => 'تقييماتك';
+
+  @override
+  String get discard => 'تجاهل';
+
+  @override
+  String get leave => 'مغادرة';
+
+  @override
+  String get withdraw => 'سحب';
+
+  @override
+  String get withdrawRequestTitle => 'سحب طلبك؟';
 }

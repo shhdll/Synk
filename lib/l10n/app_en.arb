@@ -1384,5 +1384,9 @@
   "weatherTipNice": "Perfect weather. Enjoy it!",
   "weatherTipCool": "A little chilly. Bring a light jacket.",
   "weatherTipCold": "Cold out. Dress warm and cozy.",
-  "yourRatings": "Your ratings"
+  "yourRatings": "Your ratings",
+  "discard": "Discard",
+  "leave": "Leave",
+  "withdraw": "Withdraw",
+  "withdrawRequestTitle": "Withdraw your request?"
 }

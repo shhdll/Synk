@@ -174,14 +174,13 @@ Future<void> confirmRemoveFriend(
   FriendUser friend,
 ) async {
   final firstName = friend.name.split(' ').first;
-  final action = await SynkDialog.destructive(
+  final remove = await SynkDialog.confirm(
+    context,
     icon: Icons.person_remove_rounded,
     title: context.l10n.removeFriendTitle(firstName),
-    message: context.l10n.removeFriendMessage(firstName),
-    primaryLabel: context.l10n.cancel,
-    secondaryLabel: context.l10n.remove,
-  ).show(context);
-  if (action != SynkDialogAction.secondary) return;
+    action: context.l10n.remove,
+  );
+  if (!remove || !context.mounted) return;
 
   final ok = await FriendsController.instance.removeFriend(friend.id);
   if (!context.mounted) return;
@@ -195,16 +194,16 @@ Future<void> confirmBlockUser(BuildContext context, FriendUser user) async {
   final leavesActivity = await FriendsController.instance
       .blockRemovesMeFromActivity(user.id);
   if (!context.mounted) return;
-  final action = await SynkDialog.destructive(
+  final block = await SynkDialog.confirm(
+    context,
     icon: Icons.block_rounded,
     title: context.l10n.blockUserTitle(firstName),
     message: leavesActivity
         ? context.l10n.blockHostMessage
         : context.l10n.blockUserMessage,
-    primaryLabel: context.l10n.cancel,
-    secondaryLabel: context.l10n.block,
-  ).show(context);
-  if (action != SynkDialogAction.secondary) return;
+    action: context.l10n.block,
+  );
+  if (!block || !context.mounted) return;
 
   final ok = await FriendsController.instance.block(user);
   if (!context.mounted) return;

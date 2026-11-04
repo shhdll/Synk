@@ -5892,6 +5892,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your ratings'**
   String get yourRatings;
+
+  /// No description provided for @discard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get discard;
+
+  /// No description provided for @leave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get leave;
+
+  /// No description provided for @withdraw.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdraw'**
+  String get withdraw;
+
+  /// No description provided for @withdrawRequestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdraw your request?'**
+  String get withdrawRequestTitle;
 }
 
 class _AppLocalizationsDelegate

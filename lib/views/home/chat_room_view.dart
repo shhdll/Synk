@@ -45,14 +45,14 @@ Future<void> openChatRoom(
 
 // Asks first, then deletes the chat for you only. True when it was deleted.
 Future<bool> confirmDeleteChat(BuildContext context, ChatSummary chat) async {
-  final action = await SynkDialog.destructive(
+  final delete = await SynkDialog.confirm(
+    context,
     icon: Icons.delete_outline_rounded,
     title: context.l10n.deleteThisChat,
     message: context.l10n.chatDeletedOnlyForYou,
-    primaryLabel: context.l10n.cancel,
-    secondaryLabel: context.l10n.deleteLabel,
-  ).show(context);
-  if (action != SynkDialogAction.secondary || !context.mounted) return false;
+    action: context.l10n.deleteLabel,
+  );
+  if (!delete || !context.mounted) return false;
 
   final ok = await ChatController.instance.deleteChatForMe(chat.id);
   if (!context.mounted) return ok;

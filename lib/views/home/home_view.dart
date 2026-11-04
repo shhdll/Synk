@@ -810,6 +810,7 @@ class _HomeViewState extends State<HomeView> {
             return ExploreTile(
               activity: activity,
               distanceKm: _distanceOf(activity),
+              friends: _friends.friendsGoingIn(activity.id),
               onTap: () => _onActivityTap(activity),
             );
           },
