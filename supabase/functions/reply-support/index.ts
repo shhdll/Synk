@@ -1,7 +1,8 @@
-// Backs synk.cc/support-reply.html: loads a ticket and emails the user a
-// styled reply that quotes their original message.
+// Backs synk.cc/support-reply.html and the admin dashboard: loads a ticket
+// and emails the user a styled reply that quotes their original message.
 //
-// Access is by the ticket's reply_token, which is only in the team's email.
+// Access is by the ticket's reply_token, which is only in the team's email,
+// or by a signed-in admin's token when no reply_token is sent.
 // Secrets: RESEND_API_KEY, SUPPORT_INBOX_EMAIL, SUPPORT_FROM_EMAIL.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -23,7 +24,32 @@ const CATEGORY_LABELS: Record<string, string> = {
   problem: "Bug",
   feedback: "Idea",
   other: "Other",
+  appeal: "Appeal",
 };
+
+// Asks the database whether the caller is in private.admins, using their own
+// token so auth.uid() is them.
+async function adminIdFromRequest(request: Request): Promise<string | null> {
+  const authorization = request.headers.get("Authorization") ?? "";
+  const jwt = authorization.replace(/^Bearer\s+/i, "");
+  const apikey = request.headers.get("apikey") ?? "";
+  if (!admin || !jwt || !apikey || jwt === apikey) return null;
+
+  const { data } = await admin.auth.getUser(jwt);
+  if (!data?.user) return null;
+
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_is_admin`, {
+    method: "POST",
+    headers: {
+      apikey,
+      Authorization: `Bearer ${jwt}`,
+      "Content-Type": "application/json",
+    },
+    body: "{}",
+  }).catch(() => null);
+  if (!response?.ok) return null;
+  return (await response.json()) === true ? data.user.id : null;
+}
 
 const admin = SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY
   ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
@@ -126,15 +152,23 @@ Deno.serve(async (request: Request) => {
   } catch {
     return jsonResponse({ error: "invalid_json" }, 400);
   }
-  if (!UUID.test(ticketId) || !UUID.test(token)) {
+  if (!UUID.test(ticketId)) {
     return jsonResponse({ error: "not_found" }, 404);
   }
 
-  const { data: ticket } = await admin.from("support_tickets")
+  let adminId: string | null = null;
+  if (!token) {
+    adminId = await adminIdFromRequest(request);
+    if (!adminId) return jsonResponse({ error: "not_allowed" }, 403);
+  } else if (!UUID.test(token)) {
+    return jsonResponse({ error: "not_found" }, 404);
+  }
+
+  let query = admin.from("support_tickets")
     .select("id, user_id, email, category, message, created_at, reply, replied_at, screenshot_paths")
-    .eq("id", ticketId)
-    .eq("reply_token", token)
-    .maybeSingle();
+    .eq("id", ticketId);
+  if (!adminId) query = query.eq("reply_token", token);
+  const { data: ticket } = await query.maybeSingle();
   if (!ticket) {
     return jsonResponse({ error: "not_found" }, 404);
   }
@@ -199,17 +233,27 @@ Deno.serve(async (request: Request) => {
   }).catch(() => null);
 
   if (!response?.ok) {
-    console.error("Resend failed:", response?.status);
-    return jsonResponse({ error: "send_failed" }, 502);
+    const detail = response
+      ? `Resend ${response.status}: ${(await response.text()).slice(0, 300)}`
+      : "Could not reach Resend";
+    console.error("Resend failed:", detail);
+    await admin.rpc("record_support_reply", {
+      p_ticket_id: ticket.id,
+      p_admin_id: adminId,
+      p_body: reply,
+      p_sent: false,
+      p_error: detail,
+    });
+    return jsonResponse({ error: "send_failed", detail }, 502);
   }
 
-  await admin.from("support_tickets")
-    .update({
-      status: "replied",
-      reply,
-      replied_at: new Date().toISOString(),
-    })
-    .eq("id", ticket.id);
+  const { error: recordError } = await admin.rpc("record_support_reply", {
+    p_ticket_id: ticket.id,
+    p_admin_id: adminId,
+    p_body: reply,
+    p_sent: true,
+  });
+  if (recordError) console.error("Could not record reply:", recordError.message);
 
   return jsonResponse({ ok: true, name });
 });

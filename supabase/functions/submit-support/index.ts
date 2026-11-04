@@ -1,6 +1,11 @@
 // Saves a support message and emails it to the team through Resend.
 // The email's reply-to is the user, so the team can answer straight away.
 //
+// A suspended user can't sign in, so the login screen sends
+// { action: "appeal", email, message } without a token. It's only saved when
+// the email belongs to a suspended account, and the answer is the same
+// either way so it doesn't tell anyone who is suspended.
+//
 // Secrets: RESEND_API_KEY, SUPPORT_INBOX_EMAIL, SUPPORT_FROM_EMAIL.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -19,6 +24,7 @@ const SUPPORT_REPLY_URL = Deno.env.get("SUPPORT_REPLY_URL") ??
 
 const LOGO_URL = "https://synk.cc/logo.png";
 const DAILY_LIMIT = 5;
+const APPEAL_DAILY_LIMIT = 2;
 const CATEGORIES = ["problem", "feedback", "other"];
 const SCREENSHOT_BUCKET = "support-screenshots";
 const MAX_SCREENSHOTS = 3;
@@ -51,6 +57,7 @@ const CATEGORY_LABELS: Record<string, { label: string; color: string; tint: stri
   problem: { label: "Bug", color: "#CA602F", tint: "#FCE3D4" },
   feedback: { label: "Idea", color: "#2A6F65", tint: "#DCEFEC" },
   other: { label: "Other", color: "#5F6672", tint: "#ECEDEF" },
+  appeal: { label: "Appeal", color: "#B42318", tint: "#FDECEA" },
 };
 
 // Email-safe layout: tables and inline styles only.
@@ -122,6 +129,96 @@ function screenshotsHtml(links: string[]): string {
   return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:16px 0 0"><tr>${cells}</tr></table>`;
 }
 
+async function handleAppeal(body: Record<string, unknown>): Promise<Response> {
+  const email = typeof body.email === "string" ? body.email.trim() : "";
+  const message = typeof body.message === "string" ? body.message.trim() : "";
+  const appVersion = typeof body.app_version === "string"
+    ? body.app_version.slice(0, 40)
+    : null;
+  if (email.length > 254 || !EMAIL_PATTERN.test(email)) {
+    return jsonResponse({ error: "invalid_email" }, 400);
+  }
+  if (message.length < 1 || message.length > 2000) {
+    return jsonResponse({ error: "invalid_message" }, 400);
+  }
+
+  const { data: userId } = await admin!.rpc("suspended_user_for_email", {
+    p_email: email,
+  });
+  if (typeof userId !== "string") {
+    return jsonResponse({ ok: true });
+  }
+
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { count } = await admin!.from("support_tickets")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("category", "appeal")
+    .gte("created_at", since);
+  if ((count ?? 0) >= APPEAL_DAILY_LIMIT) {
+    return jsonResponse({ ok: true });
+  }
+
+  const { data: profile } = await admin!.from("users")
+    .select("full_name, username, email")
+    .eq("id", userId)
+    .maybeSingle();
+  // Replies go to the account's own email, not whatever was typed.
+  const accountEmail = (profile?.email as string | undefined) ?? email;
+  const name = profile?.full_name?.trim() || profile?.username?.trim() ||
+    accountEmail;
+
+  const { data: ticket, error: insertError } = await admin!
+    .from("support_tickets")
+    .insert({
+      user_id: userId,
+      email: accountEmail,
+      category: "appeal",
+      message,
+      app_version: appVersion,
+      screenshot_paths: [],
+    })
+    .select("id, reply_token")
+    .single();
+  if (insertError || !ticket) {
+    console.error("Could not save appeal:", insertError?.message);
+    return jsonResponse({ error: "save_failed" }, 500);
+  }
+
+  const shortId = (ticket.id as string).slice(0, 8);
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: SUPPORT_FROM_EMAIL,
+      to: [SUPPORT_INBOX_EMAIL],
+      reply_to: accountEmail,
+      subject: `[Appeal] ${name} (#${shortId})`,
+      text: `${message}\n\n---\nFrom: ${name} <${accountEmail}>\nUser ID: ${userId}\nApp: ${appVersion ?? "unknown"}\nTicket: ${ticket.id}`,
+      html: supportEmailHtml({
+        category: "appeal",
+        name,
+        email: accountEmail,
+        userId,
+        appVersion,
+        ticketId: ticket.id as string,
+        shortId,
+        replyToken: ticket.reply_token as string,
+        message,
+        screenshots: [],
+      }),
+    }),
+  }).catch(() => null);
+  if (!response?.ok) {
+    console.error("Resend failed:", response?.status);
+  }
+
+  return jsonResponse({ ok: true });
+}
+
 Deno.serve(async (request: Request) => {
   if (request.method !== "POST") {
     return jsonResponse({ error: "method_not_allowed" }, 405);
@@ -129,6 +226,11 @@ Deno.serve(async (request: Request) => {
   if (!admin || !RESEND_API_KEY || !SUPPORT_INBOX_EMAIL) {
     console.error("submit-support is missing server configuration.");
     return jsonResponse({ error: "server_misconfigured" }, 500);
+  }
+
+  const peek = await request.clone().json().catch(() => null);
+  if (peek?.action === "appeal") {
+    return await handleAppeal(peek);
   }
 
   const jwt = request.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
