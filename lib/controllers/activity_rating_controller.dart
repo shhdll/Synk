@@ -5,10 +5,13 @@ import '../models/activity_rating_model.dart';
 
 // Holds the stars chosen in the rating prompt and sends them once.
 class ActivityRatingController extends ChangeNotifier {
-  ActivityRatingController({
-    required this.pending,
-    ActivityRatingModel? model,
-  }) : _model = model ?? ActivityRatingModel();
+  ActivityRatingController({required this.pending, ActivityRatingModel? model})
+    : _model = model ?? ActivityRatingModel() {
+    for (final participant in pending.participants) {
+      final previous = participant.previousHalfStars;
+      if (previous != null) _halfStars[participant.userId] = previous;
+    }
+  }
 
   final PendingActivityRating pending;
   final ActivityRatingModel _model;

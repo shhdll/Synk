@@ -51,6 +51,9 @@ class MyActivityCard extends StatelessWidget {
     this.showCode = false,
     this.canShare = false,
     this.anonymous = false,
+    this.onRate,
+    this.hasRated = false,
+    this.limited = false,
   });
 
   final bool anonymous;
@@ -59,12 +62,21 @@ class MyActivityCard extends StatelessWidget {
   final MyActivityRole role;
   // null while loading
   final List<Map<String, dynamic>>? participants;
-  final VoidCallback onTap;
+  // Null when it can't be opened.
+  final VoidCallback? onTap;
+
+  // A private activity the user only asked to join: photo and title only.
+  final bool limited;
   // null hides the Chat button.
   final VoidCallback? onChat;
   final int unreadCount;
   final bool showCode;
   final bool canShare;
+  // Null hides the ratings strip of a past activity.
+  final VoidCallback? onRate;
+
+  // Everyone is rated already, so the strip says Your ratings.
+  final bool hasRated;
 
   @override
   Widget build(BuildContext context) {
@@ -131,48 +143,54 @@ class MyActivityCard extends StatelessWidget {
                               ],
                             ],
                           ),
-                          const SizedBox(height: 6),
-                          _MetaLine(
-                            icon: Icons.schedule_rounded,
-                            text: DiscoveryActivityCard.formatWhen(
-                              activity.dateTime,
-                            ),
-                            color: activity.isPast
-                                ? SynkColors.textSecondary
-                                : SynkColors.orangeDark,
-                          ),
-                          if (hasLocation) ...[
-                            const SizedBox(height: 4),
+                          if (!limited) ...[
+                            const SizedBox(height: 6),
                             _MetaLine(
-                              icon: Icons.place_outlined,
-                              text: activity.location,
-                              color: SynkColors.textSecondary,
+                              icon: Icons.schedule_rounded,
+                              text: DiscoveryActivityCard.formatWhen(
+                                activity.dateTime,
+                              ),
+                              color: activity.isPast
+                                  ? SynkColors.textSecondary
+                                  : SynkColors.orangeDark,
                             ),
+                            if (hasLocation) ...[
+                              const SizedBox(height: 4),
+                              _MetaLine(
+                                icon: Icons.place_outlined,
+                                text: activity.location,
+                                color: SynkColors.textSecondary,
+                              ),
+                            ],
                           ],
                         ],
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    _RoleBadge(role: role),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Expanded(child: _buildPeople()),
-                    if (onChat != null) ...[
+                    if (role != MyActivityRole.joined) ...[
                       const SizedBox(width: 8),
-                      _ChatPill(unreadCount: unreadCount, onTap: onChat!),
+                      _RoleBadge(role: role),
                     ],
                   ],
                 ),
+                if (!limited) ...[
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Expanded(child: _buildPeople()),
+                      if (onChat != null) ...[
+                        const SizedBox(width: 8),
+                        _ChatPill(unreadCount: unreadCount, onTap: onChat!),
+                      ],
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
         ),
       ),
     );
-    if (code == null && !canShare) return card;
+    if (code == null && !canShare && onRate == null) return card;
 
     // The code and share sit on a strip that peeks out from under the card.
     return Stack(
@@ -182,7 +200,9 @@ class MyActivityCard extends StatelessWidget {
           right: 0,
           bottom: 0,
           height: _CardStrip.height + 20,
-          child: _CardStrip(activity: activity, code: code, canShare: canShare),
+          child: onRate != null
+              ? _RateStrip(onTap: onRate!, hasRated: hasRated)
+              : _CardStrip(activity: activity, code: code, canShare: canShare),
         ),
         Padding(
           padding: const EdgeInsets.only(bottom: _CardStrip.height),
@@ -380,6 +400,60 @@ class _CardStrip extends StatelessWidget {
   }
 }
 
+// Light yellow, for past activities and the chat button.
+const _yellow = Color(0xFFFFEFB8);
+const _yellowText = Color(0xFF8A6500);
+
+// Under a past activity: rate the others, or see and change your ratings.
+class _RateStrip extends StatelessWidget {
+  const _RateStrip({required this.onTap, required this.hasRated});
+
+  final VoidCallback onTap;
+  final bool hasRated;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Material(
+        color: _yellow,
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            // The top 20 is under the card.
+            padding: const EdgeInsetsDirectional.fromSTEB(14, 20, 10, 0),
+            child: Row(
+              children: [
+                const Icon(Icons.star_rounded, size: 18, color: _yellowText),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    hasRated
+                        ? context.l10n.yourRatings
+                        : context.l10n.rateMembers,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: _yellowText,
+                    ),
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: _yellowText,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _ChatPill extends StatelessWidget {
   const _ChatPill({required this.unreadCount, required this.onTap});
 
@@ -390,10 +464,10 @@ class _ChatPill extends StatelessWidget {
   Widget build(BuildContext context) {
     // Unread shows as the orange count, not a different pill.
     final unread = unreadCount > 0;
-    const foreground = SynkColors.orangeDeep;
+    const foreground = _yellowText;
 
     return Material(
-      color: SynkColors.orangeLight,
+      color: _yellow,
       shape: const StadiumBorder(),
       child: InkWell(
         onTap: onTap,
@@ -401,23 +475,15 @@ class _ChatPill extends StatelessWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 44),
           child: Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(14, 0, 16, 0),
+            padding: const EdgeInsets.symmetric(horizontal: 13),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   Icons.chat_bubble_outline_rounded,
-                  size: 18,
+                  size: 20,
                   color: foreground,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  context.l10n.chat,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: foreground,
-                  ),
+                  semanticLabel: context.l10n.chat,
                 ),
                 if (unread) ...[
                   const SizedBox(width: 8),
@@ -497,7 +563,7 @@ class _Face extends StatelessWidget {
   }
 }
 
-// Hosting as a crown; Joined and Requested in muted gray.
+// Hosting as a crown; Requested and Waitlisted in muted gray.
 class _RoleBadge extends StatelessWidget {
   const _RoleBadge({required this.role});
 

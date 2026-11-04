@@ -11,6 +11,7 @@ class RatingParticipant {
     this.avatarUrl,
     this.gender,
     this.isHost = false,
+    this.previousHalfStars,
   });
 
   factory RatingParticipant.fromMap(Map<String, dynamic> map) {
@@ -21,6 +22,7 @@ class RatingParticipant {
       avatarUrl: map['avatar_url'] as String?,
       gender: map['gender'] as String?,
       isHost: map['is_host'] as bool? ?? false,
+      previousHalfStars: (map['my_halves'] as num?)?.toInt(),
     );
   }
 
@@ -30,6 +32,9 @@ class RatingParticipant {
   final String? avatarUrl;
   final String? gender;
   final bool isHost;
+
+  // What the user gave them before, in half stars; null if not rated.
+  final int? previousHalfStars;
 }
 
 // An ended activity with the attendees the user has not rated yet.
@@ -77,6 +82,17 @@ class ActivityRatingModel {
           ),
         )
         .toList();
+  }
+
+  // An ended activity the user was in, with everyone they can rate and
+  // their earlier stars. Null when the user can't rate it.
+  Future<PendingActivityRating?> fetchForActivity(String activityId) async {
+    final response = await _client.rpc(
+      'get_activity_rating',
+      params: {'requested_activity_id': activityId},
+    );
+    if (response is! Map) return null;
+    return PendingActivityRating.fromMap(Map<String, dynamic>.from(response));
   }
 
   // Saves all ratings or none. [halfStarsByUser] maps a user id to 1–10

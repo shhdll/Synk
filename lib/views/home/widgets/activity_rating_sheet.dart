@@ -12,17 +12,20 @@ import 'half_star_rating_input.dart';
 
 // Offers to rate the attendees of one ended activity. Skip stops offering
 // it; closing with Back leaves it for a later app opening.
+// [fromPast] is opened from a past activity: earlier stars are filled in,
+// and Close just closes.
 Future<void> showActivityRatingSheet({
   required BuildContext context,
   required PendingActivityRating pending,
+  bool fromPast = false,
 }) async {
   final saved = await showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
-    isDismissible: false,
-    enableDrag: false,
+    isDismissible: fromPast,
+    enableDrag: fromPast,
     backgroundColor: Colors.transparent,
-    builder: (_) => ActivityRatingSheet(pending: pending),
+    builder: (_) => ActivityRatingSheet(pending: pending, fromPast: fromPast),
   );
 
   if (saved == true && context.mounted) {
@@ -31,9 +34,14 @@ Future<void> showActivityRatingSheet({
 }
 
 class ActivityRatingSheet extends StatefulWidget {
-  const ActivityRatingSheet({super.key, required this.pending});
+  const ActivityRatingSheet({
+    super.key,
+    required this.pending,
+    this.fromPast = false,
+  });
 
   final PendingActivityRating pending;
+  final bool fromPast;
 
   @override
   State<ActivityRatingSheet> createState() => _ActivityRatingSheetState();
@@ -65,7 +73,7 @@ class _ActivityRatingSheetState extends State<ActivityRatingSheet> {
   }
 
   Future<void> _skip() async {
-    await _controller.skip();
+    if (!widget.fromPast) await _controller.skip();
     _close(false);
   }
 
@@ -312,7 +320,7 @@ class _ActivityRatingSheetState extends State<ActivityRatingSheet> {
                 ),
               ),
               child: Text(
-                context.l10n.skip,
+                widget.fromPast ? context.l10n.close : context.l10n.skip,
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
