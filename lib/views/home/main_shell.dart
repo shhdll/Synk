@@ -76,6 +76,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     PushNotificationService.instance.setMessageReceivedHandler(
       () => unawaited(_notifications.refresh()),
     );
+    FriendsController.instance.onBlocksChanged = _reloadAfterBlockChange;
     unawaited(_notifications.refresh());
     unawaited(FriendsController.instance.refresh());
     unawaited(ChatController.instance.refresh());
@@ -126,6 +127,15 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       // Picks up an email change confirmed in the browser.
       unawaited(_authModel.refreshIfEmailChangePending());
     }
+  }
+
+  // After a block or unblock: the lists and chats the server changed, so
+  // an activity the user was taken out of doesn't stay on screen.
+  void _reloadAfterBlockChange() {
+    if (!mounted) return;
+    unawaited(_loadActivities());
+    unawaited(_discoveryController.loadFeed(isSilent: true));
+    unawaited(ChatController.instance.refresh());
   }
 
   void _refreshActivity(String activityId) {
@@ -276,6 +286,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     _requestPoll?.cancel();
     PushNotificationService.instance.setActivityUpdatedHandler(null);
     PushNotificationService.instance.setMessageReceivedHandler(null);
+    if (FriendsController.instance.onBlocksChanged == _reloadAfterBlockChange) {
+      FriendsController.instance.onBlocksChanged = null;
+    }
     _notifications.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _activityStore.removeListener(_openMapForFocus);

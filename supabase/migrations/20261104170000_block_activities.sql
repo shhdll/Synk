@@ -417,7 +417,10 @@ revoke all on function public.join_activity_by_code(text) from public;
 grant execute on function public.join_activity_by_code(text) to authenticated;
 
 -- Safety net on the table, for any other way a row could be added (a later
--- join function, a host approving an old request). Same generic message.
+-- join function). Same generic message. It only stops new rows: requests
+-- and waitlist places from before a block are removed by block_user
+-- (20261104190000_block_removes_from_host_activities.sql), so the host
+-- can't accept them and the waitlist can't promote them.
 create or replace function public.prevent_blocked_activity_join()
 returns trigger
 language plpgsql

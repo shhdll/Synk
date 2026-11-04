@@ -192,15 +192,23 @@ class FriendsController extends ChangeNotifier {
     return _apply(() => _model.removeFriend(userId));
   }
 
+  // Called after a block or unblock goes through, to reload the activity
+  // lists, feed and chats: either person's hosted activities appear or
+  // disappear, and a block takes the non-host out of the other's
+  // activities. Set by the home shell.
+  VoidCallback? onBlocksChanged;
+
   // Blocking also ends the friendship and any request between the two.
-  Future<bool> block(FriendUser user) {
+  Future<bool> block(FriendUser user) async {
     _friends.removeWhere((u) => u.id == user.id);
     _requests.removeWhere((r) => r.user.id == user.id);
     if (!_blocked.any((u) => u.id == user.id)) _blocked.insert(0, user);
-    return _apply(
+    final ok = await _apply(
       () => _model.block(user.id),
       failsOn: const {'self', 'not_found'},
     );
+    if (ok) onBlocksChanged?.call();
+    return ok;
   }
 
   // For the confirmation before blocking; false when it can't be checked.
@@ -212,9 +220,11 @@ class FriendsController extends ChangeNotifier {
     }
   }
 
-  Future<bool> unblock(String userId) {
+  Future<bool> unblock(String userId) async {
     _blocked.removeWhere((u) => u.id == userId);
-    return _apply(() => _model.unblock(userId));
+    final ok = await _apply(() => _model.unblock(userId));
+    if (ok) onBlocksChanged?.call();
+    return ok;
   }
 
   // Shows the local change, sends it, then reloads the real lists.
