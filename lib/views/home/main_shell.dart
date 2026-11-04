@@ -86,11 +86,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     unawaited(PushNotificationService.instance.registerForCurrentUser());
     unawaited(_authModel.refreshIfEmailChangePending());
 
-    // Loads hosted, participating, and public activities, then greets the
-    // user with their streak.
-    unawaited(_loadActivities().then((_) => _showStreakOnOpen()));
-    // Loads hosted, participating, and public activities.
-    unawaited(_loadActivities().then((_) => _offerActivityRating()));
+    // Loads hosted, participating, and public activities once, then shows
+    // the opening pop-ups one after another.
+    unawaited(_loadActivities().then((_) => _showOpeningPopups()));
 
     WidgetsBinding.instance.addObserver(this);
     _requestPoll = Timer.periodic(
@@ -173,11 +171,20 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   bool _mineLoaded = false;
   bool _participatingLoaded = false;
 
-  // Pops up the streak sheet once a day when the app opens.
+  // The streak greeting first, then a rating offer once it is closed, so
+  // the two sheets never stack.
+  Future<void> _showOpeningPopups() async {
+    await _showStreakOnOpen();
+    await _offerActivityRating();
+  }
+
+  // Pops up the streak sheet once a day when the app opens. Skipped, without
+  // using up the day's turn, while another screen, sheet or dialog is open.
   Future<void> _showStreakOnOpen() async {
     if (!mounted || !_mineLoaded || !_participatingLoaded) return;
+    if (ModalRoute.of(context)?.isCurrent != true) return;
     if (!await StreakIntro.takeTurn(_activityStore.currentUserId)) return;
-    if (!mounted) return;
+    if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
     await showStreakSheet(context, _activityStore);
   }
 
