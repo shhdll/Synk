@@ -33,9 +33,7 @@ Activity activity(
   );
 }
 
-List<String> ids(List<TopPick> picks) => [
-  for (final p in picks) p.activity.id,
-];
+List<String> ids(List<TopPick> picks) => [for (final p in picks) p.activity.id];
 
 void main() {
   test('skips past, full, hosted and already-joined activities', () {
@@ -62,7 +60,12 @@ void main() {
         activity('padel-far', title: 'Padel', kmEast: 9),
         activity('padel-near', title: 'Padel', kmEast: 1),
         activity('padel-movie', title: 'Padel then movie night', kmEast: 20),
-        activity('padel-near-later', title: 'Padel', kmEast: 1, hoursFromNow: 48),
+        activity(
+          'padel-near-later',
+          title: 'Padel',
+          kmEast: 1,
+          hoursFromNow: 48,
+        ),
       ],
       interests: const ['Padel', 'Movies'],
       currentUserId: me,
@@ -150,9 +153,7 @@ void main() {
 
   test('"I don\'t mind" adds nothing for the setting', () {
     final picks = rankTopPicks(
-      activities: [
-        activity('outdoor', setting: ActivitySetting.outdoor),
-      ],
+      activities: [activity('outdoor', setting: ActivitySetting.outdoor)],
       interests: const [],
       preferredSetting: "I don't mind",
       currentUserId: me,
@@ -174,5 +175,95 @@ void main() {
 
     expect(picks, hasLength(5));
     expect(picks.every((p) => p.reason is PopularNearYou), isTrue);
+  });
+
+  group('history', () {
+    TasteEvent event(
+      String id,
+      String title,
+      TasteSignal signal,
+      int daysAgo,
+    ) => TasteEvent(
+      activity: activity(id, title: title),
+      signal: signal,
+      at: now.subtract(Duration(days: daysAgo)),
+    );
+
+    test('learns liked kinds of activity from joins', () {
+      final taste = Taste.fromHistory([
+        event('old1', 'Bowling night', TasteSignal.joined, 3),
+        event('old2', 'Bowling', TasteSignal.joined, 10),
+      ], now: now);
+      final picks = rankTopPicks(
+        activities: [
+          activity('chat', title: 'Chat', joined: 5),
+          activity('bowling', title: 'Bowling'),
+        ],
+        interests: const [],
+        currentUserId: me,
+        participatingIds: const {},
+        taste: taste,
+        now: now,
+      );
+
+      expect(ids(picks), ['bowling', 'chat']);
+      expect((picks.first.reason as SharedInterest).interest, 'Bowling');
+    });
+
+    test('older history counts less', () {
+      final fresh = Taste.fromHistory([
+        event('a', 'Bowling', TasteSignal.joined, 0),
+      ], now: now);
+      final stale = Taste.fromHistory([
+        event('a', 'Bowling', TasteSignal.joined, 60),
+      ], now: now);
+
+      expect(fresh.categories['Bowling'], closeTo(1, 0.01));
+      expect(stale.categories['Bowling'], closeTo(0.25, 0.01));
+    });
+
+    test('skipped activities go down the list', () {
+      final taste = Taste.fromHistory([
+        event('padel1', 'Padel', TasteSignal.skipped, 1),
+        event('busy', 'Chat', TasteSignal.skipped, 1),
+      ], now: now);
+      final picks = rankTopPicks(
+        activities: [
+          activity('padel1', title: 'Padel'),
+          activity('padel2', title: 'Padel'),
+          activity('busy', title: 'Chat', joined: 5),
+          activity('quiet', title: 'Chat'),
+        ],
+        interests: const ['Padel'],
+        currentUserId: me,
+        participatingIds: const {},
+        taste: taste,
+        now: now,
+      );
+
+      expect(ids(picks), ['padel2', 'padel1', 'quiet', 'busy']);
+    });
+  });
+
+  test('a close match can beat a far one with more in common', () {
+    final picks = rankTopPicks(
+      activities: [
+        activity(
+          'far',
+          title: 'Padel',
+          kmEast: 40,
+          setting: ActivitySetting.outdoor,
+        ),
+        activity('near', title: 'Padel', kmEast: 1),
+      ],
+      interests: const ['Padel'],
+      preferredSetting: 'Outdoor',
+      currentUserId: me,
+      participatingIds: const {},
+      userLocation: home,
+      now: now,
+    );
+
+    expect(ids(picks), ['near', 'far']);
   });
 }
