@@ -106,6 +106,20 @@
         margin-top: 14px;
       }
 
+      .shots {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .shots img {
+        display: block;
+        width: 120px;
+        border-radius: 10px;
+        border: 1px solid #efe8da;
+      }
+
       .done {
         text-align: center;
         align-items: center;
@@ -135,6 +149,7 @@
         <p id="who" class="who"></p>
         <p id="email" class="hint"></p>
         <div id="message" class="quote"></div>
+        <div id="screenshots" class="shots" hidden></div>
         <div id="previous" class="previous" hidden></div>
 
         <form id="form" novalidate>
@@ -207,6 +222,18 @@
             $("who").textContent = name;
             $("email").textContent = data.email;
             $("message").textContent = data.message;
+            (data.screenshots || []).forEach(function (link) {
+              var a = document.createElement("a");
+              a.href = link;
+              a.target = "_blank";
+              a.rel = "noopener";
+              var img = document.createElement("img");
+              img.src = link;
+              img.alt = "Screenshot";
+              a.appendChild(img);
+              $("screenshots").appendChild(a);
+              $("screenshots").hidden = false;
+            });
             $("send").textContent = "Send reply to " + first;
             if (data.reply) {
               $("previous").hidden = false;

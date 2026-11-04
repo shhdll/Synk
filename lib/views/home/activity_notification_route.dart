@@ -7,14 +7,22 @@ import '../../core/constants/synk_colors.dart';
 import '../../l10n/l10n.dart';
 import '../../models/activities_model.dart';
 import '../../models/activity_model.dart';
+import 'activity_code_join_sheet.dart';
 import 'widgets/activity_details_sheet.dart';
 
 // Loads an activity opened from a push notification and presents the existing
 // activity details sheet on top of a small route that can be dismissed cleanly.
 class ActivityNotificationRoute extends StatefulWidget {
-  const ActivityNotificationRoute({super.key, required this.activityId});
+  const ActivityNotificationRoute({
+    super.key,
+    required this.activityId,
+    this.code,
+  });
 
   final String activityId;
+
+  // From a shared link to a private activity.
+  final String? code;
 
   @override
   State<ActivityNotificationRoute> createState() =>
@@ -42,13 +50,26 @@ class _ActivityNotificationRouteState extends State<ActivityNotificationRoute> {
       Activity? activity;
       for (final item in participating) {
         if (item.id == widget.activityId) {
-          activity = item;
+          // Only asked to join a private one: it stays closed.
+          if (!(item.isPending && !item.isPublic)) activity = item;
           break;
         }
       }
       activity ??= await _activitiesModel.fetchById(widget.activityId);
 
       if (!mounted) return;
+      final code = widget.code;
+      if (activity == null && code != null && code.isNotEmpty) {
+        // A private activity the user isn't in yet: same as typing its code.
+        await joinActivityWithCode(
+          context,
+          activityStore: _activityStore,
+          activitiesModel: _activitiesModel,
+          initialCode: code,
+        );
+        if (mounted) Navigator.of(context).pop();
+        return;
+      }
       if (activity == null) {
         setState(() => _error = context.l10n.thisActivityIsNoLongerAvailable);
         return;
