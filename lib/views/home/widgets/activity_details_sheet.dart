@@ -497,13 +497,9 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                               _buildTitleAndBadges(),
                               const SizedBox(height: 18),
                               _buildScheduleAndLocationSection(),
-                              if (_currentActivity.hasCoordinates &&
-                                  !_currentActivity.isPast) ...[
-                                ActivityWeatherCard(
-                                  latitude: _currentActivity.latitude!,
-                                  longitude: _currentActivity.longitude!,
-                                  startsAt: _currentActivity.dateTime,
-                                ),
+                              if (_hasMapRow) ...[
+                                const SizedBox(height: 12),
+                                _buildMapRow(),
                               ],
                               if (_currentActivity.description.isNotEmpty) ...[
                                 const SizedBox(height: 20),
@@ -1563,21 +1559,39 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
               ],
             ),
           ],
-          if (_currentActivity.hasCoordinates ||
-              MapsLauncher.canOpen(_currentActivity)) ...[
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                if (_currentActivity.hasCoordinates)
-                  Expanded(child: _buildViewOnMapButton()),
-                if (_currentActivity.hasCoordinates &&
-                    MapsLauncher.canOpen(_currentActivity))
-                  const SizedBox(width: 10),
-                if (MapsLauncher.canOpen(_currentActivity))
-                  _buildOpenInMapsButton(),
-              ],
+        ],
+      ),
+    );
+  }
+
+  bool get _hasMapRow =>
+      _currentActivity.hasCoordinates || MapsLauncher.canOpen(_currentActivity);
+
+  // Its own card under the date and place: the map buttons and the weather.
+  Widget _buildMapRow() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: SynkColors.textSecondary.withValues(alpha: 0.10),
+        ),
+      ),
+      child: Row(
+        children: [
+          if (_currentActivity.hasCoordinates)
+            Expanded(child: _buildViewOnMapButton()),
+          if (_currentActivity.hasCoordinates &&
+              MapsLauncher.canOpen(_currentActivity))
+            const SizedBox(width: 10),
+          if (MapsLauncher.canOpen(_currentActivity)) _buildOpenInMapsButton(),
+          if (_currentActivity.hasCoordinates && !_currentActivity.isPast)
+            ActivityWeatherCard(
+              latitude: _currentActivity.latitude!,
+              longitude: _currentActivity.longitude!,
+              startsAt: _currentActivity.dateTime,
             ),
-          ],
         ],
       ),
     );

@@ -8,6 +8,7 @@ import '../../core/constants/synk_colors.dart';
 import '../../l10n/l10n.dart';
 import '../../models/activities_model.dart';
 import '../../models/activity_model.dart';
+import '../../models/activity_rating_model.dart';
 import '../../utils/custom_widgets/synk_dialog.dart';
 import '../../utils/custom_widgets/synk_feedback.dart';
 import '../widgets/synk_blob_background.dart';
@@ -17,6 +18,7 @@ import 'chat_room_view.dart';
 import 'schedule_conflict_resolution_view.dart';
 import 'widgets/activities_filter_sheet.dart';
 import 'widgets/activity_details_sheet.dart';
+import 'widgets/activity_rating_sheet.dart';
 import 'widgets/code_bubble.dart';
 import 'widgets/empty_state.dart';
 import 'widgets/my_activity_card.dart';
@@ -47,6 +49,10 @@ class _ActivitiesViewState extends State<ActivitiesView> {
   final Map<String, List<Map<String, dynamic>>> _people = {};
   final Set<String> _loadingPeople = {};
 
+  // Ended activities the user can still rate, by activity id.
+  final ActivityRatingModel _ratingModel = ActivityRatingModel();
+  Map<String, PendingActivityRating> _pendingRatings = const {};
+
   ActivityStore get _store => widget.activityStore;
 
   @override
@@ -62,6 +68,42 @@ class _ActivitiesViewState extends State<ActivitiesView> {
     _store.addListener(_takeDetailsFocus);
     _loadMissingPeople();
     unawaited(_loadScheduleConflicts());
+    unawaited(_loadPendingRatings());
+  }
+
+  Future<void> _loadPendingRatings() async {
+    try {
+      final pending = await _ratingModel.fetchPending();
+      if (!mounted) return;
+      setState(() {
+        _pendingRatings = {for (final p in pending) p.activity.id: p};
+      });
+    } catch (_) {
+      // Rating is optional; the button just doesn't show.
+    }
+  }
+
+  // Everyone in the past activity, with the stars the user gave before.
+  Future<void> _rate(Activity activity) async {
+    PendingActivityRating? rating;
+    try {
+      rating = await _ratingModel.fetchForActivity(activity.id);
+    } catch (_) {}
+    if (!mounted) return;
+    if (rating == null || rating.participants.isEmpty) {
+      SynkFeedback.showToast(
+        context,
+        title: context.l10n.ratingActivityUnavailable,
+        success: false,
+      );
+      return;
+    }
+    await showActivityRatingSheet(
+      context: context,
+      pending: rating,
+      fromPast: true,
+    );
+    await _loadPendingRatings();
   }
 
   @override
@@ -367,6 +409,7 @@ class _ActivitiesViewState extends State<ActivitiesView> {
             child: _Segmented(
               showPast: _showPast,
               onChanged: (past) => setState(() {
+                if (past) unawaited(_loadPendingRatings());
                 _showPast = past;
                 _filter = ActivityRoleFilter.all;
                 _visibility = ActivityVisibility.all;
@@ -422,6 +465,9 @@ class _ActivitiesViewState extends State<ActivitiesView> {
       final role = roles[activity.id]!;
       final chat = chats.activityChatFor(activity.id);
       final member = isMember(activity);
+      final limited = role == MyActivityRole.pending && !activity.isPublic;
+      // Ended, and the user was in it.
+      final canRate = member && activity.endsAt.isBefore(now);
       items
         ..add(
           MyActivityCard(
@@ -429,14 +475,18 @@ class _ActivitiesViewState extends State<ActivitiesView> {
             role: role,
             participants: _people[activity.id],
             anonymous: role == MyActivityRole.pending,
-            onTap: () => _openActivity(activity),
+            // A private activity they only asked to join stays closed.
+            limited: limited,
+            onTap: limited ? null : () => _openActivity(activity),
             // Past activities keep their chat if it's still there.
             onChat: member && (!activity.isPast || chat != null)
                 ? () => _openChat(activity)
                 : null,
             unreadCount: chat?.unreadCount ?? 0,
-            showCode: role == MyActivityRole.hosting && !activity.isPast,
+            showCode: member && !activity.isPast,
             canShare: member && !activity.isPast,
+            onRate: canRate ? () => _rate(activity) : null,
+            hasRated: !_pendingRatings.containsKey(activity.id),
           ),
         )
         ..add(const SizedBox(height: 12));

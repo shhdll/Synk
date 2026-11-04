@@ -65,6 +65,9 @@ class _ForYouDeckState extends State<ForYouDeck>
   static const double _threshold = 0.35;
   static const double _flingSpeed = 900;
   static const double _maxTilt = 12 * math.pi / 180;
+  // Tilt and sideways shift of the cards behind, by depth.
+  static const _scatter = [0.0, -3.5 * math.pi / 180, 4.5 * math.pi / 180];
+  static const _shift = [0.0, -8.0, 10.0];
 
   late final ActivitySwipesModel _swipes =
       widget.swipes ?? ActivitySwipesModel();
@@ -86,6 +89,7 @@ class _ForYouDeckState extends State<ForYouDeck>
   double _width = 1;
   bool _crossed = false;
   bool _busy = false;
+  bool _expanded = true;
 
   // Built cards by activity id; see [_cardFor].
   final Map<String, Widget> _cards = {};
@@ -330,68 +334,76 @@ class _ForYouDeckState extends State<ForYouDeck>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: Text(
-                  l.forYou,
-                  style: GoogleFonts.nunito(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    color: SynkColors.ink,
-                  ),
-                ),
-              ),
-              if (deck != null && !done)
-                Text(
-                  l.deckCounter(_index + 1, deck.length),
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: SynkColors.textSecondary,
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          if (deck == null)
-            const _DeckSkeleton()
-          else
-            // Eases down to the end card after the last one, and back up on
-            // See again, so Explore slides instead of jumping.
-            AnimatedSize(
-              duration: const Duration(milliseconds: 350),
-              curve: Curves.easeInOutCubic,
-              alignment: Alignment.topCenter,
-              // Dragged and flying cards go past its edges.
-              clipBehavior: Clip.none,
-              child: done
-                  ? Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      child: Center(
-                        child: _CaughtUp(
-                          onSeeAgain: _seeAgain,
-                          onCreate: widget.onCreate,
-                        ),
-                      ),
-                    )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            _width = constraints.maxWidth;
-                            return _buildDeck(deck);
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        _DeckProgress(count: deck.length, index: _index),
-                      ],
+          SectionFoldHeader(
+            title: l.forYou,
+            open: _expanded,
+            onToggle: () => setState(() => _expanded = !_expanded),
+            trailing: deck != null && !done && _expanded
+                ? Text(
+                    l.deckCounter(_index + 1, deck.length),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: SynkColors.textSecondary,
                     ),
-            ),
+                  )
+                : null,
+          ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+            alignment: Alignment.topCenter,
+            clipBehavior: Clip.none,
+            child: _expanded
+                ? _buildBody(deck, done)
+                : const SizedBox(width: double.infinity),
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildBody(List<TopPick>? deck, bool done) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 12),
+        if (deck == null)
+          const _DeckSkeleton()
+        else
+          // Eases down to the end card after the last one, and back up on
+          // See again, so Explore slides instead of jumping.
+          AnimatedSize(
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeInOutCubic,
+            alignment: Alignment.topCenter,
+            // Dragged and flying cards go past its edges.
+            clipBehavior: Clip.none,
+            child: done
+                ? Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Center(
+                      child: _CaughtUp(
+                        onSeeAgain: _seeAgain,
+                        onCreate: widget.onCreate,
+                      ),
+                    ),
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          _width = constraints.maxWidth;
+                          return _buildDeck(deck);
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      _DeckProgress(count: deck.length, index: _index),
+                    ],
+                  ),
+          ),
+      ],
     );
   }
 
@@ -436,29 +448,35 @@ class _ForYouDeckState extends State<ForYouDeck>
       // Where it sits: 0 in front, 1 and 2 behind, moving up as the front
       // card is dragged away.
       final place = front ? 0.0 : math.max(depth - progress, depth - 1.0);
-      final tint = ActivityVisual.of(pick.activity).tint;
-      // The light tint fades out as a card comes to the front.
+      // Cards behind are faded, and clear up as they come to the front.
       final cover = switch (depth) {
         0 => 0.0,
-        1 => (1 - progress) * 0.85,
-        _ => 0.85,
+        1 => (1 - progress) * 0.45,
+        _ => 0.6,
       };
+      // Cards behind sit a little crooked, like a loose pile, and
+      // straighten as they come to the front.
+      final scatter = place <= 1
+          ? place * _scatter[1]
+          : _scatter[1] + (place - 1) * (_scatter[2] - _scatter[1]);
+      final shift = place <= 1
+          ? place * _shift[1]
+          : _shift[1] + (place - 1) * (_shift[2] - _shift[1]);
 
       return Positioned(
         key: ValueKey(pick.activity.id),
-        top: _peek * 2,
+        top: _peek,
         left: 0,
         right: 0,
         height: ForYouDeck.cardHeight,
         child: IgnorePointer(
           ignoring: !front,
           child: Transform.translate(
-            offset: front ? _offset : Offset(0, -_peek * place),
+            offset: front ? _offset : Offset(shift, 0),
             child: Transform.rotate(
-              angle: front ? angle : 0,
+              angle: front ? angle : scatter,
               child: Transform.scale(
-                scale: 1 - 0.06 * place,
-                alignment: Alignment.topCenter,
+                scale: 1 - 0.015 * place,
                 child: Semantics(
                   customSemanticsActions: front
                       ? {
@@ -485,7 +503,7 @@ class _ForYouDeckState extends State<ForYouDeck>
                           IgnorePointer(
                             child: Opacity(
                               opacity: cover,
-                              child: _TintCard(tint: tint),
+                              child: const _FadeCard(),
                             ),
                           ),
                       ],
@@ -526,14 +544,14 @@ String topPickReasonText(TopPickReason reason) => switch (reason) {
   PopularNearYou() => appL10n.topPickPopularNearYou,
 };
 
-// "Thu · 8:30 PM · 3.2 km"
+// "Thu Â· 8:30 PM Â· 3.2 km"
 String deckMeta(Activity activity, double? km) {
   final date = activity.dateTime;
   return [
     weekdayShort(date),
     formatTime(date.hour, date.minute),
     if (km != null) appL10n.topPickDistanceKm(km.toStringAsFixed(1)),
-  ].join(' · ');
+  ].join(' Â· ');
 }
 
 const _cardRadius = BorderRadius.all(Radius.circular(24));
@@ -546,19 +564,13 @@ final _cardShadow = [
   ),
 ];
 
-class _TintCard extends StatelessWidget {
-  const _TintCard({required this.tint});
-
-  final Color tint;
+class _FadeCard extends StatelessWidget {
+  const _FadeCard();
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Color.alphaBlend(tint.withValues(alpha: 0.28), Colors.white),
-        borderRadius: _cardRadius,
-        boxShadow: _cardShadow,
-      ),
+    return const DecoratedBox(
+      decoration: BoxDecoration(color: Colors.white, borderRadius: _cardRadius),
     );
   }
 }
@@ -577,6 +589,7 @@ class _DeckCard extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: _cardRadius,
         boxShadow: _cardShadow,
       ),
@@ -889,7 +902,7 @@ class _CaughtUp extends StatelessWidget {
               TextButton(
                 onPressed: onCreate,
                 style: TextButton.styleFrom(
-                  foregroundColor: SynkColors.orangeDeep,
+                  foregroundColor: SynkColors.orangeDark,
                   minimumSize: const Size(44, 44),
                   padding: const EdgeInsets.symmetric(horizontal: 6),
                 ),
@@ -898,6 +911,8 @@ class _CaughtUp extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
+                    decoration: TextDecoration.underline,
+                    decorationColor: SynkColors.orangeDark,
                   ),
                 ),
               ),
@@ -971,6 +986,62 @@ class _SkeletonBlockState extends State<SkeletonBlock>
             _shimmer.value * 0.65,
           ),
           borderRadius: BorderRadius.circular(widget.radius),
+        ),
+      ),
+    );
+  }
+}
+
+// A Home section title; tapping it folds the section away.
+class SectionFoldHeader extends StatelessWidget {
+  const SectionFoldHeader({
+    super.key,
+    required this.title,
+    required this.open,
+    required this.onToggle,
+    this.trailing,
+  });
+
+  final String title;
+  final bool open;
+  final VoidCallback onToggle;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      expanded: open,
+      child: InkWell(
+        onTap: onToggle,
+        borderRadius: BorderRadius.circular(12),
+        child: Row(
+          children: [
+            Text(
+              title,
+              style: GoogleFonts.nunito(
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                color: SynkColors.ink,
+              ),
+            ),
+            const SizedBox(width: 2),
+            AnimatedRotation(
+              turns: open
+                  ? 0
+                  : Directionality.of(context) == TextDirection.rtl
+                  ? 0.25
+                  : -0.25,
+              duration: const Duration(milliseconds: 200),
+              child: const Icon(
+                Icons.keyboard_arrow_down_rounded,
+                size: 24,
+                color: SynkColors.ink,
+              ),
+            ),
+            const Spacer(),
+            ?trailing,
+          ],
         ),
       ),
     );

@@ -114,7 +114,6 @@ class _FindPeopleViewState extends State<FindPeopleView> {
       return EmptyState(
         icon: Icons.person_search_rounded,
         title: context.l10n.searchForPeopleOnSynk,
-        message: context.l10n.searchByNameOrUsername,
       );
     }
 

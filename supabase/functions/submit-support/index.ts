@@ -17,6 +17,7 @@ const SUPPORT_FROM_EMAIL = Deno.env.get("SUPPORT_FROM_EMAIL") ??
 const SUPPORT_REPLY_URL = Deno.env.get("SUPPORT_REPLY_URL") ??
   "https://synk.cc/support-reply.html";
 
+const LOGO_URL = "https://synk.cc/logo.png";
 const DAILY_LIMIT = 5;
 const CATEGORIES = ["problem", "feedback", "other"];
 const SCREENSHOT_BUCKET = "support-screenshots";
@@ -81,7 +82,12 @@ function supportEmailHtml(ticket: {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F6F1E6;padding:32px 12px">
   <tr><td align="center">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
-      <tr><td style="padding:0 4px 16px;font-size:22px;font-weight:800;letter-spacing:-0.5px;color:#FF7A36">synk</td></tr>
+      <tr><td style="padding:0 4px 16px">
+        <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+          <td style="vertical-align:middle;padding-right:10px"><img src="${LOGO_URL}" alt="Synk" width="36" height="36" style="display:block;width:36px;height:36px"></td>
+          <td style="vertical-align:middle;font-size:22px;font-weight:800;letter-spacing:-0.5px;color:#2D2A32">Synk</td>
+        </tr></table>
+      </td></tr>
       <tr><td style="background:#FFFFFF;border-radius:20px;padding:28px">
         <span style="display:inline-block;padding:4px 12px;border-radius:999px;background:${tag.tint};color:${tag.color};font-size:12px;font-weight:700">${tag.label}</span>
         <h1 style="margin:14px 0 4px;font-size:20px;line-height:1.3;color:#1E1C24">New message from ${name}</h1>

@@ -15,6 +15,9 @@ const SUPPORT_INBOX_EMAIL = Deno.env.get("SUPPORT_INBOX_EMAIL");
 const SUPPORT_FROM_EMAIL = Deno.env.get("SUPPORT_FROM_EMAIL") ??
   "Synk Support <onboarding@resend.dev>";
 
+const LOGO_URL = "https://synk.cc/logo.png";
+const SCREENSHOT_BUCKET = "support-screenshots";
+const SCREENSHOT_LINK_SECONDS = 60 * 60;
 const UUID = /^[0-9a-f-]{36}$/i;
 const CATEGORY_LABELS: Record<string, string> = {
   problem: "Bug",
@@ -73,11 +76,16 @@ function replyEmailHtml(ticket: {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F6F1E6;padding:32px 12px">
   <tr><td align="center">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
-      <tr><td style="padding:0 4px 16px;font-size:22px;font-weight:800;letter-spacing:-0.5px;color:#FF7A36">synk</td></tr>
+      <tr><td style="padding:0 4px 16px">
+        <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+          <td style="vertical-align:middle;padding-right:10px"><img src="${LOGO_URL}" alt="Synk" width="36" height="36" style="display:block;width:36px;height:36px"></td>
+          <td style="vertical-align:middle;font-size:22px;font-weight:800;letter-spacing:-0.5px;color:#2D2A32">Synk</td>
+        </tr></table>
+      </td></tr>
       <tr><td style="background:#FFFFFF;border-radius:20px;padding:28px">
         <h1 style="margin:0 0 16px;font-size:20px;line-height:1.3;color:#1E1C24">Hi ${escapeHtml(ticket.firstName)},</h1>
         <div style="font-size:15px;line-height:1.6;color:#1E1C24;white-space:pre-wrap">${escapeHtml(ticket.reply)}</div>
-        <p style="margin:24px 0 0;font-size:15px;color:#1E1C24">The Synk team</p>
+        <p style="margin:24px 0 0;font-size:15px;color:#1E1C24">Synk team</p>
         <div style="margin-top:28px;padding-top:20px;border-top:1px solid #EFE8DA">
           <p style="margin:0 0 10px;font-size:12px;font-weight:700;color:#6B7280">
             YOUR MESSAGE · ${escapeHtml(CATEGORY_LABELS[ticket.category] ?? "Other").toUpperCase()} · ${escapeHtml(formatDate(ticket.createdAt))}
@@ -123,7 +131,7 @@ Deno.serve(async (request: Request) => {
   }
 
   const { data: ticket } = await admin.from("support_tickets")
-    .select("id, user_id, email, category, message, created_at, reply, replied_at")
+    .select("id, user_id, email, category, message, created_at, reply, replied_at, screenshot_paths")
     .eq("id", ticketId)
     .eq("reply_token", token)
     .maybeSingle();
@@ -141,7 +149,18 @@ Deno.serve(async (request: Request) => {
     (ticket.email as string).split("@")[0];
 
   if (action === "get") {
+    // The bucket is private, so the page gets short-lived links.
+    const paths = (ticket.screenshot_paths as string[] | null) ?? [];
+    let screenshots: string[] = [];
+    if (paths.length > 0) {
+      const { data: signed } = await admin.storage.from(SCREENSHOT_BUCKET)
+        .createSignedUrls(paths, SCREENSHOT_LINK_SECONDS);
+      screenshots = (signed ?? [])
+        .map((item) => item.signedUrl)
+        .filter((link): link is string => !!link);
+    }
     return jsonResponse({
+      screenshots,
       name,
       email: ticket.email,
       category: ticket.category,
@@ -168,7 +187,7 @@ Deno.serve(async (request: Request) => {
       // If they answer back, it lands in the team inbox.
       reply_to: SUPPORT_INBOX_EMAIL,
       subject: `Re: your message to Synk (#${(ticket.id as string).slice(0, 8)})`,
-      text: `Hi ${name.split(" ")[0]},\n\n${reply}\n\nThe Synk team\n\n---\nYour message:\n${ticket.message}`,
+      text: `Hi ${name.split(" ")[0]},\n\n${reply}\n\nSynk team\n\n---\nYour message:\n${ticket.message}`,
       html: replyEmailHtml({
         firstName: name.split(" ")[0],
         reply,

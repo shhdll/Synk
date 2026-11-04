@@ -10,7 +10,7 @@ IconData weatherIconFor(WeatherCondition condition) => switch (condition) {
   WeatherCondition.partlyCloudy => Icons.wb_cloudy_outlined,
   WeatherCondition.cloudy => Icons.cloud_rounded,
   WeatherCondition.fog => Icons.foggy,
-  WeatherCondition.drizzle => Icons.grain_rounded,
+  WeatherCondition.drizzle => Icons.water_drop_rounded,
   WeatherCondition.rain => Icons.umbrella_rounded,
   WeatherCondition.snow => Icons.ac_unit_rounded,
   WeatherCondition.storm => Icons.thunderstorm_rounded,
@@ -21,6 +21,175 @@ Color weatherColorFor(WeatherCondition condition) =>
     condition == WeatherCondition.clear
     ? const Color(0xFFF2B705)
     : SynkColors.tealText;
+
+String weatherNameFor(AppLocalizations l10n, WeatherCondition condition) =>
+    switch (condition) {
+      WeatherCondition.clear => l10n.weatherClear,
+      WeatherCondition.partlyCloudy => l10n.weatherPartlyCloudy,
+      WeatherCondition.cloudy => l10n.weatherCloudy,
+      WeatherCondition.fog => l10n.weatherFog,
+      WeatherCondition.drizzle => l10n.weatherDrizzle,
+      WeatherCondition.rain => l10n.weatherRain,
+      WeatherCondition.snow => l10n.weatherSnow,
+      WeatherCondition.storm => l10n.weatherStorm,
+    };
+
+// A short tip on what to wear, from how it feels outside.
+String weatherTipFor(AppLocalizations l10n, ActivityWeather weather) {
+  if (weather.condition == WeatherCondition.storm) return l10n.weatherTipStorm;
+  if (weather.condition == WeatherCondition.rain ||
+      weather.condition == WeatherCondition.drizzle) {
+    return l10n.weatherTipRain;
+  }
+  final feels = weather.feelsLike;
+  if (feels >= 38) return l10n.weatherTipHot;
+  if (feels >= 30) return l10n.weatherTipWarm;
+  if (feels >= 20) return l10n.weatherTipNice;
+  if (feels >= 12) return l10n.weatherTipCool;
+  return l10n.weatherTipCold;
+}
+
+// The full forecast, from tapping the temperature.
+Future<void> showWeatherSheet(BuildContext context, ActivityWeather weather) {
+  return showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    builder: (context) => _WeatherSheet(weather: weather),
+  );
+}
+
+class _WeatherSheet extends StatelessWidget {
+  const _WeatherSheet({required this.weather});
+
+  final ActivityWeather weather;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final rows = [
+      (
+        Icons.thermostat_rounded,
+        l10n.feelsLike,
+        '${weather.feelsLike.round()}°',
+      ),
+      (Icons.water_drop_outlined, l10n.chanceOfRain, '${weather.rainChance}%'),
+      (Icons.air_rounded, l10n.wind, l10n.kmPerHour(weather.windSpeed.round())),
+      (Icons.opacity_rounded, l10n.humidity, '${weather.humidity}%'),
+    ];
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        20,
+        12,
+        20,
+        20 + MediaQuery.paddingOf(context).bottom,
+      ),
+      decoration: const BoxDecoration(
+        color: SynkColors.background,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: SynkColors.textSecondary.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Icon(
+            weatherIconFor(weather.condition),
+            size: 44,
+            color: weatherColorFor(weather.condition),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '${weather.temperature.round()}°',
+            style: const TextStyle(
+              fontSize: 40,
+              fontWeight: FontWeight.w900,
+              color: SynkColors.textPrimary,
+            ),
+          ),
+          Text(
+            weatherNameFor(l10n, weather.condition),
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: SynkColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF4C7),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Text(
+              weatherTipFor(l10n, weather),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: SynkColors.textPrimary,
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              children: [
+                for (final (i, (icon, label, value)) in rows.indexed) ...[
+                  if (i > 0)
+                    Divider(
+                      height: 1,
+                      color: SynkColors.textSecondary.withValues(alpha: 0.12),
+                    ),
+                  SizedBox(
+                    height: 48,
+                    child: Row(
+                      children: [
+                        Icon(icon, size: 20, color: SynkColors.tealText),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            label,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: SynkColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          value,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: SynkColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 // Forecast for the activity's place at its start time.
 class ActivityWeatherCard extends StatefulWidget {
@@ -64,12 +233,10 @@ class _ActivityWeatherCardState extends State<ActivityWeatherCard> {
     startsAt: widget.startsAt,
   );
 
-  // One small line: icon, temperature and anything worth knowing. Hidden
-  // while loading and when there's no forecast.
+  // A small button with the icon and temperature, next to the map
+  // buttons. Hidden while loading and when there's no forecast.
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
     return FutureBuilder<ActivityWeather>(
       future: _future,
       builder: (context, snapshot) {
@@ -78,69 +245,48 @@ class _ActivityWeatherCardState extends State<ActivityWeatherCard> {
             weather == null) {
           return const SizedBox.shrink();
         }
-        final note = _note(l10n, weather);
 
-        // The gap above comes with it, so nothing is left when it's hidden.
-        return Container(
-          margin: const EdgeInsets.only(top: 12),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.65),
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                weatherIconFor(weather.condition),
-                size: 18,
-                color: weatherColorFor(weather.condition),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '${weather.temperature.round()}°',
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  color: SynkColors.textPrimary,
-                ),
-              ),
-              if (note != null) ...[
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    note,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: SynkColors.textSecondary,
-                    ),
+        // The gap before it comes with it, so nothing is left when hidden.
+        return Padding(
+          padding: const EdgeInsetsDirectional.only(start: 10),
+          child: SizedBox(
+            height: 48,
+            child: TextButton(
+              onPressed: () => showWeatherSheet(context, weather),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  side: BorderSide(
+                    color: SynkColors.textSecondary.withValues(alpha: 0.18),
                   ),
                 ),
-              ],
-            ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    weatherIconFor(weather.condition),
+                    size: 20,
+                    color: weatherColorFor(weather.condition),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${weather.temperature.round()}°',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: SynkColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         );
       },
     );
-  }
-
-  // Only weather worth knowing about; a clear or cloudy day shows nothing.
-  static String? _note(AppLocalizations l10n, ActivityWeather weather) {
-    final notes = <String>[
-      ?switch (weather.condition) {
-        WeatherCondition.storm => l10n.weatherStorm,
-        WeatherCondition.rain => l10n.weatherRain,
-        WeatherCondition.drizzle => l10n.weatherDrizzle,
-        WeatherCondition.snow => l10n.weatherSnow,
-        WeatherCondition.fog => l10n.weatherFog,
-        _ when weather.rainChance >= 40 => l10n.rainChance(weather.rainChance),
-        _ => null,
-      },
-      if (weather.windSpeed >= 30) l10n.windSpeed(weather.windSpeed.round()),
-    ];
-    return notes.isEmpty ? null : notes.join(' · ');
   }
 }
 
@@ -192,26 +338,30 @@ class _MapWeatherPillState extends State<MapWeatherPill> {
           elevation: 3,
           shadowColor: Colors.black26,
           borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  weatherIconFor(weather.condition),
-                  size: 16,
-                  color: weatherColorFor(weather.condition),
-                ),
-                const SizedBox(width: 5),
-                Text(
-                  '${weather.temperature.round()}°',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: SynkColors.textPrimary,
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: () => showWeatherSheet(context, weather),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    weatherIconFor(weather.condition),
+                    size: 16,
+                    color: weatherColorFor(weather.condition),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 5),
+                  Text(
+                    '${weather.temperature.round()}°',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: SynkColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );

@@ -18,7 +18,7 @@ class AuthDeepLinkHandler {
   final void Function(OtpType type, AuthLinkOutcome outcome) onResult;
 
   // A shared activity link, io.supabase.synk://activity?id=...
-  final void Function(String activityId)? onActivityLink;
+  final void Function(String activityId, String? code)? onActivityLink;
   final AppLinks _appLinks;
 
   StreamSubscription<Uri>? _subscription;
@@ -87,7 +87,9 @@ class AuthDeepLinkHandler {
 
     if (uri.host == 'activity') {
       final id = uri.queryParameters['id'];
-      if (id != null && id.isNotEmpty) onActivityLink?.call(id);
+      if (id != null && id.isNotEmpty) {
+        onActivityLink?.call(id, uri.queryParameters['code']);
+      }
       return;
     }
 

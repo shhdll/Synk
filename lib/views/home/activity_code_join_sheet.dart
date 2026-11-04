@@ -10,6 +10,8 @@ import '../../models/activity_participation_model.dart';
 import '../../utils/custom_widgets/synk_feedback.dart';
 import '../widgets/schedule_conflict_text.dart';
 import 'widgets/activity_details_sheet.dart';
+import 'widgets/activity_thumbnail.dart';
+import 'widgets/discovery_activity_card.dart';
 import 'widgets/overlapping_activity_notice.dart';
 
 // Shared by Home and Activities.
@@ -18,8 +20,12 @@ Future<void> joinActivityWithCode(
   required ActivityStore activityStore,
   ActivitiesModel? activitiesModel,
   VoidCallback? onJoined,
+  String? initialCode,
 }) async {
-  final result = await showActivityCodeJoinSheet(context);
+  final result = await showActivityCodeJoinSheet(
+    context,
+    initialCode: initialCode,
+  );
 
   // The user closed the sheet without completing a join.
   if (!context.mounted || result == null) return;
@@ -110,19 +116,25 @@ Future<void> joinActivityWithCode(
 
 // Opens the code sheet and returns the successful join result.
 // A null result means the user closed the sheet without joining.
-Future<ActivityJoinResult?> showActivityCodeJoinSheet(BuildContext context) {
+Future<ActivityJoinResult?> showActivityCodeJoinSheet(
+  BuildContext context, {
+  String? initialCode,
+}) {
   return showModalBottomSheet<ActivityJoinResult>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (_) {
-      return const ActivityCodeJoinSheet();
+      return ActivityCodeJoinSheet(initialCode: initialCode);
     },
   );
 }
 
 class ActivityCodeJoinSheet extends StatefulWidget {
-  const ActivityCodeJoinSheet({super.key});
+  const ActivityCodeJoinSheet({super.key, this.initialCode});
+
+  // Filled in from a shared link.
+  final String? initialCode;
 
   @override
   State<ActivityCodeJoinSheet> createState() {
@@ -144,6 +156,14 @@ class _ActivityCodeJoinSheetState extends State<ActivityCodeJoinSheet> {
 
     _controller = ActivityJoinController();
     _controller.addListener(_refresh);
+
+    final code = widget.initialCode;
+    if (code != null && RegExp(r'^[0-9]{6}$').hasMatch(code)) {
+      _controller.codeController.text = code;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _codeChanged(code);
+      });
+    }
   }
 
   Future<void> _codeChanged(String code) async {
@@ -286,7 +306,7 @@ class _ActivityCodeJoinSheetState extends State<ActivityCodeJoinSheet> {
               const SizedBox(height: 24),
               TextField(
                 controller: _controller.codeController,
-                autofocus: true,
+                autofocus: widget.initialCode == null,
                 keyboardType: TextInputType.number,
                 textInputAction: TextInputAction.done,
                 textAlign: TextAlign.center,
@@ -347,17 +367,8 @@ class _ActivityCodeJoinSheetState extends State<ActivityCodeJoinSheet> {
                 ),
               ),
               if (_resolvedActivity != null) ...[
-                const SizedBox(height: 12),
-                Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: Text(
-                    _resolvedActivity!.title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: SynkColors.textPrimary,
-                    ),
-                  ),
-                ),
+                const SizedBox(height: 16),
+                _ActivityPreview(activity: _resolvedActivity!),
                 if (_hasPendingScheduleOverlap) ...[
                   const SizedBox(height: 10),
                   const OverlappingActivityNotice(),
@@ -402,6 +413,75 @@ class _ActivityCodeJoinSheetState extends State<ActivityCodeJoinSheet> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// The activity a code belongs to, before joining.
+class _ActivityPreview extends StatelessWidget {
+  const _ActivityPreview({required this.activity});
+
+  final Activity activity;
+
+  @override
+  Widget build(BuildContext context) {
+    final title = activity.title.trim();
+    final place = activity.location.trim();
+    // A private activity shows only its photo and title before joining.
+    final private = !activity.isPublic;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        children: [
+          ActivityThumbnail(activity: activity, size: 72, radius: 14),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title.isEmpty ? context.l10n.untitledActivity : title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 19,
+                    fontWeight: FontWeight.w900,
+                    color: SynkColors.textPrimary,
+                  ),
+                ),
+                if (!private) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    DiscoveryActivityCard.formatWhen(activity.dateTime),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: SynkColors.orangeDark,
+                    ),
+                  ),
+                  if (place.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      place,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: SynkColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

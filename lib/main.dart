@@ -220,21 +220,24 @@ class _MyAppState extends State<MyApp> {
   }
 
   String? _pendingNotificationActivityId;
+  String? _pendingActivityCode;
   bool _pendingJoinRequestsNotification = false;
   bool _pendingFriendRequestsNotification = false;
   bool _pendingFriendsNotification = false;
   bool _pendingScheduleConflictsNotification = false;
 
-  void _openNotificationActivity(String activityId) {
+  void _openNotificationActivity(String activityId, [String? code]) {
     final navigator = _navigatorKey.currentState;
     if (navigator == null) {
       _pendingNotificationActivityId = activityId;
+      _pendingActivityCode = code;
       return;
     }
 
     navigator.push(
       MaterialPageRoute<void>(
-        builder: (_) => ActivityNotificationRoute(activityId: activityId),
+        builder: (_) =>
+            ActivityNotificationRoute(activityId: activityId, code: code),
       ),
     );
   }
@@ -242,8 +245,10 @@ class _MyAppState extends State<MyApp> {
   void _drainPendingActivityNotification() {
     final activityId = _pendingNotificationActivityId;
     if (activityId == null || _navigatorKey.currentState == null) return;
+    final code = _pendingActivityCode;
     _pendingNotificationActivityId = null;
-    _openNotificationActivity(activityId);
+    _pendingActivityCode = null;
+    _openNotificationActivity(activityId, code);
   }
 
   void _openJoinRequests() {

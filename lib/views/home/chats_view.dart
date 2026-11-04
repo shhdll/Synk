@@ -452,7 +452,7 @@ class _FilterTabs extends StatelessWidget {
   }
 }
 
-// Friends you don't have a chat with yet, to start one.
+// All friends; ones you already chat with are marked and open that chat.
 class _NewChatSheet extends StatefulWidget {
   const _NewChatSheet({required this.onPick});
 
@@ -475,7 +475,7 @@ class _NewChatSheetState extends State<_NewChatSheet> {
   Widget build(BuildContext context) {
     final friendsController = FriendsController.instance;
     final chats = ChatController.instance;
-    bool isNew(FriendUser friend) => chats.directChatWith(friend.id) == null;
+    bool hasChat(FriendUser friend) => chats.directChatWith(friend.id) != null;
 
     void openFindPeople() {
       final navigator = Navigator.of(context);
@@ -492,16 +492,9 @@ class _NewChatSheetState extends State<_NewChatSheet> {
       builder: (context, scrollController) => ListenableBuilder(
         listenable: Listenable.merge([friendsController, chats]),
         builder: (context, _) {
-          final friends = friendsController
-              .searchFriends(_search.text)
-              .where(isNew)
-              .toList();
+          final friends = friendsController.searchFriends(_search.text);
           final noFriends =
               friendsController.hasLoaded && friendsController.friends.isEmpty;
-          final chattingWithAll =
-              friendsController.hasLoaded &&
-              !noFriends &&
-              !friendsController.friends.any(isNew);
 
           return ListView(
             controller: scrollController,
@@ -533,18 +526,6 @@ class _NewChatSheetState extends State<_NewChatSheet> {
                   child: EmptyState(
                     icon: Icons.people_alt_outlined,
                     title: context.l10n.noFriendsYet,
-                    message: context.l10n.findPeopleYouKnow,
-                    actionLabel: context.l10n.findPeople,
-                    onAction: openFindPeople,
-                  ),
-                )
-              else if (chattingWithAll)
-                Padding(
-                  padding: const EdgeInsets.only(top: 24),
-                  child: EmptyState(
-                    icon: Icons.mark_chat_read_outlined,
-                    title: context.l10n.youreChattingWithAllYourFriends,
-                    message: context.l10n.findNewFriendsToChatWith,
                     actionLabel: context.l10n.findPeople,
                     onAction: openFindPeople,
                   ),
@@ -552,7 +533,7 @@ class _NewChatSheetState extends State<_NewChatSheet> {
               else ...[
                 FriendsSearchField(
                   controller: _search,
-                  hint: context.l10n.searchChats,
+                  hint: context.l10n.searchFriends,
                   onChanged: (_) => setState(() {}),
                 ),
                 const SizedBox(height: 14),
@@ -580,15 +561,17 @@ class _NewChatSheetState extends State<_NewChatSheet> {
                         FriendsPersonRow(
                           user: friend,
                           onTap: () => widget.onPick(friend),
-                          trailing: const SizedBox.square(
-                            dimension: 40,
-                            child: Center(
-                              child: NewChatIcon(
-                                size: 22,
-                                color: SynkColors.orangeDark,
-                              ),
-                            ),
-                          ),
+                          trailing: hasChat(friend)
+                              ? const _HasChatTag()
+                              : const SizedBox.square(
+                                  dimension: 40,
+                                  child: Center(
+                                    child: NewChatIcon(
+                                      size: 22,
+                                      color: SynkColors.orangeDark,
+                                    ),
+                                  ),
+                                ),
                         ),
                     ],
                   ),
@@ -596,6 +579,30 @@ class _NewChatSheetState extends State<_NewChatSheet> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+// On a friend you already have a chat with.
+class _HasChatTag extends StatelessWidget {
+  const _HasChatTag();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: SynkColors.textSecondary.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        context.l10n.openChat,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: SynkColors.textSecondary,
+        ),
       ),
     );
   }

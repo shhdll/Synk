@@ -7,9 +7,13 @@ import '../models/activity_model.dart';
 // Opens the phone's share menu with a ready-made invite in the app's
 // language, so people don't have to type the details themselves.
 // [buttonContext] is the tapped button's context; iPads point the menu at it.
-// The synk.cc page that opens the activity in the app.
-Uri activityLink(Activity activity) =>
-    Uri.https('synk.cc', '/activity.html', {'id': activity.id});
+// The synk.cc page that opens the activity in the app. A private one
+// carries its code, so people who aren't in it yet can join.
+Uri activityLink(Activity activity) => Uri.https('synk.cc', '/activity.html', {
+  'id': activity.id,
+  if (!activity.isPublic && activity.hasActivityCode)
+    'code': activity.activityCode!,
+});
 
 // Opens the phone's share menu with the activity, a link to it and its code.
 Future<void> shareActivityLink(

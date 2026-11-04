@@ -4892,18 +4892,6 @@ abstract class AppLocalizations {
   /// **'Following'**
   String get following;
 
-  /// No description provided for @youreChattingWithAllYourFriends.
-  ///
-  /// In en, this message translates to:
-  /// **'You already have a chat with all your friends'**
-  String get youreChattingWithAllYourFriends;
-
-  /// No description provided for @findNewFriendsToChatWith.
-  ///
-  /// In en, this message translates to:
-  /// **'Find new friends to chat with!'**
-  String get findNewFriendsToChatWith;
-
   /// No description provided for @messageWasDeleted.
   ///
   /// In en, this message translates to:
@@ -5796,6 +5784,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This profile is unavailable.'**
   String get thisProfileIsUnavailable;
+
+  /// No description provided for @rateMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate members'**
+  String get rateMembers;
+
+  /// No description provided for @openChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Open chat'**
+  String get openChat;
+
+  /// No description provided for @weatherClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get weatherClear;
+
+  /// No description provided for @weatherPartlyCloudy.
+  ///
+  /// In en, this message translates to:
+  /// **'Partly cloudy'**
+  String get weatherPartlyCloudy;
+
+  /// No description provided for @weatherCloudy.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloudy'**
+  String get weatherCloudy;
+
+  /// No description provided for @feelsLike.
+  ///
+  /// In en, this message translates to:
+  /// **'Feels like'**
+  String get feelsLike;
+
+  /// No description provided for @chanceOfRain.
+  ///
+  /// In en, this message translates to:
+  /// **'Chance of rain'**
+  String get chanceOfRain;
+
+  /// No description provided for @wind.
+  ///
+  /// In en, this message translates to:
+  /// **'Wind'**
+  String get wind;
+
+  /// No description provided for @humidity.
+  ///
+  /// In en, this message translates to:
+  /// **'Humidity'**
+  String get humidity;
+
+  /// No description provided for @kmPerHour.
+  ///
+  /// In en, this message translates to:
+  /// **'{speed} km/h'**
+  String kmPerHour(int speed);
+
+  /// No description provided for @weatherTipStorm.
+  ///
+  /// In en, this message translates to:
+  /// **'Stormy out there. Stay safe and dress for it.'**
+  String get weatherTipStorm;
+
+  /// No description provided for @weatherTipRain.
+  ///
+  /// In en, this message translates to:
+  /// **'Rain\'s on the way. Bring an umbrella!'**
+  String get weatherTipRain;
+
+  /// No description provided for @weatherTipHot.
+  ///
+  /// In en, this message translates to:
+  /// **'Very hot. Drink water and stay in the shade.'**
+  String get weatherTipHot;
+
+  /// No description provided for @weatherTipWarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm out. Wear something light.'**
+  String get weatherTipWarm;
+
+  /// No description provided for @weatherTipNice.
+  ///
+  /// In en, this message translates to:
+  /// **'Perfect weather. Enjoy it!'**
+  String get weatherTipNice;
+
+  /// No description provided for @weatherTipCool.
+  ///
+  /// In en, this message translates to:
+  /// **'A little chilly. Bring a light jacket.'**
+  String get weatherTipCool;
+
+  /// No description provided for @weatherTipCold.
+  ///
+  /// In en, this message translates to:
+  /// **'Cold out. Dress warm and cozy.'**
+  String get weatherTipCold;
+
+  /// No description provided for @yourRatings.
+  ///
+  /// In en, this message translates to:
+  /// **'Your ratings'**
+  String get yourRatings;
 }
 
 class _AppLocalizationsDelegate

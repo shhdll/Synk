@@ -13,6 +13,60 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
+    <style>
+      .activity {
+        width: 100%;
+        margin-top: 24px;
+        border-radius: 24px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: 0 10px 30px rgba(45, 42, 50, 0.08);
+        text-align: left;
+      }
+
+      .activity-photo {
+        display: grid;
+        place-items: center;
+        height: 170px;
+        background: #fce3d4;
+        font-size: 56px;
+      }
+
+      .activity-photo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .activity-photo img.activity-logo {
+        width: 64px;
+        height: 64px;
+        object-fit: contain;
+        opacity: 0.8;
+      }
+
+      .activity-info {
+        padding: 16px 18px 18px;
+      }
+
+      .activity-title {
+        margin: 0 0 8px;
+        font-size: 21px;
+        font-weight: 800;
+        line-height: 1.25;
+      }
+
+      .activity-line {
+        margin: 4px 0 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+
+      .activity-line.when {
+        color: var(--coral-dark);
+      }
+    </style>
   </head>
   <body>
     <div class="orbs" aria-hidden="true">
@@ -24,15 +78,27 @@
     <header class="brand"><img src="logo.png" alt="" />Synk</header>
 
     <main class="content">
-      <h1 id="title">You're invited</h1>
+      <h1 id="title">You're invited!</h1>
       <p id="message" class="subtitle">Open the activity in Synk to see the details and join.</p>
+      <section id="activity" class="activity" hidden>
+        <div id="photo" class="activity-photo"></div>
+        <div class="activity-info">
+          <h2 id="activity-title" class="activity-title"></h2>
+          <p id="when" class="activity-line when"></p>
+          <p id="place" class="activity-line" hidden></p>
+          <p id="spots" class="activity-line"></p>
+        </div>
+      </section>
       <a id="open-app" class="button" href="io.supabase.synk://activity"><img class="button-logo" src="logo.png" alt="" /><span>Open in Synk</span></a>
     </main>
 
+    <script src="config.js"></script>
     <script>
-      // synk.cc/activity.html?id=<activity id> opens the activity in the app.
+      // synk.cc/activity.html?id=<activity id>&code=<code> opens the activity in the app.
       (function () {
-        var id = new URLSearchParams(window.location.search).get("id") || "";
+        var params = new URLSearchParams(window.location.search);
+        var id = params.get("id") || "";
+        var code = params.get("code") || "";
         var valid = /^[0-9a-f-]{36}$/i.test(id);
         var button = document.getElementById("open-app");
         if (!valid) {
@@ -42,9 +108,75 @@
           return;
         }
         var url = "io.supabase.synk://activity?id=" + encodeURIComponent(id);
+        if (/^[0-9]{6}$/.test(code)) url += "&code=" + code;
         button.href = url;
         // Android opens the app straight away; iPhone needs the tap.
         if (/android/i.test(navigator.userAgent)) window.location.href = url;
+
+        // The basics, so people know what they're opening. A private
+        // activity only shows with its code.
+        var $ = function (name) {
+          return document.getElementById(name);
+        };
+        fetch(window.SYNK_SUPABASE.url + "/rest/v1/rpc/get_activity_preview", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: window.SYNK_SUPABASE.anonKey,
+          },
+          body: JSON.stringify({
+            target_activity_id: id,
+            entered_code: /^[0-9]{6}$/.test(code) ? code : null,
+          }),
+        })
+          .then(function (response) {
+            return response.ok ? response.json() : null;
+          })
+          .then(function (activity) {
+            if (!activity) return;
+            $("message").hidden = true;
+            $("activity-title").textContent = activity.title || "Activity";
+            // A private activity only gives its title and photo.
+            var date = activity.starts_at ? new Date(activity.starts_at) : null;
+            $("when").hidden = !date;
+            if (date) $("when").textContent =
+              date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }) +
+              " · " +
+              date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+            if (activity.location_name) {
+              $("place").textContent = activity.location_name;
+              $("place").hidden = false;
+            }
+            var going = activity.participants_count;
+            var max = activity.max_participants;
+            $("spots").hidden = going == null || max == null;
+            if (!$("spots").hidden) $("spots").textContent = going >= max ? "Full" : going + " of " + max + " going";
+            // No photo: the category emoji, or the Synk logo.
+            var fallback = function () {
+              $("photo").textContent = "";
+              if (activity.category_emoji) {
+                $("photo").textContent = activity.category_emoji;
+                return;
+              }
+              var logo = document.createElement("img");
+              logo.src = "logo.png";
+              logo.alt = "";
+              logo.className = "activity-logo";
+              $("photo").appendChild(logo);
+            };
+            var photo = activity.photo_url || "";
+            if (/^https:\/\//.test(photo)) {
+              var img = document.createElement("img");
+              img.src = photo;
+              img.alt = "";
+              img.onerror = fallback;
+              $("photo").appendChild(img);
+            } else {
+              fallback();
+            }
+            $("activity").hidden = false;
+          })
+          .catch(function () {});
       })();
     </script>
   </body>

@@ -2793,13 +2793,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get following => 'Following';
 
   @override
-  String get youreChattingWithAllYourFriends =>
-      'You already have a chat with all your friends';
-
-  @override
-  String get findNewFriendsToChatWith => 'Find new friends to chat with!';
-
-  @override
   String get messageWasDeleted => 'This message was deleted';
 
   @override
@@ -3309,4 +3302,60 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get thisProfileIsUnavailable => 'This profile is unavailable.';
+
+  @override
+  String get rateMembers => 'Rate members';
+
+  @override
+  String get openChat => 'Open chat';
+
+  @override
+  String get weatherClear => 'Clear';
+
+  @override
+  String get weatherPartlyCloudy => 'Partly cloudy';
+
+  @override
+  String get weatherCloudy => 'Cloudy';
+
+  @override
+  String get feelsLike => 'Feels like';
+
+  @override
+  String get chanceOfRain => 'Chance of rain';
+
+  @override
+  String get wind => 'Wind';
+
+  @override
+  String get humidity => 'Humidity';
+
+  @override
+  String kmPerHour(int speed) {
+    return '$speed km/h';
+  }
+
+  @override
+  String get weatherTipStorm => 'Stormy out there. Stay safe and dress for it.';
+
+  @override
+  String get weatherTipRain => 'Rain\'s on the way. Bring an umbrella!';
+
+  @override
+  String get weatherTipHot => 'Very hot. Drink water and stay in the shade.';
+
+  @override
+  String get weatherTipWarm => 'Warm out. Wear something light.';
+
+  @override
+  String get weatherTipNice => 'Perfect weather. Enjoy it!';
+
+  @override
+  String get weatherTipCool => 'A little chilly. Bring a light jacket.';
+
+  @override
+  String get weatherTipCold => 'Cold out. Dress warm and cozy.';
+
+  @override
+  String get yourRatings => 'Your ratings';
 }

@@ -2728,12 +2728,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get following => 'متابع';
 
   @override
-  String get youreChattingWithAllYourFriends => 'لديك محادثة مع جميع أصدقائك';
-
-  @override
-  String get findNewFriendsToChatWith => 'ابحث عن أصدقاء جدد للدردشة معهم!';
-
-  @override
   String get messageWasDeleted => 'تم حذف هذه الرسالة';
 
   @override
@@ -3240,4 +3234,60 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get thisProfileIsUnavailable => 'هذا الملف الشخصي غير متاح';
+
+  @override
+  String get rateMembers => 'قيم الأعضاء';
+
+  @override
+  String get openChat => 'افتح المحادثة';
+
+  @override
+  String get weatherClear => 'صافي';
+
+  @override
+  String get weatherPartlyCloudy => 'غائم جزئيا';
+
+  @override
+  String get weatherCloudy => 'غائم';
+
+  @override
+  String get feelsLike => 'الحرارة المحسوسة';
+
+  @override
+  String get chanceOfRain => 'احتمال المطر';
+
+  @override
+  String get wind => 'الرياح';
+
+  @override
+  String get humidity => 'الرطوبة';
+
+  @override
+  String kmPerHour(int speed) {
+    return '$speed كم/س';
+  }
+
+  @override
+  String get weatherTipStorm => 'الجو عاصف، انتبه لنفسك والبس المناسب';
+
+  @override
+  String get weatherTipRain => 'فيه مطر، لا تنسى المظلة!';
+
+  @override
+  String get weatherTipHot => 'حر شديد، اشرب ماء وخلك في الظل';
+
+  @override
+  String get weatherTipWarm => 'الجو دافئ، البس شي خفيف';
+
+  @override
+  String get weatherTipNice => 'الجو حلو، استمتع!';
+
+  @override
+  String get weatherTipCool => 'فيه برودة خفيفة، خذ معك جاكيت';
+
+  @override
+  String get weatherTipCold => 'الجو بارد، تدفى زين';
+
+  @override
+  String get yourRatings => 'تقييماتك';
 }

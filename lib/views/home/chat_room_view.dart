@@ -97,6 +97,9 @@ class _ChatRoomViewState extends State<ChatRoomView> {
   bool _failed = false;
   bool _isSending = false;
 
+  // The server said the activity chat is closed.
+  bool _closed = false;
+
   // The message the next one replies to, shown above the input.
   ChatMessage? _replyingTo;
 
@@ -456,8 +459,8 @@ class _ChatRoomViewState extends State<ChatRoomView> {
         message: context.l10n.chatClosedActivityFinished,
         success: false,
       );
+      setState(() => _closed = true);
       unawaited(_chats.refresh());
-      Navigator.pop(context);
       return false;
     }
     if (result == 'not_visible_to_all') {
@@ -1118,6 +1121,23 @@ class _ChatRoomViewState extends State<ChatRoomView> {
   }
 
   Widget _buildComposer() {
+    if (_closed || widget.chat.isClosed) {
+      return SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+          child: Text(
+            context.l10n.chatClosed,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: SynkColors.textSecondary,
+            ),
+          ),
+        ),
+      );
+    }
     final replyingTo = _replyingTo;
     return SafeArea(
       top: false,

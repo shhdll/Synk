@@ -71,6 +71,11 @@ class ChatSummary {
 
   bool get isActivity => kind == ChatKind.activity;
 
+  // Activity chats stay readable, but sending stops a day after it ends.
+  bool get isClosed =>
+      activity != null &&
+      !DateTime.now().isBefore(activity!.endsAt.add(const Duration(days: 1)));
+
   String get title => activity?.title ?? otherUser?.name ?? '';
 
   DateTime get sortTime => lastMessageAt ?? createdAt;
@@ -100,6 +105,7 @@ class ChatSummary {
   factory ChatSummary.fromMap(Map<String, dynamic> map) {
     final kind = map['kind'] == 'direct' ? ChatKind.direct : ChatKind.activity;
     final startsAt = map['activity_starts_at'] as String?;
+    final endsAt = map['activity_ends_at'] as String?;
     final lastAt = map['last_message_at'] as String?;
 
     return ChatSummary(
@@ -111,6 +117,7 @@ class ChatSummary {
               id: map['activity_id'] as String,
               title: map['activity_title'] as String? ?? '',
               dateTime: DateTime.parse(startsAt).toLocal(),
+              endsAt: endsAt == null ? null : DateTime.parse(endsAt).toLocal(),
               location: '',
               photoUrl: map['activity_photo_url'] as String?,
               categoryLabel: map['activity_category_label'] as String? ?? '',

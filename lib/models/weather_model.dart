@@ -12,12 +12,16 @@ class ActivityWeather {
     required this.temperature,
     required this.rainChance,
     required this.windSpeed,
+    required this.feelsLike,
+    required this.humidity,
   });
 
   final WeatherCondition condition;
   final double temperature;
   final int rainChance;
   final double windSpeed;
+  final double feelsLike;
+  final int humidity;
 }
 
 class WeatherTooFarAhead implements Exception {
@@ -53,7 +57,8 @@ class WeatherModel {
       'latitude': '$latitude',
       'longitude': '$longitude',
       'hourly':
-          'temperature_2m,precipitation_probability,weather_code,wind_speed_10m',
+          'temperature_2m,precipitation_probability,weather_code,wind_speed_10m,'
+          'apparent_temperature,relative_humidity_2m',
       'timezone': 'GMT',
       'start_date': date,
       'end_date': date,
@@ -71,13 +76,16 @@ class WeatherModel {
     var index = times.indexWhere((t) => t.startsWith(target));
     if (index < 0) index = 0;
 
-    num? at(String field) => (hourly[field] as List)[index] as num?;
+    num? at(String field) => (hourly[field] as List?)?[index] as num?;
 
     final weather = ActivityWeather(
       condition: _condition((at('weather_code') ?? 0).toInt()),
       temperature: (at('temperature_2m') ?? 0).toDouble(),
       rainChance: (at('precipitation_probability') ?? 0).toInt(),
       windSpeed: (at('wind_speed_10m') ?? 0).toDouble(),
+      feelsLike: (at('apparent_temperature') ?? at('temperature_2m') ?? 0)
+          .toDouble(),
+      humidity: (at('relative_humidity_2m') ?? 0).toInt(),
     );
     _cache[key] = weather;
     return weather;
