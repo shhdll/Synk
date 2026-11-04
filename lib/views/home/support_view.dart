@@ -366,7 +366,8 @@ class _CategoryCard extends StatelessWidget {
   }
 }
 
-// Up to three screenshot thumbnails, then a dashed tile to add one.
+// Each screenshot takes a third of the row; the dashed tile to add one
+// fills the rest while there's room.
 class _Screenshots extends StatelessWidget {
   const _Screenshots({required this.controller});
 
@@ -376,47 +377,53 @@ class _Screenshots extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const gap = 10.0;
+    const slots = SupportModel.maxScreenshots;
     final shots = controller.screenshots;
 
     return SizedBox(
       height: _size,
-      child: Row(
-        children: [
-          for (final shot in shots) ...[
-            _Thumbnail(
-              file: shot,
-              onRemove: () => controller.removeScreenshot(shot),
-            ),
-            const SizedBox(width: 10),
-          ],
-          if (controller.canAddScreenshot)
-            Expanded(
-              child: GestureDetector(
-                onTap: controller.isSending ? null : controller.addScreenshot,
-                child: CustomPaint(
-                  painter: _DashedBorder(
-                    color: SynkColors.textSecondary.withValues(alpha: 0.45),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.add_photo_alternate_outlined,
-                          size: 28,
-                          color: SynkColors.textSecondary,
-                          semanticLabel: context.l10n.supportAddScreenshot,
-                        ),
-                      ],
-                    ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final third = (constraints.maxWidth - gap * (slots - 1)) / slots;
+          return Row(
+            children: [
+              for (final (i, shot) in shots.indexed) ...[
+                if (i > 0) const SizedBox(width: gap),
+                SizedBox(
+                  width: third,
+                  child: _Thumbnail(
+                    file: shot,
+                    onRemove: () => controller.removeScreenshot(shot),
                   ),
                 ),
-              ),
-            )
-          else
-            const Spacer(),
-        ],
+              ],
+              if (controller.canAddScreenshot) ...[
+                if (shots.isNotEmpty) const SizedBox(width: gap),
+                Expanded(child: _addTile(context)),
+              ],
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _addTile(BuildContext context) {
+    return GestureDetector(
+      onTap: controller.isSending ? null : controller.addScreenshot,
+      child: CustomPaint(
+        painter: _DashedBorder(
+          color: SynkColors.textSecondary.withValues(alpha: 0.45),
+        ),
+        child: Center(
+          child: Icon(
+            Icons.add_photo_alternate_outlined,
+            size: 28,
+            color: SynkColors.textSecondary,
+            semanticLabel: context.l10n.supportAddScreenshot,
+          ),
+        ),
       ),
     );
   }

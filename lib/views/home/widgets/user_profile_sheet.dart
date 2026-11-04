@@ -483,6 +483,7 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
   // The sheet's frame and handle, around a loading or unavailable state.
   Widget _buildStatusSheet(Widget child) {
     return Container(
+      width: double.infinity,
       decoration: const BoxDecoration(
         color: SynkColors.background,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),

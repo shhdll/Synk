@@ -125,14 +125,21 @@ class FriendsCardBox extends StatelessWidget {
 
 // A card of rows split by thin dividers.
 class FriendsListCard extends StatelessWidget {
-  const FriendsListCard({super.key, required this.children});
+  const FriendsListCard({
+    super.key,
+    required this.children,
+    this.padding = const EdgeInsets.symmetric(vertical: 6),
+  });
 
   final List<Widget> children;
+
+  // Zero when rows have swipe actions, so they reach the card's edges.
+  final EdgeInsetsGeometry padding;
 
   @override
   Widget build(BuildContext context) {
     return FriendsCardBox(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: padding,
       child: Material(
         color: Colors.transparent,
         child: Column(

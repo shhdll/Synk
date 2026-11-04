@@ -550,14 +550,14 @@ String topPickReasonText(TopPickReason reason) => switch (reason) {
   PopularNearYou() => appL10n.topPickPopularNearYou,
 };
 
-// "Thu Â· 8:30 PM Â· 3.2 km"
+// "Thu · 8:30 PM · 3.2 km"
 String deckMeta(Activity activity, double? km) {
   final date = activity.dateTime;
   return [
     weekdayShort(date),
     formatTime(date.hour, date.minute),
     if (km != null) appL10n.topPickDistanceKm(km.toStringAsFixed(1)),
-  ].join(' Â· ');
+  ].join(' · ');
 }
 
 const _cardRadius = BorderRadius.all(Radius.circular(24));
