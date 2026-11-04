@@ -169,7 +169,12 @@ class _ChatRoomViewState extends State<ChatRoomView> {
       setState(() => _messages = [..._messages]..[index] = message);
       return;
     }
-    setState(() => _messages = [..._messages, message]);
+    // Each one is loaded separately, so they can arrive out of order.
+    setState(
+      () =>
+          _messages = [..._messages, message]
+            ..sort((a, b) => a.createdAt.compareTo(b.createdAt)),
+    );
     unawaited(_chats.markRead(widget.chat.id));
     unawaited(_loadPhotoLinks([message]));
     // Someone who joined after the chat opened.

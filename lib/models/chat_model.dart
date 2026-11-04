@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -329,18 +330,27 @@ class ChatModel {
     };
   }
 
-  // The latest [limit] messages, oldest first.
+  // The latest [limit] messages, oldest first. The text is stored
+  // encrypted, so this goes through get_chat_messages, which decrypts it.
   Future<List<ChatMessage>> fetchMessages(
     String chatId, {
     int limit = 200,
+    List<String>? ids,
   }) async {
-    final rows = await _supabase
-        .from('chat_messages')
-        .select()
-        .eq('chat_id', chatId)
-        .order('created_at', ascending: false)
-        .limit(limit);
-    return rows.reversed.map(ChatMessage.fromMap).toList();
+    final response = await _supabase.rpc(
+      'get_chat_messages',
+      params: {
+        'target_chat_id': chatId,
+        'message_ids': ?ids,
+        'max_count': limit,
+      },
+    );
+    if (response is! List) return const [];
+    return response.reversed
+        .map(
+          (row) => ChatMessage.fromMap(Map<String, dynamic>.from(row as Map)),
+        )
+        .toList();
   }
 
   // Calls [onMessage] for each new message in the chat, and again when one
@@ -354,8 +364,18 @@ class ChatModel {
       column: 'chat_id',
       value: chatId,
     );
-    void deliver(PostgresChangePayload payload) =>
-        onMessage(ChatMessage.fromMap(payload.newRecord));
+    // Realtime only has the encrypted text, so load the message itself.
+    Future<void> deliver(PostgresChangePayload payload) async {
+      final id = payload.newRecord['id'] as String?;
+      if (id == null) return;
+      try {
+        final messages = await fetchMessages(chatId, ids: [id], limit: 1);
+        if (messages.isNotEmpty) onMessage(messages.first);
+      } catch (error) {
+        debugPrint('SYNK: new chat message failed to load: $error');
+      }
+    }
+
     return _supabase
         .channel('chat:$chatId')
         .onPostgresChanges(
