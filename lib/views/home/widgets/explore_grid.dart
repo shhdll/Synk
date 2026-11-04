@@ -8,17 +8,17 @@ import 'activity_thumbnail.dart';
 import 'for_you_deck.dart';
 
 class ExploreHeader extends StatelessWidget {
-  const ExploreHeader({super.key});
+  const ExploreHeader({super.key, required this.open, required this.onToggle});
+
+  final bool open;
+  final VoidCallback onToggle;
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      context.l10n.explore,
-      style: GoogleFonts.nunito(
-        fontSize: 20,
-        fontWeight: FontWeight.w900,
-        color: SynkColors.ink,
-      ),
+    return SectionFoldHeader(
+      title: context.l10n.explore,
+      open: open,
+      onToggle: onToggle,
     );
   }
 }

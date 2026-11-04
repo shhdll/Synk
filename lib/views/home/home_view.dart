@@ -89,6 +89,7 @@ class _HomeViewState extends State<HomeView> {
 
   final FocusNode _searchFocus = FocusNode();
   bool _codeBubbleExpanded = true;
+  bool _exploreOpen = true;
   Timer? _debounce;
   List<String> _recent = const [];
 
@@ -294,14 +295,43 @@ class _HomeViewState extends State<HomeView> {
             a.id: _friends.friendsGoingIn(a.id),
       },
       currentUserId: store.currentUserId,
-      participatingIds: {
-        for (final a in store.participating) a.id,
-        for (final a in activities)
-          if (a.participationStatus != null) a.id,
-      },
+      participatingIds: _participatingIds(activities),
       userLocation: _discoveryController.userLocation,
       limit: limit,
     );
+  }
+
+  // Activities the user already joined, asked to join or is waiting for.
+  Set<String> _participatingIds(List<Activity> activities) => {
+    for (final a in widget.activityStore.participating) a.id,
+    for (final a in activities)
+      if (a.participationStatus != null) a.id,
+  };
+
+  // Home leaves out the user's own activities.
+  List<Activity> _notJoined(List<Activity> activities) {
+    final ids = _participatingIds(activities);
+    return [
+      for (final a in activities)
+        if (!ids.contains(a.id)) a,
+    ];
+  }
+
+  Map<DateTime, int> _countsByDay() {
+    final controller = _discoveryController;
+    final matching = controller.filters
+        .withDate(DateOption.any)
+        .apply(
+          _notJoined(controller.allActivities),
+          userLocation: controller.userLocation,
+          search: controller.searchQuery,
+        );
+    final counts = <DateTime, int>{};
+    for (final a in matching) {
+      final day = DateUtils.dateOnly(a.dateTime);
+      counts[day] = (counts[day] ?? 0) + 1;
+    }
+    return counts;
   }
 
   // Null while loading; empty when there's nothing to show or it failed.
@@ -315,7 +345,7 @@ class _HomeViewState extends State<HomeView> {
   // Search results, best matches for the user first.
   // Returns the results and the id of a top result that matches the user.
   (List<Activity>, String?) _searchResults() {
-    final results = [..._discoveryController.filteredActivities];
+    final results = _notJoined(_discoveryController.filteredActivities);
     final scores = {
       for (final p in _rank(results, limit: results.length))
         p.activity.id: p.score,
@@ -415,27 +445,36 @@ class _HomeViewState extends State<HomeView> {
         else ...[
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(_gutter, 24, _gutter, 0),
-            sliver: SliverToBoxAdapter(child: ExploreHeader()),
+            sliver: SliverToBoxAdapter(
+              child: ExploreHeader(
+                open: _exploreOpen,
+                onToggle: () => setState(() => _exploreOpen = !_exploreOpen),
+              ),
+            ),
           ),
-          if (_discoveryController.feedCategories.isNotEmpty)
+          if (!_exploreOpen)
+            const SliverToBoxAdapter(child: SizedBox(height: 120))
+          else ...[
+            if (_discoveryController.feedCategories.isNotEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: _buildCategoryChipsBar(),
+                ),
+              ),
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: _buildCategoryChipsBar(),
+                padding: const EdgeInsets.only(top: 14),
+                child: DayStrip(
+                  filters: _discoveryController.filters,
+                  countsByDay: _countsByDay(),
+                  onDayTap: _discoveryController.selectDay,
+                  padding: const EdgeInsets.symmetric(horizontal: _gutter),
+                ),
               ),
             ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 14),
-              child: DayStrip(
-                filters: _discoveryController.filters,
-                countsByDay: _discoveryController.activityCountsByDay,
-                onDayTap: _discoveryController.selectDay,
-                padding: const EdgeInsets.symmetric(horizontal: _gutter),
-              ),
-            ),
-          ),
-          ..._buildExplore(),
+            ..._buildExplore(),
+          ],
         ],
       ],
     );
@@ -706,7 +745,7 @@ class _HomeViewState extends State<HomeView> {
       ];
     }
 
-    final activities = _discoveryController.filteredActivities;
+    final activities = _notJoined(_discoveryController.filteredActivities);
 
     if (activities.isEmpty) {
       final failed = _discoveryController.errorMessage != null;
@@ -715,7 +754,7 @@ class _HomeViewState extends State<HomeView> {
 
       return [
         SliverPadding(
-          padding: const EdgeInsets.only(top: 28),
+          padding: EdgeInsets.only(top: filtered ? 60 : 28),
           sliver: SliverToBoxAdapter(
             child: filtered
                 ? _NoMatches(
@@ -780,30 +819,32 @@ class _FeedFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final style = GoogleFonts.leagueSpartan(
+      fontSize: 18,
+      fontWeight: FontWeight.w800,
+      color: SynkColors.ink,
+    );
     return Padding(
-      padding: const EdgeInsets.only(top: 10),
-      child: Column(
+      padding: const EdgeInsets.only(top: 36),
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 6,
         children: [
-          Text(
-            context.l10n.couldntFindYourThing,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.leagueSpartan(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: SynkColors.ink,
-            ),
-          ),
+          Text(context.l10n.couldntFindYourThing, style: style),
           if (onCreate != null)
-            TextButton(
-              onPressed: onCreate,
-              style: TextButton.styleFrom(
-                foregroundColor: SynkColors.orangeDark,
-              ),
-              child: Text(
-                context.l10n.createOne,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
+            GestureDetector(
+              onTap: onCreate,
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  context.l10n.createOne,
+                  style: style.copyWith(
+                    color: SynkColors.orangeDark,
+                    decoration: TextDecoration.underline,
+                    decorationColor: SynkColors.orangeDark,
+                  ),
                 ),
               ),
             ),
@@ -836,20 +877,6 @@ class _NoMatches extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 96,
-              height: 96,
-              decoration: BoxDecoration(
-                color: SynkColors.orange.withValues(alpha: 0.16),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.event_busy_rounded,
-                size: 44,
-                color: SynkColors.orangeDark,
-              ),
-            ),
-            const SizedBox(height: 16),
             Text(
               title,
               textAlign: TextAlign.center,
@@ -869,7 +896,7 @@ class _NoMatches extends StatelessWidget {
                   FilledButton(
                     onPressed: onCreate,
                     style: FilledButton.styleFrom(
-                      backgroundColor: SynkColors.ink,
+                      backgroundColor: SynkColors.orange,
                       foregroundColor: Colors.white,
                       minimumSize: const Size(0, 44),
                       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -881,8 +908,11 @@ class _NoMatches extends StatelessWidget {
                 OutlinedButton(
                   onPressed: onClear,
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: SynkColors.ink,
-                    side: const BorderSide(color: SynkColors.ink, width: 1.5),
+                    foregroundColor: SynkColors.textSecondary,
+                    side: const BorderSide(
+                      color: SynkColors.textSecondary,
+                      width: 1.5,
+                    ),
                     minimumSize: const Size(0, 44),
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     shape: shape,
