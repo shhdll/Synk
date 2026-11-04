@@ -86,4 +86,27 @@ class SupportModel {
       return SupportResult.failed;
     }
   }
+
+  // From the login screen of a suspended account, so there's no session.
+  // The reply goes to the account's email.
+  Future<bool> sendAppeal({
+    required String email,
+    required String message,
+    String? appVersion,
+  }) async {
+    try {
+      await _supabase.functions.invoke(
+        'submit-support',
+        body: {
+          'action': 'appeal',
+          'email': email.trim(),
+          'message': message.trim(),
+          'app_version': ?appVersion,
+        },
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
 }

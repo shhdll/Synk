@@ -25,6 +25,21 @@ is only used when the form is submitted (`/auth/v1/verify`, then
 `config.js` holds the project URL and the public anon key (the same values the
 app ships with).
 
+## Admin dashboard
+
+`admin/` is the team's dashboard at `https://synk.cc/admin/`: overview numbers,
+support tickets, reports, users, activities and an audit log. Admins sign in
+with their normal Synk email and password. All data goes through the
+`admin_*` functions in `20261107100000_admin_dashboard.sql`, which check admin
+access on the server.
+
+To add an admin, run this in the Supabase SQL editor:
+
+```sql
+insert into private.admins (user_id)
+select id from auth.users where email = 'someone@example.com';
+```
+
 ## Deploy
 
 Serve this folder as the root of `https://synk.cc` (Netlify, Cloudflare Pages,

@@ -1,8 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-// Reports about other users, reviewed by the Synk team. Reports go through
-// report_user() (supabase/migrations/20261028210000_user_reports.sql), and
-// users can't read them back.
+// Reports about other users and activities, reviewed by the Synk team in the
+// admin dashboard. Reports go through report_user()
+// (supabase/migrations/20261028210000_user_reports.sql) and report_activity()
+// (20261107100000_admin_dashboard.sql), and users can't read them back.
 
 // The values match the reason check in user_reports.
 enum ReportReason {
@@ -30,6 +31,25 @@ class ReportsModel {
       'report_user',
       params: {
         'target_user_id': userId,
+        'report_reason': reason.value,
+        'report_details': details,
+      },
+    );
+    if (response is Map && response['result'] is String) {
+      return response['result'] as String;
+    }
+    return '';
+  }
+
+  Future<String> reportActivity({
+    required String activityId,
+    required ReportReason reason,
+    String? details,
+  }) async {
+    final response = await _supabase.rpc(
+      'report_activity',
+      params: {
+        'target_activity_id': activityId,
         'report_reason': reason.value,
         'report_details': details,
       },

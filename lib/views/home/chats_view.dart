@@ -18,6 +18,7 @@ import 'widgets/chat_list_tile.dart';
 import 'widgets/empty_state.dart';
 import 'widgets/friends_list_widgets.dart';
 import '../widgets/synk_blob_background.dart';
+import 'main_shell.dart';
 
 // Opens the chat with a friend, creating it the first time.
 Future<void> openDirectChatWith(BuildContext context, FriendUser friend) async {
@@ -181,7 +182,10 @@ class _ChatsViewState extends State<ChatsView> {
               child: RefreshIndicator(
                 color: SynkColors.orangeDark,
                 backgroundColor: Colors.white,
-                onRefresh: _chats.refresh,
+                onRefresh: () {
+                  unawaited(MainShell.checkAccount());
+                  return _chats.refresh();
+                },
                 child: ListenableBuilder(
                   listenable: _chats,
                   builder: (context, _) => _buildList(fabBottom + 72),

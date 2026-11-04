@@ -10,6 +10,7 @@ import '../core/constants/synk_colors.dart';
 import '../screens/auth/email_verification_screen.dart';
 import 'widgets/synk_blob_background.dart';
 import 'widgets/synk_input_decoration.dart';
+import 'widgets/suspended_account_sheet.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -119,6 +120,12 @@ class _LoginViewState extends State<LoginView> {
               sendEmailOnOpen: true,
             ),
           ),
+        );
+        return;
+      case LoginErrorType.suspended:
+        showSuspendedAccountSheet(
+          context: context,
+          email: _loginController.accountEmail ?? '',
         );
         return;
       case LoginErrorType.other:

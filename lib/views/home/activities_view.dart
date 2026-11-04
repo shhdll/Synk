@@ -23,6 +23,7 @@ import 'widgets/code_bubble.dart';
 import 'widgets/empty_state.dart';
 import 'widgets/my_activity_card.dart';
 import '../create_activity/create_activity_view.dart';
+import 'main_shell.dart';
 
 class ActivitiesView extends StatefulWidget {
   const ActivitiesView({super.key, required this.activityStore});
@@ -150,6 +151,7 @@ class _ActivitiesViewState extends State<ActivitiesView> {
   }
 
   Future<void> _refresh() async {
+    unawaited(MainShell.checkAccount());
     try {
       final results = await Future.wait([
         _activitiesModel.fetchMine(),

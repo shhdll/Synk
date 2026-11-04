@@ -95,6 +95,33 @@ class AuthModel {
     }
   }
 
+  // A saved session keeps working until it expires, even after the account
+  // was deleted or suspended in the admin dashboard. my_account_status()
+  // (20261107130000_my_account_status.sql) catches that. Errors are ignored, so
+  // being offline never signs anyone out. Returns true when it signed out.
+  Future<bool> signOutIfAccountGone() async {
+    if (_supabase.auth.currentSession == null) return false;
+    String? status;
+    try {
+      status = await _supabase.rpc('my_account_status') as String?;
+    } catch (_) {
+      return false;
+    }
+    if (status != 'deleted' && status != 'suspended') return false;
+
+    if (PushNotificationService.instance.isInitialized) {
+      try {
+        await PushNotificationService.instance.unregisterCurrentDevice(
+          client: _supabase,
+        );
+      } catch (_) {}
+    }
+    try {
+      await _supabase.auth.signOut(scope: SignOutScope.local);
+    } catch (_) {}
+    return true;
+  }
+
   // Listens for authentication state changes, including password recovery.
   Stream<AuthState> get authStateChanges => _supabase.auth.onAuthStateChange;
 

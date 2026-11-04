@@ -7,7 +7,13 @@ import '../utils/auth_errors.dart';
 import '../views/onboarding_view.dart';
 
 // Which field a login error belongs to, so the view can show it there.
-enum LoginErrorType { noAccount, wrongCredentials, emailNotConfirmed, other }
+enum LoginErrorType {
+  noAccount,
+  wrongCredentials,
+  emailNotConfirmed,
+  suspended,
+  other,
+}
 
 class LoginController extends ChangeNotifier {
   LoginController({AuthModel? authModel})
@@ -108,6 +114,10 @@ class LoginController extends ChangeNotifier {
       _errorMessage = byUsername
           ? appL10n.incorrectUsernameOrPassword
           : appL10n.incorrectEmailOrPassword;
+    } else if (e.code == 'user_banned' || message.contains('banned')) {
+      // Suspended from the admin dashboard.
+      _errorType = LoginErrorType.suspended;
+      _errorMessage = appL10n.accountSuspended;
     } else if (isNetworkError(e)) {
       _errorType = LoginErrorType.other;
       _errorMessage = kNetworkErrorMessage;

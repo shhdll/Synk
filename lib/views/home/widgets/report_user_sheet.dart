@@ -22,10 +22,25 @@ Future<void> showReportUserSheet({
   );
 }
 
-class ReportUserSheet extends StatefulWidget {
-  const ReportUserSheet({super.key, required this.user});
+// Same flow for an activity, without the block option.
+Future<void> showReportActivitySheet({
+  required BuildContext context,
+  required String activityId,
+}) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => ReportUserSheet(activityId: activityId),
+  );
+}
 
-  final FriendUser user;
+class ReportUserSheet extends StatefulWidget {
+  const ReportUserSheet({super.key, this.user, this.activityId})
+    : assert((user == null) != (activityId == null));
+
+  final FriendUser? user;
+  final String? activityId;
 
   @override
   State<ReportUserSheet> createState() => _ReportUserSheetState();
@@ -43,7 +58,9 @@ class _ReportUserSheetState extends State<ReportUserSheet> {
   // Which button is busy, so only that one shows the spinner.
   bool _submittingWithBlock = false;
 
-  String get _firstName => widget.user.name.split(' ').first;
+  bool get _isActivity => widget.activityId != null;
+
+  String get _firstName => widget.user?.name.split(' ').first ?? '';
 
   // "Something else" needs an explanation.
   bool get _detailsRequired => _reason == ReportReason.other;
@@ -82,11 +99,17 @@ class _ReportUserSheetState extends State<ReportUserSheet> {
     String result;
     try {
       final details = _details.text.trim();
-      result = await _reports.reportUser(
-        userId: widget.user.id,
-        reason: reason,
-        details: details.isEmpty ? null : details,
-      );
+      result = _isActivity
+          ? await _reports.reportActivity(
+              activityId: widget.activityId!,
+              reason: reason,
+              details: details.isEmpty ? null : details,
+            )
+          : await _reports.reportUser(
+              userId: widget.user!.id,
+              reason: reason,
+              details: details.isEmpty ? null : details,
+            );
     } catch (_) {
       result = '';
     }
@@ -104,7 +127,7 @@ class _ReportUserSheetState extends State<ReportUserSheet> {
 
     // An earlier open report still counts, so blocking goes ahead either way.
     final blocked =
-        block && await FriendsController.instance.block(widget.user);
+        block && await FriendsController.instance.block(widget.user!);
 
     if (!mounted) return;
 
@@ -118,7 +141,9 @@ class _ReportUserSheetState extends State<ReportUserSheet> {
         title: blocked
             ? l10n.reportedAndBlockedName(_firstName)
             : result == 'already_reported'
-            ? l10n.alreadyReportedName(_firstName)
+            ? (_isActivity
+                  ? l10n.alreadyReportedActivity
+                  : l10n.alreadyReportedName(_firstName))
             : l10n.reportSent,
       );
     }
@@ -180,6 +205,7 @@ class _ReportUserSheetState extends State<ReportUserSheet> {
                       ? _ReasonStep(
                           key: const ValueKey('reasons'),
                           firstName: _firstName,
+                          isActivity: _isActivity,
                           onPick: (picked) => setState(() => _reason = picked),
                         )
                       : _buildDetailsStep(reason, media.padding.bottom),
@@ -203,7 +229,7 @@ class _ReportUserSheetState extends State<ReportUserSheet> {
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
             children: [
               Text(
-                _reasonLabel(context, reason),
+                _reasonLabel(context, reason, isActivity: _isActivity),
                 style: _headingStyle,
               ),
               const SizedBox(height: 6),
@@ -263,14 +289,16 @@ class _ReportUserSheetState extends State<ReportUserSheet> {
                 busy: _isSubmitting && !_submittingWithBlock,
                 onPressed: _canSubmit ? () => _submit(block: false) : null,
               ),
-              const SizedBox(height: 8),
-              _SheetButton(
-                label: l10n.reportAndBlockName(_firstName),
-                background: SynkColors.badge.withValues(alpha: 0.10),
-                foreground: SynkColors.badge,
-                busy: _isSubmitting && _submittingWithBlock,
-                onPressed: _canSubmit ? () => _submit(block: true) : null,
-              ),
+              if (!_isActivity) ...[
+                const SizedBox(height: 8),
+                _SheetButton(
+                  label: l10n.reportAndBlockName(_firstName),
+                  background: SynkColors.badge.withValues(alpha: 0.10),
+                  foreground: SynkColors.badge,
+                  busy: _isSubmitting && _submittingWithBlock,
+                  onPressed: _canSubmit ? () => _submit(block: true) : null,
+                ),
+              ],
             ],
           ),
         ),
@@ -295,12 +323,17 @@ const _noteStyle = TextStyle(
   color: SynkColors.textSecondary,
 );
 
-String _reasonLabel(BuildContext context, ReportReason reason) {
+String _reasonLabel(
+  BuildContext context,
+  ReportReason reason, {
+  bool isActivity = false,
+}) {
   final l = context.l10n;
   return switch (reason) {
     ReportReason.harassment => l.reportReasonHarassment,
     ReportReason.spam => l.reportReasonSpam,
-    ReportReason.fakeProfile => l.reportReasonFakeProfile,
+    ReportReason.fakeProfile =>
+      isActivity ? l.reportReasonMisleading : l.reportReasonFakeProfile,
     ReportReason.inappropriateContent => l.reportReasonInappropriateContent,
     ReportReason.other => l.reportReasonOther,
   };
@@ -308,9 +341,15 @@ String _reasonLabel(BuildContext context, ReportReason reason) {
 
 // The first step: a question, a short note and a plain list of reasons.
 class _ReasonStep extends StatelessWidget {
-  const _ReasonStep({super.key, required this.firstName, required this.onPick});
+  const _ReasonStep({
+    super.key,
+    required this.firstName,
+    required this.isActivity,
+    required this.onPick,
+  });
 
   final String firstName;
+  final bool isActivity;
   final ValueChanged<ReportReason> onPick;
 
   @override
@@ -323,10 +362,17 @@ class _ReasonStep extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(context.l10n.reportWhyName(firstName), style: _headingStyle),
+              Text(
+                isActivity
+                    ? context.l10n.reportActivityWhy
+                    : context.l10n.reportWhyName(firstName),
+                style: _headingStyle,
+              ),
               const SizedBox(height: 6),
               Text(
-                context.l10n.reportUserMessage(firstName),
+                isActivity
+                    ? context.l10n.reportActivityMessage
+                    : context.l10n.reportUserMessage(firstName),
                 style: _noteStyle,
               ),
             ],
@@ -341,7 +387,7 @@ class _ReasonStep extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      _reasonLabel(context, reason),
+                      _reasonLabel(context, reason, isActivity: isActivity),
                       style: const TextStyle(
                         fontSize: 15,
                         color: SynkColors.textPrimary,
