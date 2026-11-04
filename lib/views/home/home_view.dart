@@ -84,6 +84,10 @@ class _HomeViewState extends State<HomeView> {
   Map<String, dynamic> _profile = const {};
   bool _profileLoaded = false;
 
+  // Learned from what the user hosted, joined, opened and skipped.
+  Taste _taste = Taste.none;
+  bool _tasteLoaded = false;
+
   // A new value deals a fresh For you deck.
   int _deckSession = 0;
 
@@ -104,6 +108,7 @@ class _HomeViewState extends State<HomeView> {
     super.initState();
     _discoveryController.init();
     _loadProfile();
+    _loadTaste();
     _loadRecent();
     _searchFocus.addListener(() {
       if (mounted) setState(() {});
@@ -163,6 +168,16 @@ class _HomeViewState extends State<HomeView> {
     }
   }
 
+  Future<void> _loadTaste() async {
+    final history = await _swipes.fetchHistory();
+    if (mounted) {
+      setState(() {
+        _taste = Taste.fromHistory(history);
+        _tasteLoaded = true;
+      });
+    }
+  }
+
   Future<void> _loadRecent() async {
     final recent = await _recentSearches.load();
     if (mounted) setState(() => _recent = recent);
@@ -183,6 +198,7 @@ class _HomeViewState extends State<HomeView> {
     await Future.wait([
       _discoveryController.loadFeed(isSilent: true),
       _loadProfile(),
+      _loadTaste(),
     ]);
     if (mounted) setState(() => _deckSession++);
   }
@@ -288,6 +304,7 @@ class _HomeViewState extends State<HomeView> {
           (_profile['interests'] as List?)?.whereType<String>().toList() ??
           const [],
       preferredSetting: _profile['activity_type'] as String?,
+      taste: _taste,
       friendsGoing: <String, List<FriendUser>>{
         for (final a in activities)
           if (_friends.friendsGoingIn(a.id).isNotEmpty)
@@ -308,7 +325,7 @@ class _HomeViewState extends State<HomeView> {
   List<TopPick>? _deckPicks() {
     final controller = _discoveryController;
     if (controller.errorMessage != null) return const [];
-    if (controller.isLoading || !_profileLoaded) return null;
+    if (controller.isLoading || !_profileLoaded || !_tasteLoaded) return null;
     return _rank(controller.allActivities);
   }
 
