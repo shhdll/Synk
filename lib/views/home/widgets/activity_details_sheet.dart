@@ -26,6 +26,7 @@ import 'activity_weather_card.dart';
 import 'activity_status_chip.dart';
 import 'overlapping_activity_notice.dart';
 import 'chat_share_sheets.dart';
+import 'report_user_sheet.dart';
 import 'host_transfer_sheet.dart';
 import 'user_profile_sheet.dart';
 
@@ -1236,8 +1237,9 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
           ),
         ),
 
-        // Top controls: Close, and Share (in a chat or as a link) for
-        // upcoming public activities (friends can't open private ones).
+        // Top controls: Close, Share (in a chat or as a link) for upcoming
+        // public activities (friends can't open private ones), and Report
+        // for anyone but the host.
         Positioned(
           top: 20,
           left: 16,
@@ -1250,12 +1252,28 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                 tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                 onTap: () => Navigator.of(context).pop(),
               ),
-              if (_currentActivity.isPublic && !_currentActivity.isPast)
-                _buildHeaderButton(
-                  icon: Icons.ios_share_rounded,
-                  tooltip: context.l10n.share,
-                  onTap: () => showShareToChatSheet(context, _currentActivity),
-                ),
+              Row(
+                children: [
+                  if (_currentActivity.isPublic && !_currentActivity.isPast)
+                    _buildHeaderButton(
+                      icon: Icons.ios_share_rounded,
+                      tooltip: context.l10n.share,
+                      onTap: () =>
+                          showShareToChatSheet(context, _currentActivity),
+                    ),
+                  if (!_isViewerHost && _viewerId != null) ...[
+                    const SizedBox(width: 8),
+                    _buildHeaderButton(
+                      icon: Icons.flag_outlined,
+                      tooltip: context.l10n.reportActivity,
+                      onTap: () => showReportActivitySheet(
+                        context: context,
+                        activityId: _currentActivity.id,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ],
           ),
         ),

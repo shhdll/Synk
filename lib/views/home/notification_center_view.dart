@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 
@@ -16,6 +18,7 @@ import 'friends_view.dart';
 import 'notification_settings_view.dart';
 import 'schedule_conflict_resolution_view.dart';
 import 'widgets/activity_thumbnail.dart';
+import 'main_shell.dart';
 
 // The list behind the bell: friend requests on top, then notifications in
 // New, Today, Yesterday, This week and Earlier. Opening it marks everything
@@ -80,6 +83,7 @@ class _NotificationCenterViewState extends State<NotificationCenterView> {
   }
 
   Future<void> _refresh() async {
+    unawaited(MainShell.checkAccount());
     await Future.wait([_c.refresh(), _friends.refresh()]);
     if (!mounted) return;
     setState(_keepNew);

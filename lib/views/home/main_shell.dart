@@ -25,11 +25,17 @@ import 'schedule_conflict_resolution_view.dart';
 import 'widgets/activity_rating_sheet.dart';
 import 'widgets/bottom_bar.dart';
 import 'widgets/streak_widgets.dart';
+import '../welcome_view.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key, this.initialTab = HomeTab.home});
 
   final HomeTab initialTab;
+
+  // Pull to refresh in the tabs also checks that the account wasn't
+  // suspended or deleted, so the user is sent out right away.
+  static Future<void> checkAccount() => _accountCheck?.call() ?? Future.value();
+  static Future<void> Function()? _accountCheck;
 
   @override
   State<MainShell> createState() => _MainShellState();
@@ -86,6 +92,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
 
     unawaited(PushNotificationService.instance.registerForCurrentUser());
     unawaited(_authModel.refreshIfEmailChangePending());
+    MainShell._accountCheck = _leaveIfAccountGone;
+    unawaited(_leaveIfAccountGone());
 
     // Loads hosted, participating, and public activities once, then shows
     // the opening pop-ups one after another.
@@ -96,6 +104,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       _requestPollInterval,
       (_) {
         _loadPendingRequestCount();
+        unawaited(_leaveIfAccountGone());
         unawaited(_requireScheduleConflictResolution());
         unawaited(_notifications.refresh());
         unawaited(FriendsController.instance.refresh());
@@ -126,7 +135,18 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       unawaited(PushNotificationService.instance.registerForCurrentUser());
       // Picks up an email change confirmed in the browser.
       unawaited(_authModel.refreshIfEmailChangePending());
+      unawaited(_leaveIfAccountGone());
     }
+  }
+
+  // The account was deleted or suspended: back to the welcome screen, the
+  // same way Log out does it.
+  Future<void> _leaveIfAccountGone() async {
+    if (!await _authModel.signOutIfAccountGone() || !mounted) return;
+    Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const WelcomeView()),
+      (route) => false,
+    );
   }
 
   // After a block or unblock: the lists and chats the server changed, so
@@ -283,6 +303,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    if (MainShell._accountCheck == _leaveIfAccountGone) {
+      MainShell._accountCheck = null;
+    }
     _requestPoll?.cancel();
     PushNotificationService.instance.setActivityUpdatedHandler(null);
     PushNotificationService.instance.setMessageReceivedHandler(null);
@@ -354,6 +377,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
           selected: _tab,
           onSelect: (tab) {
             setState(() => _tab = tab);
+            unawaited(_leaveIfAccountGone());
             if (tab == HomeTab.activities) _loadPendingRequestCount();
             if (tab == HomeTab.chat) {
               unawaited(ChatController.instance.refresh());

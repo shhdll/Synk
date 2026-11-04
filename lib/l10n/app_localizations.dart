@@ -464,6 +464,42 @@ abstract class AppLocalizations {
   /// **'Unable to log in. Please try again.'**
   String get unableToLogInPleaseTry;
 
+  /// No description provided for @accountSuspended.
+  ///
+  /// In en, this message translates to:
+  /// **'This account is suspended.'**
+  String get accountSuspended;
+
+  /// No description provided for @suspendedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is suspended'**
+  String get suspendedTitle;
+
+  /// No description provided for @suspendedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'If you think this is a mistake, tell us what happened. We\'ll reply to {email}.'**
+  String suspendedMessage(Object email);
+
+  /// No description provided for @suspendedMessageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your message'**
+  String get suspendedMessageHint;
+
+  /// No description provided for @contactSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact support'**
+  String get contactSupport;
+
+  /// No description provided for @suspendedSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Message sent. We\'ll reply by email.'**
+  String get suspendedSent;
+
   /// No description provided for @noAccountFoundWithThisUsername.
   ///
   /// In en, this message translates to:
@@ -4574,6 +4610,36 @@ abstract class AppLocalizations {
   /// **'You already reported {name}'**
   String alreadyReportedName(Object name);
 
+  /// No description provided for @reportActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Report activity'**
+  String get reportActivity;
+
+  /// No description provided for @reportActivityWhy.
+  ///
+  /// In en, this message translates to:
+  /// **'Why are you reporting this activity?'**
+  String get reportActivityWhy;
+
+  /// No description provided for @reportActivityMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The host won\'t know you reported it.'**
+  String get reportActivityMessage;
+
+  /// No description provided for @reportReasonMisleading.
+  ///
+  /// In en, this message translates to:
+  /// **'Fake or misleading'**
+  String get reportReasonMisleading;
+
+  /// No description provided for @alreadyReportedActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'You already reported this activity'**
+  String get alreadyReportedActivity;
+
   /// No description provided for @blockedUsersInfo.
   ///
   /// In en, this message translates to:
@@ -5353,12 +5419,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Free on the App Store'**
   String get ntfyGetAppHint;
-
-  /// No description provided for @contactSupport.
-  ///
-  /// In en, this message translates to:
-  /// **'Contact support'**
-  String get contactSupport;
 
   /// No description provided for @supportIntro.
   ///

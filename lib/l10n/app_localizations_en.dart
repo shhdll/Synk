@@ -198,6 +198,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unableToLogInPleaseTry => 'Unable to log in. Please try again.';
 
   @override
+  String get accountSuspended => 'This account is suspended.';
+
+  @override
+  String get suspendedTitle => 'Your account is suspended';
+
+  @override
+  String suspendedMessage(Object email) {
+    return 'If you think this is a mistake, tell us what happened. We\'ll reply to $email.';
+  }
+
+  @override
+  String get suspendedMessageHint => 'Your message';
+
+  @override
+  String get contactSupport => 'Contact support';
+
+  @override
+  String get suspendedSent => 'Message sent. We\'ll reply by email.';
+
+  @override
   String get noAccountFoundWithThisUsername =>
       'No account found with this username';
 
@@ -2588,6 +2608,21 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get reportActivity => 'Report activity';
+
+  @override
+  String get reportActivityWhy => 'Why are you reporting this activity?';
+
+  @override
+  String get reportActivityMessage => 'The host won\'t know you reported it.';
+
+  @override
+  String get reportReasonMisleading => 'Fake or misleading';
+
+  @override
+  String get alreadyReportedActivity => 'You already reported this activity';
+
+  @override
   String get blockedUsersInfo =>
       'Blocked users can\'t find you or send you friend requests. They aren\'t told they\'re blocked.';
 
@@ -3043,9 +3078,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ntfyGetAppHint => 'Free on the App Store';
-
-  @override
-  String get contactSupport => 'Contact support';
 
   @override
   String get supportIntro =>

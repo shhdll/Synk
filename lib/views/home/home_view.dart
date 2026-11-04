@@ -34,6 +34,7 @@ import 'widgets/home_search_view.dart';
 import 'widgets/notification_bell.dart';
 import 'widgets/streak_widgets.dart';
 import 'widgets/synk_filter_chip.dart';
+import 'main_shell.dart';
 
 // Home: header, search, the For you deck and the Explore grid. While the
 // search field is in use, search takes the place of the deck and the grid.
@@ -196,6 +197,7 @@ class _HomeViewState extends State<HomeView> {
 
   // Pull to refresh: new feed and profile, then a fresh deck.
   Future<void> _refresh() async {
+    unawaited(MainShell.checkAccount());
     await Future.wait([
       _discoveryController.loadFeed(isSilent: true),
       _loadProfile(),
