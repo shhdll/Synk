@@ -89,6 +89,10 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
   WeeklyStreak? _streak;
   bool _loading = true;
 
+  // The profile row came back empty, not failed: the person blocked the
+  // viewer, or the account is gone. Shown the same way, without a reason.
+  bool _unavailable = false;
+
   @override
   void initState() {
     super.initState();
@@ -97,6 +101,7 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
 
   Future<void> _load() async {
     final client = Supabase.instance.client;
+    var profileFailed = false;
     final results = await Future.wait<Object?>([
       // select() so a missing column can't break it.
       client
@@ -104,7 +109,13 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
           .select()
           .eq('id', widget.userId)
           .maybeSingle()
-          .then<Object?>((row) => row, onError: (_) => null),
+          .then<Object?>(
+            (row) => row,
+            onError: (_) {
+              profileFailed = true;
+              return null;
+            },
+          ),
       ActivitiesModel()
           .fetchCompletedCount(userId: widget.userId)
           .then<Object?>((count) => count, onError: (_) => null),
@@ -118,6 +129,7 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
     if (!mounted) return;
     setState(() {
       _profile = results[0] as Map<String, dynamic>?;
+      _unavailable = !profileFailed && _profile == null;
       _completedCount = results[1] as int?;
       _friends = results[2] as List<FriendUser>?;
       final times = results[3] as List<DateTime>?;
@@ -157,6 +169,26 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
         : fallback;
 
     final media = MediaQuery.of(context);
+
+    // Nothing passed in by the opener (name, photo) is shown until the
+    // lookup finishes: an old link or notification may point to someone
+    // whose profile is no longer available.
+    if (_loading) {
+      return _buildStatusSheet(
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 36),
+          child: SizedBox(
+            width: 26,
+            height: 26,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.6,
+              color: SynkColors.orangeDark,
+            ),
+          ),
+        ),
+      );
+    }
+    if (_unavailable) return _buildUnavailable(context);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -198,19 +230,9 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
                     clipBehavior: Clip.none,
                     alignment: Alignment.bottomCenter,
                     children: [
-                      // Plain while loading, so the default color doesn't flash.
-                      _loading
-                          ? Container(
-                              height: 100,
-                              decoration: BoxDecoration(
-                                color: SynkColors.beige.withValues(alpha: 0.35),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                            )
-                          : ProfileHeaderBanner.forProfile(
-                              _profile,
-                              height: 100,
-                            ),
+                      // Built only after loading (see build()), so the
+                      // default color never flashes.
+                      ProfileHeaderBanner.forProfile(_profile, height: 100),
                       Positioned(
                         bottom: -50,
                         child: GestureDetector(
@@ -349,17 +371,6 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
                       ),
                     ),
                   ],
-                  if (_loading) ...[
-                    const SizedBox(height: 24),
-                    const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.4,
-                        color: SynkColors.orangeDark,
-                      ),
-                    ),
-                  ],
                   if (bio != null) ...[
                     const SizedBox(height: 20),
                     _Card(
@@ -431,6 +442,73 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
           ),
         );
       },
+    );
+  }
+
+  // Only this line, nothing about who it is or why.
+  Widget _buildUnavailable(BuildContext context) {
+    return _buildStatusSheet(
+      Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 28),
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: SynkColors.textSecondary.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.person_off_outlined,
+              size: 32,
+              color: SynkColors.labelGrey,
+            ),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            context.l10n.thisProfileIsUnavailable,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w800,
+              color: SynkColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // The sheet's frame and handle, around a loading or unavailable state.
+  Widget _buildStatusSheet(Widget child) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: SynkColors.background,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          controller: widget.scrollController,
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: SynkColors.textSecondary.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 12),
+              child,
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

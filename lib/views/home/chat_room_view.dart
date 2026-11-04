@@ -27,6 +27,7 @@ import 'widgets/discovery_activity_card.dart';
 import 'widgets/friend_options_sheet.dart';
 import 'widgets/user_avatar.dart';
 import '../widgets/chat_wallpaper.dart';
+import '../widgets/default_avatar.dart';
 
 // [activityStore] lets activities open over the chat with the app's own
 // activity data; without it they open on their own page.
@@ -294,11 +295,7 @@ class _ChatRoomViewState extends State<ChatRoomView> {
                         padding: const EdgeInsets.symmetric(vertical: 6),
                         child: Row(
                           children: [
-                            UserAvatar(
-                              avatarUrl: user.avatarUrl,
-                              gender: user.gender,
-                              size: 36,
-                            ),
+                            _MemberAvatar(user: user, size: 36),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
@@ -718,7 +715,8 @@ class _ChatRoomViewState extends State<ChatRoomView> {
   }
 
   void _openProfile(FriendUser user) {
-    if (user.id == _me) return;
+    // Nothing to open for someone in a block with you, either way.
+    if (user.id == _me || user.isRestricted) return;
     openFriendProfile(
       context,
       user,
@@ -731,7 +729,8 @@ class _ChatRoomViewState extends State<ChatRoomView> {
   String _memberNames() {
     final others = _members.values
         .where((u) => u.id != _me)
-        .map((u) => u.name.split(' ').first)
+        // "Synk user" stays whole.
+        .map((u) => u.isHidden ? u.name : u.name.split(' ').first)
         .where((name) => name.isNotEmpty);
     return [
       ...others.map(bidiIsolate),
@@ -1671,13 +1670,13 @@ class _MessageBubble extends StatelessWidget {
         child: Align(alignment: AlignmentDirectional.centerEnd, child: bubble),
       );
     } else {
-      row = _buildTheirRow(bubble);
+      row = _buildTheirRow(context, bubble);
     }
     if (onReply == null) return row;
     return _SwipeToReply(onReply: onReply!, child: row);
   }
 
-  Widget _buildTheirRow(Widget bubble) {
+  Widget _buildTheirRow(BuildContext context, Widget bubble) {
     return Padding(
       padding: const EdgeInsets.only(top: 3),
       child: Row(
@@ -1686,14 +1685,19 @@ class _MessageBubble extends StatelessWidget {
           if (isGroupChat) ...[
             showAvatar
                 ? GestureDetector(
-                    onTap: sender == null || onSenderTap == null
+                    onTap:
+                        sender == null ||
+                            onSenderTap == null ||
+                            sender!.isRestricted
                         ? null
                         : () => onSenderTap!(sender!),
-                    child: UserAvatar(
-                      avatarUrl: sender?.avatarUrl,
-                      gender: sender?.gender,
-                      size: _avatarSize,
-                    ),
+                    child: sender == null
+                        ? const UserAvatar(
+                            avatarUrl: null,
+                            gender: null,
+                            size: _avatarSize,
+                          )
+                        : _MemberAvatar(user: sender!, size: _avatarSize),
                   )
                 : const SizedBox(width: _avatarSize),
             const SizedBox(width: 8),
@@ -1709,14 +1713,42 @@ class _MessageBubble extends StatelessWidget {
                       bottom: 3,
                       top: 6,
                     ),
-                    child: Text(
-                      sender!.name,
-                      textDirection: textDirectionOf(sender!.name),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: SynkColors.tealText,
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            sender!.name,
+                            textDirection: textDirectionOf(sender!.name),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: sender!.isRestricted
+                                  ? SynkColors.textSecondary
+                                  : SynkColors.tealText,
+                            ),
+                          ),
+                        ),
+                        if (sender!.blockedByMe) ...[
+                          const SizedBox(width: 4),
+                          const Icon(
+                            Icons.lock_outline_rounded,
+                            size: 12,
+                            color: SynkColors.labelGrey,
+                          ),
+                          const SizedBox(width: 2),
+                          Text(
+                            context.l10n.blockedTag,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: SynkColors.labelGrey,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
                 bubble,
@@ -1820,6 +1852,27 @@ class _SwipeToReplyState extends State<_SwipeToReply>
           ),
         ],
       ),
+    );
+  }
+}
+
+// A chat member's photo. Anyone in a block with the viewer, either way,
+// gets the default avatar for their gender instead of their real photo.
+class _MemberAvatar extends StatelessWidget {
+  const _MemberAvatar({required this.user, required this.size});
+
+  final FriendUser user;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    if (user.isRestricted) {
+      return DefaultAvatar(gender: user.gender, size: size);
+    }
+    return UserAvatar(
+      avatarUrl: user.avatarUrl,
+      gender: user.gender,
+      size: size,
     );
   }
 }

@@ -1,9 +1,11 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/l10n.dart';
 import 'activity_model.dart';
 import 'friends_model.dart';
 import 'place_search_model.dart';
@@ -26,6 +28,7 @@ class ChatSummary {
     this.lastMessageBody,
     this.lastMessageSenderId,
     this.lastMessageSenderName,
+    this.lastMessageSenderHidden = false,
     this.lastMessageAt,
     this.lastMessageIsDeleted = false,
     this.lastMessageHasPhoto = false,
@@ -49,6 +52,9 @@ class ChatSummary {
   final String? lastMessageBody;
   final String? lastMessageSenderId;
   final String? lastMessageSenderName;
+
+  // The sender blocked the viewer; the server left their name out.
+  final bool lastMessageSenderHidden;
   final DateTime? lastMessageAt;
   final bool lastMessageIsDeleted;
   final bool lastMessageHasPhoto;
@@ -80,6 +86,7 @@ class ChatSummary {
       lastMessageBody: lastMessageBody,
       lastMessageSenderId: lastMessageSenderId,
       lastMessageSenderName: lastMessageSenderName,
+      lastMessageSenderHidden: lastMessageSenderHidden,
       lastMessageAt: lastMessageAt,
       lastMessageIsDeleted: lastMessageIsDeleted,
       lastMessageHasPhoto: lastMessageHasPhoto,
@@ -123,6 +130,7 @@ class ChatSummary {
       lastMessageBody: map['last_message_body'] as String?,
       lastMessageSenderId: map['last_message_sender_id'] as String?,
       lastMessageSenderName: map['last_message_sender_name'] as String?,
+      lastMessageSenderHidden: map['last_message_sender_hidden'] == true,
       lastMessageAt: lastAt == null ? null : DateTime.parse(lastAt).toLocal(),
       lastMessageIsDeleted: map['last_message_is_deleted'] == true,
       lastMessageHasPhoto: map['last_message_has_photo'] == true,
@@ -156,7 +164,8 @@ class ChatMessage {
   final String id;
   final String chatId;
 
-  // Null when the sender deleted their account.
+  // Null when the sender deleted their account. For a sender who blocked
+  // the viewer, the stand-in id from get_chat_members, not the real one.
   final String? senderId;
   // Empty for a photo sent without text.
   final String body;
@@ -263,6 +272,7 @@ class ChatModel {
   static const _photoLinkSeconds = 60 * 60;
 
   final ImagePicker _picker = ImagePicker();
+  final Random _random = Random();
 
   // Looked up on use, so widgets can build without Supabase (e.g. in tests).
   SupabaseClient get _supabase => Supabase.instance.client;
@@ -281,9 +291,17 @@ class ChatModel {
       params: {'target_chat_id': chatId},
     );
     if (response is! List) return const [];
-    return response
-        .map((row) => FriendUser.fromMap(row as Map<String, dynamic>))
-        .toList();
+    return response.map((row) {
+      final user = FriendUser.fromMap(row as Map<String, dynamic>);
+      // Someone who blocked the viewer: the server sent no name.
+      if (!user.isHidden) return user;
+      return FriendUser(
+        id: user.id,
+        name: appL10n.synkUser,
+        gender: user.gender,
+        isHidden: true,
+      );
+    }).toList();
   }
 
   // How far each member has read the chat.
@@ -331,7 +349,9 @@ class ChatModel {
   }
 
   // The latest [limit] messages, oldest first. The text is stored
-  // encrypted, so this goes through get_chat_messages, which decrypts it.
+  // encrypted, so this goes through get_chat_messages, which decrypts it
+  // and leaves out the real id of anyone who blocked the viewer
+  // (supabase/migrations/20261104180000_block_chats.sql).
   Future<List<ChatMessage>> fetchMessages(
     String chatId, {
     int limit = 200,
@@ -364,7 +384,8 @@ class ChatModel {
       column: 'chat_id',
       value: chatId,
     );
-    // Realtime only has the encrypted text, so load the message itself.
+    // Realtime only has the encrypted text and no sender, so load the
+    // message itself.
     Future<void> deliver(PostgresChangePayload payload) async {
       final id = payload.newRecord['id'] as String?;
       if (id == null) return;
@@ -433,7 +454,6 @@ class ChatModel {
 
   // Uploads into the chat's folder and returns the path to send.
   Future<String> uploadPhoto(String chatId, XFile file) async {
-    final me = _supabase.auth.currentUser?.id ?? 'unknown';
     final extension = file.path.split('.').last.toLowerCase();
     final type = switch (extension) {
       'png' => 'png',
@@ -441,8 +461,11 @@ class ChatModel {
       'webp' => 'webp',
       _ => 'jpeg',
     };
+    // No user id in the name: everyone in the chat sees the path, including
+    // people the sender blocked.
     final path =
-        '$chatId/${me}_${DateTime.now().microsecondsSinceEpoch}'
+        '$chatId/${DateTime.now().microsecondsSinceEpoch}'
+        '_${_random.nextInt(1 << 32)}'
         '.${type == 'jpeg' ? 'jpg' : type}';
     await _supabase.storage
         .from(photoBucket)

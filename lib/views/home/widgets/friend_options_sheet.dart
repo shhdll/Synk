@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import '../../../controllers/chat_controller.dart';
 import '../../../controllers/friends_controller.dart';
 import '../../../core/constants/synk_colors.dart';
 import '../../../l10n/l10n.dart';
@@ -191,16 +194,24 @@ Future<void> confirmRemoveFriend(
 
 Future<void> confirmBlockUser(BuildContext context, FriendUser user) async {
   final firstName = user.name.split(' ').first;
+  // Blocking someone who hosts an activity you're in takes you out of it.
+  final leavesActivity = await FriendsController.instance
+      .blockRemovesMeFromActivity(user.id);
+  if (!context.mounted) return;
   final action = await SynkDialog.destructive(
     icon: Icons.block_rounded,
     title: context.l10n.blockUserTitle(firstName),
-    message: context.l10n.blockUserMessage,
+    message: leavesActivity
+        ? context.l10n.blockHostMessage
+        : context.l10n.blockUserMessage,
     primaryLabel: context.l10n.cancel,
     secondaryLabel: context.l10n.block,
   ).show(context);
   if (action != SynkDialogAction.secondary) return;
 
   final ok = await FriendsController.instance.block(user);
+  // A block can take one of you out of the other's activity and its chat.
+  if (ok) unawaited(ChatController.instance.refresh());
   if (!context.mounted) return;
   if (!ok) return _showError(context);
   SynkFeedback.showToast(context, title: context.l10n.userBlocked(firstName));

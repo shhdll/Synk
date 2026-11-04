@@ -203,6 +203,15 @@ class FriendsController extends ChangeNotifier {
     );
   }
 
+  // For the confirmation before blocking; false when it can't be checked.
+  Future<bool> blockRemovesMeFromActivity(String userId) async {
+    try {
+      return await _model.blockRemovesMeFromActivity(userId);
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<bool> unblock(String userId) {
     _blocked.removeWhere((u) => u.id == userId);
     return _apply(() => _model.unblock(userId));

@@ -742,6 +742,7 @@
   "blockName": "حظر {name}",
   "blockUserTitle": "حظر {name}؟",
   "blockUserMessage": "لن يجدك أو يضيفك، ولن يعرف بذلك",
+  "blockHostMessage": "حظر هذا المضيف سيزيلك من نشاطه",
   "block": "حظر",
   "unblock": "إلغاء الحظر",
   "reportName": "الإبلاغ عن {name}",
@@ -961,5 +962,8 @@
   "role": "الدور",
   "thisWeek": "هذا الأسبوع",
   "shareLinkCodeMessage": "تبي تنضم لنا في {title}؟\n📅 {date}\n\n{link}\n\nأو اكتب الرمز في Synk: {code}",
-  "friendsCount": "{count, plural, =0{0 أصدقاء} =1{صديق واحد} =2{صديقان} few{{count} أصدقاء} many{{count} صديقا} other{{count} صديق}}"
+  "friendsCount": "{count, plural, =0{0 أصدقاء} =1{صديق واحد} =2{صديقان} few{{count} أصدقاء} many{{count} صديقا} other{{count} صديق}}",
+  "blockedTag": "محظور",
+  "thisActivityIsUnavailable": "هذا النشاط غير متاح",
+  "thisProfileIsUnavailable": "هذا الملف الشخصي غير متاح"
 }

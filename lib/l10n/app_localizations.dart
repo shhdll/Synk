@@ -4454,6 +4454,12 @@ abstract class AppLocalizations {
   /// **'They can\'t find or add you. They won\'t know.'**
   String get blockUserMessage;
 
+  /// No description provided for @blockHostMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocking this host will remove you from their activity.'**
+  String get blockHostMessage;
+
   /// No description provided for @block.
   ///
   /// In en, this message translates to:
@@ -5772,6 +5778,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 friend} other{{count} friends}}'**
   String friendsCount(int count);
+
+  /// No description provided for @blockedTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked'**
+  String get blockedTag;
+
+  /// No description provided for @thisActivityIsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This activity is unavailable.'**
+  String get thisActivityIsUnavailable;
+
+  /// No description provided for @thisProfileIsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This profile is unavailable.'**
+  String get thisProfileIsUnavailable;
 }
 
 class _AppLocalizationsDelegate
