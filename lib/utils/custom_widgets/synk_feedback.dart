@@ -14,15 +14,12 @@ class SynkFeedback {
   // Asks before leaving a screen with unsaved changes.
   // Resolves to true when the user chose to discard and leave.
   static Future<bool> confirmDiscardChanges(BuildContext context) async {
-    final SynkDialogAction? action = await SynkDialog.destructive(
+    return SynkDialog.confirm(
+      context,
       icon: Icons.edit_off_rounded,
       title: context.l10n.discardChanges,
-      message: context.l10n.unsavedChangesWillBeLost,
-      primaryLabel: context.l10n.keepEditing,
-      secondaryLabel: context.l10n.discardAndLeave,
-    ).show(context, barrierDismissible: false);
-
-    return action == SynkDialogAction.secondary;
+      action: context.l10n.discard,
+    );
   }
 
   // Shows "Saved", with an extra line only when there is more to say.

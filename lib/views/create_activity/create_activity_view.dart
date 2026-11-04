@@ -112,18 +112,17 @@ class _CreateActivityViewState extends State<CreateActivityView> {
       return;
     }
 
-    final SynkDialogAction? action = await SynkDialog.destructive(
+    final discard = await SynkDialog.confirm(
+      context,
       icon: Icons.delete_outline_rounded,
       title: context.l10n.discardActivity,
-      message: context.l10n.unsavedChangesWillBeLost,
-      primaryLabel: context.l10n.keepEditing,
-      secondaryLabel: context.l10n.discardAndLeave,
-    ).show(context, barrierDismissible: false);
+      action: context.l10n.discard,
+    );
 
     if (!mounted) return;
     // A submit could have started while the dialog was open; never pop over one.
     if (_controller.isSubmitting) return;
-    if (action == SynkDialogAction.secondary) {
+    if (discard) {
       Navigator.of(context).pop();
     }
   }

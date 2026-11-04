@@ -9,7 +9,7 @@ import '../welcome_view.dart';
 import 'widgets/settings_row.dart';
 
 // What gets removed, with the delete button at the bottom. Tapping it asks
-// to confirm, then for the password, then deletes.
+// for the password, then to confirm, then deletes.
 class DeleteAccountView extends StatefulWidget {
   const DeleteAccountView({super.key});
 
@@ -27,18 +27,6 @@ class _DeleteAccountViewState extends State<DeleteAccountView> {
   }
 
   Future<void> _delete() async {
-    final l10n = context.l10n;
-
-    // The safe choice is the primary button.
-    final action = await SynkDialog.destructive(
-      icon: Icons.delete_outline_rounded,
-      title: l10n.deleteAccountConfirmTitle,
-      message: l10n.deleteAccountConfirmMessage,
-      primaryLabel: l10n.keepAccount,
-      secondaryLabel: l10n.deleteAccount,
-    ).show(context);
-    if (action != SynkDialogAction.secondary || !mounted) return;
-
     final deleted = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -154,8 +142,8 @@ class _DeleteAccountViewState extends State<DeleteAccountView> {
   }
 }
 
-// The last step: the password, then the account is deleted. Pops true once
-// it's gone.
+// The password, then a red popup to confirm, then the account is deleted.
+// Pops true once it's gone.
 class _PasswordSheet extends StatefulWidget {
   const _PasswordSheet({required this.controller});
 
@@ -185,6 +173,17 @@ class _PasswordSheetState extends State<_PasswordSheet> {
       }
       return;
     }
+    if (!mounted) return;
+    final l10n = context.l10n;
+    final delete = await SynkDialog.confirm(
+      context,
+      icon: Icons.delete_outline_rounded,
+      title: l10n.deleteAccountConfirmTitle,
+      message: l10n.deleteAccountConfirmMessage,
+      action: l10n.deleteLabel,
+      red: true,
+    );
+    if (!delete || !mounted) return;
     final ok = await _controller.deleteAccount();
     if (!mounted) return;
     if (!ok) {

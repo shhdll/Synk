@@ -3358,4 +3358,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get yourRatings => 'Your ratings';
+
+  @override
+  String get discard => 'Discard';
+
+  @override
+  String get leave => 'Leave';
+
+  @override
+  String get withdraw => 'Withdraw';
+
+  @override
+  String get withdrawRequestTitle => 'Withdraw your request?';
 }
