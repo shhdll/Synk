@@ -12,46 +12,29 @@
 -- history stay. Unblocking doesn't bring anything back; they join again.
 -- Two people who are both just participants of someone else's activity
 -- both stay (20261104170000_block_activities.sql redacts them instead).
+-- Blocks made before this file get the same removal once, at the end.
 --
 -- Safe to run again.
 
 begin;
 
--- Same as 20261028200000_friends.sql, plus taking the non-host out of the
--- activities between the two.
-create or replace function public.block_user(target_user_id uuid)
-returns jsonb
+-- Takes whichever of the two isn't the host out of the other's activities
+-- that haven't ended. Returns how many records it removed. Used by
+-- block_user and by the one-time cleanup below.
+create or replace function private.remove_from_activities_between(
+  first_user_id uuid,
+  second_user_id uuid
+)
+returns integer
 language plpgsql
 security definer
 set search_path = ''
 as $$
 declare
-  me uuid := public.require_signed_in();
   removal record;
   removed_status text;
   removed_count integer := 0;
 begin
-  if target_user_id = me then
-    return jsonb_build_object('result', 'self');
-  end if;
-
-  if not exists (select 1 from public.users where id = target_user_id) then
-    return jsonb_build_object('result', 'not_found');
-  end if;
-
-  perform public.lock_user_pair(me, target_user_id);
-
-  delete from public.friendships
-  where user_a = least(me, target_user_id) and user_b = greatest(me, target_user_id);
-
-  delete from public.friend_requests
-  where (sender_id = me and receiver_id = target_user_id)
-     or (sender_id = target_user_id and receiver_id = me);
-
-  insert into public.user_blocks (blocker_id, blocked_id)
-  values (me, target_user_id)
-  on conflict do nothing;
-
   -- In activity order, so two blocks at once lock activities in the
   -- same order.
   for removal in
@@ -61,8 +44,8 @@ begin
     where a.ends_at > now()
       and ap.status in ('joined', 'pending', 'waitlisted')
       and (
-        (a.host_id = me and ap.user_id = target_user_id)
-        or (a.host_id = target_user_id and ap.user_id = me)
+        (a.host_id = first_user_id and ap.user_id = second_user_id)
+        or (a.host_id = second_user_id and ap.user_id = first_user_id)
       )
     order by ap.activity_id
   loop
@@ -85,6 +68,48 @@ begin
       perform public.promote_eligible_waitlist(removal.activity_id);
     end if;
   end loop;
+
+  return removed_count;
+end;
+$$;
+
+revoke all on function private.remove_from_activities_between(uuid, uuid)
+  from public, anon, authenticated;
+
+-- Same as 20261028200000_friends.sql, plus taking the non-host out of the
+-- activities between the two.
+create or replace function public.block_user(target_user_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.require_signed_in();
+  removed_count integer;
+begin
+  if target_user_id = me then
+    return jsonb_build_object('result', 'self');
+  end if;
+
+  if not exists (select 1 from public.users where id = target_user_id) then
+    return jsonb_build_object('result', 'not_found');
+  end if;
+
+  perform public.lock_user_pair(me, target_user_id);
+
+  delete from public.friendships
+  where user_a = least(me, target_user_id) and user_b = greatest(me, target_user_id);
+
+  delete from public.friend_requests
+  where (sender_id = me and receiver_id = target_user_id)
+     or (sender_id = target_user_id and receiver_id = me);
+
+  insert into public.user_blocks (blocker_id, blocked_id)
+  values (me, target_user_id)
+  on conflict do nothing;
+
+  removed_count := private.remove_from_activities_between(me, target_user_id);
 
   return jsonb_build_object(
     'result', 'blocked',
@@ -119,5 +144,29 @@ $$;
 
 revoke all on function public.block_removes_me_from_activity(uuid) from public, anon;
 grant execute on function public.block_removes_me_from_activity(uuid) to authenticated;
+
+-- One time, for blocks made before this file: the same removal, so no
+-- host and blocked person share an upcoming activity. After this, block_user
+-- keeps it that way, and prevent_blocked_activity_join stops new joins, so a
+-- host can't accept, and the waitlist can't promote, someone in a block with
+-- them. On a rerun there is nothing left to remove.
+do $$
+declare
+  pair record;
+begin
+  for pair in
+    select distinct
+      least(blocker_id, blocked_id) as first_user_id,
+      greatest(blocker_id, blocked_id) as second_user_id
+    from public.user_blocks
+    order by 1, 2
+  loop
+    perform public.lock_user_pair(pair.first_user_id, pair.second_user_id);
+    perform private.remove_from_activities_between(
+      pair.first_user_id, pair.second_user_id
+    );
+  end loop;
+end;
+$$;
 
 commit;

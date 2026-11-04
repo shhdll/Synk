@@ -1,8 +1,5 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
-import '../../../controllers/chat_controller.dart';
 import '../../../controllers/friends_controller.dart';
 import '../../../core/constants/synk_colors.dart';
 import '../../../l10n/l10n.dart';
@@ -210,8 +207,6 @@ Future<void> confirmBlockUser(BuildContext context, FriendUser user) async {
   if (action != SynkDialogAction.secondary) return;
 
   final ok = await FriendsController.instance.block(user);
-  // A block can take one of you out of the other's activity and its chat.
-  if (ok) unawaited(ChatController.instance.refresh());
   if (!context.mounted) return;
   if (!ok) return _showError(context);
   SynkFeedback.showToast(context, title: context.l10n.userBlocked(firstName));
