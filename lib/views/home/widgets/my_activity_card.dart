@@ -112,7 +112,10 @@ class MyActivityCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  // Only the title is shown, so center it on the photo.
+                  crossAxisAlignment: limited
+                      ? CrossAxisAlignment.center
+                      : CrossAxisAlignment.start,
                   children: [
                     ActivityThumbnail(activity: activity, size: 72, radius: 14),
                     const SizedBox(width: 14),
