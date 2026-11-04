@@ -27,6 +27,8 @@ type PromotionEvent = {
   is_group?: boolean;
   message_kind?: string;
   preview?: string;
+  participation_id?: string;
+  requester_name?: string;
   event_type?: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received" | "friend_request_received" | "friend_request_accepted" | "host_assigned" | "activity_conflict" | "activity_full" | "activity_reminder" | "chat_message";
 };
 
@@ -134,12 +136,27 @@ function isUnregisteredToken(error: Record<string, unknown>): boolean {
   );
 }
 
-function formatScheduleTime(value: string): string {
-  return new Date(value).toLocaleString("en-US", {
-    timeZone: "Asia/Riyadh",
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
+// "Thu, Nov 5, 7:00 PM" in Riyadh time; Arabic keeps the Gregorian
+// calendar and Western digits like the app.
+function formatScheduleTime(value: string, language = "en"): string {
+  return new Date(value).toLocaleString(
+    language === "ar" ? "ar-u-ca-gregory-nu-latn" : "en-US",
+    {
+      timeZone: "Asia/Riyadh",
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    },
+  );
+}
+
+function formatStartTime(value: string, language = "en"): string {
+  return new Date(value).toLocaleTimeString(
+    language === "ar" ? "ar-u-ca-gregory-nu-latn" : "en-US",
+    { timeZone: "Asia/Riyadh", hour: "numeric", minute: "2-digit" },
+  );
 }
 
 function notificationContent(
@@ -159,77 +176,101 @@ function notificationContent(
       body: event.is_group ? `${event.sender_name}: ${text}` : text,
     };
   }
-  return event.event_type === "join_request_accepted"
-    ? {
-      title: "Request accepted",
-      body: `Your request to join ${event.activity_title} was accepted. You're in!`,
+  const ar = language === "ar";
+  const a = event.activity_title;
+  // Picks the Arabic or English line.
+  const t = (en: string, arabic: string) => (ar ? arabic : en);
+  const when = event.starts_at ? formatScheduleTime(event.starts_at, language) : null;
+
+  switch (event.event_type) {
+    case "join_request_accepted":
+      return {
+        title: t("Request accepted", "تم قبول طلبك"),
+        body: t(`You're in ${a}.`, `انضممت إلى ${a}`),
+      };
+    case "join_request_rejected":
+      return {
+        title: t("Request declined", "تم رفض طلبك"),
+        body: t(
+          `The host declined your request to join ${a}.`,
+          `رفض المنظم طلب انضمامك إلى ${a}`,
+        ),
+      };
+    case "join_request_received": {
+      const name = event.requester_name || t("Someone", "شخص");
+      return {
+        title: t("New join request", "طلب انضمام جديد"),
+        body: t(`${name} wants to join ${a}.`, `${name} يريد الانضمام إلى ${a}`),
+      };
     }
-    : event.event_type === "join_request_rejected"
-    ? {
-      title: "Request declined",
-      body: `Your request to join ${event.activity_title} was declined by the host.`,
-    }
-    : event.event_type === "join_request_received"
-    ? {
-      title: "New join request",
-      body: `Someone requested to join ${event.activity_title}. Review their request.`,
-    }
-    : event.event_type === "activity_full"
-    ? {
-      title: language === "ar"
-        ? "اكتمل النشاط! 🎉"
-        : "Activity full! 🎉",
-      body: language === "ar"
-        ? `وصل نشاط ${event.activity_title} إلى الحد الأقصى للمشاركين.`
-        : `${event.activity_title} has reached its participant limit.`,
-    }
-    : event.event_type === "friend_request_received"
-    ? {
-      title: language === "ar" ? "طلب صداقة جديد" : "New friend request",
-      body: language === "ar"
-        ? `${event.activity_title} أرسل إليك طلب صداقة.`
-        : `${event.activity_title} sent you a friend request.`,
-    }
-    : event.event_type === "friend_request_accepted"
-    ? {
-      title: language === "ar" ? "تم قبول طلب الصداقة" : "Friend request accepted",
-      body: language === "ar"
-        ? `قبل ${event.activity_title} طلب صداقتك. أصبحتما صديقين الآن.`
-        : `${event.activity_title} accepted your friend request. You're now friends!`,
-    }
-    : event.event_type === "activity_reminder"
-    ? {
-      title: language === "ar" ? "يبدأ قريبا" : "Starting soon",
-      body: language === "ar"
-        ? `يبدأ ${event.activity_title} خلال ساعة`
-        : `${event.activity_title} starts in an hour.`,
-    }
-    : event.event_type === "host_assigned"
-    ? {
-      title: "You're Now the Host! \u{1F389}",
-      body: `You've been assigned as the new host of ${event.activity_title}.`,
-    }
-    : event.event_type === "activity_conflict"
-    ? {
-      title: "Scheduling Conflict Detected",
-      body: `${event.activity_title} was rescheduled${event.starts_at ? ` to ${formatScheduleTime(event.starts_at)}` : ""} and now overlaps another activity. Tap to resolve.`,
-    }
-    : event.event_type === "activity_deleted"
-    ? {
-      title: "Activity canceled",
-      body: `${event.activity_title} was deleted by the host.`,
-    }
-    : event.event_type === "activity_updated"
-    ? {
-      title: event.schedule_changed ? "Activity Schedule Updated" : "Activity updated",
-      body: event.schedule_changed && event.starts_at
-        ? `${event.activity_title} has been rescheduled to ${formatScheduleTime(event.starts_at)}.`
-        : `${event.activity_title} has new details. Tap to review the changes.`,
-    }
-    : {
-      title: "You're In! \u{1F389}",
-      body: `A spot opened up! You've been moved from the waiting list and successfully joined ${event.activity_title}.`,
-    };
+    case "activity_full":
+      return {
+        title: t("Activity full 🎉", "اكتمل النشاط 🎉"),
+        body: t(`All spots in ${a} are taken.`, `اكتملت كل الأماكن في ${a}`),
+      };
+    // For friend requests activity_title holds the person's name.
+    case "friend_request_received":
+      return {
+        title: t("New friend request", "طلب صداقة جديد"),
+        body: t(`${a} sent you a friend request.`, `${a} أرسل لك طلب صداقة`),
+      };
+    case "friend_request_accepted":
+      return {
+        title: t("Friend request accepted", "تم قبول طلب الصداقة"),
+        body: t(`You and ${a} are now friends.`, `أنت و${a} أصدقاء الآن`),
+      };
+    case "activity_reminder":
+      return {
+        title: t("Starting in 1 hour", "يبدأ بعد ساعة"),
+        body: event.starts_at
+          ? t(
+            `${a} starts at ${formatStartTime(event.starts_at)}.`,
+            `يبدأ ${a} الساعة ${formatStartTime(event.starts_at, "ar")}`,
+          )
+          : t(`${a} starts in an hour.`, `يبدأ ${a} بعد ساعة`),
+      };
+    case "host_assigned":
+      return {
+        title: t("You're the host now", "أصبحت المنظم"),
+        body: t(`You're now the host of ${a}.`, `أصبحت منظم ${a}`),
+      };
+    case "activity_conflict":
+      return {
+        title: t("Schedule clash", "تعارض في المواعيد"),
+        body: when
+          ? t(
+            `${a} moved to ${when} and now clashes with another activity. Tap to fix.`,
+            `تغير موعد ${a} إلى ${when} ويتعارض الآن مع نشاط آخر. اضغط للحل`,
+          )
+          : t(
+            `${a} now clashes with another activity. Tap to fix.`,
+            `${a} يتعارض الآن مع نشاط آخر. اضغط للحل`,
+          ),
+      };
+    case "activity_deleted":
+      return {
+        title: t("Activity canceled", "تم إلغاء النشاط"),
+        body: t(`The host canceled ${a}.`, `ألغى المنظم ${a}`),
+      };
+    case "activity_updated":
+      return event.schedule_changed && when
+        ? {
+          title: t("Time changed", "تغير الموعد"),
+          body: t(`${a} is now on ${when}.`, `موعد ${a} الجديد: ${when}`),
+        }
+        : {
+          title: t("Activity updated", "تم تحديث النشاط"),
+          body: t(
+            `The host updated ${a}. Tap to see the details.`,
+            `حدث المنظم ${a}. اضغط لرؤية التفاصيل`,
+          ),
+        };
+    default:
+      return {
+        title: t("You're off the waitlist 🎉", "خرجت من قائمة الانتظار 🎉"),
+        body: t(`A spot opened up. You've joined ${a}.`, `توفر مكان، وانضممت إلى ${a}`),
+      };
+  }
 }
 
 async function sendToToken(
@@ -441,6 +482,8 @@ Deno.serve(async (request: Request) => {
     ? "id, user_id, activity_id, activity_title, conflict_id, status"
     : eventType === "chat_message"
     ? "id, user_id, chat_id, activity_title, sender_name, is_group, message_kind, preview, status"
+    : eventType === "join_request_received"
+    ? "id, user_id, activity_id, activity_title, participation_id, status"
     : "id, user_id, activity_id, activity_title, status";
   const { data: event, error: claimError } = await admin
     .from(outboxTable)
@@ -511,6 +554,28 @@ Deno.serve(async (request: Request) => {
         return jsonResponse({ ok: true, sent: 0, skipped: "host" });
       }
     }
+  }
+  // Who asked to join, so the host sees a name.
+  if (eventType === "join_request_received" && typedEvent.participation_id) {
+    const { data: participation } = await admin.from("activity_participants")
+      .select("user_id")
+      .eq("id", typedEvent.participation_id)
+      .maybeSingle();
+    if (participation) {
+      const { data: requester } = await admin.from("users")
+        .select("full_name")
+        .eq("id", participation.user_id)
+        .maybeSingle();
+      const name = (requester?.full_name as string | null)?.trim();
+      if (name) typedEvent.requester_name = name;
+    }
+  }
+  if (eventType === "activity_reminder") {
+    const { data: schedule } = await admin.from("activities")
+      .select("starts_at")
+      .eq("id", typedEvent.activity_id)
+      .maybeSingle();
+    if (schedule) typedEvent.starts_at = schedule.starts_at;
   }
   if (eventType === "activity_conflict" && typedEvent.conflict_id) {
     const { data: conflict } = await admin.from("activity_schedule_conflicts")
