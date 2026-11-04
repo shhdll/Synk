@@ -14,6 +14,8 @@ class FriendUser {
     this.username,
     this.avatarUrl,
     this.gender,
+    this.isHidden = false,
+    this.blockedByMe = false,
   });
 
   final String id;
@@ -21,6 +23,15 @@ class FriendUser {
   final String? username;
   final String? avatarUrl;
   final String? gender;
+
+  // Group chat members in a block with the viewer (get_chat_members).
+  // Hidden: they blocked the viewer; the server sent a stand-in id and no
+  // name, username or photo. Blocked by me: real name, marked as blocked.
+  // Neither has a real photo or can be opened.
+  final bool isHidden;
+  final bool blockedByMe;
+
+  bool get isRestricted => isHidden || blockedByMe;
 
   // [idKey] is 'user_id' for request rows, whose 'id' is the request's.
   factory FriendUser.fromMap(Map<String, dynamic> map, {String idKey = 'id'}) {
@@ -34,6 +45,8 @@ class FriendUser {
       username: username,
       avatarUrl: map['avatar_url'] as String?,
       gender: map['gender'] as String?,
+      isHidden: map['is_hidden'] == true,
+      blockedByMe: map['blocked_by_me'] == true,
     );
   }
 }
@@ -142,6 +155,16 @@ class FriendsModel {
 
   Future<String> block(String userId) =>
       _change('block_user', {'target_user_id': userId});
+
+  // True when [userId] hosts an activity the user is in, which blocking
+  // them would take the user out of (block_user does that on the server).
+  Future<bool> blockRemovesMeFromActivity(String userId) async {
+    final response = await _supabase.rpc(
+      'block_removes_me_from_activity',
+      params: {'target_user_id': userId},
+    );
+    return response == true;
+  }
 
   Future<String> unblock(String userId) =>
       _change('unblock_user', {'target_user_id': userId});

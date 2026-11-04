@@ -18,6 +18,7 @@ import '../../../utils/custom_widgets/synk_feedback.dart';
 import '../../../utils/maps_launcher.dart';
 import '../../../utils/share_activity.dart';
 import '../../widgets/anonymous_avatar.dart';
+import '../../widgets/default_avatar.dart';
 import '../../widgets/crown_icon.dart';
 import '../../widgets/schedule_conflict_text.dart';
 import 'activity_thumbnail.dart';
@@ -1789,14 +1790,19 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
       children = withDividers([
         hostRow,
         for (final p in _participants)
-          _buildParticipantRow(
-            name: (p['full_name'] as String?) ?? context.l10n.communityMember,
-            username: p['username'] as String?,
-            userId: p['user_id'] as String?,
-            avatarUrl: p['avatar_url'] as String?,
-            gender: p['gender'] as String?,
-            isHost: false,
-          ),
+          // Someone who blocked the viewer shows without name or photo.
+          if (p['is_hidden'] == true)
+            _buildHiddenRow(p['gender'] as String?)
+          else
+            _buildParticipantRow(
+              name: (p['full_name'] as String?) ?? context.l10n.communityMember,
+              username: p['username'] as String?,
+              userId: p['user_id'] as String?,
+              avatarUrl: p['avatar_url'] as String?,
+              gender: p['gender'] as String?,
+              isHost: false,
+              blockedByMe: p['blocked_by_me'] == true,
+            ),
       ]);
     }
 
@@ -1810,6 +1816,29 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
         ),
       ),
       child: Column(children: children),
+    );
+  }
+
+  // A participant who blocked the viewer: "Synk user", the default avatar
+  // for their gender, and nothing to tap.
+  Widget _buildHiddenRow(String? gender) {
+    return Row(
+      children: [
+        DefaultAvatar(gender: gender, size: 38),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            context.l10n.synkUser,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: SynkColors.textPrimary,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -1840,8 +1869,11 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     required String? avatarUrl,
     required String? gender,
     required bool isHost,
+    bool blockedByMe = false,
   }) {
-    final canOpen = userId != null && userId != _viewerId;
+    // Someone the viewer blocked keeps their name but can't be opened or
+    // contacted from here.
+    final canOpen = userId != null && userId != _viewerId && !blockedByMe;
     final following =
         canOpen &&
         FriendsController.instance.statusFor(userId) ==
@@ -1865,12 +1897,15 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
           Stack(
             clipBehavior: Clip.none,
             children: [
-              _buildAvatar(
-                userId: userId,
-                avatarUrl: avatarUrl,
-                gender: gender,
-                size: 38,
-              ),
+              // No real photo for someone the viewer blocked.
+              blockedByMe
+                  ? DefaultAvatar(gender: gender, size: 38)
+                  : _buildAvatar(
+                      userId: userId,
+                      avatarUrl: avatarUrl,
+                      gender: gender,
+                      size: 38,
+                    ),
               if (following)
                 PositionedDirectional(
                   top: -3,
@@ -1939,6 +1974,33 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                   fontWeight: FontWeight.w700,
                   color: _joinedColor,
                 ),
+              ),
+            ),
+          if (blockedByMe)
+            Container(
+              padding: const EdgeInsetsDirectional.fromSTEB(6, 3, 8, 3),
+              decoration: BoxDecoration(
+                color: SynkColors.textSecondary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.lock_outline_rounded,
+                    size: 12,
+                    color: SynkColors.labelGrey,
+                  ),
+                  const SizedBox(width: 3),
+                  Text(
+                    context.l10n.blockedTag,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: SynkColors.labelGrey,
+                    ),
+                  ),
+                ],
               ),
             ),
           if (isHost)

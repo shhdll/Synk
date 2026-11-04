@@ -151,6 +151,10 @@ class ChatListTile extends StatelessWidget {
     if (chat.lastMessageSenderId == currentUserId) {
       return context.l10n.youSaid(body);
     }
+    // Someone who blocked you: the server sent no name.
+    if (chat.isActivity && chat.lastMessageSenderHidden) {
+      return context.l10n.personSaid(context.l10n.synkUser, body);
+    }
     final sender = chat.lastMessageSenderName;
     if (chat.isActivity && sender != null && sender.isNotEmpty) {
       return context.l10n.personSaid(

@@ -2450,6 +2450,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get blockUserMessage => 'لن يجدك أو يضيفك، ولن يعرف بذلك';
 
   @override
+  String get blockHostMessage => 'حظر هذا المضيف سيزيلك من نشاطه';
+
+  @override
   String get block => 'حظر';
 
   @override
@@ -3228,4 +3231,13 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get blockedTag => 'محظور';
+
+  @override
+  String get thisActivityIsUnavailable => 'هذا النشاط غير متاح';
+
+  @override
+  String get thisProfileIsUnavailable => 'هذا الملف الشخصي غير متاح';
 }

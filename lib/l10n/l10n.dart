@@ -89,6 +89,8 @@ String serverMessage(String message) {
   return switch (message) {
     'Enter a valid six-digit activity code.' => l.enterAValid6DigitActivity,
     'No activity was found with this code.' => l.serverNoActivityWithCode,
+    // A block with the host; deliberately says nothing about why.
+    'This activity is unavailable.' => l.thisActivityIsUnavailable,
     'This activity is no longer available to join.' =>
       l.thisActivityIsNoLongerAvailable,
     'You are the host of this activity.' => l.serverYouAreTheHost,

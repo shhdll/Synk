@@ -307,7 +307,11 @@ class ActivitiesModel {
     return result;
   }
 
-  // Returns joined participants list for activity details view
+  // Returns joined participants list for activity details view.
+  //
+  // Only through get_activity_participants_list, which hides anyone who
+  // blocked the viewer. There is deliberately no direct-table fallback: it
+  // would skip that redaction. On failure the list is empty.
   Future<List<Map<String, dynamic>>> fetchParticipantsList(
     String activityId,
   ) async {
@@ -319,40 +323,6 @@ class ActivitiesModel {
       if (response is List) {
         return response
             .map((item) => Map<String, dynamic>.from(item as Map))
-            .toList();
-      }
-    } catch (_) {}
-
-    // Fallback: Query activity_participants & users directly
-    try {
-      final rows = await _supabase
-          .from('activity_participants')
-          .select('user_id, status')
-          .eq('activity_id', activityId)
-          .eq('status', 'joined');
-
-      final userIds = rows
-          .map((r) => r['user_id'] as String?)
-          .whereType<String>()
-          .toList();
-
-      if (userIds.isNotEmpty) {
-        final users = await _supabase
-            .from('users')
-            .select('id, full_name, username, avatar_url, gender')
-            .inFilter('id', userIds);
-
-        return users
-            .map(
-              (u) => {
-                'user_id': u['id'],
-                'full_name': u['full_name'] ?? appL10n.synkMember,
-                'username': u['username'],
-                'avatar_url': u['avatar_url'],
-                'gender': u['gender'],
-                'status': 'joined',
-              },
-            )
             .toList();
       }
     } catch (_) {}

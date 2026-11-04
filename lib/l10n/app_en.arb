@@ -1106,6 +1106,7 @@
   "blockUserTitle": "Block {name}?",
   "@blockUserTitle": {"placeholders": {"name": {}}},
   "blockUserMessage": "They can't find or add you. They won't know.",
+  "blockHostMessage": "Blocking this host will remove you from their activity.",
   "block": "Block",
   "unblock": "Unblock",
   "reportName": "Report {name}",
@@ -1363,5 +1364,8 @@
   "shareLinkCodeMessage": "Want to join us for {title}?\n📅 {date}\n\n{link}\n\nOr enter the code in Synk: {code}",
   "@shareLinkCodeMessage": {"placeholders": {"title": {}, "date": {}, "link": {}, "code": {}}},
   "friendsCount": "{count, plural, =1{1 friend} other{{count} friends}}",
-  "@friendsCount": {"placeholders": {"count": {"type": "int"}}}
+  "@friendsCount": {"placeholders": {"count": {"type": "int"}}},
+  "blockedTag": "Blocked",
+  "thisActivityIsUnavailable": "This activity is unavailable.",
+  "thisProfileIsUnavailable": "This profile is unavailable."
 }

@@ -2514,6 +2514,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'They can\'t find or add you. They won\'t know.';
 
   @override
+  String get blockHostMessage =>
+      'Blocking this host will remove you from their activity.';
+
+  @override
   String get block => 'Block';
 
   @override
@@ -3296,4 +3300,13 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get blockedTag => 'Blocked';
+
+  @override
+  String get thisActivityIsUnavailable => 'This activity is unavailable.';
+
+  @override
+  String get thisProfileIsUnavailable => 'This profile is unavailable.';
 }

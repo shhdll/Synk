@@ -7,6 +7,7 @@ import '../../../l10n/l10n.dart';
 import '../../../models/activity_model.dart';
 import '../../../models/avatar_uploader.dart';
 import '../../widgets/anonymous_avatar.dart';
+import '../../widgets/default_avatar.dart';
 import '../../widgets/crown_icon.dart';
 import '../../../utils/custom_widgets/synk_feedback.dart';
 import 'activity_thumbnail.dart';
@@ -220,6 +221,9 @@ class MyActivityCard extends StatelessWidget {
                       avatarUrl: p['avatar_url'] as String?,
                       gender: p['gender'] as String?,
                       anonymous: anonymous,
+                      // In a block with the viewer, either way.
+                      restricted:
+                          p['is_hidden'] == true || p['blocked_by_me'] == true,
                     ),
                   ),
               ],
@@ -452,11 +456,15 @@ class _Face extends StatelessWidget {
     required this.avatarUrl,
     required this.gender,
     this.anonymous = false,
+    this.restricted = false,
   });
 
   final String? avatarUrl;
   final String? gender;
   final bool anonymous;
+
+  // Gets the default avatar for their gender, never their real photo.
+  final bool restricted;
 
   @override
   Widget build(BuildContext context) {
@@ -473,6 +481,8 @@ class _Face extends StatelessWidget {
       ),
       child: anonymous
           ? const AnonymousAvatar(size: 22)
+          : restricted
+          ? DefaultAvatar(gender: gender, size: 22)
           : ClipOval(
               child: Image(
                 image: url != null && url.startsWith('http')
