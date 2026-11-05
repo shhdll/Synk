@@ -19,6 +19,8 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: subosito/flutter-action@v2
         with:
@@ -42,8 +44,15 @@ jobs:
 
       - run: flutter pub get
 
+      # 1.<merged pull requests>.0+<commits>, e.g. 1.70.0+240. The About page
+      # shows it as "Version 1.70.0 (240)". pubspec.yaml isn't changed.
       - name: Build
-        run: flutter build ios --release --no-codesign
+        run: |
+          prs=$(git log --oneline | grep -c 'Merge pull request' || true)
+          commits=$(git rev-list --count HEAD)
+          echo "Version 1.${prs}.0+${commits}"
+          flutter build ios --release --no-codesign \
+            --build-name="1.${prs}.0" --build-number="${commits}"
 
       - name: Package IPA
         run: |
