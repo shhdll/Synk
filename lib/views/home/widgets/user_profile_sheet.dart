@@ -89,6 +89,11 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
   WeeklyStreak? _streak;
   bool _loading = true;
 
+  // Friends are same-gender only, as on the server
+  // (20261108100000_same_gender_friends.sql), so Add friend is hidden for
+  // anyone else.
+  String? _viewerGender;
+
   // The profile row came back empty, not failed: the person blocked the
   // viewer, or the account is gone. Shown the same way, without a reason.
   bool _unavailable = false;
@@ -97,6 +102,13 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
   void initState() {
     super.initState();
     _load();
+  }
+
+  // Someone without a gender matches no one, as on the server.
+  static bool _sameGender(String? a, String? b) {
+    final first = a?.trim().toLowerCase() ?? '';
+    final second = b?.trim().toLowerCase() ?? '';
+    return first.isNotEmpty && first == second;
   }
 
   Future<void> _load() async {
@@ -125,6 +137,12 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
       ActivitiesModel()
           .fetchStreakTimes(widget.userId)
           .then<Object?>((times) => times, onError: (_) => null),
+      client
+          .from('users')
+          .select('gender')
+          .eq('id', client.auth.currentUser?.id ?? '')
+          .maybeSingle()
+          .then<Object?>((row) => row?['gender'], onError: (_) => null),
     ]);
     if (!mounted) return;
     setState(() {
@@ -134,6 +152,7 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
       _friends = results[2] as List<FriendUser>?;
       final times = results[3] as List<DateTime>?;
       _streak = times == null ? null : WeeklyStreak.from(times);
+      _viewerGender = results[4] as String?;
       _loading = false;
     });
   }
@@ -362,6 +381,7 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
                     const SizedBox(height: 20),
                     _FriendActions(
                       showMessageButton: widget.showMessageButton,
+                      sameGender: _sameGender(_viewerGender, gender),
                       user: FriendUser(
                         id: widget.userId,
                         name: name,
@@ -552,11 +572,17 @@ class _Stat extends StatelessWidget {
 
 // Add friend (or Requested / Accept / Following), plus a ⋯ menu to report
 // or block. Friends also get Message. A blocked user only gets Unblock.
+// Someone of the other gender gets no Add friend, only the menu.
 class _FriendActions extends StatelessWidget {
-  const _FriendActions({required this.user, this.showMessageButton = true});
+  const _FriendActions({
+    required this.user,
+    required this.sameGender,
+    this.showMessageButton = true,
+  });
 
   final FriendUser user;
   final bool showMessageButton;
+  final bool sameGender;
 
   @override
   Widget build(BuildContext context) {
@@ -601,10 +627,16 @@ class _FriendActions extends StatelessWidget {
           );
         }
 
+        // Friendships from before the rule keep their buttons.
+        final canFriend = sameGender || status == FriendshipStatus.friends;
+
         return Row(
+          mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            Expanded(child: FriendActionButton(user: user)),
-            const SizedBox(width: 10),
+            if (canFriend) ...[
+              Expanded(child: FriendActionButton(user: user)),
+              const SizedBox(width: 10),
+            ],
             if (showMessageButton && status == FriendshipStatus.friends) ...[
               Expanded(child: _MessageButton(user: user)),
               const SizedBox(width: 10),
