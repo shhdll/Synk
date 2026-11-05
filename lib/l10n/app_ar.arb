@@ -784,6 +784,7 @@
   "noPeopleFound": "لم يتم العثور على أشخاص",
   "tryAnotherNameOrUsername": "ابحث باسم آخر أو اسم مستخدم آخر",
   "searchForPeopleOnSynk": "ابحث عن أشخاص في Synk",
+  "lookForQueryOnSynk": "ابحث عن \"{query}\" في Synk",
   "friendRequestSent": "تم إرسال طلب الصداقة",
   "friendRequestCancelled": "تم إلغاء طلب الصداقة",
   "youAreNowFriendsWith": "أصبحت أنت و{name} أصدقاء",

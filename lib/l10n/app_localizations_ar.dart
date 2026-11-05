@@ -2592,6 +2592,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get searchForPeopleOnSynk => 'ابحث عن أشخاص في Synk';
 
   @override
+  String lookForQueryOnSynk(String query) {
+    return 'ابحث عن \"$query\" في Synk';
+  }
+
+  @override
   String get friendRequestSent => 'تم إرسال طلب الصداقة';
 
   @override

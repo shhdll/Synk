@@ -4706,6 +4706,12 @@ abstract class AppLocalizations {
   /// **'Search for people on Synk'**
   String get searchForPeopleOnSynk;
 
+  /// No description provided for @lookForQueryOnSynk.
+  ///
+  /// In en, this message translates to:
+  /// **'Look for \"{query}\" on Synk'**
+  String lookForQueryOnSynk(String query);
+
   /// No description provided for @friendRequestSent.
   ///
   /// In en, this message translates to:

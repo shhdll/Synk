@@ -1155,6 +1155,8 @@
   "noPeopleFound": "No people found",
   "tryAnotherNameOrUsername": "Try another name or username.",
   "searchForPeopleOnSynk": "Search for people on Synk",
+  "lookForQueryOnSynk": "Look for \"{query}\" on Synk",
+  "@lookForQueryOnSynk": {"placeholders": {"query": {"type": "String"}}},
   "friendRequestSent": "Friend request sent",
   "friendRequestCancelled": "Friend request cancelled",
   "youAreNowFriendsWith": "You're now friends with {name}",
