@@ -29,3 +29,8 @@ verify_jwt = false
 enabled = true
 # Checks the reply token or the admin token itself.
 verify_jwt = false
+
+[functions.request-admin]
+enabled = true
+# Checks the user token itself.
+verify_jwt = false

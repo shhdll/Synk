@@ -59,6 +59,7 @@
     "support.reply_failed": "Reply not sent",
     "support.close": "Closed ticket",
     "support.reopen": "Reopened ticket",
+    "admin.add": "Added admin",
     "admin.approve": "Approved admin request",
     "admin.decline": "Declined admin request",
     "admin.remove": "Removed admin",
@@ -152,7 +153,7 @@
     var px = (size || 32) + "px";
     // Activities without a photo get the app logo on a soft tile.
     var empty = h("span", { class: "thumb thumb-empty", style: "width:" + px + ";height:" + px },
-      h("img", { src: "../logo.png", alt: "" }));
+      h("img", { src: "/logo.png", alt: "" }));
     if (!url) return empty;
     return h("img", {
       class: "thumb", src: url, alt: "", loading: "lazy",
@@ -216,7 +217,12 @@
     return new Promise(function (resolve) {
       var note = null;
       var error = h("p", { class: "form-error", hidden: true });
-      if (options.note) {
+      if (options.note && options.note.type) {
+        note = h("input", {
+          class: "input", type: options.note.type,
+          placeholder: options.note.placeholder || "",
+        });
+      } else if (options.note) {
         note = h("textarea", {
           class: "textarea", rows: 3, maxlength: 500,
           placeholder: options.note.placeholder || "",
@@ -239,7 +245,7 @@
         event.preventDefault();
         var text = note ? note.value.trim() : "";
         if (note && options.note.required && !text) {
-          error.textContent = "Add a reason first.";
+          error.textContent = options.note.missing || "Add a reason first.";
           error.hidden = false;
           note.focus();
           return;
@@ -301,7 +307,7 @@
       h("section", { class: "signin-brand" },
         // The app's drifting blobs, stronger here.
         h("div", { class: "signin-blobs", "aria-hidden": "true" }, h("span"), h("span"), h("span"), h("span")),
-        h("div", { class: "signin-logo" }, h("img", { src: "../logo.png", alt: "" }), "Synk"),
+        h("div", { class: "signin-logo" }, h("img", { src: "/logo.png", alt: "" }), "Synk"),
         h("div", null,
           h("p", { class: "signin-tagline" }, "Welcome backstage"),
           h("p", { class: "signin-lead" }, "Where Synk's people and plans get looked after.")),
@@ -309,7 +315,7 @@
           h("div", { class: "stripe", "aria-hidden": "true" }, h("span"), h("span"), h("span")),
           "Team dashboard")),
       h("section", { class: "signin-main" },
-        h("div", { class: "signin-mobile-logo" }, h("img", { src: "../logo.png", alt: "" }), "Synk"),
+        h("div", { class: "signin-mobile-logo" }, h("img", { src: "/logo.png", alt: "" }), "Synk"),
         h("div", { class: "signin-card" }, content))));
   }
 
@@ -408,7 +414,12 @@
       send.disabled = true;
       send.textContent = "Sending";
       try {
-        await rpc("request_admin_access", { p_note: note.value.trim() || null });
+        var result = await sb.functions.invoke("request-admin", { body: { note: note.value.trim() || null } });
+        if (result.error) {
+          var detail = null;
+          try { detail = await result.error.context.json(); } catch (e) { /* not json */ }
+          throw new Error((detail && detail.error) || "Could not send the request.");
+        }
         await enter(session);
       } catch (e) {
         send.disabled = false;
@@ -467,7 +478,7 @@
     var root = h("div", { class: "shell" });
 
     var side = h("aside", { class: "side" },
-      h("div", { class: "side-logo" }, h("img", { src: "../logo.png", alt: "" }), "Synk"),
+      h("div", { class: "side-logo" }, h("img", { src: "/logo.png", alt: "" }), "Synk"),
       h("div", { class: "side-me" },
         avatar({ full_name: me.name || me.email, avatar_url: me.avatar_url }, 32),
         h("div", { class: "media-text" },
@@ -483,7 +494,7 @@
     var closeMenu = h("div", { class: "menu-back", onclick: function () { root.classList.remove("nav-open"); } });
 
     var topbar = h("div", { class: "topbar" },
-      h("div", { class: "side-logo" }, h("img", { src: "../logo.png", alt: "" }), "Synk"),
+      h("div", { class: "side-logo" }, h("img", { src: "/logo.png", alt: "" }), "Synk"),
       h("button", {
         class: "burger", type: "button", "aria-label": "Menu",
         onclick: function () { root.classList.toggle("nav-open"); },
@@ -1558,9 +1569,27 @@
 
   function renderAdmins() {
     var page = clear(shell.page);
-    page.appendChild(h("div", { class: "page-head" }, h("h1", null, "Admins")));
+    var add = h("button", { class: "btn small primary" }, "Add admin");
+    page.appendChild(h("div", { class: "page-head" }, h("h1", null, "Admins"), add));
     var body = h("div");
     page.appendChild(body);
+
+    add.addEventListener("click", async function () {
+      var answer = await confirmDialog({
+        title: "Add an admin",
+        body: "They need a Synk account. They'll see all users, tickets and reports, and can suspend accounts and delete activities.",
+        note: { type: "email", label: "Their account email", required: true, missing: "Add an email first." },
+        confirm: "Add",
+      });
+      if (!answer.ok) return;
+      runAction(add, "Adding", async function () {
+        var res = await rpc("admin_add_admin", { p_email: answer.note });
+        if (res.result === "not_found") throw new Error("No Synk account uses that email.");
+        toast(res.result === "added" ? "Admin added" : "Already an admin");
+        load();
+        refreshCounts();
+      });
+    });
 
     async function load() {
       clear(body).appendChild(stateBox("Loading"));
