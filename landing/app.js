@@ -42,6 +42,8 @@
       "Open the link we sent to your other email to finish the change.",
     ],
     recovery: ["Password updated", "Log in to Synk with your new password."],
+    // Signed up at synk.cc/admin, so there is no app account to open.
+    dashboard: ["Email confirmed", "Sign in to the dashboard to ask for access."],
   };
 
   function el(id) {
@@ -115,6 +117,11 @@
   function showConfirmed(kind, params, appQuery) {
     var text = SUCCESS[kind] || SUCCESS.signup;
     show(text[0], text[1], kind !== "email_change_partial");
+    if (kind === "dashboard") {
+      el("open-app").href = "/admin/";
+      el("open-app").querySelector("span").textContent = "Go to the dashboard";
+      return;
+    }
     openApp(
       appUrl("login-callback", appQuery || "", confirmedUrl(kind)),
       params
@@ -318,6 +325,8 @@
         var session = result.body && result.body.refresh_token ? result.body : null;
         var kind = type;
         if (type === "email_change" && !session) kind = "email_change_partial";
+        var meta = result.body && result.body.user && result.body.user.user_metadata;
+        if (type === "signup" && meta && meta.dashboard_only) kind = "dashboard";
 
         // A reload now shows this result instead of re-using the token.
         window.history.replaceState(null, "", confirmedUrl(kind));
