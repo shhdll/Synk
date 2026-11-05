@@ -279,6 +279,16 @@ button.button:disabled {
   display: none !important;
 }
 
+/* Big number on 404.html. */
+.error-code {
+  margin: 0 0 12px;
+  font-size: 96px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -3px;
+  color: var(--coral);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .orb,
   .badge {

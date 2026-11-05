@@ -14,7 +14,10 @@ import 'widgets/friends_list_widgets.dart';
 
 // Search everyone on Synk by name or username to send friend requests.
 class FindPeopleView extends StatefulWidget {
-  const FindPeopleView({super.key});
+  const FindPeopleView({super.key, this.initialQuery});
+
+  // Filled in when coming from a friends search with no match.
+  final String? initialQuery;
 
   @override
   State<FindPeopleView> createState() => _FindPeopleViewState();
@@ -25,6 +28,17 @@ class _FindPeopleViewState extends State<FindPeopleView> {
   Timer? _debounce;
   List<FriendUser> _results = const [];
   bool _isSearching = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final query = widget.initialQuery?.trim() ?? '';
+    if (query.isNotEmpty) {
+      _search.text = query;
+      _search.selection = TextSelection.collapsed(offset: query.length);
+      _runSearch(query);
+    }
+  }
 
   @override
   void dispose() {

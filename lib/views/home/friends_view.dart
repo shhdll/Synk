@@ -140,6 +140,7 @@ class _FriendsViewState extends State<FriendsView> {
     }
 
     final shown = _friends.searchFriends(_search.text);
+    final query = _search.text.trim();
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
@@ -200,6 +201,42 @@ class _FriendsViewState extends State<FriendsView> {
                 ),
             ],
           ),
+        // Not a friend yet? Search all of Synk with the same text.
+        if (query.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          FriendsListCard(
+            children: [
+              ListTile(
+                onTap: () {
+                  _saveRecent(query);
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => FindPeopleView(initialQuery: query),
+                    ),
+                  );
+                },
+                leading: const Icon(
+                  Icons.person_search_rounded,
+                  color: SynkColors.orangeDark,
+                ),
+                title: Text(
+                  context.l10n.lookForQueryOnSynk(query),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: SynkColors.textPrimary,
+                  ),
+                ),
+                trailing: const Icon(
+                  Icons.chevron_right_rounded,
+                  color: SynkColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }

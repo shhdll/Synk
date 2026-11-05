@@ -131,7 +131,7 @@
 
   function personName(card) {
     if (!card) return "Deleted account";
-    return card.full_name || (card.username ? "@" + card.username : "No name");
+    return card.full_name || (card.username ? "@" + card.username : card.email || "No name");
   }
 
   // Small round profile photo, or the first letter when there is none.
@@ -170,7 +170,8 @@
     if (!card) return h("span", { class: "sub" }, "Deleted account");
     return h("span", { class: "person" },
       avatar(card, 20),
-      h("a", { href: "#/users?id=" + card.id }, personName(card)),
+      // Dashboard-only accounts have no Synk profile to open.
+      card.dashboard_only ? h("span", null, personName(card)) : h("a", { href: "#/users?id=" + card.id }, personName(card)),
       card.suspended ? [" ", pill("suspended", "Suspended")] : null);
   }
 
@@ -328,8 +329,8 @@
     var form = h("form", null,
       h("h1", null, requesting ? "Request admin access" : "Sign in"),
       h("p", { class: "signin-sub" }, requesting
-        ? "Sign in with your Synk account, then send your request."
-        : "Use your Synk account."),
+        ? "Sign in with your Synk or dashboard account, then send your request."
+        : "Use your Synk or dashboard account."),
       h("label", { class: "field" }, h("span", null, "Email"), email),
       h("label", { class: "field" }, h("span", null, "Password"), password),
       error,
@@ -339,7 +340,11 @@
         h("button", {
           type: "button", class: "link-btn",
           onclick: function () { renderSignIn(null, !requesting); },
-        }, requesting ? "Sign in" : "Request access")));
+        }, requesting ? "Sign in" : "Request access")),
+      requesting ? h("div", { class: "signin-switch" },
+        "No Synk account? ",
+        h("button", { type: "button", class: "link-btn", onclick: function () { renderSignUp(); } },
+          "Create a dashboard account")) : null);
 
     form.addEventListener("submit", async function (event) {
       event.preventDefault();
@@ -366,6 +371,64 @@
 
     signinLayout(form);
     email.focus();
+  }
+
+  // An account just for the dashboard. dashboard_only tells handle_new_user
+  // not to make a Synk profile for it.
+  function renderSignUp() {
+    var name = h("input", { class: "input", type: "text", autocomplete: "name", required: true, maxlength: 80 });
+    var email = h("input", { class: "input", type: "email", autocomplete: "username", required: true });
+    var password = h("input", { class: "input", type: "password", autocomplete: "new-password", required: true, minlength: 8 });
+    var error = h("p", { class: "form-error", hidden: true });
+    var button = h("button", { class: "btn primary block big", type: "submit" }, "Create account");
+
+    var form = h("form", null,
+      h("h1", null, "Create a dashboard account"),
+      h("p", { class: "signin-sub" }, "For team members without a Synk account. It only works here, not in the app."),
+      h("label", { class: "field" }, h("span", null, "Your name"), name),
+      h("label", { class: "field" }, h("span", null, "Email"), email),
+      h("label", { class: "field" }, h("span", null, "Password"), password),
+      error,
+      button,
+      h("div", { class: "signin-switch" },
+        "Already have an account? ",
+        h("button", { type: "button", class: "link-btn", onclick: function () { renderSignIn(null, true); } }, "Sign in")));
+
+    form.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      error.hidden = true;
+      button.disabled = true;
+      button.textContent = "Creating";
+      var result = await sb.auth.signUp({
+        email: email.value.trim(),
+        password: password.value,
+        options: {
+          emailRedirectTo: location.origin + "/admin/",
+          data: { dashboard_only: true, full_name: name.value.trim() },
+        },
+      });
+      button.disabled = false;
+      button.textContent = "Create account";
+      if (result.error) {
+        error.textContent = result.error.message || "Could not create the account.";
+        error.hidden = false;
+        return;
+      }
+      if (result.data.session) {
+        await enter(result.data.session);
+        return;
+      }
+      signinLayout([
+        h("h1", null, "Check your email"),
+        h("p", { class: "signin-sub" },
+          "We sent a link to " + email.value.trim() + ". Open it, then come back and sign in to send your request."),
+        h("div", { class: "signin-actions" },
+          h("button", { type: "button", class: "btn primary block big", onclick: function () { renderSignIn(null, true); } }, "Sign in")),
+      ]);
+    });
+
+    signinLayout(form);
+    name.focus();
   }
 
   // Signed in but not an admin: ask for access, or wait for an answer.
@@ -445,7 +508,7 @@
       return;
     }
     me = session.user;
-    me.name = "";
+    me.name = (me.user_metadata && me.user_metadata.full_name) || "";
     try {
       var profile = await sb.from("users").select("full_name, username, avatar_url").eq("id", me.id).maybeSingle();
       if (profile.data) {
@@ -1269,6 +1332,7 @@
 
   function renderUsers(params) {
     var filter = params.filter || "all";
+    var gender = params.gender || "all";
     listPage({
       title: "Users",
       filters: [
@@ -1277,13 +1341,18 @@
           { value: "reported", label: "Reported" },
           { value: "suspended", label: "Suspended" },
         ], filter),
+        tabs("gender", [
+          { value: "all", label: "Any gender" },
+          { value: "male", label: "Male" },
+          { value: "female", label: "Female" },
+        ], gender),
         searchBox(params.q, "Search name, username or email"),
       ],
       sort: { key: "joined", dir: "desc" },
       fetch: function (offset, sort) {
         return rpc("admin_list_users", {
           p_search: params.q || null, p_filter: filter, p_limit: PAGE_SIZE, p_offset: offset,
-          p_sort: sort.key, p_dir: sort.dir,
+          p_sort: sort.key, p_dir: sort.dir, p_gender: gender === "all" ? null : gender,
         });
       },
       rowKey: function (row) { return row.id; },
@@ -1577,14 +1646,14 @@
     add.addEventListener("click", async function () {
       var answer = await confirmDialog({
         title: "Add an admin",
-        body: "They need a Synk account. They'll see all users, tickets and reports, and can suspend accounts and delete activities.",
+        body: "They need a Synk account or a dashboard account. They'll see all users, tickets and reports, and can suspend accounts and delete activities.",
         note: { type: "email", label: "Their account email", required: true, missing: "Add an email first." },
         confirm: "Add",
       });
       if (!answer.ok) return;
       runAction(add, "Adding", async function () {
         var res = await rpc("admin_add_admin", { p_email: answer.note });
-        if (res.result === "not_found") throw new Error("No Synk account uses that email.");
+        if (res.result === "not_found") throw new Error("No account uses that email. They can create a dashboard account from the sign-in page first.");
         toast(res.result === "added" ? "Admin added" : "Already an admin");
         load();
         refreshCounts();
@@ -1654,7 +1723,7 @@
             remove.addEventListener("click", async function () {
               var answer = await confirmDialog({
                 title: "Remove " + personName(a) + " as admin?",
-                body: "Their Synk account stays as it is. They just lose access to this dashboard.",
+                body: "Their account stays as it is. They just lose access to this dashboard.",
                 confirm: "Remove",
                 danger: true,
               });
