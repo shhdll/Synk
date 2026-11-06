@@ -5,12 +5,13 @@ import '../../core/constants/synk_colors.dart';
 import '../../l10n/l10n.dart';
 import 'widgets/settings_row.dart';
 
-// TODO: replace with the real team.
 const _team = [
-  (name: '[Name]', role: '[Role]'),
-  (name: '[Name]', role: '[Role]'),
-  (name: '[Name]', role: '[Role]'),
-  (name: '[Name]', role: '[Role]'),
+  'Joud Alhugbani',
+  'Shahad Alhedari',
+  'Muneerah Alhaqbani',
+  'Joud Alwabel',
+  'Laila Aljassar',
+  'Shaden Aljammaz',
 ];
 
 class AboutView extends StatelessWidget {
@@ -59,22 +60,32 @@ class AboutView extends StatelessWidget {
                   const SizedBox(height: 28),
                   _Section(
                     title: l10n.ourStory,
-                    child: Text(
-                      l10n.ourStoryBody,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        height: 1.5,
-                        fontWeight: FontWeight.w500,
-                        color: SynkColors.textPrimary,
-                      ),
-                    ),
+                    initiallyExpanded: true,
+                    child: _Body(l10n.ourStoryBody),
+                  ),
+                  const SizedBox(height: 16),
+                  _Section(
+                    title: l10n.ourMission,
+                    child: _Body(l10n.ourMissionBody),
                   ),
                   const SizedBox(height: 16),
                   _Section(
                     title: l10n.theTeam,
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        for (final member in _team) _TeamMember(member),
+                        _Body(l10n.theTeamBody),
+                        const SizedBox(height: 10),
+                        for (final (i, member) in _team.indexed) ...[
+                          if (i > 0)
+                            Divider(
+                              height: 1,
+                              thickness: 1,
+                              color: SynkColors.textSecondary
+                                  .withValues(alpha: 0.12),
+                            ),
+                          _TeamMember(member),
+                        ],
                       ],
                     ),
                   ),
@@ -124,17 +135,29 @@ class AppVersionText extends StatelessWidget {
   }
 }
 
-class _Section extends StatelessWidget {
-  const _Section({required this.title, required this.child});
+class _Section extends StatefulWidget {
+  const _Section({
+    required this.title,
+    required this.child,
+    this.initiallyExpanded = false,
+  });
 
   final String title;
   final Widget child;
+  final bool initiallyExpanded;
+
+  @override
+  State<_Section> createState() => _SectionState();
+}
+
+class _SectionState extends State<_Section> {
+  late bool _expanded = widget.initiallyExpanded;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(18),
@@ -145,30 +168,78 @@ class _Section extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: SynkColors.textSecondary,
+          InkWell(
+            onTap: () => setState(() => _expanded = !_expanded),
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.title,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: SynkColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  AnimatedRotation(
+                    turns: _expanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: SynkColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 10),
-          child,
+          AnimatedSize(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+            alignment: Alignment.topCenter,
+            child: _expanded
+                ? Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+                    child: widget.child,
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
         ],
       ),
     );
   }
 }
 
-class _TeamMember extends StatelessWidget {
-  const _TeamMember(this.member);
+class _Body extends StatelessWidget {
+  const _Body(this.text);
 
-  final ({String name, String role}) member;
+  final String text;
 
   @override
   Widget build(BuildContext context) {
-    final initial = member.name.replaceAll(RegExp(r'[^\p{L}]', unicode: true), '');
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: 15,
+        height: 1.5,
+        fontWeight: FontWeight.w500,
+        color: SynkColors.textPrimary,
+      ),
+    );
+  }
+}
+
+class _TeamMember extends StatelessWidget {
+  const _TeamMember(this.name);
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    final initial = name.replaceAll(RegExp(r'[^\p{L}]', unicode: true), '');
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -193,26 +264,13 @@ class _TeamMember extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  member.name,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: SynkColors.textPrimary,
-                  ),
-                ),
-                Text(
-                  member.role,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: SynkColors.textSecondary,
-                  ),
-                ),
-              ],
+            child: Text(
+              name,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: SynkColors.textPrimary,
+              ),
             ),
           ),
         ],

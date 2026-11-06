@@ -2914,10 +2914,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get ourStory => 'قصتنا';
 
   @override
-  String get ourStoryBody => '[قصتنا هنا.]';
+  String get ourStoryBody =>
+      'بدأت Synk من فكرة بسيطة: أجمل العلاقات تبدأ غالبًا بشيء صغير. نشاط مشترك، أو اهتمام واحد، أو سبب للحضور. صمّمنا Synk لنجعل هذه الخطوة الأولى أسهل، حتى يصبح التعرّف على أشخاص جدد ومشاركة اللحظات الجميلة أمرًا طبيعيًا.';
 
   @override
-  String get theTeam => 'الفريق';
+  String get ourMission => 'رسالتنا';
+
+  @override
+  String get ourMissionBody =>
+      'حوّل أي يوم إلى خطة. اكتشف نشاطًا ممتعًا، والتقِ بمن يشبهونك، واصنع لحظات تستحق أن تُحكى.';
+
+  @override
+  String get theTeam => 'تعرّف على الفريق';
+
+  @override
+  String get theTeamBody =>
+      'يقف خلف Synk فريق من طلاب هندسة البرمجيات يجمعهم هدف واحد: أن يصبح التواصل الاجتماعي أسهل وأكثر معنى. بالتعاون والإبداع والكثير من الليالي الطويلة، عملنا معًا لنُخرج Synk إلى النور.';
 
   @override
   String get madeInRiyadh => 'صنع في الرياض';

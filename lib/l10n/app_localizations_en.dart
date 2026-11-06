@@ -2983,10 +2983,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ourStory => 'Our story';
 
   @override
-  String get ourStoryBody => '[Our story goes here.]';
+  String get ourStoryBody =>
+      'Synk started with a simple belief: the best connections often begin with something small. A shared activity, a common interest, a reason to show up. We built Synk to make that first step easier, so meeting new people and sharing good moments feels natural.';
 
   @override
-  String get theTeam => 'The team';
+  String get ourMission => 'Our mission';
+
+  @override
+  String get ourMissionBody =>
+      'Turn any day into a plan. Find something fun, meet your people, and make moments worth talking about.';
+
+  @override
+  String get theTeam => 'Meet the team';
+
+  @override
+  String get theTeamBody =>
+      'Synk is built by a team of Software Engineering students who share one goal: making social connections easier and more meaningful. Through collaboration, creativity, and a lot of late nights, we brought Synk to life together.';
 
   @override
   String get madeInRiyadh => 'Made in Riyadh';

@@ -5231,14 +5231,32 @@ abstract class AppLocalizations {
   /// No description provided for @ourStoryBody.
   ///
   /// In en, this message translates to:
-  /// **'[Our story goes here.]'**
+  /// **'Synk started with a simple belief: the best connections often begin with something small. A shared activity, a common interest, a reason to show up. We built Synk to make that first step easier, so meeting new people and sharing good moments feels natural.'**
   String get ourStoryBody;
+
+  /// No description provided for @ourMission.
+  ///
+  /// In en, this message translates to:
+  /// **'Our mission'**
+  String get ourMission;
+
+  /// No description provided for @ourMissionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn any day into a plan. Find something fun, meet your people, and make moments worth talking about.'**
+  String get ourMissionBody;
 
   /// No description provided for @theTeam.
   ///
   /// In en, this message translates to:
-  /// **'The team'**
+  /// **'Meet the team'**
   String get theTeam;
+
+  /// No description provided for @theTeamBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Synk is built by a team of Software Engineering students who share one goal: making social connections easier and more meaningful. Through collaboration, creativity, and a lot of late nights, we brought Synk to life together.'**
+  String get theTeamBody;
 
   /// No description provided for @madeInRiyadh.
   ///
