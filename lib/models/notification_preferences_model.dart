@@ -27,13 +27,19 @@ class NotificationPreferencesModel {
       Map<NotificationKind, bool> values,
       String? ntfyTopic,
       String? savedNtfyTopic,
+      bool telegramLinked,
     })
   >
   fetch() async {
     final userId = _supabase.auth.currentUser?.id;
     final values = {for (final kind in NotificationKind.values) kind: true};
     if (userId == null) {
-      return (values: values, ntfyTopic: null, savedNtfyTopic: null);
+      return (
+        values: values,
+        ntfyTopic: null,
+        savedNtfyTopic: null,
+        telegramLinked: false,
+      );
     }
 
     final row = await _supabase
@@ -41,8 +47,14 @@ class NotificationPreferencesModel {
         .select()
         .eq('user_id', userId)
         .maybeSingle();
+    final telegramLinked = await fetchTelegramLinked();
     if (row == null) {
-      return (values: values, ntfyTopic: null, savedNtfyTopic: null);
+      return (
+        values: values,
+        ntfyTopic: null,
+        savedNtfyTopic: null,
+        telegramLinked: telegramLinked,
+      );
     }
 
     for (final kind in NotificationKind.values) {
@@ -52,7 +64,38 @@ class NotificationPreferencesModel {
       values: values,
       ntfyTopic: row['ntfy_topic'] as String?,
       savedNtfyTopic: row['ntfy_saved_topic'] as String?,
+      telegramLinked: telegramLinked,
     );
+  }
+
+  // Telegram link (supabase/migrations/20261108130000_telegram_notifications.sql).
+  // Only the telegram-webhook function sets the chat id.
+  Future<bool> fetchTelegramLinked() async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) return false;
+
+    final row = await _supabase
+        .from('telegram_links')
+        .select('chat_id')
+        .eq('user_id', userId)
+        .maybeSingle();
+    return row?['chat_id'] != null;
+  }
+
+  // One-time code for https://t.me/<bot>?start=<code>.
+  Future<String> telegramLinkCode(String language) async {
+    final code = await _supabase.rpc(
+      'telegram_link_code',
+      params: {'p_language': language},
+    );
+    return code as String;
+  }
+
+  Future<void> unlinkTelegram() async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) throw AuthSessionMissingException();
+
+    await _supabase.from('telegram_links').delete().eq('user_id', userId);
   }
 
   Future<void> save(NotificationKind kind, bool enabled) async {

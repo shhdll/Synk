@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -7,6 +8,7 @@ import '../../controllers/chat_controller.dart';
 import '../../controllers/friends_controller.dart';
 import '../../controllers/home_discovery_controller.dart';
 import '../../controllers/notification_center_controller.dart';
+import '../../controllers/notification_preferences_controller.dart';
 import '../../core/constants/synk_colors.dart';
 import '../../models/activities_model.dart';
 import '../../models/activity_model.dart';
@@ -15,6 +17,7 @@ import '../../models/activity_rating_model.dart';
 import '../../models/auth_model.dart';
 import '../../models/home_tab.dart';
 import '../../models/streak_intro.dart';
+import '../../models/telegram_intro.dart';
 import '../../services/push_notification_service.dart';
 import '../create_activity/create_activity_view.dart';
 import 'activities_view.dart';
@@ -25,6 +28,7 @@ import 'schedule_conflict_resolution_view.dart';
 import 'widgets/activity_rating_sheet.dart';
 import 'widgets/bottom_bar.dart';
 import 'widgets/streak_widgets.dart';
+import 'widgets/telegram_connect.dart';
 import '../welcome_view.dart';
 
 class MainShell extends StatefulWidget {
@@ -100,17 +104,14 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     unawaited(_loadActivities().then((_) => _showOpeningPopups()));
 
     WidgetsBinding.instance.addObserver(this);
-    _requestPoll = Timer.periodic(
-      _requestPollInterval,
-      (_) {
-        _loadPendingRequestCount();
-        unawaited(_leaveIfAccountGone());
-        unawaited(_requireScheduleConflictResolution());
-        unawaited(_notifications.refresh());
-        unawaited(FriendsController.instance.refresh());
-        unawaited(ChatController.instance.refresh());
-      },
-    );
+    _requestPoll = Timer.periodic(_requestPollInterval, (_) {
+      _loadPendingRequestCount();
+      unawaited(_leaveIfAccountGone());
+      unawaited(_requireScheduleConflictResolution());
+      unawaited(_notifications.refresh());
+      unawaited(FriendsController.instance.refresh());
+      unawaited(ChatController.instance.refresh());
+    });
   }
 
   void _openMapForFocus() {
@@ -204,8 +205,27 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   // The streak greeting first, then a rating offer once it is closed, so
   // the two sheets never stack.
   Future<void> _showOpeningPopups() async {
+    await _offerTelegram();
     await _showStreakOnOpen();
     await _offerActivityRating();
+  }
+
+  // iPhones have no native push, so offer Telegram once for each account on
+  // the device. Skipped if they already have it.
+  Future<void> _offerTelegram() async {
+    if (!Platform.isIOS || !mounted) return;
+    if (ModalRoute.of(context)?.isCurrent != true) return;
+    final controller = NotificationPreferencesController();
+    try {
+      await controller.load();
+      if (controller.loadFailed) return;
+      if (controller.telegramLinked) return;
+      if (!await TelegramIntro.takeTurn(_activityStore.currentUserId)) return;
+      if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
+      await showTelegramPrompt(context, controller);
+    } finally {
+      controller.dispose();
+    }
   }
 
   // Pops up the streak sheet once a day when the app opens. Skipped, without
