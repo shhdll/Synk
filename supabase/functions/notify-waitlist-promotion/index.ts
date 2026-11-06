@@ -10,6 +10,7 @@ const FCM_SERVICE_ACCOUNT_JSON = Deno.env.get("FCM_SERVICE_ACCOUNT_JSON");
 const FCM_SCOPE = "https://www.googleapis.com/auth/firebase.messaging";
 const NTFY_URL = "https://ntfy.sh";
 const NTFY_LOGO_URL = "https://www.synk.cc/logo.png";
+const TELEGRAM_BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
 
 type PromotionEvent = {
   id: string;
@@ -388,6 +389,44 @@ async function sendToNtfy(
   }
 }
 
+function escapeHtml(text: string): string {
+  return text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+}
+
+// Sends a copy to the user's Telegram chat with the Synk bot, for iPhones
+// without native push. gone means the user blocked the bot.
+async function sendToTelegram(
+  chatId: number,
+  event: PromotionEvent,
+  language: string,
+): Promise<{ sent: boolean; gone: boolean }> {
+  const { title, body } = notificationContent(event, language);
+  try {
+    const response = await fetch(
+      `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: `<b>${escapeHtml(title)}</b>\n${escapeHtml(body)}`,
+          parse_mode: "HTML",
+          link_preview_options: { is_disabled: true },
+        }),
+      },
+    );
+    if (!response.ok) {
+      console.error("Telegram rejected notification delivery", {
+        httpStatus: response.status,
+      });
+    }
+    return { sent: response.ok, gone: response.status === 403 };
+  } catch {
+    console.error("Telegram delivery failed");
+    return { sent: false, gone: false };
+  }
+}
+
 function preferenceColumn(eventType: NonNullable<PromotionEvent["event_type"]>): string {
   switch (eventType) {
     case "waitlist_promotion":
@@ -612,14 +651,35 @@ Deno.serve(async (request: Request) => {
     ? await sendToNtfy(ntfyTopic, typedEvent, tokens?.[0]?.language ?? "en")
     : false;
 
+  let telegramSent = false;
+  if (TELEGRAM_BOT_TOKEN) {
+    const { data: telegram } = await admin.from("telegram_links")
+      .select("chat_id, language")
+      .eq("user_id", typedEvent.user_id)
+      .not("chat_id", "is", null)
+      .maybeSingle();
+    if (telegram) {
+      const outcome = await sendToTelegram(
+        telegram.chat_id as number,
+        typedEvent,
+        telegram.language as string,
+      );
+      telegramSent = outcome.sent;
+      if (outcome.gone) {
+        await admin.from("telegram_links").delete().eq("user_id", typedEvent.user_id);
+      }
+    }
+  }
+  const extraSent = (ntfySent ? 1 : 0) + (telegramSent ? 1 : 0);
+
   if (!tokens?.length) {
     await admin.from(outboxTable)
       .update({
-        status: ntfySent ? "sent" : "no_tokens",
+        status: extraSent > 0 ? "sent" : "no_tokens",
         processed_at: new Date().toISOString(),
       })
       .eq("id", eventId);
-    return jsonResponse({ ok: true, sent: ntfySent ? 1 : 0 });
+    return jsonResponse({ ok: true, sent: extraSent });
   }
 
   let credentials: FcmCredentials;
@@ -666,8 +726,7 @@ Deno.serve(async (request: Request) => {
         .in("fcm_token", invalidTokens);
     }
 
-    const sent = outcomes.filter((outcome) => outcome.sent).length +
-      (ntfySent ? 1 : 0);
+    const sent = outcomes.filter((outcome) => outcome.sent).length + extraSent;
     await admin.from(outboxTable)
       .update({
         status: sent > 0 ? "sent" : "failed",

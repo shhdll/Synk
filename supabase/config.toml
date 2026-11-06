@@ -34,3 +34,8 @@ verify_jwt = false
 enabled = true
 # Checks the user token itself.
 verify_jwt = false
+
+[functions.telegram-webhook]
+enabled = true
+# Checks Telegram's secret token header itself.
+verify_jwt = false
