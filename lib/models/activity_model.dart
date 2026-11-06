@@ -353,8 +353,17 @@ class ActivityStore extends ChangeNotifier {
       _personalActivities.where((activity) => !activity.isPast).toList()
         ..sort((first, second) => first.dateTime.compareTo(second.dateTime));
 
+  // Pending and waitlisted requests never became a seat, so they don't
+  // belong in history.
   List<Activity> get past =>
-      _personalActivities.where((activity) => activity.isPast).toList()
+      _personalActivities
+          .where(
+            (activity) =>
+                activity.isPast &&
+                !activity.isWaitlisted &&
+                !activity.isPending,
+          )
+          .toList()
         ..sort((first, second) => second.dateTime.compareTo(first.dateTime));
 
   // Activities the user hosted or was accepted into whose time has passed.
