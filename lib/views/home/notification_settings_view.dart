@@ -5,7 +5,7 @@ import '../../core/constants/synk_colors.dart';
 import '../../l10n/l10n.dart';
 import '../../models/notification_preferences_model.dart';
 import '../../utils/custom_widgets/synk_feedback.dart';
-import 'ntfy_settings_view.dart';
+import 'iphone_notifications_view.dart';
 import 'widgets/settings_row.dart';
 
 class NotificationSettingsView extends StatefulWidget {
@@ -172,8 +172,9 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                             title: l10n.ntfyPageTitle,
                             onTap: () => Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (_) =>
-                                    NtfySettingsView(controller: _controller),
+                                builder: (_) => IphoneNotificationsView(
+                                  controller: _controller,
+                                ),
                               ),
                             ),
                           ),

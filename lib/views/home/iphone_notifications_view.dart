@@ -7,42 +7,83 @@ import '../../core/constants/synk_colors.dart';
 import '../../l10n/l10n.dart';
 import '../../utils/custom_widgets/synk_feedback.dart';
 import 'widgets/settings_row.dart';
+import 'widgets/telegram_connect.dart';
 
+final _telegramAppStoreUrl = Uri.parse(
+  'https://apps.apple.com/app/telegram-messenger/id686449807',
+);
 final _ntfyAppStoreUrl = Uri.parse(
   'https://apps.apple.com/app/ntfy/id1625396347',
 );
 
-// iPhone notifications through the ntfy app, for builds without native push.
-class NtfySettingsView extends StatelessWidget {
-  const NtfySettingsView({super.key, required this.controller});
+// iPhone notifications through Telegram or the ntfy app, for builds without
+// native push.
+class IphoneNotificationsView extends StatefulWidget {
+  const IphoneNotificationsView({super.key, required this.controller});
 
   final NotificationPreferencesController controller;
 
-  Future<void> _setEnabled(BuildContext context, bool enabled) async {
-    final ok = await controller.setNtfyEnabled(enabled);
-    if (!ok && context.mounted) {
-      SynkFeedback.showError(
-        context,
-        context.l10n.somethingWentWrongPleaseTryAgain,
-      );
-    }
+  @override
+  State<IphoneNotificationsView> createState() =>
+      _IphoneNotificationsViewState();
+}
+
+class _IphoneNotificationsViewState extends State<IphoneNotificationsView> {
+  late final AppLifecycleListener _lifecycle;
+  bool _connecting = false;
+
+  NotificationPreferencesController get _controller => widget.controller;
+
+  @override
+  void initState() {
+    super.initState();
+    // The bot saves the link, so check when the user comes back from Telegram.
+    _lifecycle = AppLifecycleListener(onResume: _controller.refreshTelegram);
   }
 
-  Future<void> _copyTopic(BuildContext context, String topic) async {
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    super.dispose();
+  }
+
+  void _showError() {
+    if (!mounted) return;
+    SynkFeedback.showError(
+      context,
+      context.l10n.somethingWentWrongPleaseTryAgain,
+    );
+  }
+
+  Future<void> _connectTelegram() async {
+    setState(() => _connecting = true);
+    await openTelegramConnect(context, _controller);
+    if (mounted) setState(() => _connecting = false);
+  }
+
+  Future<void> _disconnectTelegram() async {
+    final ok = await _controller.disconnectTelegram();
+    if (!ok) _showError();
+  }
+
+  Future<void> _setNtfyEnabled(bool enabled) async {
+    final ok = await _controller.setNtfyEnabled(enabled);
+    if (!ok) _showError();
+  }
+
+  Future<void> _copyTopic(String topic) async {
     await Clipboard.setData(ClipboardData(text: topic));
-    if (!context.mounted) return;
+    if (!mounted) return;
     SynkFeedback.showToast(context, title: context.l10n.notifPrefNtfyCopied);
+  }
+
+  void _open(Uri url) {
+    launchUrl(url, mode: LaunchMode.externalApplication);
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final steps = [
-      l10n.ntfyStep1,
-      l10n.ntfyStep2,
-      l10n.ntfyStep3,
-      l10n.ntfyStep4,
-    ];
 
     return Scaffold(
       backgroundColor: SynkColors.background,
@@ -52,34 +93,96 @@ class NtfySettingsView extends StatelessWidget {
             SettingsHeader(title: l10n.ntfyPageTitle),
             Expanded(
               child: ListenableBuilder(
-                listenable: controller,
+                listenable: _controller,
                 builder: (context, _) {
-                  final topic = controller.ntfyTopic;
+                  final linked = _controller.telegramLinked;
+                  final topic = _controller.ntfyTopic;
 
                   return ListView(
                     padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
                     children: [
                       const _IphoneOnlyBanner(),
-                      const SizedBox(height: 32),
-                      SettingsGroup(
-                        title: l10n.ntfyStepsTitle,
+                      const SizedBox(height: 24),
+                      Padding(
+                        padding: const EdgeInsetsDirectional.fromSTEB(
+                          16,
+                          0,
+                          16,
+                          10,
+                        ),
+                        child: Text(
+                          l10n.iphoneNotifPickOne,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: SynkColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                      _FoldableSection(
+                        icon: Icons.send_rounded,
+                        iconColor: SynkColors.teal,
+                        title: l10n.telegramTitle,
+                        status: linked
+                            ? l10n.telegramConnected
+                            : l10n.telegramRecommended,
+                        initiallyOpen: true,
                         children: [
-                          for (var i = 0; i < steps.length; i++)
-                            _Step(number: i + 1, text: steps[i]),
+                          SettingsRow(
+                            icon: Icons.download_rounded,
+                            iconColor: SynkColors.teal,
+                            title: l10n.telegramGetApp,
+                            subtitle: l10n.ntfyGetAppHint,
+                            onTap: () => _open(_telegramAppStoreUrl),
+                          ),
+                          if (linked) ...[
+                            SettingsRow(
+                              icon: Icons.check_circle_rounded,
+                              iconColor: SynkColors.teal,
+                              title: l10n.telegramConnected,
+                              subtitle: l10n.telegramConnectedHint,
+                            ),
+                            SettingsRow(
+                              icon: Icons.link_off_rounded,
+                              iconColor: SynkColors.badge,
+                              title: l10n.telegramDisconnect,
+                              destructive: true,
+                              onTap: _disconnectTelegram,
+                            ),
+                          ] else
+                            SettingsRow(
+                              icon: Icons.link_rounded,
+                              iconColor: SynkColors.orangeDark,
+                              title: l10n.telegramConnect,
+                              subtitle: l10n.telegramConnectHint,
+                              trailing: _connecting
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: SynkColors.orangeDark,
+                                      ),
+                                    )
+                                  : null,
+                              onTap: _connecting ? null : _connectTelegram,
+                            ),
                         ],
                       ),
-                      const SizedBox(height: 24),
-                      SettingsGroup(
+                      const SizedBox(height: 16),
+                      _FoldableSection(
+                        icon: Icons.notifications_rounded,
+                        iconColor: SynkColors.orangeDark,
+                        title: l10n.ntfyTitle,
+                        status: topic != null ? l10n.ntfyOn : null,
+                        initiallyOpen: topic != null,
                         children: [
                           SettingsRow(
                             icon: Icons.download_rounded,
                             iconColor: SynkColors.teal,
                             title: l10n.ntfyGetApp,
                             subtitle: l10n.ntfyGetAppHint,
-                            onTap: () => launchUrl(
-                              _ntfyAppStoreUrl,
-                              mode: LaunchMode.externalApplication,
-                            ),
+                            onTap: () => _open(_ntfyAppStoreUrl),
                           ),
                           SettingsRow(
                             icon: Icons.phone_iphone_rounded,
@@ -89,21 +192,21 @@ class NtfySettingsView extends StatelessWidget {
                             trailing: Switch.adaptive(
                               value: topic != null,
                               activeTrackColor: SynkColors.teal,
-                              onChanged: (value) => _setEnabled(context, value),
+                              onChanged: _setNtfyEnabled,
                             ),
                           ),
                           if (topic != null)
                             SettingsRow(
                               icon: Icons.tag_rounded,
                               iconColor: SynkColors.pink,
-                              title: l10n.notifPrefNtfyTopic,
-                              subtitle: topic,
+                              title: topic,
+                              subtitle: l10n.ntfyTopicHint,
                               trailing: const Icon(
                                 Icons.copy_rounded,
                                 size: 18,
                                 color: SynkColors.textSecondary,
                               ),
-                              onTap: () => _copyTopic(context, topic),
+                              onTap: () => _copyTopic(topic),
                             ),
                         ],
                       ),
@@ -114,6 +217,84 @@ class NtfySettingsView extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// A settings group that opens and closes from its title row.
+class _FoldableSection extends StatefulWidget {
+  const _FoldableSection({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    this.status,
+    this.initiallyOpen = false,
+    required this.children,
+  });
+
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String? status;
+  final bool initiallyOpen;
+  final List<Widget> children;
+
+  @override
+  State<_FoldableSection> createState() => _FoldableSectionState();
+}
+
+class _FoldableSectionState extends State<_FoldableSection> {
+  late bool _open = widget.initiallyOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final divider = Divider(
+      height: 1,
+      thickness: 1,
+      indent: 60,
+      color: SynkColors.textSecondary.withValues(alpha: 0.10),
+    );
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: SynkColors.textSecondary.withValues(alpha: 0.10),
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          SettingsRow(
+            icon: widget.icon,
+            iconColor: widget.iconColor,
+            title: widget.title,
+            value: widget.status,
+            trailing: AnimatedRotation(
+              turns: _open ? 0.5 : 0,
+              duration: const Duration(milliseconds: 200),
+              child: Icon(
+                Icons.expand_more_rounded,
+                color: SynkColors.textSecondary.withValues(alpha: 0.6),
+              ),
+            ),
+            onTap: () => setState(() => _open = !_open),
+          ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+            alignment: Alignment.topCenter,
+            child: _open
+                ? Column(
+                    children: [
+                      for (final child in widget.children) ...[divider, child],
+                    ],
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
+        ],
       ),
     );
   }
@@ -153,52 +334,6 @@ class _IphoneOnlyBanner extends StatelessWidget {
           color: SynkColors.textSecondary.withValues(alpha: 0.18),
         ),
       ],
-    );
-  }
-}
-
-class _Step extends StatelessWidget {
-  const _Step({required this.number, required this.text});
-
-  final int number;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsetsDirectional.fromSTEB(14, 12, 12, 12),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              color: SynkColors.orangeLight,
-              shape: BoxShape.circle,
-            ),
-            child: Text(
-              '$number',
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: SynkColors.orangeDeep,
-              ),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                fontSize: 14.5,
-                fontWeight: FontWeight.w600,
-                color: SynkColors.textPrimary,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

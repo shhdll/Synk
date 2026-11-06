@@ -15,6 +15,7 @@ class NotificationPreferencesController extends ChangeNotifier {
 
   // The user's topic, kept while ntfy is off.
   String? _savedNtfyTopic;
+  bool _telegramLinked = false;
   bool _isLoading = true;
   bool _loadFailed = false;
 
@@ -22,6 +23,7 @@ class NotificationPreferencesController extends ChangeNotifier {
   bool get loadFailed => _loadFailed;
   bool isEnabled(NotificationKind kind) => _values[kind] ?? true;
   String? get ntfyTopic => _ntfyTopic;
+  bool get telegramLinked => _telegramLinked;
 
   Future<void> load() async {
     _isLoading = true;
@@ -32,6 +34,7 @@ class NotificationPreferencesController extends ChangeNotifier {
       _values = result.values;
       _ntfyTopic = result.ntfyTopic;
       _savedNtfyTopic = result.savedNtfyTopic ?? result.ntfyTopic;
+      _telegramLinked = result.telegramLinked;
     } catch (_) {
       _loadFailed = true;
     } finally {
@@ -71,6 +74,37 @@ class NotificationPreferencesController extends ChangeNotifier {
     } catch (_) {
       _ntfyTopic = previous;
       notifyListeners();
+      return false;
+    }
+  }
+
+  // Code for opening the Synk bot, or null if it could not be made.
+  Future<String?> telegramLinkCode(String language) async {
+    try {
+      return await _model.telegramLinkCode(language);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // The link is saved by the bot, so check again when the user comes back.
+  // Connecting also turns ntfy off, so its topic is read again too.
+  Future<void> refreshTelegram() async {
+    try {
+      final result = await _model.fetch();
+      _telegramLinked = result.telegramLinked;
+      _ntfyTopic = result.ntfyTopic;
+      notifyListeners();
+    } catch (_) {}
+  }
+
+  Future<bool> disconnectTelegram() async {
+    try {
+      await _model.unlinkTelegram();
+      _telegramLinked = false;
+      notifyListeners();
+      return true;
+    } catch (_) {
       return false;
     }
   }

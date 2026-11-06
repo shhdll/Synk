@@ -5366,11 +5366,11 @@ abstract class AppLocalizations {
   /// **'Your Synk notifications go to ntfy'**
   String get notifPrefNtfyHint;
 
-  /// No description provided for @notifPrefNtfyTopic.
+  /// No description provided for @ntfyTopicHint.
   ///
   /// In en, this message translates to:
-  /// **'Your topic'**
-  String get notifPrefNtfyTopic;
+  /// **'Tap to copy, then in ntfy tap +, paste it and tap Subscribe'**
+  String get ntfyTopicHint;
 
   /// No description provided for @notifPrefNtfyCopied.
   ///
@@ -5383,36 +5383,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'iPhone notifications'**
   String get ntfyPageTitle;
-
-  /// No description provided for @ntfyStepsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'How to set it up'**
-  String get ntfyStepsTitle;
-
-  /// No description provided for @ntfyStep1.
-  ///
-  /// In en, this message translates to:
-  /// **'Get ntfy from the App Store'**
-  String get ntfyStep1;
-
-  /// No description provided for @ntfyStep2.
-  ///
-  /// In en, this message translates to:
-  /// **'Turn on Send to ntfy below'**
-  String get ntfyStep2;
-
-  /// No description provided for @ntfyStep3.
-  ///
-  /// In en, this message translates to:
-  /// **'Tap your topic to copy it'**
-  String get ntfyStep3;
-
-  /// No description provided for @ntfyStep4.
-  ///
-  /// In en, this message translates to:
-  /// **'In ntfy, tap +, paste the topic and tap Subscribe'**
-  String get ntfyStep4;
 
   /// No description provided for @ntfyGetApp.
   ///
@@ -5719,6 +5689,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only for iPhone users'**
   String get ntfyIphoneOnly;
+
+  /// No description provided for @telegramTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Telegram'**
+  String get telegramTitle;
+
+  /// No description provided for @telegramRecommended.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended'**
+  String get telegramRecommended;
+
+  /// No description provided for @telegramGetApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Telegram'**
+  String get telegramGetApp;
+
+  /// No description provided for @telegramConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Telegram'**
+  String get telegramConnect;
+
+  /// No description provided for @telegramConnectHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Then tap Start in Telegram'**
+  String get telegramConnectHint;
+
+  /// No description provided for @telegramConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get telegramConnected;
+
+  /// No description provided for @telegramConnectedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Synk notifications go to Telegram'**
+  String get telegramConnectedHint;
+
+  /// No description provided for @telegramDisconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect Telegram'**
+  String get telegramDisconnect;
+
+  /// No description provided for @ntfyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'ntfy'**
+  String get ntfyTitle;
+
+  /// No description provided for @ntfyOn.
+  ///
+  /// In en, this message translates to:
+  /// **'On'**
+  String get ntfyOn;
+
+  /// No description provided for @iphoneNotifPickOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick one way to get your notifications'**
+  String get iphoneNotifPickOne;
+
+  /// No description provided for @telegramPromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get notifications on your iPhone'**
+  String get telegramPromptTitle;
+
+  /// No description provided for @telegramPromptMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Synk sends iPhone notifications through Telegram. Connect it now and tap Start.'**
+  String get telegramPromptMessage;
+
+  /// No description provided for @telegramSwitchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to Telegram?'**
+  String get telegramSwitchTitle;
+
+  /// No description provided for @telegramSwitchMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Telegram notifications are more reliable than ntfy. Connect it and tap Start, and ntfy turns off by itself.'**
+  String get telegramSwitchMessage;
+
+  /// No description provided for @notNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get notNow;
 
   /// No description provided for @supportSubtitle.
   ///

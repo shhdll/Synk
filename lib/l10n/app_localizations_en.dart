@@ -3055,28 +3055,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifPrefNtfyHint => 'Your Synk notifications go to ntfy';
 
   @override
-  String get notifPrefNtfyTopic => 'Your topic';
+  String get ntfyTopicHint =>
+      'Tap to copy, then in ntfy tap +, paste it and tap Subscribe';
 
   @override
   String get notifPrefNtfyCopied => 'Topic copied';
 
   @override
   String get ntfyPageTitle => 'iPhone notifications';
-
-  @override
-  String get ntfyStepsTitle => 'How to set it up';
-
-  @override
-  String get ntfyStep1 => 'Get ntfy from the App Store';
-
-  @override
-  String get ntfyStep2 => 'Turn on Send to ntfy below';
-
-  @override
-  String get ntfyStep3 => 'Tap your topic to copy it';
-
-  @override
-  String get ntfyStep4 => 'In ntfy, tap +, paste the topic and tap Subscribe';
 
   @override
   String get ntfyGetApp => 'Get ntfy';
@@ -3259,6 +3245,56 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ntfyIphoneOnly => 'Only for iPhone users';
+
+  @override
+  String get telegramTitle => 'Telegram';
+
+  @override
+  String get telegramRecommended => 'Recommended';
+
+  @override
+  String get telegramGetApp => 'Get Telegram';
+
+  @override
+  String get telegramConnect => 'Connect Telegram';
+
+  @override
+  String get telegramConnectHint => 'Then tap Start in Telegram';
+
+  @override
+  String get telegramConnected => 'Connected';
+
+  @override
+  String get telegramConnectedHint => 'Your Synk notifications go to Telegram';
+
+  @override
+  String get telegramDisconnect => 'Disconnect Telegram';
+
+  @override
+  String get ntfyTitle => 'ntfy';
+
+  @override
+  String get ntfyOn => 'On';
+
+  @override
+  String get iphoneNotifPickOne => 'Pick one way to get your notifications';
+
+  @override
+  String get telegramPromptTitle => 'Get notifications on your iPhone';
+
+  @override
+  String get telegramPromptMessage =>
+      'Synk sends iPhone notifications through Telegram. Connect it now and tap Start.';
+
+  @override
+  String get telegramSwitchTitle => 'Switch to Telegram?';
+
+  @override
+  String get telegramSwitchMessage =>
+      'Telegram notifications are more reliable than ntfy. Connect it and tap Start, and ntfy turns off by itself.';
+
+  @override
+  String get notNow => 'Not now';
 
   @override
   String get supportSubtitle => 'We read every message.';

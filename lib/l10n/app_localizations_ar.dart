@@ -2986,28 +2986,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notifPrefNtfyHint => 'تصلك إشعارات Synk عبر ntfy';
 
   @override
-  String get notifPrefNtfyTopic => 'الموضوع الخاص بك';
+  String get ntfyTopicHint =>
+      'اضغط للنسخ، ثم في ntfy اضغط +، الصقه واضغط Subscribe';
 
   @override
   String get notifPrefNtfyCopied => 'تم نسخ الموضوع';
 
   @override
   String get ntfyPageTitle => 'إشعارات الآيفون';
-
-  @override
-  String get ntfyStepsTitle => 'طريقة التفعيل';
-
-  @override
-  String get ntfyStep1 => 'حمل ntfy من App Store';
-
-  @override
-  String get ntfyStep2 => 'فعل الإرسال إلى ntfy في الأسفل';
-
-  @override
-  String get ntfyStep3 => 'اضغط على الموضوع لنسخه';
-
-  @override
-  String get ntfyStep4 => 'في ntfy، اضغط +، الصق الموضوع ثم اضغط Subscribe';
 
   @override
   String get ntfyGetApp => 'حمل ntfy';
@@ -3187,6 +3173,56 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get ntfyIphoneOnly => 'لمستخدمي الآيفون فقط';
+
+  @override
+  String get telegramTitle => 'تيليجرام';
+
+  @override
+  String get telegramRecommended => 'موصى به';
+
+  @override
+  String get telegramGetApp => 'حمل تيليجرام';
+
+  @override
+  String get telegramConnect => 'ربط تيليجرام';
+
+  @override
+  String get telegramConnectHint => 'ثم اضغط ابدأ (Start) في تيليجرام';
+
+  @override
+  String get telegramConnected => 'تم الربط';
+
+  @override
+  String get telegramConnectedHint => 'تصلك إشعارات Synk عبر تيليجرام';
+
+  @override
+  String get telegramDisconnect => 'إلغاء ربط تيليجرام';
+
+  @override
+  String get ntfyTitle => 'ntfy';
+
+  @override
+  String get ntfyOn => 'مفعل';
+
+  @override
+  String get iphoneNotifPickOne => 'اختر طريقة واحدة لتصلك الإشعارات';
+
+  @override
+  String get telegramPromptTitle => 'استقبل الإشعارات على الآيفون';
+
+  @override
+  String get telegramPromptMessage =>
+      'يرسل Synk إشعارات الآيفون عبر تيليجرام. اربطه الآن واضغط ابدأ (Start)';
+
+  @override
+  String get telegramSwitchTitle => 'تنتقل إلى تيليجرام؟';
+
+  @override
+  String get telegramSwitchMessage =>
+      'إشعارات تيليجرام أكثر ثباتا من ntfy. اربطه واضغط ابدأ (Start)، وسيتوقف ntfy تلقائيا';
+
+  @override
+  String get notNow => 'ليس الآن';
 
   @override
   String get supportSubtitle => 'نقرأ كل رسالة';
