@@ -4,11 +4,11 @@
 
 Synk is a Flutter application for Android and iOS that helps Riyadh residents connect through shared interests, discover local activities, and organize meetups.
 
-The current implementation includes accounts and profiles, creating and joining activities, search and filters, a live map, waitlists, push notifications, and Arabic/English support.
+The current implementation includes accounts and profiles, creating and joining activities, search and filters, a live map, waitlists, friends, activity and friend chats, ratings, weather, a weekly streak, notifications, an admin dashboard, and Arabic/English support.
 
 **Team:** Group #10  
-**Project version:** `1.0.0+1`  
-**Last documentation review:** 21 October 2026
+**Project version:** set automatically at build time  
+**Last documentation review:** 6 November 2026
 
 ---
 
@@ -35,7 +35,7 @@ The current implementation includes accounts and profiles, creating and joining 
 | Create Activity | Implemented |
 | Activity location search | Implemented using Google Places through a Supabase Edge Function |
 | Activity photo upload | Implemented using Supabase Storage |
-| Activity search | Implemented (by name) |
+| Activity search | Implemented (typo-tolerant, matches the start of words, Arabic and English) |
 | Activity filtering | Implemented (time, location, category) |
 | Map | Implemented with activity markers, filters, and marker preview |
 | Activity details | Implemented with status tags: Available, One More Needed, Full |
@@ -49,9 +49,29 @@ The current implementation includes accounts and profiles, creating and joining 
 | Share activity code | Implemented with a ready-made message |
 | View another user's profile | Implemented |
 | Past activities and completed count | Implemented |
-| Push notifications | Implemented on Android only |
+| Push notifications | Implemented on Android; on iPhone through the ntfy app |
+| Notification center | Implemented (read and delete notifications) |
+| Notification settings | Implemented (each notification type can be turned on or off) |
 | Arabic/English | Implemented with RTL/LTR layout |
 | iOS support | Implemented |
+| Same-gender visibility | Activities, activity codes, and friends are limited to users of the same gender |
+| Friends | Implemented (send, accept, reject, cancel, and remove friend requests) |
+| Friends going | Shows which friends joined an activity |
+| Blocking | Implemented (block and unblock users from Settings) |
+| Reporting users | Implemented with a reason and optional details |
+| Activity chats | Implemented (created automatically, closed after the activity ends) |
+| Friend chats | Implemented (one-to-one) |
+| Chat features | Share activities, photos, and locations; mute and delete chats; delete messages for everyone or just me |
+| Ratings | Implemented (rate participants after an activity; view ratings and reviews on profiles) |
+| Recent activities | Shown on a user's profile |
+| Waitlist position | Shows your place in the waitlist and how many are waiting |
+| Activity suggestions | Implemented (Top Picks based on interests and location) |
+| Weather | Implemented for an activity's location and date using Open-Meteo |
+| Weekly streak | Implemented (weeks in a row with an attended activity; shown on Home) |
+| Settings | Implemented (language, notifications, blocked users, support, About page, delete account) |
+| Contact support | Implemented (form in Settings; replies by email) |
+| Delete account | Implemented (permanently deletes the account and its data) |
+| Admin dashboard | Implemented as a web page (statistics, support requests, and reports review) |
 
 ### Implemented Highlights
 
@@ -71,6 +91,12 @@ The current implementation includes accounts and profiles, creating and joining 
 - Separate upcoming and past activity lists for the signed-in user
 - Push notifications for join requests, accepted and rejected requests, waitlist promotion, and activity updates or cancellations
 - Joining, leaving, waitlist promotion, and host transfer run in database functions with row-level locking, so simultaneous actions stay consistent
+- Friends, friend requests, blocking, and reporting, with notifications for new and accepted requests
+- Group chats for every activity and one-to-one chats with friends, with shared activities, photos, and locations
+- Ratings and reviews after an activity, shown on user profiles
+- Weather forecast on activity details
+- A weekly streak that greets the user once a day and turns grey near the end of the week when nothing is booked
+- A web admin dashboard for statistics, support requests, and reported content
 
 ---
 
@@ -78,10 +104,6 @@ The current implementation includes accounts and profiles, creating and joining 
 
 The following features are not yet fully available:
 
-- Live weather information and weather-based suggestions
-- Activity group chats
-- Friend management
-- Participant ratings
 - Profile verification
 - Activity check-in
 
@@ -100,7 +122,11 @@ The following features are not yet fully available:
 | Server-side integration | Supabase Edge Functions |
 | Location search | Google Places API |
 | Map dependency | `google_maps_flutter` |
-| Push notifications | Firebase Cloud Messaging (`firebase_messaging`) |
+| Push notifications | Firebase Cloud Messaging (`firebase_messaging`); ntfy on iPhone |
+| Weather | Open-Meteo API (`http`) |
+| Swipe actions | `flutter_slidable` |
+| App version info | `package_info_plus` |
+| Admin dashboard and landing pages | HTML, CSS, and JavaScript in `landing/`, deployed on Vercel |
 | Localization | `flutter_localizations` with ARB files in `lib/l10n/` |
 | Environment configuration | `flutter_dotenv` |
 | Image selection | `image_picker` |
@@ -137,10 +163,17 @@ lib/
 
 supabase/
 ├── functions/
+│   ├── delete-account/
 │   ├── notify-waitlist-promotion/
-│   └── places-proxy/
+│   ├── places-proxy/
+│   ├── reply-support/
+│   ├── request-admin/
+│   └── submit-support/
 ├── migrations/
 └── templates/
+
+landing/
+└── admin/
 
 assets/
 android/
@@ -233,9 +266,12 @@ The application requires:
 - Row-Level Security policies for profiles, activities, and storage
 - An `avatars` Storage bucket for profile photos
 - An `activity-photos` Storage bucket for activity photos
+- A `chat-photos` Storage bucket for photos sent in chats
+- A `support-screenshots` Storage bucket for screenshots attached to support requests
 - The `places-proxy` Edge Function for Google Places requests
 - A server-side `GOOGLE_PLACES_API_KEY` secret for the Edge Function
 - The `notify-waitlist-promotion` Edge Function for push notifications, with the `FCM_SERVICE_ACCOUNT_JSON` and `PROMOTION_WEBHOOK_SECRET` secrets
+- The `submit-support`, `reply-support`, `request-admin`, and `delete-account` Edge Functions
 - The migrations in `supabase/migrations/`
 - Password-recovery and email-confirmation redirect URLs
 
@@ -284,9 +320,13 @@ Replace `<device-id>` with an ID displayed by `flutter devices`.
 8. Open an activity to join, leave, or join its waitlist, or enter an activity code to join.
 9. Use **Create Activity** to enter activity details, select a location, configure the schedule and capacity, and publish the activity.
 10. Use the Activities screen to view the signed-in user’s upcoming and past activities.
-11. Use the Profile screen to view or edit account information, interests, email, password, and profile photo.
-12. Use **Forgot Password** to request a password-recovery email.
-13. Log out from the profile area when finished.
+11. Use the Chats screen to talk in activity group chats or with friends.
+12. Use the friends button on Home to find people, manage friend requests, and view friends.
+13. Tap the 🔥 streak next to your name on Home to see your weekly streak.
+14. Use the Profile screen to view or edit account information, interests, email, password, and profile photo.
+15. Use **Settings** to change the language and notifications, manage blocked users, contact support, or delete the account.
+16. Use **Forgot Password** to request a password-recovery email.
+17. Log out from the profile area when finished.
 
 ---
 
@@ -298,13 +338,13 @@ The project was analyzed using:
 flutter analyze
 ```
 
-Result:
+Result on 6 November 2026:
 
 ```text
-No issues found!
+10 issues found.
 ```
 
-This result confirms that the current project complies with the configured Dart and Flutter analysis rules.
+There are no errors: 2 warnings and 8 style suggestions, mostly missing braces and unneeded string interpolation.
 
 ---
 
@@ -325,6 +365,13 @@ The repository currently includes tests for:
 - Activity status tags and completed activity count
 - Home and map filters
 - Localization
+- Typo-tolerant search
+- Weekly streak
+- Activity suggestions (Top Picks)
+- Participant ratings
+- Recent activities on profiles
+
+On 6 November 2026, all 170 tests passed.
 
 ---
 
