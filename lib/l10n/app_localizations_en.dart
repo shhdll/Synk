@@ -2781,6 +2781,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messageNotSent => 'Couldn\'t send your message';
 
   @override
+  String noLongerFriendsWith(Object name) {
+    return 'You and $name are no longer friends';
+  }
+
+  @override
   String get canOnlyMessageFriends => 'You can only message friends';
 
   @override

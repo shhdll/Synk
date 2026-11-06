@@ -1195,6 +1195,8 @@
   "messageHint": "Message",
   "send": "Send",
   "messageNotSent": "Couldn't send your message",
+  "noLongerFriendsWith": "You and {name} are no longer friends",
+  "@noLongerFriendsWith": {"placeholders": {"name": {}}},
   "canOnlyMessageFriends": "You can only message friends",
   "couldntOpenChat": "Couldn't open this chat",
   "yesterday": "Yesterday",

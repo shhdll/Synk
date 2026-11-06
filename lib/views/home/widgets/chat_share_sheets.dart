@@ -360,9 +360,16 @@ class _ShareToChatSheetState extends State<_ShareToChatSheet> {
         builder: (context, _) {
           final q = _search.text.trim().toLowerCase();
           bool matches(String text) => text.toLowerCase().contains(q);
+          // Only chats you can still send to: open activity chats and
+          // current friends. Removed or blocked friends are left out.
+          final friendIds = {for (final f in friends.friends) f.id};
           final chatRows = [
-            ...chats.activityChats,
-            ...chats.directChats,
+            ...chats.activityChats.where((c) => !c.isClosed),
+            ...chats.directChats.where(
+              (c) =>
+                  !c.isUnfriended &&
+                  (!friends.hasLoaded || friendIds.contains(c.otherUser?.id)),
+            ),
           ].where((c) => q.isEmpty || matches(c.title)).toList();
           final newFriends = friends
               .searchFriends(_search.text)

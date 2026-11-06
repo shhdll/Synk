@@ -4880,6 +4880,12 @@ abstract class AppLocalizations {
   /// **'Couldn\'t send your message'**
   String get messageNotSent;
 
+  /// No description provided for @noLongerFriendsWith.
+  ///
+  /// In en, this message translates to:
+  /// **'You and {name} are no longer friends'**
+  String noLongerFriendsWith(Object name);
+
   /// No description provided for @canOnlyMessageFriends.
   ///
   /// In en, this message translates to:

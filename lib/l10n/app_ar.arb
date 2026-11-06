@@ -813,6 +813,7 @@
   "messageHint": "رسالة",
   "send": "إرسال",
   "messageNotSent": "تعذر إرسال رسالتك",
+  "noLongerFriendsWith": "لم تعد أنت و{name} أصدقاء",
   "canOnlyMessageFriends": "يمكنك مراسلة أصدقائك فقط",
   "couldntOpenChat": "تعذر فتح هذه المحادثة",
   "yesterday": "أمس",

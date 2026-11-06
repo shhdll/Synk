@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/friends_model.dart';
+import 'chat_controller.dart';
 import '../utils/fuzzy_search.dart';
 
 // Friends, friend requests and blocked users for the signed-in user.
@@ -170,16 +171,19 @@ class FriendsController extends ChangeNotifier {
     return _apply(() => _model.cancelRequest(userId));
   }
 
-  Future<bool> acceptRequest(String userId) {
+  Future<bool> acceptRequest(String userId) async {
     final request = _incomingFrom(userId);
     if (request != null) {
       _requests.remove(request);
       _friends.insert(0, request.user);
     }
-    return _apply(
+    final ok = await _apply(
       () => _model.respondToRequest(userId, accept: true),
       failsOn: const {'not_found'},
     );
+    // An old chat with them opens up again.
+    if (ok) unawaited(ChatController.instance.refresh());
+    return ok;
   }
 
   Future<bool> rejectRequest(String userId) {
@@ -187,9 +191,12 @@ class FriendsController extends ChangeNotifier {
     return _apply(() => _model.respondToRequest(userId, accept: false));
   }
 
-  Future<bool> removeFriend(String userId) {
+  Future<bool> removeFriend(String userId) async {
     _friends.removeWhere((u) => u.id == userId);
-    return _apply(() => _model.removeFriend(userId));
+    final ok = await _apply(() => _model.removeFriend(userId));
+    // Their chat stays, read only.
+    if (ok) unawaited(ChatController.instance.refresh());
+    return ok;
   }
 
   // Called after a block or unblock goes through, to reload the activity

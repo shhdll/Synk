@@ -100,6 +100,9 @@ class _ChatRoomViewState extends State<ChatRoomView> {
   // The server said the activity chat is closed.
   bool _closed = false;
 
+  // The server said you're no longer friends.
+  bool _unfriended = false;
+
   // The message the next one replies to, shown above the input.
   ChatMessage? _replyingTo;
 
@@ -463,6 +466,11 @@ class _ChatRoomViewState extends State<ChatRoomView> {
       unawaited(_chats.refresh());
       return false;
     }
+    if (result == 'not_friends' && !widget.chat.isActivity) {
+      setState(() => _unfriended = true);
+      unawaited(_chats.refresh());
+      return false;
+    }
     if (result == 'not_visible_to_all') {
       SynkFeedback.showToast(
         context,
@@ -801,7 +809,12 @@ class _ChatRoomViewState extends State<ChatRoomView> {
               ],
             ),
           ),
-          _buildComposer(),
+          // Rebuilt when the chats list refreshes, so removing a friend
+          // locks a chat that's already open.
+          ListenableBuilder(
+            listenable: _chats,
+            builder: (context, _) => _buildComposer(),
+          ),
         ],
       ),
     );
@@ -1121,13 +1134,18 @@ class _ChatRoomViewState extends State<ChatRoomView> {
   }
 
   Widget _buildComposer() {
-    if (_closed || widget.chat.isClosed) {
+    final unfriended =
+        _unfriended ||
+        (_chats.byId(widget.chat.id) ?? widget.chat).isUnfriended;
+    if (_closed || widget.chat.isClosed || unfriended) {
       return SafeArea(
         top: false,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
           child: Text(
-            context.l10n.chatClosed,
+            unfriended
+                ? context.l10n.noLongerFriendsWith(widget.chat.title)
+                : context.l10n.chatClosed,
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 14,

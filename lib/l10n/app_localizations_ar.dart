@@ -2717,6 +2717,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get messageNotSent => 'تعذر إرسال رسالتك';
 
   @override
+  String noLongerFriendsWith(Object name) {
+    return 'لم تعد أنت و$name أصدقاء';
+  }
+
+  @override
   String get canOnlyMessageFriends => 'يمكنك مراسلة أصدقائك فقط';
 
   @override

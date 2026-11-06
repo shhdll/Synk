@@ -36,6 +36,7 @@ class ChatSummary {
     this.lastMessageLabel,
     this.unreadCount = 0,
     this.isMuted = false,
+    this.isFriend = true,
   });
 
   final String id;
@@ -69,6 +70,13 @@ class ChatSummary {
   // Left out of the Chat tab badge.
   final bool isMuted;
 
+  // Direct chats: false once either person removes the other as a friend.
+  final bool isFriend;
+
+  // A direct chat with someone who's no longer a friend. Readable, but
+  // neither of you can send.
+  bool get isUnfriended => !isActivity && !isFriend;
+
   bool get isActivity => kind == ChatKind.activity;
 
   // Activity chats stay readable, but sending stops a day after it ends.
@@ -99,6 +107,7 @@ class ChatSummary {
       lastMessageLabel: lastMessageLabel,
       unreadCount: unreadCount ?? this.unreadCount,
       isMuted: isMuted ?? this.isMuted,
+      isFriend: isFriend,
     );
   }
 
@@ -145,6 +154,8 @@ class ChatSummary {
       lastMessageLabel: map['last_message_label'] as String?,
       unreadCount: map['unread_count'] as int? ?? 0,
       isMuted: map['is_muted'] == true,
+      // Missing on servers without the column yet: treat as a friend.
+      isFriend: map['is_friend'] != false,
     );
   }
 }
