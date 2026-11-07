@@ -6124,8 +6124,56 @@ abstract class AppLocalizations {
   /// No description provided for @removePastActivityMessage.
   ///
   /// In en, this message translates to:
-  /// **'It\'s only removed for you. Everyone else still sees it.'**
+  /// **'It\'s removed from your list and your recent activities. Everyone else still sees the activity.'**
   String get removePastActivityMessage;
+
+  /// No description provided for @searchActivities.
+  ///
+  /// In en, this message translates to:
+  /// **'Search activities'**
+  String get searchActivities;
+
+  /// No description provided for @noActivitiesMatchYourSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'No activities match your search'**
+  String get noActivitiesMatchYourSearch;
+
+  /// No description provided for @hideFromRecentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide from recent activities?'**
+  String get hideFromRecentTitle;
+
+  /// No description provided for @hideFromRecentMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your friends won\'t see it on your profile anymore.'**
+  String get hideFromRecentMessage;
+
+  /// No description provided for @hide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get hide;
+
+  /// No description provided for @hiddenActivities.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden'**
+  String get hiddenActivities;
+
+  /// No description provided for @hiddenActivitiesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden activities'**
+  String get hiddenActivitiesTitle;
+
+  /// No description provided for @unhide.
+  ///
+  /// In en, this message translates to:
+  /// **'Unhide'**
+  String get unhide;
 }
 
 class _AppLocalizationsDelegate

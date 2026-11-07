@@ -1021,5 +1021,13 @@
   "chatStarterWhereMeet": "وين نتلاقى؟",
   "chatStarterGoTogether": "أحد يبي نروح سوا؟",
   "removePastActivityTitle": "إزالة من قائمتك؟",
-  "removePastActivityMessage": "تزال لك فقط، ويبقى ظاهرًا للآخرين."
+  "removePastActivityMessage": "تزال من قائمتك ومن أنشطتك الأخيرة، ويبقى النشاط ظاهرا للآخرين.",
+  "searchActivities": "ابحث في الأنشطة",
+  "noActivitiesMatchYourSearch": "لا توجد أنشطة تطابق بحثك",
+  "hideFromRecentTitle": "إخفاء من الأنشطة الأخيرة؟",
+  "hideFromRecentMessage": "لن يظهر لأصدقائك في ملفك بعد الآن.",
+  "hide": "إخفاء",
+  "hiddenActivities": "المخفية",
+  "hiddenActivitiesTitle": "الأنشطة المخفية",
+  "unhide": "إظهار"
 }

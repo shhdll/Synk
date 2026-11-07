@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -39,6 +40,9 @@ class SynkFeedback {
 
   static OverlayEntry? _toast;
 
+  // Lets a toast that a newer one replaces still say it ended.
+  static VoidCallback? _toastEnded;
+
   // Slides a small banner down from the top, above sheets and dialogs.
   static void showToast(
     BuildContext context, {
@@ -46,11 +50,51 @@ class SynkFeedback {
     String? message,
     bool success = true,
   }) {
+    _insertToast(context, title: title, message: message, success: success);
+  }
+
+  // The same banner with an Undo button. [UndoToast.closed] is true when
+  // Undo was tapped, false when it went away any other way.
+  static UndoToast showUndoToast(
+    BuildContext context, {
+    required String title,
+    required String undoLabel,
+  }) {
+    final toast = UndoToast._();
+    _insertToast(
+      context,
+      title: title,
+      success: true,
+      actionLabel: undoLabel,
+      onAction: () => toast._finish(true),
+      onEnded: () => toast._finish(false),
+      register: (close) => toast._closer = close,
+    );
+    return toast;
+  }
+
+  static void _insertToast(
+    BuildContext context, {
+    required String title,
+    String? message,
+    required bool success,
+    String? actionLabel,
+    VoidCallback? onAction,
+    VoidCallback? onEnded,
+    ValueChanged<VoidCallback>? register,
+  }) {
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
-    if (overlay == null) return;
+    if (overlay == null) {
+      onEnded?.call();
+      return;
+    }
 
     final previous = _toast;
+    final previousEnded = _toastEnded;
+    _toast = null;
+    _toastEnded = null;
     if (previous != null && previous.mounted) previous.remove();
+    previousEnded?.call();
 
     late final OverlayEntry entry;
     entry = OverlayEntry(
@@ -58,13 +102,21 @@ class SynkFeedback {
         title: title,
         message: message,
         success: success,
+        actionLabel: actionLabel,
+        onAction: onAction,
+        register: register,
         onDismissed: () {
           if (entry.mounted) entry.remove();
-          if (_toast == entry) _toast = null;
+          if (_toast == entry) {
+            _toast = null;
+            _toastEnded = null;
+          }
+          onEnded?.call();
         },
       ),
     );
     _toast = entry;
+    _toastEnded = onEnded;
     overlay.insert(entry);
   }
 
@@ -103,18 +155,44 @@ class SynkFeedback {
   }
 }
 
+// What [SynkFeedback.showUndoToast] returns.
+class UndoToast {
+  UndoToast._();
+
+  final Completer<bool> _done = Completer();
+  VoidCallback? _closer;
+
+  Future<bool> get closed => _done.future;
+
+  // Hides it now; counts as not undone.
+  void close() {
+    _finish(false);
+    _closer?.call();
+  }
+
+  void _finish(bool undone) {
+    if (!_done.isCompleted) _done.complete(undone);
+  }
+}
+
 class _Toast extends StatefulWidget {
   const _Toast({
     required this.title,
     required this.message,
     required this.success,
     required this.onDismissed,
+    this.actionLabel,
+    this.onAction,
+    this.register,
   });
 
   final String title;
   final String? message;
   final bool success;
   final VoidCallback onDismissed;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+  final ValueChanged<VoidCallback>? register;
 
   @override
   State<_Toast> createState() => _ToastState();
@@ -136,9 +214,12 @@ class _ToastState extends State<_Toast> with SingleTickerProviderStateMixin {
   void initState() {
     super.initState();
     _controller.forward();
-    // Longer messages stay a bit longer.
+    widget.register?.call(_close);
+    // Longer messages stay a bit longer; Undo gets a steady 4 seconds.
     final length = widget.title.length + (widget.message?.length ?? 0);
-    final ms = (1800 + length * 35).clamp(2500, 5000);
+    final ms = widget.actionLabel != null
+        ? 4000
+        : (1800 + length * 35).clamp(2500, 5000);
     Future.delayed(Duration(milliseconds: ms), _close);
   }
 
@@ -235,6 +316,21 @@ class _ToastState extends State<_Toast> with SingleTickerProviderStateMixin {
                         ],
                       ),
                     ),
+                    if (widget.actionLabel case final label?)
+                      TextButton(
+                        onPressed: () {
+                          widget.onAction?.call();
+                          _close();
+                        },
+                        style: TextButton.styleFrom(
+                          foregroundColor: SynkColors.orangeDark,
+                          textStyle: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        child: Text(label),
+                      ),
                   ],
                 ),
               ),

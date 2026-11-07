@@ -3486,5 +3486,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get removePastActivityMessage =>
-      'It\'s only removed for you. Everyone else still sees it.';
+      'It\'s removed from your list and your recent activities. Everyone else still sees the activity.';
+
+  @override
+  String get searchActivities => 'Search activities';
+
+  @override
+  String get noActivitiesMatchYourSearch => 'No activities match your search';
+
+  @override
+  String get hideFromRecentTitle => 'Hide from recent activities?';
+
+  @override
+  String get hideFromRecentMessage =>
+      'Your friends won\'t see it on your profile anymore.';
+
+  @override
+  String get hide => 'Hide';
+
+  @override
+  String get hiddenActivities => 'Hidden';
+
+  @override
+  String get hiddenActivitiesTitle => 'Hidden activities';
+
+  @override
+  String get unhide => 'Unhide';
 }

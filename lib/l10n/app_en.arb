@@ -1427,5 +1427,13 @@
   "chatStarterWhereMeet": "Where are we meeting?",
   "chatStarterGoTogether": "Anyone wanna go together?",
   "removePastActivityTitle": "Remove from your list?",
-  "removePastActivityMessage": "It's only removed for you. Everyone else still sees it."
+  "removePastActivityMessage": "It's removed from your list and your recent activities. Everyone else still sees the activity.",
+  "searchActivities": "Search activities",
+  "noActivitiesMatchYourSearch": "No activities match your search",
+  "hideFromRecentTitle": "Hide from recent activities?",
+  "hideFromRecentMessage": "Your friends won't see it on your profile anymore.",
+  "hide": "Hide",
+  "hiddenActivities": "Hidden",
+  "hiddenActivitiesTitle": "Hidden activities",
+  "unhide": "Unhide"
 }
