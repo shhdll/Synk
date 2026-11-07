@@ -148,6 +148,32 @@ class ActivitiesModel {
     );
   }
 
+  // Takes an ended activity off the user's recent activities, for everyone.
+  Future<void> hideRecentActivity(String activityId) async {
+    final uid = currentUserId;
+    if (uid == null) return;
+    await _supabase.from('hidden_recent_activities').upsert({
+      'user_id': uid,
+      'activity_id': activityId,
+    }, ignoreDuplicates: true);
+  }
+
+  // Ended activities the user hid from their recent activities.
+  Future<List<Activity>> fetchHiddenRecentActivities() async {
+    final response = await _supabase.rpc('get_my_hidden_recent_activities');
+    return _mapRows(response as List? ?? const []);
+  }
+
+  Future<void> unhideRecentActivity(String activityId) async {
+    final uid = currentUserId;
+    if (uid == null) return;
+    await _supabase
+        .from('hidden_recent_activities')
+        .delete()
+        .eq('user_id', uid)
+        .eq('activity_id', activityId);
+  }
+
   // Kept temporarily for callers that still use the previous method name.
   Future<List<Activity>> fetchJoined() {
     return fetchParticipating();
