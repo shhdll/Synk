@@ -17,7 +17,7 @@
 Synk helps people in Riyadh find others who are into the same things, whether that's padel, board games or a jewelry workshop, and actually meet up. We built it for **SWE 444** @ KSU.
 
 <p align="center">
-  <a href="https://synk.cc"><img src="assets/get_the_app_badge.svg" alt="Get the app at synk.cc" height="40"/></a>
+  <a href="https://synk.cc"><img src="assets/get_the_app_badge.svg" alt="Get the app at synk.cc" height="56"/></a>
 </p>
 
 <p align="center">Grab it for Android or iPhone at <a href="https://synk.cc"><b>synk.cc</b></a></p>
