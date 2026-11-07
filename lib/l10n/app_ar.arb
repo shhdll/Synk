@@ -273,7 +273,7 @@
   "transferAndLeave": "نقل ومغادرة",
   "newHostIs": "المنظم الآن: {name}",
   "chooseANewHost": "اختر منظم جديد",
-  "thePersonYouChooseGetsFull": "يحصل الشخص المختار على كل صلاحيات المنظم ومنها إدارة الطلبات وحذف النشاط، وستغادر أنت النشاط",
+  "thePersonYouChooseGetsFull": "يحصل الشخص المختار على كل صلاحيات المنظم ومنها إدارة الطلبات وحذف النشاط",
   "unableToLoadParticipantsPleaseTry": "تعذر تحميل المشاركين، حاول مرة أخرى",
   "noOneCanTakeOverYet": "لا يوجد من يتولى التنظيم بعد، المشاركون فقط يمكنهم أن يصبحوا منظمين ويمكنك حذف النشاط بدلا من ذلك",
   "thisActivityIsNoLongerAvailable": "هذا النشاط لم يعد متاح",
@@ -1008,5 +1008,18 @@
   "discard": "تجاهل",
   "leave": "مغادرة",
   "withdraw": "سحب",
-  "withdrawRequestTitle": "سحب طلبك؟"
+  "withdrawRequestTitle": "سحب طلبك؟",
+  "hiddenProfileExplanation": "هذا الملف مخفي عنك. يحدث هذا عندما يحد شخص من يستطيع رؤيته، أو عندما يكون الحساب موقوفًا. ما زال يُحسب ضمن المشاركين.",
+  "thisActivityWasDeleted": "تم حذف هذا النشاط.",
+  "suggestedForYou": "مقترحون لك",
+  "chatStarterHey": "هلا 👋",
+  "chatStarterHowsItGoing": "وش أخبارك؟",
+  "chatStarterPlanSomething": "نخطط لطلعة هذا الاسبوع؟",
+  "chatStarterSameThings": "شكلنا نحب نفس الأشياء، نروح نشاط سوا؟",
+  "chatStarterHiEveryone": "هلا والله بالجميع 👋",
+  "chatStarterExcited": "متحمسين مرة!",
+  "chatStarterWhereMeet": "وين نتلاقى؟",
+  "chatStarterGoTogether": "أحد يبي نروح سوا؟",
+  "removePastActivityTitle": "إزالة من قائمتك؟",
+  "removePastActivityMessage": "تزال لك فقط، ويبقى ظاهرًا للآخرين."
 }

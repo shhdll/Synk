@@ -1739,7 +1739,7 @@ abstract class AppLocalizations {
   /// No description provided for @thePersonYouChooseGetsFull.
   ///
   /// In en, this message translates to:
-  /// **'The person you choose gets full host permissions, including managing join requests and deleting the activity. You will leave the activity.'**
+  /// **'The person you choose gets full host permissions, including managing join requests and deleting the activity.'**
   String get thePersonYouChooseGetsFull;
 
   /// No description provided for @unableToLoadParticipantsPleaseTry.
@@ -6048,6 +6048,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Withdraw your request?'**
   String get withdrawRequestTitle;
+
+  /// No description provided for @hiddenProfileExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'This profile is hidden from you. This happens when someone limits who can see them, or the account is paused. They still count as a participant.'**
+  String get hiddenProfileExplanation;
+
+  /// No description provided for @thisActivityWasDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'This activity was deleted.'**
+  String get thisActivityWasDeleted;
+
+  /// No description provided for @suggestedForYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested for you'**
+  String get suggestedForYou;
+
+  /// No description provided for @chatStarterHey.
+  ///
+  /// In en, this message translates to:
+  /// **'Heyy 👋'**
+  String get chatStarterHey;
+
+  /// No description provided for @chatStarterHowsItGoing.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s up?'**
+  String get chatStarterHowsItGoing;
+
+  /// No description provided for @chatStarterPlanSomething.
+  ///
+  /// In en, this message translates to:
+  /// **'Wanna do something this week?'**
+  String get chatStarterPlanSomething;
+
+  /// No description provided for @chatStarterSameThings.
+  ///
+  /// In en, this message translates to:
+  /// **'We like the same stuff, wanna join something together?'**
+  String get chatStarterSameThings;
+
+  /// No description provided for @chatStarterHiEveryone.
+  ///
+  /// In en, this message translates to:
+  /// **'Hey all! 👋'**
+  String get chatStarterHiEveryone;
+
+  /// No description provided for @chatStarterExcited.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t wait for this!'**
+  String get chatStarterExcited;
+
+  /// No description provided for @chatStarterWhereMeet.
+  ///
+  /// In en, this message translates to:
+  /// **'Where are we meeting?'**
+  String get chatStarterWhereMeet;
+
+  /// No description provided for @chatStarterGoTogether.
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone wanna go together?'**
+  String get chatStarterGoTogether;
+
+  /// No description provided for @removePastActivityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from your list?'**
+  String get removePastActivityTitle;
+
+  /// No description provided for @removePastActivityMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'It\'s only removed for you. Everyone else still sees it.'**
+  String get removePastActivityMessage;
 }
 
 class _AppLocalizationsDelegate

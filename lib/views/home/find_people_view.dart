@@ -28,10 +28,12 @@ class _FindPeopleViewState extends State<FindPeopleView> {
   Timer? _debounce;
   List<FriendUser> _results = const [];
   bool _isSearching = false;
+  List<FriendUser> _suggested = const [];
 
   @override
   void initState() {
     super.initState();
+    _loadSuggested();
     final query = widget.initialQuery?.trim() ?? '';
     if (query.isNotEmpty) {
       _search.text = query;
@@ -45,6 +47,16 @@ class _FindPeopleViewState extends State<FindPeopleView> {
     _debounce?.cancel();
     _search.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadSuggested() async {
+    try {
+      final people = await FriendsController.instance.suggestPeople();
+      if (mounted) setState(() => _suggested = people);
+    } catch (error) {
+      // Suggestions are extra; the empty search stays as it was.
+      debugPrint('SYNK: people suggestions failed: $error');
+    }
   }
 
   // Waits for a short pause in typing before searching.
@@ -125,10 +137,13 @@ class _FindPeopleViewState extends State<FindPeopleView> {
 
   Widget _buildResults() {
     if (_search.text.trim().isEmpty) {
-      return EmptyState(
-        icon: Icons.person_search_rounded,
-        title: context.l10n.searchForPeopleOnSynk,
-      );
+      if (_suggested.isEmpty) {
+        return EmptyState(
+          icon: Icons.person_search_rounded,
+          title: context.l10n.searchForPeopleOnSynk,
+        );
+      }
+      return _buildPeople(_suggested, title: context.l10n.suggestedForYou);
     }
 
     if (_isSearching && _results.isEmpty) {
@@ -145,12 +160,28 @@ class _FindPeopleViewState extends State<FindPeopleView> {
       );
     }
 
+    return _buildPeople(_results);
+  }
+
+  Widget _buildPeople(List<FriendUser> people, {String? title}) {
     return ListView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
       children: [
+        if (title != null) ...[
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: SynkColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
         FriendsListCard(
           children: [
-            for (final user in _results)
+            for (final user in people)
               FriendsPersonRow(
                 user: user,
                 onTap: () => openFriendProfile(context, user),

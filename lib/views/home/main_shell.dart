@@ -163,6 +163,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     unawaited(() async {
       try {
         final activity = await _activitiesModel.fetchById(activityId);
+        // Deleted, or no longer visible to this user.
+        if (mounted && activity == null) _activityStore.removeById(activityId);
         if (mounted && activity != null) {
           final previous = _activityStore.byId(activityId);
           _activityStore.upsert(
@@ -398,7 +400,12 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
           onSelect: (tab) {
             setState(() => _tab = tab);
             unawaited(_leaveIfAccountGone());
-            if (tab == HomeTab.activities) _loadPendingRequestCount();
+            if (tab == HomeTab.activities) {
+              _loadPendingRequestCount();
+              // Drops activities deleted since the last load.
+              unawaited(_loadMyActivities());
+              unawaited(_loadParticipatingActivities());
+            }
             if (tab == HomeTab.chat) {
               unawaited(ChatController.instance.refresh());
             }

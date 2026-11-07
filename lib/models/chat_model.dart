@@ -79,6 +79,9 @@ class ChatSummary {
 
   bool get isActivity => kind == ChatKind.activity;
 
+  // A message the user can still see; none after deleting the chat.
+  bool get hasMessages => lastMessageBody != null;
+
   // Activity chats stay readable, but sending stops a day after it ends.
   bool get isClosed =>
       activity != null &&

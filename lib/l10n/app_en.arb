@@ -382,7 +382,7 @@
     }
   },
   "chooseANewHost": "Choose a new host",
-  "thePersonYouChooseGetsFull": "The person you choose gets full host permissions, including managing join requests and deleting the activity. You will leave the activity.",
+  "thePersonYouChooseGetsFull": "The person you choose gets full host permissions, including managing join requests and deleting the activity.",
   "unableToLoadParticipantsPleaseTry": "Unable to load participants. Please try again.",
   "noOneCanTakeOverYet": "No one can take over yet. Only joined participants can become the host. You can delete the activity instead.",
   "thisActivityIsNoLongerAvailable": "This activity is no longer available.",
@@ -1414,5 +1414,18 @@
   "discard": "Discard",
   "leave": "Leave",
   "withdraw": "Withdraw",
-  "withdrawRequestTitle": "Withdraw your request?"
+  "withdrawRequestTitle": "Withdraw your request?",
+  "hiddenProfileExplanation": "This profile is hidden from you. This happens when someone limits who can see them, or the account is paused. They still count as a participant.",
+  "thisActivityWasDeleted": "This activity was deleted.",
+  "suggestedForYou": "Suggested for you",
+  "chatStarterHey": "Heyy 👋",
+  "chatStarterHowsItGoing": "What's up?",
+  "chatStarterPlanSomething": "Wanna do something this week?",
+  "chatStarterSameThings": "We like the same stuff, wanna join something together?",
+  "chatStarterHiEveryone": "Hey all! 👋",
+  "chatStarterExcited": "Can't wait for this!",
+  "chatStarterWhereMeet": "Where are we meeting?",
+  "chatStarterGoTogether": "Anyone wanna go together?",
+  "removePastActivityTitle": "Remove from your list?",
+  "removePastActivityMessage": "It's only removed for you. Everyone else still sees it."
 }

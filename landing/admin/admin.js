@@ -1332,7 +1332,7 @@
 
   function renderUsers(params) {
     var filter = params.filter || "all";
-    var gender = params.gender || "all";
+    var gender = params.gender || "female";
     listPage({
       title: "Users",
       filters: [

@@ -1162,9 +1162,66 @@ class _ChatRoomViewState extends State<ChatRoomView> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (!_isLoading && !_failed && _messages.isEmpty) _buildStarters(),
           if (replyingTo != null) _buildReplyBar(replyingTo),
           _buildComposerRow(),
         ],
+      ),
+    );
+  }
+
+  // Ready messages for a chat with nothing in it yet; one tap sends it.
+  Widget _buildStarters() {
+    final l = context.l10n;
+    final starters = widget.chat.isActivity
+        ? [
+            l.chatStarterHiEveryone,
+            l.chatStarterExcited,
+            l.chatStarterWhereMeet,
+            l.chatStarterGoTogether,
+          ]
+        : [
+            l.chatStarterHey,
+            l.chatStarterHowsItGoing,
+            l.chatStarterPlanSomething,
+            if (_sharedInterests.isNotEmpty) l.chatStarterSameThings,
+          ];
+
+    return SizedBox(
+      height: 48,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+        itemCount: starters.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          final text = starters[i];
+          return Material(
+            color: Colors.white,
+            shape: StadiumBorder(
+              side: BorderSide(
+                color: SynkColors.textSecondary.withValues(alpha: 0.14),
+              ),
+            ),
+            child: InkWell(
+              customBorder: const StadiumBorder(),
+              onTap: _isSending ? null : () => _deliver(text: text),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Center(
+                  child: Text(
+                    text,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: SynkColors.ink,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
