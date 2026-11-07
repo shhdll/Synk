@@ -72,7 +72,7 @@ synk/
 
 - Flutter SDK
 - Android Studio with an emulator or a phone
-- Access to the team's Supabase project
+- A Supabase project with the migrations in `supabase/migrations` applied
 
 On iPhone? Check [docs/IOS_SETUP.md](docs/IOS_SETUP.md).
 
@@ -99,13 +99,11 @@ Use the publishable key here. Never put a service-role key in the app.
 
 ### 4. Keys
 
-These aren't in the repo, so grab them from a teammate.
-
-| File | What it holds |
-| :--- | :--- |
-| `android/local.properties` | `MAPS_API_KEY` for Android |
-| `ios/Flutter/Secrets.xcconfig` | `MAPS_API_KEY` for iOS |
-| `android/app/google-services.json` | Firebase config for push notifications |
+| File | What it holds | Where to get it |
+| :--- | :--- | :--- |
+| `android/local.properties` | `MAPS_API_KEY` for Android | [Google Cloud](https://console.cloud.google.com/apis/credentials) |
+| `ios/Flutter/Secrets.xcconfig` | `MAPS_API_KEY` for iOS | [Google Cloud](https://console.cloud.google.com/apis/credentials) |
+| `android/app/google-services.json` | Firebase config for push notifications | [Firebase](https://console.firebase.google.com/) |
 
 ### 5. Run
 
@@ -115,9 +113,7 @@ flutter run -d <device-id>
 ```
 
 <details>
-<summary>Setting up a new Supabase project</summary>
-
-You only need this if you're not using the team's project.
+<summary>Setting up Supabase</summary>
 
 ```bash
 supabase link --project-ref <project-ref>
