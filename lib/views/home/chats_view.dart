@@ -220,9 +220,9 @@ class _ChatsViewState extends State<ChatsView> {
     final activityChats = showActivities
         ? _matching(_chats.activityChats)
         : <ChatSummary>[];
-    final directChats = showFriends
-        ? _matching(_chats.directChats)
-        : <ChatSummary>[];
+    // A friend chat shows once someone has written in it.
+    final talkedTo = _chats.directChats.where((c) => c.hasMessages).toList();
+    final directChats = showFriends ? _matching(talkedTo) : <ChatSummary>[];
     // Activities and friends in one list, latest message first.
     final mixed = [...activityChats, ...directChats]
       ..sort((a, b) => b.sortTime.compareTo(a.sortTime));
@@ -230,7 +230,7 @@ class _ChatsViewState extends State<ChatsView> {
     final nothingYet =
         _chats.hasLoaded &&
         (!showActivities || _chats.activityChats.isEmpty) &&
-        (!showFriends || _chats.directChats.isEmpty);
+        (!showFriends || talkedTo.isEmpty);
 
     // Swipe toward the start to show Mute and Delete.
     Widget tile(ChatSummary chat) => Slidable(
@@ -482,7 +482,8 @@ class _NewChatSheetState extends State<_NewChatSheet> {
   Widget build(BuildContext context) {
     final friendsController = FriendsController.instance;
     final chats = ChatController.instance;
-    bool hasChat(FriendUser friend) => chats.directChatWith(friend.id) != null;
+    bool hasChat(FriendUser friend) =>
+        chats.directChatWith(friend.id)?.hasMessages ?? false;
 
     void openFindPeople() {
       final navigator = Navigator.of(context);

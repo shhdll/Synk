@@ -58,6 +58,12 @@ class _FriendsViewState extends State<FriendsView> {
     if (mounted) setState(() {});
   }
 
+  void _cancelSearch() {
+    _search.clear();
+    _searchFocus.unfocus();
+    setState(() {});
+  }
+
   @override
   void dispose() {
     _friends.removeListener(_refresh);
@@ -141,102 +147,147 @@ class _FriendsViewState extends State<FriendsView> {
 
     final shown = _friends.searchFriends(_search.text);
     final query = _search.text.trim();
+    final searching = _searchFocus.hasFocus || query.isNotEmpty;
+    final showRecent =
+        _searchFocus.hasFocus && query.isEmpty && _recent.isNotEmpty;
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        FriendsSearchField(
-          controller: _search,
-          focusNode: _searchFocus,
-          hint: context.l10n.searchFriends,
-          onChanged: (_) => setState(() {}),
-          onSubmitted: _saveRecent,
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+          child: _buildSearchRow(searching),
         ),
-        const SizedBox(height: 16),
-        if (_searchFocus.hasFocus &&
-            _search.text.trim().isEmpty &&
-            _recent.isNotEmpty) ...[
-          RecentSearchesList(
-            recent: _recent,
-            onTap: _runRecent,
-            onRemove: _removeRecent,
-          ),
-          const SizedBox(height: 12),
-        ],
-        if (shown.isEmpty)
+        Expanded(
+          child: shown.isEmpty
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Text(
+                      context.l10n.noFriendsMatchYourSearch,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: SynkColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                )
+              : ListView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+                  children: [
+                    // Recent searches first, then the friends, as on Home.
+                    // While the field is in use, recent searches take the
+                    // place of the list, as on Home.
+                    if (showRecent)
+                      RecentSearchesList(
+                        recent: _recent,
+                        onTap: _runRecent,
+                        onRemove: _removeRecent,
+                      )
+                    else
+                      FriendsListCard(
+                        children: [
+                          for (final friend in shown)
+                            FriendsPersonRow(
+                              user: friend,
+                              onTap: () {
+                                if (query.isNotEmpty) _saveRecent(query);
+                                openFriendProfile(context, friend);
+                              },
+                              trailing: IconButton(
+                                tooltip: context.l10n.friendOptions,
+                                onPressed: () => showFriendOptionsSheet(
+                                  context: context,
+                                  friend: friend,
+                                ),
+                                icon: const Icon(
+                                  Icons.more_vert_rounded,
+                                  color: SynkColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                  ],
+                ),
+        ),
+        // Not a friend yet? Search all of Synk with the same text. Kept at
+        // the bottom so it sits right above the keyboard.
+        if (query.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(top: 32),
-            child: Text(
-              context.l10n.noFriendsMatchYourSearch,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14,
-                color: SynkColors.textSecondary,
-              ),
-            ),
-          )
-        else
-          FriendsListCard(
-            children: [
-              for (final friend in shown)
-                FriendsPersonRow(
-                  user: friend,
-                  onTap: () {
-                    if (_search.text.trim().isNotEmpty) {
-                      _saveRecent(_search.text);
-                    }
-                    openFriendProfile(context, friend);
-                  },
-                  trailing: IconButton(
-                    tooltip: context.l10n.friendOptions,
-                    onPressed: () => showFriendOptionsSheet(
-                      context: context,
-                      friend: friend,
-                    ),
-                    icon: const Icon(
-                      Icons.more_vert_rounded,
-                      color: SynkColors.textSecondary,
-                    ),
-                  ),
-                ),
-            ],
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            child: _buildLookOnSynk(query),
           ),
-        // Not a friend yet? Search all of Synk with the same text.
-        if (query.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          FriendsListCard(
-            children: [
-              ListTile(
-                onTap: () {
-                  _saveRecent(query);
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => FindPeopleView(initialQuery: query),
-                    ),
-                  );
-                },
-                leading: const Icon(
-                  Icons.person_search_rounded,
-                  color: SynkColors.orangeDark,
-                ),
-                title: Text(
-                  context.l10n.lookForQueryOnSynk(query),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: SynkColors.textPrimary,
-                  ),
-                ),
-                trailing: const Icon(
-                  Icons.chevron_right_rounded,
-                  color: SynkColors.textSecondary,
-                ),
-              ),
-            ],
+      ],
+    );
+  }
+
+  Widget _buildSearchRow(bool searching) {
+    return Row(
+      children: [
+        Expanded(
+          child: FriendsSearchField(
+            controller: _search,
+            focusNode: _searchFocus,
+            hint: context.l10n.searchFriends,
+            borderRadius: 24,
+            onChanged: (_) => setState(() {}),
+            onSubmitted: _saveRecent,
+          ),
+        ),
+        if (searching) ...[
+          const SizedBox(width: 10),
+          TextButton(
+            onPressed: _cancelSearch,
+            style: TextButton.styleFrom(
+              foregroundColor: SynkColors.ink,
+              minimumSize: const Size(44, 48),
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+            ),
+            child: Text(
+              context.l10n.cancel,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+            ),
           ),
         ],
+      ],
+    );
+  }
+
+  Widget _buildLookOnSynk(String query) {
+    return FriendsListCard(
+      children: [
+        ListTile(
+          onTap: () {
+            _saveRecent(query);
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => FindPeopleView(initialQuery: query),
+              ),
+            );
+          },
+          leading: const Icon(
+            Icons.person_search_rounded,
+            color: SynkColors.orangeDark,
+          ),
+          title: Text(
+            context.l10n.lookForQueryOnSynk(query),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: SynkColors.textPrimary,
+            ),
+          ),
+          trailing: const Icon(
+            Icons.chevron_right_rounded,
+            color: SynkColors.textSecondary,
+          ),
+        ),
       ],
     );
   }

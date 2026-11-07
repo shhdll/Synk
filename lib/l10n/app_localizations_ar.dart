@@ -909,7 +909,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get thePersonYouChooseGetsFull =>
-      'يحصل الشخص المختار على كل صلاحيات المنظم ومنها إدارة الطلبات وحذف النشاط، وستغادر أنت النشاط';
+      'يحصل الشخص المختار على كل صلاحيات المنظم ومنها إدارة الطلبات وحذف النشاط';
 
   @override
   String get unableToLoadParticipantsPleaseTry =>
@@ -2920,17 +2920,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get ourStoryBody =>
-      'بدأت Synk من فكرة بسيطة: أجمل العلاقات تبدأ غالبًا بشيء صغير. نشاط مشترك، أو اهتمام واحد، أو سبب للحضور. صمّمنا Synk لنجعل هذه الخطوة الأولى أسهل، حتى يصبح التعرّف على أشخاص جدد ومشاركة اللحظات الجميلة أمرًا طبيعيًا.';
+      'بدأت Synk من فكرة بسيطة: أجمل العلاقات تبدأ غالبًا بشيء صغير. نشاط مشترك، أو اهتمام واحد، أو سبب للحضور. صممنا Synk لنجعل هذه الخطوة الأولى أسهل، حتى يصبح التعرف على أشخاص جدد ومشاركة اللحظات الجميلة أمرًا طبيعيًا.';
 
   @override
   String get ourMission => 'رسالتنا';
 
   @override
   String get ourMissionBody =>
-      'حوّل أي يوم إلى خطة. اكتشف نشاطًا ممتعًا، والتقِ بمن يشبهونك، واصنع لحظات تستحق أن تُحكى.';
+      'حول أي يوم إلى خطة. اكتشف نشاطًا ممتعًا، والتقِ بمن يشبهونك، واصنع لحظات تستحق أن تُحكى.';
 
   @override
-  String get theTeam => 'تعرّف على الفريق';
+  String get theTeam => 'تعرف على الفريق';
 
   @override
   String get theTeamBody =>
@@ -3392,4 +3392,44 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get withdrawRequestTitle => 'سحب طلبك؟';
+
+  @override
+  String get hiddenProfileExplanation =>
+      'هذا الملف مخفي عنك. يحدث هذا عندما يحد شخص من يستطيع رؤيته، أو عندما يكون الحساب موقوفًا. ما زال يُحسب ضمن المشاركين.';
+
+  @override
+  String get thisActivityWasDeleted => 'تم حذف هذا النشاط.';
+
+  @override
+  String get suggestedForYou => 'مقترحون لك';
+
+  @override
+  String get chatStarterHey => 'هلا 👋';
+
+  @override
+  String get chatStarterHowsItGoing => 'وش أخبارك؟';
+
+  @override
+  String get chatStarterPlanSomething => 'نخطط لطلعة هذا الاسبوع؟';
+
+  @override
+  String get chatStarterSameThings => 'شكلنا نحب نفس الأشياء، نروح نشاط سوا؟';
+
+  @override
+  String get chatStarterHiEveryone => 'هلا والله بالجميع 👋';
+
+  @override
+  String get chatStarterExcited => 'متحمسين مرة!';
+
+  @override
+  String get chatStarterWhereMeet => 'وين نتلاقى؟';
+
+  @override
+  String get chatStarterGoTogether => 'أحد يبي نروح سوا؟';
+
+  @override
+  String get removePastActivityTitle => 'إزالة من قائمتك؟';
+
+  @override
+  String get removePastActivityMessage => 'تزال لك فقط، ويبقى ظاهرًا للآخرين.';
 }

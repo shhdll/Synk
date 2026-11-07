@@ -30,6 +30,44 @@ import 'report_user_sheet.dart';
 import 'host_transfer_sheet.dart';
 import 'user_profile_sheet.dart';
 
+// Wording for leaving, leaving the waitlist or withdrawing a request.
+({
+  IconData icon,
+  String title,
+  String confirm,
+  String action,
+  String successTitle,
+  String successMessage,
+})
+activityLeaveCopy(BuildContext context, String? status) {
+  return switch (status) {
+    'waitlisted' => (
+      icon: SynkIcons.logout,
+      title: context.l10n.leaveWaitlistTitle,
+      confirm: context.l10n.leave,
+      action: context.l10n.leaveWaitlist,
+      successTitle: context.l10n.youLeftTheWaitlist,
+      successMessage: context.l10n.youHaveBeenRemovedFromThe,
+    ),
+    'pending' => (
+      icon: Icons.close_rounded,
+      title: context.l10n.withdrawRequestTitle,
+      confirm: context.l10n.withdraw,
+      action: context.l10n.cancelRequest,
+      successTitle: context.l10n.requestCancelled,
+      successMessage: context.l10n.yourJoinRequestHasBeenCancelled,
+    ),
+    _ => (
+      icon: SynkIcons.logout,
+      title: context.l10n.leaveActivityTitle,
+      confirm: context.l10n.leave,
+      action: context.l10n.leaveActivity,
+      successTitle: context.l10n.youLeftTheActivity,
+      successMessage: context.l10n.youHaveSuccessfullyLeftThisActivity,
+    ),
+  };
+}
+
 Future<void> showActivityDetailsSheet({
   required BuildContext context,
   required Activity activity,
@@ -902,7 +940,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
   }
 
   Widget _buildLeaveButton() {
-    final copy = _leaveCopy(_participationStatus);
+    final copy = activityLeaveCopy(context, _participationStatus);
 
     return SizedBox(
       width: double.infinity,
@@ -941,43 +979,6 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
 
   static const Color _destructiveColor = Color(0xFFE85D5D);
 
-  ({
-    IconData icon,
-    String title,
-    String confirm,
-    String action,
-    String successTitle,
-    String successMessage,
-  })
-  _leaveCopy(String? status) {
-    return switch (status) {
-      'waitlisted' => (
-        icon: SynkIcons.logout,
-        title: context.l10n.leaveWaitlistTitle,
-        confirm: context.l10n.leave,
-        action: context.l10n.leaveWaitlist,
-        successTitle: context.l10n.youLeftTheWaitlist,
-        successMessage: context.l10n.youHaveBeenRemovedFromThe,
-      ),
-      'pending' => (
-        icon: Icons.close_rounded,
-        title: context.l10n.withdrawRequestTitle,
-        confirm: context.l10n.withdraw,
-        action: context.l10n.cancelRequest,
-        successTitle: context.l10n.requestCancelled,
-        successMessage: context.l10n.yourJoinRequestHasBeenCancelled,
-      ),
-      _ => (
-        icon: SynkIcons.logout,
-        title: context.l10n.leaveActivityTitle,
-        confirm: context.l10n.leave,
-        action: context.l10n.leaveActivity,
-        successTitle: context.l10n.youLeftTheActivity,
-        successMessage: context.l10n.youHaveSuccessfullyLeftThisActivity,
-      ),
-    };
-  }
-
   Future<void> _runAction(Future<void> Function() action) async {
     if (_actionInProgress) return;
 
@@ -998,7 +999,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     final store = widget.activityStore;
     final activityId = _currentActivity.id;
     final isPublic = _currentActivity.isPublic;
-    final copy = _leaveCopy(status);
+    final copy = activityLeaveCopy(context, status);
 
     final leave = await SynkDialog.confirm(
       context,
@@ -1843,26 +1844,30 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     );
   }
 
-  // A participant who blocked the viewer: "Synk user", the default avatar
-  // for their gender, and nothing to tap.
+  // A participant who blocked the viewer: "Synk user" and the default avatar
+  // for their gender. Tapping explains why, without a profile.
   Widget _buildHiddenRow(String? gender) {
-    return Row(
-      children: [
-        DefaultAvatar(gender: gender, size: 38),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            context.l10n.synkUser,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: SynkColors.textPrimary,
+    return InkWell(
+      onTap: () => showHiddenUserSheet(context: context, gender: gender),
+      borderRadius: BorderRadius.circular(12),
+      child: Row(
+        children: [
+          DefaultAvatar(gender: gender, size: 38),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              context.l10n.synkUser,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: SynkColors.textPrimary,
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -1896,10 +1901,12 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     bool blockedByMe = false,
   }) {
     // Someone the viewer blocked keeps their name but can't be opened or
-    // contacted from here.
-    final canOpen = userId != null && userId != _viewerId && !blockedByMe;
+    // contacted from here. The viewer's own row opens their profile.
+    final isMe = userId != null && userId == _viewerId;
+    final canOpen = userId != null && !blockedByMe;
     final following =
         canOpen &&
+        !isMe &&
         FriendsController.instance.statusFor(userId) ==
             FriendshipStatus.friends;
 
@@ -1912,6 +1919,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
               username: username,
               avatarUrl: avatarUrl,
               gender: gender,
+              showMessageButton: !isMe,
             )
           : null,
       borderRadius: BorderRadius.circular(12),
