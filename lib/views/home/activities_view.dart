@@ -1,8 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../controllers/activity_delete_controller.dart';
+import '../../controllers/activity_leave_controller.dart';
 import '../../controllers/chat_controller.dart';
 import '../../core/constants/synk_colors.dart';
 import '../../l10n/l10n.dart';
@@ -40,6 +43,10 @@ class _ActivitiesViewState extends State<ActivitiesView> {
   late final Listenable _changes;
 
   bool _showPast = false;
+
+  // Past activities the user swiped away; kept on this phone only.
+  static const _removedPastKey = 'removed_past_activities';
+  Set<String> _removedPast = const {};
   ActivityRoleFilter _filter = ActivityRoleFilter.all;
   ActivityVisibility _visibility = ActivityVisibility.all;
   bool _codeBubbleExpanded = true;
@@ -52,6 +59,7 @@ class _ActivitiesViewState extends State<ActivitiesView> {
 
   // Ended activities the user can still rate, by activity id.
   final ActivityRatingModel _ratingModel = ActivityRatingModel();
+  final ActivityLeaveController _leaveController = ActivityLeaveController();
   Map<String, PendingActivityRating> _pendingRatings = const {};
 
   ActivityStore get _store => widget.activityStore;
@@ -70,6 +78,31 @@ class _ActivitiesViewState extends State<ActivitiesView> {
     _loadMissingPeople();
     unawaited(_loadScheduleConflicts());
     unawaited(_loadPendingRatings());
+    unawaited(_loadRemovedPast());
+  }
+
+  Future<void> _loadRemovedPast() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final ids = prefs.getStringList(_removedPastKey) ?? const [];
+      if (mounted) setState(() => _removedPast = ids.toSet());
+    } catch (_) {}
+  }
+
+  Future<void> _removePast(Activity activity) async {
+    final remove = await SynkDialog.confirm(
+      context,
+      icon: Icons.delete_outline_rounded,
+      title: context.l10n.removePastActivityTitle,
+      message: context.l10n.removePastActivityMessage,
+      action: context.l10n.remove,
+    );
+    if (!remove || !mounted) return;
+    setState(() => _removedPast = {..._removedPast, activity.id});
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(_removedPastKey, _removedPast.toList());
+    } catch (_) {}
   }
 
   Future<void> _loadPendingRatings() async {
@@ -90,6 +123,8 @@ class _ActivitiesViewState extends State<ActivitiesView> {
     try {
       rating = await _ratingModel.fetchForActivity(activity.id);
     } catch (_) {}
+    if (!mounted) return;
+    if (rating == null && await _dropIfGone(activity)) return;
     if (!mounted) return;
     if (rating == null || rating.participants.isEmpty) {
       SynkFeedback.showToast(
@@ -112,6 +147,7 @@ class _ActivitiesViewState extends State<ActivitiesView> {
     _store.removeListener(_loadMissingPeople);
     _store.removeListener(_takeDetailsFocus);
     _deleteController.dispose();
+    _leaveController.dispose();
     super.dispose();
   }
 
@@ -253,6 +289,57 @@ class _ActivitiesViewState extends State<ActivitiesView> {
     return false;
   }
 
+  // The activity was deleted (or can't be seen any more): take it off the
+  // list and say so. Returns true when it was gone.
+  Future<bool> _dropIfGone(Activity activity) async {
+    Activity? fresh;
+    try {
+      fresh = await _activitiesModel.fetchById(activity.id);
+    } catch (_) {
+      return false;
+    }
+    if (fresh != null || !mounted) return false;
+    _store.removeById(activity.id);
+    SynkFeedback.showToast(
+      context,
+      title: context.l10n.thisActivityWasDeleted,
+      success: false,
+    );
+    return true;
+  }
+
+  // Swipe to leave: leaves, leaves the waitlist or withdraws the request.
+  Future<void> _confirmLeave(Activity activity) async {
+    final copy = activityLeaveCopy(context, activity.participationStatus);
+    final leave = await SynkDialog.confirm(
+      context,
+      icon: copy.icon,
+      title: copy.title,
+      action: copy.confirm,
+    );
+    if (!leave || !mounted) return;
+
+    final result = await _leaveController.leaveActivity(activity.id);
+    if (!mounted) return;
+    if (result == null) {
+      SynkFeedback.showError(
+        context,
+        _leaveController.errorMessage ??
+            context.l10n.somethingWentWrongPleaseTryAgain,
+      );
+      unawaited(_refresh());
+      return;
+    }
+
+    _store.removeParticipation(activity.id);
+    unawaited(_refresh());
+    await SynkFeedback.showSuccessDialog(
+      context,
+      title: copy.successTitle,
+      message: copy.successMessage,
+    );
+  }
+
   Future<void> _confirmDelete(Activity activity) async {
     final delete = await SynkDialog.confirm(
       context,
@@ -326,7 +413,9 @@ class _ActivitiesViewState extends State<ActivitiesView> {
 
   Widget _buildList(double bottomInset) {
     final userId = _store.currentUserId;
-    final inTab = _showPast ? _store.past : _store.upcoming;
+    final inTab = _showPast
+        ? _store.past.where((a) => !_removedPast.contains(a.id)).toList()
+        : _store.upcoming;
     final roles = {for (final a in inTab) a.id: MyActivityRole.of(a, userId)};
     final chats = ChatController.instance;
 
@@ -468,71 +557,129 @@ class _ActivitiesViewState extends State<ActivitiesView> {
       final limited = role == MyActivityRole.pending && !activity.isPublic;
       // Ended, and the user was in it.
       final canRate = member && activity.endsAt.isBefore(now);
+      final card = MyActivityCard(
+        activity: activity,
+        role: role,
+        participants: _people[activity.id],
+        anonymous: role == MyActivityRole.pending,
+        // A private activity they only asked to join stays closed.
+        limited: limited,
+        onTap: limited ? null : () => _openActivity(activity),
+        // Past activities keep their chat if it's still there.
+        onChat: member && (!activity.isPast || chat != null)
+            ? () => _openChat(activity)
+            : null,
+        unreadCount: chat?.unreadCount ?? 0,
+        showCode: member && !activity.isPast,
+        canShare: member && !activity.isPast,
+        onRate: canRate ? () => _rate(activity) : null,
+        hasRated: !_pendingRatings.containsKey(activity.id),
+      );
       items
-        ..add(
-          MyActivityCard(
-            activity: activity,
-            role: role,
-            participants: _people[activity.id],
-            anonymous: role == MyActivityRole.pending,
-            // A private activity they only asked to join stays closed.
-            limited: limited,
-            onTap: limited ? null : () => _openActivity(activity),
-            // Past activities keep their chat if it's still there.
-            onChat: member && (!activity.isPast || chat != null)
-                ? () => _openChat(activity)
-                : null,
-            unreadCount: chat?.unreadCount ?? 0,
-            showCode: member && !activity.isPast,
-            canShare: member && !activity.isPast,
-            onRate: canRate ? () => _rate(activity) : null,
-            hasRated: !_pendingRatings.containsKey(activity.id),
-          ),
-        )
+        ..add(_swipeable(activity, role, card))
         ..add(const SizedBox(height: 12));
     }
 
-    return CustomScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      slivers: [
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-          sliver: SliverList(delegate: SliverChildListDelegate(header)),
-        ),
-        if (shown.isEmpty)
-          // Centered in the space left under the header.
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: Padding(
-              padding: EdgeInsets.only(bottom: bottomPadding),
-              child: Center(
-                child: filtered
-                    ? EmptyState(
-                        icon: Icons.tune_rounded,
-                        title: context.l10n.noMatchesTryFewerFilters,
-                        actionLabel: context.l10n.clearFilters,
-                        onAction: _clearFilters,
-                      )
-                    : _showPast
-                    ? EmptyState(
-                        icon: Icons.history_rounded,
-                        title: context.l10n.noPastActivities,
-                        message: context.l10n.activitiesYouveBeenPartOfWill,
-                      )
-                    : EmptyState(
-                        icon: Icons.event_available_rounded,
-                        title: context.l10n.noUpcomingActivities,
-                        message: context.l10n.joinOneFromHomeOrTap,
-                      ),
-              ),
-            ),
-          )
-        else
+    return SlidableAutoCloseBehavior(
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
           SliverPadding(
-            padding: EdgeInsets.fromLTRB(16, 0, 16, bottomPadding),
-            sliver: SliverList(delegate: SliverChildListDelegate(items)),
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+            sliver: SliverList(delegate: SliverChildListDelegate(header)),
           ),
-      ],
+          if (shown.isEmpty)
+            // Centered in the space left under the header.
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Padding(
+                padding: EdgeInsets.only(bottom: bottomPadding),
+                child: Center(
+                  child: filtered
+                      ? EmptyState(
+                          icon: Icons.tune_rounded,
+                          title: context.l10n.noMatchesTryFewerFilters,
+                          actionLabel: context.l10n.clearFilters,
+                          onAction: _clearFilters,
+                        )
+                      : _showPast
+                      ? EmptyState(
+                          icon: Icons.history_rounded,
+                          title: context.l10n.noPastActivities,
+                          message: context.l10n.activitiesYouveBeenPartOfWill,
+                        )
+                      : EmptyState(
+                          icon: Icons.event_available_rounded,
+                          title: context.l10n.noUpcomingActivities,
+                          message: context.l10n.joinOneFromHomeOrTap,
+                        ),
+                ),
+              ),
+            )
+          else
+            SliverPadding(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, bottomPadding),
+              sliver: SliverList(delegate: SliverChildListDelegate(items)),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // Swipe a card for Delete (hosting) or Leave (joined, waitlisted or
+  // requested). A past one is only taken off this list.
+  Widget _swipeable(Activity activity, MyActivityRole role, Widget card) {
+    if (activity.isPast) {
+      return _slidable(
+        activity,
+        card,
+        icon: Icons.delete_outline_rounded,
+        label: context.l10n.remove,
+        onPressed: () => _removePast(activity),
+      );
+    }
+    final hosting = role == MyActivityRole.hosting;
+    final status = activity.participationStatus;
+    if (!hosting && status == null) return card;
+
+    final copy = activityLeaveCopy(context, status);
+    return _slidable(
+      activity,
+      card,
+      icon: hosting ? Icons.delete_outline_rounded : copy.icon,
+      label: hosting ? context.l10n.deleteLabel : copy.confirm,
+      onPressed: () =>
+          hosting ? _confirmDelete(activity) : _confirmLeave(activity),
+    );
+  }
+
+  Widget _slidable(
+    Activity activity,
+    Widget card, {
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: Slidable(
+        key: ValueKey(activity.id),
+        groupTag: 'activities',
+        endActionPane: ActionPane(
+          motion: const DrawerMotion(),
+          extentRatio: 0.3,
+          children: [
+            SlidableAction(
+              onPressed: (_) => onPressed(),
+              backgroundColor: SynkColors.badge,
+              foregroundColor: Colors.white,
+              icon: icon,
+              label: label,
+            ),
+          ],
+        ),
+        child: card,
+      ),
     );
   }
 

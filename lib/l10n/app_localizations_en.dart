@@ -921,7 +921,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get thePersonYouChooseGetsFull =>
-      'The person you choose gets full host permissions, including managing join requests and deleting the activity. You will leave the activity.';
+      'The person you choose gets full host permissions, including managing join requests and deleting the activity.';
 
   @override
   String get unableToLoadParticipantsPleaseTry =>
@@ -3460,4 +3460,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get withdrawRequestTitle => 'Withdraw your request?';
+
+  @override
+  String get hiddenProfileExplanation =>
+      'This profile is hidden from you. This happens when someone limits who can see them, or the account is paused. They still count as a participant.';
+
+  @override
+  String get thisActivityWasDeleted => 'This activity was deleted.';
+
+  @override
+  String get suggestedForYou => 'Suggested for you';
+
+  @override
+  String get chatStarterHey => 'Heyy 👋';
+
+  @override
+  String get chatStarterHowsItGoing => 'What\'s up?';
+
+  @override
+  String get chatStarterPlanSomething => 'Wanna do something this week?';
+
+  @override
+  String get chatStarterSameThings =>
+      'We like the same stuff, wanna join something together?';
+
+  @override
+  String get chatStarterHiEveryone => 'Hey all! 👋';
+
+  @override
+  String get chatStarterExcited => 'Can\'t wait for this!';
+
+  @override
+  String get chatStarterWhereMeet => 'Where are we meeting?';
+
+  @override
+  String get chatStarterGoTogether => 'Anyone wanna go together?';
+
+  @override
+  String get removePastActivityTitle => 'Remove from your list?';
+
+  @override
+  String get removePastActivityMessage =>
+      'It\'s only removed for you. Everyone else still sees it.';
 }

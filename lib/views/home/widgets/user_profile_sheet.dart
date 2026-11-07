@@ -11,6 +11,7 @@ import '../../../models/friends_model.dart';
 import '../../../models/weekly_streak.dart';
 import '../../../utils/custom_widgets/synk_feedback.dart';
 import '../../widgets/avatar_preview.dart';
+import '../../widgets/default_avatar.dart';
 import '../../widgets/profile_header_banner.dart';
 import '../chats_view.dart';
 import '../user_friends_view.dart';
@@ -49,6 +50,66 @@ Future<void> showUserProfileSheet({
         gender: gender,
         showMessageButton: showMessageButton,
         scrollController: scrollController,
+      ),
+    ),
+  );
+}
+
+// A participant shown as "Synk user". The server sends no id for them, so
+// this only explains why, without saying which reason it is.
+Future<void> showHiddenUserSheet({
+  required BuildContext context,
+  String? gender,
+}) {
+  return showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    builder: (context) => Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: SynkColors.background,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: SynkColors.textSecondary.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 28),
+              DefaultAvatar(gender: gender, size: 72),
+              const SizedBox(height: 14),
+              Text(
+                context.l10n.synkUser,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: SynkColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                context.l10n.hiddenProfileExplanation,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 14,
+                  height: 1.45,
+                  color: SynkColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     ),
   );

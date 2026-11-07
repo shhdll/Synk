@@ -117,6 +117,17 @@ class FriendsModel {
         .toList();
   }
 
+  Future<List<FriendUser>> suggestPeople() async {
+    final response = await _supabase.rpc(
+      'suggest_people',
+      params: {'result_limit': 5},
+    );
+    if (response is! List) return const [];
+    return response
+        .map((row) => FriendUser.fromMap(row as Map<String, dynamic>))
+        .toList();
+  }
+
   // Friends who host or joined each activity, keyed by activity id.
   Future<Map<String, List<FriendUser>>> fetchFriendsGoing(
     List<String> activityIds,

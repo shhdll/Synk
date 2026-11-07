@@ -147,6 +147,10 @@ class FriendsController extends ChangeNotifier {
     return _model.searchPeople(query);
   }
 
+  // People the user may know: done activities together, mutual friends or
+  // shared interests.
+  Future<List<FriendUser>> suggestPeople() => _model.suggestPeople();
+
   // Each change below returns false when it failed.
 
   // True when it went through. If they had already asked, you become friends.
