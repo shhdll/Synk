@@ -10,6 +10,7 @@ import '../../controllers/chat_controller.dart';
 import '../../core/constants/synk_colors.dart';
 import '../../l10n/l10n.dart';
 import '../../models/activities_model.dart';
+import '../../models/activity_filters.dart';
 import '../../models/activity_model.dart';
 import '../../models/activity_rating_model.dart';
 import '../../utils/custom_widgets/synk_dialog.dart';
@@ -24,7 +25,9 @@ import 'widgets/activity_details_sheet.dart';
 import 'widgets/activity_rating_sheet.dart';
 import 'widgets/code_bubble.dart';
 import 'widgets/empty_state.dart';
+import 'widgets/friends_list_widgets.dart';
 import 'widgets/my_activity_card.dart';
+import 'widgets/recent_activities_section.dart';
 import '../create_activity/create_activity_view.dart';
 import 'main_shell.dart';
 
@@ -43,6 +46,8 @@ class _ActivitiesViewState extends State<ActivitiesView> {
   late final Listenable _changes;
 
   bool _showPast = false;
+  final TextEditingController _search = TextEditingController();
+  bool _searchOpen = false;
 
   // Past activities the user swiped away; kept on this phone only.
   static const _removedPastKey = 'removed_past_activities';
@@ -103,7 +108,17 @@ class _ActivitiesViewState extends State<ActivitiesView> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setStringList(_removedPastKey, _removedPast.toList());
     } catch (_) {}
+    // Also off the user's recent activities on their profile.
+    try {
+      await _activitiesModel.hideRecentActivity(activity.id);
+      RecentActivitiesSection.changes.value++;
+    } catch (_) {}
   }
+
+  void _closeSearch() => setState(() {
+    _searchOpen = false;
+    _search.clear();
+  });
 
   Future<void> _loadPendingRatings() async {
     try {
@@ -148,6 +163,7 @@ class _ActivitiesViewState extends State<ActivitiesView> {
     _store.removeListener(_takeDetailsFocus);
     _deleteController.dispose();
     _leaveController.dispose();
+    _search.dispose();
     super.dispose();
   }
 
@@ -384,15 +400,20 @@ class _ActivitiesViewState extends State<ActivitiesView> {
           const Positioned.fill(child: SynkBlobBackground()),
           SafeArea(
             bottom: false,
-            child: NotificationListener<ScrollNotification>(
-              onNotification: _onUserScroll,
-              child: RefreshIndicator(
-                color: SynkColors.orangeDark,
-                backgroundColor: Colors.white,
-                onRefresh: _refresh,
-                child: ListenableBuilder(
-                  listenable: _changes,
-                  builder: (context, _) => _buildList(bottomInset),
+            // A tap outside the search field (not on a card) closes it.
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: _searchOpen ? _closeSearch : null,
+              child: NotificationListener<ScrollNotification>(
+                onNotification: _onUserScroll,
+                child: RefreshIndicator(
+                  color: SynkColors.orangeDark,
+                  backgroundColor: Colors.white,
+                  onRefresh: _refresh,
+                  child: ListenableBuilder(
+                    listenable: _changes,
+                    builder: (context, _) => _buildList(bottomInset),
+                  ),
                 ),
               ),
             ),
@@ -427,8 +448,13 @@ class _ActivitiesViewState extends State<ActivitiesView> {
     final filtered =
         _filter != ActivityRoleFilter.all ||
         _visibility != ActivityVisibility.all;
+    final query = _search.text.trim();
+    final searching = query.isNotEmpty;
     final shown = inTab
         .where((a) => _filter.matches(roles[a.id]!) && _visibility.matches(a))
+        .where(
+          (a) => !searching || ActivityFilters.searchScore(a, query) != null,
+        )
         .toList();
 
     bool isMember(Activity a) {
@@ -506,6 +532,13 @@ class _ActivitiesViewState extends State<ActivitiesView> {
             ),
           ),
           const SizedBox(width: 10),
+          _SearchButton(
+            active: _searchOpen,
+            onTap: () => _searchOpen
+                ? _closeSearch()
+                : setState(() => _searchOpen = true),
+          ),
+          const SizedBox(width: 10),
           _FilterButton(
             active: filtered,
             onTap: () async {
@@ -523,6 +556,16 @@ class _ActivitiesViewState extends State<ActivitiesView> {
           ),
         ],
       ),
+      if (_searchOpen) ...[
+        const SizedBox(height: 12),
+        FriendsSearchField(
+          controller: _search,
+          hint: context.l10n.searchActivities,
+          autofocus: true,
+          borderRadius: 16,
+          onChanged: (_) => setState(() {}),
+        ),
+      ],
       if (filtered) ...[
         const SizedBox(height: 12),
         Align(
@@ -595,7 +638,12 @@ class _ActivitiesViewState extends State<ActivitiesView> {
               child: Padding(
                 padding: EdgeInsets.only(bottom: bottomPadding),
                 child: Center(
-                  child: filtered
+                  child: searching
+                      ? EmptyState(
+                          icon: Icons.search_off_rounded,
+                          title: context.l10n.noActivitiesMatchYourSearch,
+                        )
+                      : filtered
                       ? EmptyState(
                           icon: Icons.tune_rounded,
                           title: context.l10n.noMatchesTryFewerFilters,
@@ -669,12 +717,33 @@ class _ActivitiesViewState extends State<ActivitiesView> {
           motion: const DrawerMotion(),
           extentRatio: 0.3,
           children: [
-            SlidableAction(
+            // A rounded button of its own, a little apart from the card.
+            CustomSlidableAction(
               onPressed: (_) => onPressed(),
-              backgroundColor: SynkColors.badge,
+              backgroundColor: Colors.transparent,
               foregroundColor: Colors.white,
-              icon: icon,
-              label: label,
+              padding: EdgeInsets.zero,
+              child: Container(
+                margin: const EdgeInsetsDirectional.only(start: 10),
+                decoration: BoxDecoration(
+                  color: SynkColors.badge,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                alignment: Alignment.center,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(icon, color: Colors.white),
+                    const SizedBox(height: 4),
+                    Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
@@ -718,6 +787,37 @@ class _GroupHeader extends StatelessWidget {
           fontSize: 13,
           fontWeight: FontWeight.w700,
           color: SynkColors.textSecondary,
+        ),
+      ),
+    );
+  }
+}
+
+class _SearchButton extends StatelessWidget {
+  const _SearchButton({required this.active, required this.onTap});
+
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Tooltip(
+          message: context.l10n.searchActivities,
+          child: SizedBox(
+            width: 48,
+            height: 48,
+            child: Icon(
+              active ? Icons.search_off_rounded : Icons.search_rounded,
+              size: 22,
+              color: SynkColors.ink,
+            ),
+          ),
         ),
       ),
     );

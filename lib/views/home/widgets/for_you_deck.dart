@@ -100,7 +100,7 @@ class _ForYouDeckState extends State<ForYouDeck>
   // Each card's skip is saved once per app run, however often it's swiped.
   static final Set<String> _skipped = {};
 
-  ScaffoldFeatureController<SnackBar, SnackBarClosedReason>? _undoBar;
+  UndoToast? _undoBar;
 
   @override
   void initState() {
@@ -228,27 +228,17 @@ class _ForYouDeckState extends State<ForYouDeck>
 
   void _showUndo(TopPick pick) {
     final l = context.l10n;
-    final messenger = ScaffoldMessenger.of(context);
-    // Closing the last bar saves what it was waiting on.
-    messenger.hideCurrentSnackBar();
-    final bar = messenger.showSnackBar(
-      SnackBar(
-        content: Text(l.youJoinedTitle(_title(pick.activity))),
-        duration: const Duration(seconds: 4),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: SynkColors.textPrimary,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        action: SnackBarAction(
-          label: l.undo,
-          textColor: SynkColors.orange,
-          onPressed: () {},
-        ),
-      ),
+    // Closing the last one saves what it was waiting on.
+    _undoBar?.close();
+    final bar = SynkFeedback.showUndoToast(
+      context,
+      title: l.youJoinedTitle(_title(pick.activity)),
+      undoLabel: l.undo,
     );
     _undoBar = bar;
-    bar.closed.then((reason) {
+    bar.closed.then((undone) {
       if (_undoBar == bar) _undoBar = null;
-      if (reason == SnackBarClosedReason.action) {
+      if (undone) {
         _bringBack();
       } else {
         _swipes.record(pick.activity.id, SwipeAction.join);

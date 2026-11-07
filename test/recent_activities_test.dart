@@ -14,11 +14,33 @@ class _FakeActivitiesModel implements ActivitiesModel {
     this.allowed = true,
     this.activities = const [],
     this.fails = false,
+    this.me,
   });
 
   final bool allowed;
   final List<Activity> activities;
   final bool fails;
+  final String? me;
+  final List<String> hidden = [];
+
+  @override
+  String? get currentUserId => me;
+
+  @override
+  Future<void> hideRecentActivity(String activityId) async {
+    hidden.add(activityId);
+  }
+
+  @override
+  Future<void> unhideRecentActivity(String activityId) async {
+    hidden.remove(activityId);
+  }
+
+  @override
+  Future<List<Activity>> fetchHiddenRecentActivities() async => [
+    for (final a in activities)
+      if (hidden.contains(a.id)) a,
+  ];
 
   @override
   Future<UserActivityHistoryPage> fetchUserRecentActivities({
@@ -27,7 +49,11 @@ class _FakeActivitiesModel implements ActivitiesModel {
     int offset = 0,
   }) async {
     if (fails) throw Exception('offline');
-    final page = activities.skip(offset).take(limit).toList();
+    final page = activities
+        .where((a) => !hidden.contains(a.id))
+        .skip(offset)
+        .take(limit)
+        .toList();
     return UserActivityHistoryPage(
       allowed: allowed,
       activities: allowed ? page : const [],
@@ -113,6 +139,40 @@ void main() {
     testWidgets('is hidden when loading fails', (tester) async {
       await _pumpSection(tester, _FakeActivitiesModel(fails: true));
       expect(find.text('Recent activities'), findsNothing);
+    });
+
+    testWidgets('only the user can hide their own', (tester) async {
+      await _pumpSection(
+        tester,
+        _FakeActivitiesModel(activities: [_padel, _hiking]),
+      );
+      expect(find.byTooltip('Hide'), findsNothing);
+
+      final mine = _FakeActivitiesModel(
+        activities: [_padel, _hiking],
+        me: 'friend',
+      );
+      await _pumpSection(tester, mine);
+      expect(find.byTooltip('Hide'), findsNWidgets(2));
+
+      await tester.tap(find.byTooltip('Hide').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Hide').last);
+      await tester.pumpAndSettle();
+
+      expect(mine.hidden, ['a1']);
+      expect(find.text('Padel'), findsNothing);
+      expect(find.text('Hiking'), findsOneWidget);
+
+      await tester.tap(find.text('Hidden (1)'));
+      await tester.pumpAndSettle();
+      expect(find.text('Padel'), findsOneWidget);
+      await tester.tap(find.text('Unhide'));
+      await tester.pumpAndSettle();
+
+      expect(mine.hidden, isEmpty);
+      expect(find.text('Hidden (1)'), findsNothing);
+      expect(find.text('Padel'), findsOneWidget);
     });
 
     testWidgets('puts a fourth activity on the next row', (tester) async {

@@ -19,6 +19,7 @@ import 'settings_view.dart';
 import 'widgets/field_editor_sheet.dart';
 import 'widgets/option_picker_sheet.dart';
 import 'widgets/profile_info_row.dart';
+import 'widgets/recent_activities_section.dart';
 import 'widgets/section_label.dart';
 import '../../utils/text_direction.dart';
 import '../widgets/avatar_preview.dart';
@@ -198,6 +199,11 @@ class _ProfileViewState extends State<ProfileView> {
     );
   }
 
+  void _openSettings() {
+    Navigator.of(context)
+        .push(MaterialPageRoute<void>(builder: (_) => const SettingsView()));
+  }
+
   Widget _buildScaffold(BuildContext context) {
     final profile = _controller.profile;
     final fullName = (profile['full_name'] as String?)?.trim();
@@ -236,35 +242,43 @@ class _ProfileViewState extends State<ProfileView> {
               padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
               sliver: SliverList.list(
                 children: [
-                  Row(
-                    children: [
-                      // Opened from the avatar in the home header.
-                      if (Navigator.of(context).canPop()) ...[
+                  // A swipe from the settings side toward the middle opens
+                  // settings, like tapping the button.
+                  GestureDetector(
+                    behavior: HitTestBehavior.translucent,
+                    onHorizontalDragEnd: (details) {
+                      final toStart =
+                          Directionality.of(context) == TextDirection.ltr
+                          ? -(details.primaryVelocity ?? 0)
+                          : details.primaryVelocity ?? 0;
+                      if (toStart > 300) _openSettings();
+                    },
+                    child: Row(
+                      children: [
+                        // Opened from the avatar in the home header.
+                        if (Navigator.of(context).canPop()) ...[
+                          IconButton(
+                            tooltip: MaterialLocalizations.of(context)
+                                .backButtonTooltip,
+                            onPressed: () => Navigator.pop(context),
+                            icon: const Icon(
+                              Icons.arrow_back_rounded,
+                              color: SynkColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                        ],
+                        const Spacer(),
                         IconButton(
-                          tooltip: MaterialLocalizations.of(context)
-                              .backButtonTooltip,
-                          onPressed: () => Navigator.pop(context),
+                          tooltip: context.l10n.settings,
+                          onPressed: _openSettings,
                           icon: const Icon(
-                            Icons.arrow_back_rounded,
+                            Icons.settings_outlined,
                             color: SynkColors.textPrimary,
                           ),
                         ),
-                        const SizedBox(width: 4),
                       ],
-                      const Spacer(),
-                      IconButton(
-                        tooltip: context.l10n.settings,
-                        onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => const SettingsView(),
-                          ),
-                        ),
-                        icon: const Icon(
-                          Icons.settings_outlined,
-                          color: SynkColors.textPrimary,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                   const SizedBox(height: 20),
                   Container(
@@ -553,6 +567,17 @@ class _ProfileViewState extends State<ProfileView> {
                       ],
                     ),
                   ),
+                  if (Supabase.instance.client.auth.currentUser?.id
+                      case final myId?)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: RecentActivitiesSection(
+                        userId: myId,
+                        userName: fullName ?? '',
+                        frame: (title, child) =>
+                            _ExpandableSection(title: title, child: child),
+                      ),
+                    ),
                 ],
               ),
             ),
