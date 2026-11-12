@@ -4,10 +4,6 @@ import 'package:flutter/services.dart';
 final _rtlLetter = RegExp(r'[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF]');
 final _ltrLetter = RegExp(r'[A-Za-z\u00C0-\u024F]');
 
-/// Drops Arabic as it's typed or pasted. Used on activity titles, which stay
-/// in Latin letters; names, bios and descriptions accept Arabic.
-final noArabicFormatter = FilteringTextInputFormatter.deny(_rtlLetter);
-
 /// Whether [text] has any Arabic letters, for checks on save.
 bool hasArabic(String text) => _rtlLetter.hasMatch(text);
 

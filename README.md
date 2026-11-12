@@ -104,6 +104,7 @@ Use the publishable key here. Never put a service-role key in the app.
 | `android/local.properties` | `MAPS_API_KEY` for Android | [Google Cloud](https://console.cloud.google.com/apis/credentials) |
 | `ios/Flutter/Secrets.xcconfig` | `MAPS_API_KEY` for iOS | [Google Cloud](https://console.cloud.google.com/apis/credentials) |
 | `android/app/google-services.json` | Firebase config for push notifications | [Firebase](https://console.firebase.google.com/) |
+| Supabase secret `OPENAI_API_KEY` | Checks activity text and photos before they're published | [OpenAI](https://platform.openai.com/api-keys), see [supabase/ACTIVITY_MODERATION.md](supabase/ACTIVITY_MODERATION.md) |
 
 ### 5. Run
 
@@ -140,3 +141,9 @@ flutter analyze   # static analysis
 ```
 
 They cover things like sign-up checks, activity status, filters, search, Top Picks, the weekly streak, ratings and translations.
+
+Activity moderation also has database and Edge Function tests; see [supabase/ACTIVITY_MODERATION.md](supabase/ACTIVITY_MODERATION.md#tests).
+
+## Content checks and privacy
+
+Activity titles, descriptions, location names and photos are checked by OpenAI's moderation model before they're published, and photos lose their EXIF and GPS data first. How it works, what is sent, and how to deploy or roll it back: [supabase/ACTIVITY_MODERATION.md](supabase/ACTIVITY_MODERATION.md).

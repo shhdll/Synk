@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -8,29 +9,33 @@ import '../l10n/l10n.dart';
 import '../models/activities_model.dart';
 import '../models/activity_model.dart';
 import '../models/activity_photo_uploader.dart';
-import '../utils/text_direction.dart';
+import '../models/activity_save_model.dart';
+import '../models/pending_activity_save_store.dart';
+import '../utils/activity_photo_jpeg.dart';
+import 'activity_save_messages.dart';
 
 // Image formats accepted for an activity photo.
 enum PhotoFormat { jpeg, png }
 
 enum CreateField { title, location, setting, date, time }
 
-// Outcome of a create attempt.
+// Outcome of a save. Saving goes through the save-activity Edge Function,
+// which checks the content first; the activity and its photo are saved
+// together or not at all.
 //
-// [activity] is non-null when the row was created. [photoWarning] explains a
-// photo problem that did NOT prevent creation. [orphanWarning] is set only
-// when a photo was uploaded but could not be linked to the activity, so the
-// file may still be sitting in Storage — it is never reported as cleaned up.
+// [activity] is set when it was saved. [latestActivity] is the current
+// version after a conflict, so the caller can show it. [closeEditor] is set
+// when there's nothing left to edit (deleted, or no longer the host).
 class CreateActivityResult {
   const CreateActivityResult({
     this.activity,
-    this.photoWarning,
-    this.orphanWarning,
+    this.latestActivity,
+    this.closeEditor = false,
   });
 
   final Activity? activity;
-  final String? photoWarning;
-  final String? orphanWarning;
+  final Activity? latestActivity;
+  final bool closeEditor;
 
   bool get created => activity != null;
 }
@@ -40,8 +45,21 @@ class CreateActivityController extends ChangeNotifier {
     ActivitiesModel? activitiesModel,
     Activity? activity,
     this.store,
+    ActivitySaveService? saveService,
+    PendingActivitySaveStore pendingStore = const PendingActivitySaveStore(),
+    Future<String?> Function(String sourcePath)? preparePhoto,
+    String? Function()? currentUserId,
   }) : _activitiesModel = activitiesModel ?? ActivitiesModel(),
-       _editingActivity = activity {
+       _editingActivity = activity,
+       _saveService = saveService ?? ActivitySaveService(),
+       _pending = pendingStore,
+       _preparePhoto = preparePhoto ?? prepareActivityPhoto,
+       _userIdGetter = currentUserId,
+       _activityId = activity?.id ?? newUuidV4(),
+       _editVersion = activity?.editVersion {
+    // Editing a field the server flagged clears its highlight.
+    titleController.addListener(() => _unflag('title'));
+    descriptionController.addListener(() => _unflag('description'));
     if (activity != null) {
       titleController.text = activity.title;
       descriptionController.text = activity.description;
@@ -63,6 +81,24 @@ class CreateActivityController extends ChangeNotifier {
   final ActivitiesModel _activitiesModel;
   final Activity? _editingActivity;
   bool get isEditing => _editingActivity != null;
+
+  final ActivitySaveService _saveService;
+  final PendingActivitySaveStore _pending;
+  final Future<String?> Function(String sourcePath) _preparePhoto;
+  final String? Function()? _userIdGetter;
+
+  // Made once per form, so a retry can't create a second activity.
+  final String _activityId;
+  // The version this edit started from; the server refuses a save over a
+  // newer one.
+  int? _editVersion;
+  // The last save sent. Sending the same content again reuses its request
+  // id, so the server answers instead of saving twice.
+  ActivitySaveRequest? _lastRequest;
+  // Fields the server found inappropriate, until they're changed.
+  final Set<String> _flagged = {};
+  // The picked photo as an upright, metadata-free JPEG, ready to send.
+  String? _preparedPhotoPath;
 
   // ---------------------------------------------------------------------------
   // Draft
@@ -198,6 +234,7 @@ class CreateActivityController extends ChangeNotifier {
     double? latitude,
     double? longitude,
   }) {
+    _flagged.remove('location');
     _locationName = name.trim();
     _locationAddress = address?.trim();
     _latitude = latitude;
@@ -206,6 +243,7 @@ class CreateActivityController extends ChangeNotifier {
   }
 
   void clearPlace() {
+    _flagged.remove('location');
     _locationName = '';
     _locationAddress = null;
     _latitude = null;
@@ -398,6 +436,16 @@ class CreateActivityController extends ChangeNotifier {
         return;
       }
 
+      // Upright JPEG, at most 2 MB, without EXIF or GPS data.
+      final prepared = await _preparePhoto(picked.path);
+      if (prepared == null) {
+        _photoError = appL10n.activityPhotoCantBeUsed;
+        return;
+      }
+      await _discardPreparedPhoto();
+      _preparedPhotoPath = prepared;
+      _flagged.remove('photo');
+
       _photo = picked;
       _photoFormat = format;
       _removeExistingPhoto = false;
@@ -408,11 +456,25 @@ class CreateActivityController extends ChangeNotifier {
   }
 
   void removePhoto() {
+    unawaited(_discardPreparedPhoto());
+    _preparedPhotoPath = null;
+    _flagged.remove('photo');
     _photo = null;
     _photoFormat = null;
     _removeExistingPhoto = _editingActivity?.hasPhoto ?? false;
     _photoError = null;
     notifyListeners();
+  }
+
+  // Deletes the prepared photo unless a pending save still needs it.
+  Future<void> _discardPreparedPhoto() async {
+    final path = _preparedPhotoPath;
+    if (path == null || _lastRequest?.photoPath == path) return;
+    await PendingActivitySaveStore.deletePhoto(path);
+  }
+
+  void _unflag(String field) {
+    if (_flagged.remove(field) && !_disposed) notifyListeners();
   }
 
   // Reads the file's leading bytes to identify the format. Returns null when
@@ -460,6 +522,8 @@ class CreateActivityController extends ChangeNotifier {
   // Validation
   // ---------------------------------------------------------------------------
 
+  // Letters in any script (Arabic, English or both, with their marks),
+  // digits 0-9, and & ' , and spaces. The server applies the same rule.
   static final RegExp titleAllowed = RegExp(
     r"^[\p{L}\p{M}0-9&', ]*$",
     unicode: true,
@@ -483,8 +547,6 @@ class CreateActivityController extends ChangeNotifier {
   String? validateTitle(String? value) {
     final title = value?.trim() ?? '';
     if (title.isEmpty) return appL10n.addATitle;
-    // The field drops Arabic as it's typed; this catches older titles.
-    if (hasArabic(title)) return appL10n.useEnglishLettersOnly;
     if (title.characters.length > ActivityConstants.titleMaxLength) {
       return appL10n.keepItToLetters(ActivityConstants.titleMaxLength);
     }
@@ -522,6 +584,10 @@ class CreateActivityController extends ChangeNotifier {
   }
 
   String? _fieldError(CreateField field) => switch (field) {
+    CreateField.title when _flagged.contains('title') =>
+      appL10n.activityFieldRejected,
+    CreateField.location when _flagged.contains('location') =>
+      appL10n.activityFieldRejected,
     CreateField.title => _invalidTitleAttempt
         ? appL10n.useLettersOnly
         : validateTitle(titleController.text),
@@ -548,9 +614,18 @@ class CreateActivityController extends ChangeNotifier {
   bool _stepValid(int step) =>
       step != 0 || CreateField.values.every((f) => _fieldError(f) == null);
 
+  // The description's error, including a moderation flag.
+  String? get descriptionError => _flagged.contains('description')
+      ? appL10n.activityFieldRejected
+      : validateDescription(descriptionController.text);
+
+  String? get _flaggedPhotoError =>
+      _flagged.contains('photo') ? appL10n.activityPhotoRejected : null;
+
   bool get canSubmit =>
       _stepValid(0) &&
-      validateDescription(descriptionController.text) == null &&
+      descriptionError == null &&
+      _flaggedPhotoError == null &&
       !_isSubmitting &&
       !_isLoading;
 
@@ -564,15 +639,40 @@ class CreateActivityController extends ChangeNotifier {
   }
 
   String? get submitBlocker =>
-      stepBlocker(0) ?? validateDescription(descriptionController.text);
+      stepBlocker(0) ?? descriptionError ?? _flaggedPhotoError;
 
   // ---------------------------------------------------------------------------
-  // Submit — insert first, then upload the photo, then attach it.
+  // Submit — one call to the save-activity Edge Function. It checks the
+  // title, description, location and photo for inappropriate content, then
+  // saves the activity and its photo together, or nothing at all.
   // ---------------------------------------------------------------------------
+
+  String? get _userId => _userIdGetter != null
+      ? _userIdGetter()
+      : _activitiesModel.currentUserId;
+
+  // The step holding the first field the server flagged, to go back to.
+  int? get firstFlaggedStep {
+    if (_flagged.contains('title') || _flagged.contains('location')) return 0;
+    if (_flagged.contains('description') || _flagged.contains('photo')) {
+      return 1;
+    }
+    return null;
+  }
+
+  bool get hasFlaggedContent => _flagged.isNotEmpty;
+
+  // The fields the server flagged, in the order they appear in the form.
+  List<String> get flaggedFields => const [
+    'title',
+    'location',
+    'description',
+    'photo',
+  ].where(_flagged.contains).toList();
 
   Future<CreateActivityResult> submit() async {
     // Guard: never start a second submit while one is running, and never
-    // reach the insert with an incomplete draft (startsAt would be null).
+    // send an incomplete draft (startsAt would be null).
     if (_isSubmitting || _isLoading) {
       return const CreateActivityResult();
     }
@@ -591,161 +691,208 @@ class CreateActivityController extends ChangeNotifier {
     _scheduleConflict = false;
     _capacityConflict = false;
 
-    Activity created;
     try {
-      final scheduleConflict = await _activitiesModel.checkScheduleConflict(
-        startsAt: start,
-        endsAt: start.add(const Duration(hours: 2)),
-        excludedActivityId: _editingActivity?.id,
-      );
-      if (scheduleConflict != null) {
-        _markScheduleConflict();
-        _isSubmitting = false;
-        _setLoading(false);
+      try {
+        final scheduleConflict = await _activitiesModel.checkScheduleConflict(
+          startsAt: start,
+          endsAt: start.add(const Duration(hours: 2)),
+          excludedActivityId: _editingActivity?.id,
+        );
+        if (scheduleConflict != null) {
+          _markScheduleConflict();
+          return const CreateActivityResult();
+        }
+      } catch (_) {
+        // Only a preflight; the server checks again when saving.
+      }
+
+      final userId = _userId;
+      if (userId == null) {
+        _errorMessage = appL10n.signInAgainToSave;
         return const CreateActivityResult();
       }
-      final draft = Activity(
-          id: _editingActivity?.id ?? '',
-          title: titleController.text,
-          description: descriptionController.text,
-          dateTime: start,
-          location: _locationName,
-          locationAddress: _locationAddress,
-          latitude: _latitude,
-          longitude: _longitude,
-          maxParticipants: _participants,
-          isPublic: _isPublic,
-          setting: _setting,
-          categoryEmoji: _editingActivity?.categoryEmoji ?? '',
-          categoryLabel: _editingActivity?.categoryLabel ?? '',
-          photoUrl: _removeExistingPhoto ? null : _editingActivity?.photoUrl,
-          hostId: _editingActivity?.hostId,
-          hostName: _editingActivity?.hostName,
-          hostUsername: _editingActivity?.hostUsername,
-          hostAvatarUrl: _editingActivity?.hostAvatarUrl,
-          hostGender: _editingActivity?.hostGender,
-          participantsCount: _editingActivity?.participantsCount,
-          activityCode: _editingActivity?.activityCode,
-        );
-      created = isEditing
-          ? await _activitiesModel.update(draft)
-          : await _activitiesModel.create(draft);
-    } catch (error) {
-      debugPrint('SYNK: create activity failed: $error');
-      final errorText = error.toString();
-      final normalizedError = errorText.toLowerCase();
-      _capacityConflict = normalizedError.contains(
-        'capacity cannot be lower than the current number of participants',
-      );
-      final scheduleConflict = normalizedError.contains(
-        'already have an activity scheduled',
-      );
-      if (scheduleConflict) _markScheduleConflict();
-      _errorMessage = scheduleConflict
-          ? _scheduleConflictMessage
-          : _capacityConflict
-          ? 'Capacity cannot be lower than the current number of participants.'
-          : isEditing
-          ? appL10n.weCouldntSaveYourChanges
-          : appL10n.weCouldntCreateYourActivityPlease;
-      _isSubmitting = false;
-      _setLoading(false);
-      return const CreateActivityResult();
-    }
 
-    // From here the activity exists. Nothing below may undo that.
-    final file = _photo;
-    if (file == null) {
-      if (isEditing && _removeExistingPhoto) {
-        final hostId = _editingActivity?.hostId;
-        if (hostId != null) {
-          var photoWarning = appL10n.photoCouldntBeDetached;
-          try {
-            final detached = await _activitiesModel.updatePhotoUrl(
-              created.id,
-              null,
-            );
-            created = detached.copyWith(
-              hostName: created.hostName,
-              hostUsername: created.hostUsername,
-              hostAvatarUrl: created.hostAvatarUrl,
-              hostGender: created.hostGender,
-              participantsCount: created.participantsCount,
-            );
-            final removed = await ActivityPhotoUploader.remove(
-              hostId: hostId,
-              activityId: created.id,
-            );
-            photoWarning = removed
-                ? ''
-                : appL10n.photoDetachedFileNotRemoved;
-          } catch (_) {
-            // Keep the attached photo when clearing its database URL fails.
-          }
-          _isSubmitting = false;
-          _setLoading(false);
-          return CreateActivityResult(
-            activity: created,
-            photoWarning: photoWarning.isEmpty ? null : photoWarning,
-          );
+      // Activities loaded before the server had versions: read it now.
+      if (isEditing && _editVersion == null) {
+        try {
+          _editVersion = (await _activitiesModel.fetchById(_activityId))
+              ?.editVersion;
+        } catch (_) {
+          _editVersion = null;
+        }
+        if (_editVersion == null) {
+          _errorMessage = appL10n.weCouldntSaveYourChanges;
+          return const CreateActivityResult();
         }
       }
-      _isSubmitting = false;
-      _setLoading(false);
-      return CreateActivityResult(activity: created);
-    }
 
-    final upload = await ActivityPhotoUploader.upload(
-      activityId: created.id,
-      file: file,
-      cacheBust: isEditing,
+      final request = _buildRequest(start);
+      final result = await _send(userId, request);
+      if (_disposed) return const CreateActivityResult();
+      return _handle(result, request);
+    } finally {
+      _isSubmitting = false;
+      if (!_disposed) _setLoading(false);
+    }
+  }
+
+  ActivitySaveRequest _buildRequest(DateTime start) {
+    final draft = Activity(
+      id: _activityId,
+      title: titleController.text,
+      description: descriptionController.text,
+      dateTime: start,
+      location: _locationName,
+      locationAddress: _locationAddress,
+      latitude: _latitude,
+      longitude: _longitude,
+      maxParticipants: _participants,
+      isPublic: _isPublic,
+      setting: _setting,
+      categoryEmoji: _editingActivity?.categoryEmoji ?? '',
+      categoryLabel: _editingActivity?.categoryLabel ?? '',
+    );
+    final photoChange = _preparedPhotoPath != null
+        ? ActivityPhotoChange.replace
+        : !isEditing
+        ? ActivityPhotoChange.none
+        : _removeExistingPhoto
+        ? ActivityPhotoChange.remove
+        : ActivityPhotoChange.keep;
+
+    ActivitySaveRequest withId(String requestId) => ActivitySaveRequest(
+      operation: isEditing
+          ? ActivitySaveOperation.update
+          : ActivitySaveOperation.create,
+      requestId: requestId,
+      activityId: _activityId,
+      expectedVersion: isEditing ? _editVersion : null,
+      activity: ActivitySaveRequest.fieldsFor(draft),
+      photoChange: photoChange,
+      photoPath: photoChange == ActivityPhotoChange.replace
+          ? _preparedPhotoPath
+          : null,
     );
 
-    if (!upload.succeeded) {
-      _isSubmitting = false;
-      _setLoading(false);
-      return CreateActivityResult(
-        activity: created,
-        photoWarning: upload.warning,
-      );
+    // The same content again (a retry): same request id, so the server
+    // answers instead of saving twice. Anything changed: a new attempt.
+    final last = _lastRequest;
+    if (last != null && last.sameContentAs(withId(last.requestId))) return last;
+    return withId(newUuidV4());
+  }
+
+  Future<ActivitySaveResult> _send(
+    String userId,
+    ActivitySaveRequest request,
+  ) async {
+    _lastRequest = request;
+    try {
+      // Kept until the server decides, in case the app closes meanwhile.
+      await _pending.save(userId, request);
+    } catch (_) {
+      // Without it a retry still works while the form is open.
     }
 
-    // Attach the URL, retrying once before giving up.
-    for (var attempt = 0; attempt < 2; attempt++) {
+    var result = await _saveService.save(request);
+    // Another attempt of this save is still running: wait once, then ask.
+    if (result.code == ActivitySaveCode.busy && !_disposed) {
+      final wait = (result.retryAfterSeconds ?? 3).clamp(1, 5);
+      await Future<void>.delayed(Duration(seconds: wait));
+      if (!_disposed) result = await _saveService.save(request);
+    }
+
+    if (result.isFinal) {
+      _lastRequest = null;
       try {
-        final updatedPhoto = await _activitiesModel.updatePhotoUrl(
-          created.id,
-          upload.url,
+        await _pending.clear(
+          userId,
+          requestId: request.requestId,
+          deletePhoto: false,
         );
-        final withPhoto = updatedPhoto.copyWith(
-          hostName: created.hostName,
-          hostUsername: created.hostUsername,
-          hostAvatarUrl: created.hostAvatarUrl,
-          hostGender: created.hostGender,
-          participantsCount: created.participantsCount,
-          participationId: created.participationId,
-          participationStatus: created.participationStatus,
-        );
-        _isSubmitting = false;
-        _setLoading(false);
-        return CreateActivityResult(activity: withPhoto);
       } catch (_) {
-        if (attempt == 0) {
-          await Future.delayed(const Duration(milliseconds: 600));
-        }
+        // Offered again on the next start, where the server replays it.
       }
     }
+    return result;
+  }
 
-    // Uploaded but not linked. The file is still in Storage and this code
-    // has not removed it, so say exactly that rather than implying cleanup.
-    _isSubmitting = false;
-    _setLoading(false);
-    return CreateActivityResult(
-      activity: created,
-      photoWarning:
-          appL10n.activityCreatedPhotoNotAdded,
-      orphanWarning:
-          'Uploaded photo for activity ${created.id} was not linked and was not removed.',
+  CreateActivityResult _handle(
+    ActivitySaveResult result,
+    ActivitySaveRequest request,
+  ) {
+    final message = activitySaveMessage(result, editing: isEditing);
+    switch (result.code) {
+      case ActivitySaveCode.saved:
+      case ActivitySaveCode.alreadyExists:
+        final saved = result.activity;
+        if (saved == null) {
+          // Saved, but the row couldn't be read back (e.g. just deleted).
+          _errorMessage = message.isEmpty ? null : message;
+          return const CreateActivityResult(closeEditor: true);
+        }
+        _flagged.clear();
+        unawaited(PendingActivitySaveStore.deletePhoto(_preparedPhotoPath));
+        _preparedPhotoPath = null;
+        return CreateActivityResult(activity: _withHostDetails(saved));
+
+      case ActivitySaveCode.rejected:
+        _flagged
+          ..clear()
+          ..addAll(result.fields);
+        if (_flagged.contains('title')) _touched.add(CreateField.title);
+        if (_flagged.contains('location')) _touched.add(CreateField.location);
+        if (_flagged.contains('photo')) {
+          _photoError = appL10n.activityPhotoRejected;
+        }
+        _errorMessage = message;
+
+      case ActivitySaveCode.photoInvalid:
+      case ActivitySaveCode.payloadTooLarge:
+        _photoError = message;
+        _errorMessage = message;
+
+      case ActivitySaveCode.scheduleConflict:
+        _markScheduleConflict();
+
+      case ActivitySaveCode.capacityBelowParticipants:
+        _capacityConflict = true;
+        _errorMessage = message;
+
+      case ActivitySaveCode.conflict:
+        _errorMessage = message;
+        return CreateActivityResult(latestActivity: result.activity);
+
+      case ActivitySaveCode.notFound:
+      case ActivitySaveCode.notHost:
+        _errorMessage = message;
+        return const CreateActivityResult(closeEditor: true);
+
+      case ActivitySaveCode.requestMismatch:
+        // Never resent automatically: the next tap is a new attempt.
+        debugPrint(
+          'SYNK: activity save request_mismatch for ${request.requestId}',
+        );
+        _errorMessage = message;
+
+      default:
+        _errorMessage = message;
+    }
+    return const CreateActivityResult();
+  }
+
+  // The server returns the plain row; keep what the screens show about the
+  // host and the people going.
+  Activity _withHostDetails(Activity saved) {
+    final original = _editingActivity;
+    if (original == null) return saved;
+    return saved.copyWith(
+      hostName: original.hostName,
+      hostUsername: original.hostUsername,
+      hostAvatarUrl: original.hostAvatarUrl,
+      hostGender: original.hostGender,
+      participantsCount: original.participantsCount,
+      participationId: original.participationId,
+      participationStatus: original.participationStatus,
     );
   }
 
@@ -756,6 +903,10 @@ class CreateActivityController extends ChangeNotifier {
 
   @override
   void dispose() {
+    // The prepared photo stays only while a pending save needs it.
+    if (_lastRequest == null) {
+      unawaited(PendingActivitySaveStore.deletePhoto(_preparedPhotoPath));
+    }
     _disposed = true;
     titleController.dispose();
     descriptionController.dispose();

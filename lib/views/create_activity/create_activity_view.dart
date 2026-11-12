@@ -12,6 +12,8 @@ import '../../core/constants/synk_colors.dart';
 import '../../models/activity_model.dart';
 import '../../utils/custom_widgets/synk_dialog.dart';
 import '../../utils/custom_widgets/synk_feedback.dart';
+import 'activity_rejected_dialog.dart';
+import 'pending_activity_save_prompt.dart';
 
 class CreateActivityOutcome {
   const CreateActivityOutcome({required this.activity});
@@ -64,6 +66,13 @@ class _CreateActivityViewState extends State<CreateActivityView> {
     }
     _controller.addListener(_onControllerChanged);
     unawaited(_controller.refreshConfirmedParticipantCount());
+    // A save that never got an answer (the app closed, or the connection
+    // dropped) is offered before starting a new one.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        unawaited(offerPendingActivitySave(context, store: widget.store));
+      }
+    });
   }
 
   @override
@@ -162,6 +171,29 @@ class _CreateActivityViewState extends State<CreateActivityView> {
     if (!mounted) return;
 
     if (!result.created) {
+      // Changed on another device: show the latest version, edit again.
+      final Activity? latest = result.latestActivity;
+      if (latest != null) {
+        widget.store?.upsert(latest);
+        await SynkFeedback.showErrorDialog(
+          context,
+          title: context.l10n.editActivity,
+          message: context.l10n.activityChangedElsewhere,
+        );
+        if (mounted) Navigator.of(context).pop();
+        return;
+      }
+      // Deleted, or no longer theirs: nothing left to edit.
+      if (result.closeEditor) {
+        await SynkFeedback.showErrorDialog(
+          context,
+          title: context.l10n.editActivity,
+          message:
+              _controller.errorMessage ?? context.l10n.activityNoLongerExists,
+        );
+        if (mounted) Navigator.of(context).pop();
+        return;
+      }
       // Back to the first step, where the error shows under Time.
       if (_controller.hasScheduleConflict) {
         _controller.goToStep(0);
@@ -173,8 +205,21 @@ class _CreateActivityViewState extends State<CreateActivityView> {
         await SynkFeedback.showErrorDialog(
           context,
           title: context.l10n.editActivity,
-          message: _controller.errorMessage ??
-              'Capacity cannot be lower than the number of confirmed participants.',
+          message:
+              _controller.errorMessage ??
+              context.l10n.capacityBelowParticipants,
+        );
+        return;
+      }
+      // Inappropriate content: back to the step with the first flagged
+      // field, which is highlighted there, and explain the guidelines.
+      // Failed checks (moderation unavailable) keep the retry message below.
+      final int? flaggedStep = _controller.firstFlaggedStep;
+      if (flaggedStep != null) _controller.goToStep(flaggedStep);
+      if (_controller.hasFlaggedContent) {
+        await showActivityRejectedDialog(
+          context,
+          fields: _controller.flaggedFields,
         );
         return;
       }
@@ -190,23 +235,11 @@ class _CreateActivityViewState extends State<CreateActivityView> {
     final Activity activity = result.activity!;
     widget.store?.upsert(activity);
 
-    final List<String> warnings = <String>[
-      if (result.photoWarning != null) result.photoWarning!,
-      if (result.orphanWarning != null) result.orphanWarning!,
-    ];
     // A short success banner, then the caller opens the activity itself.
     // It slides down from the top so the activity sheet doesn't cover it.
-    // Editing gets its own message from My Activities, so only photo
-    // problems are shown for it here.
-    if (!_controller.isEditing || warnings.isNotEmpty) {
-      SynkFeedback.showToast(
-        context,
-        title: _controller.isEditing
-            ? context.l10n.changesSaved
-            : context.l10n.activityCreated,
-        message: warnings.isEmpty ? null : warnings.join('\n'),
-        success: warnings.isEmpty,
-      );
+    // Editing gets its own message from My Activities.
+    if (!_controller.isEditing) {
+      SynkFeedback.showToast(context, title: context.l10n.activityCreated);
     }
     Navigator.of(context).pop(CreateActivityOutcome(activity: activity));
   }
@@ -354,15 +387,32 @@ class _CreateActivityViewState extends State<CreateActivityView> {
               onTap: busy ? null : _handlePrimaryAction,
               child: Center(
                 child: busy
-                    ? const SizedBox(
-                        height: 22,
-                        width: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.4,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
+                    // The content check and the save happen now.
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.4,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
                           ),
-                        ),
+                          if (isLastStep) ...<Widget>[
+                            const SizedBox(width: 10),
+                            Text(
+                              context.l10n.checkingActivity,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ],
                       )
                     : Row(
                         mainAxisAlignment: MainAxisAlignment.center,

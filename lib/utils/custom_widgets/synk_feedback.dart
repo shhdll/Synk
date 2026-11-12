@@ -128,6 +128,7 @@ class SynkFeedback {
     required String message,
     String? buttonLabel,
     Widget Function(BuildContext dialogContext)? messageBuilder,
+    IconData icon = Icons.event_busy_rounded,
   }) async {
     await showDialog<void>(
       context: context,
@@ -141,7 +142,7 @@ class SynkFeedback {
             message: message,
             messageWidget: messageBuilder?.call(dialogContext),
             buttonLabel: buttonLabel ?? context.l10n.gotIt,
-            icon: Icons.event_busy_rounded,
+            icon: icon,
             iconBackground: const Color(0x24FF7A36),
             iconColor: SynkColors.orangeDark,
           ),
