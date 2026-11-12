@@ -3535,4 +3535,30 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get addCaption => 'أضف تعليق…';
+  String get removePastActivityMessage =>
+      'تزال من قائمتك ومن أنشطتك الأخيرة، ويبقى النشاط ظاهرا للآخرين.';
+
+  @override
+  String get searchActivities => 'ابحث في الأنشطة';
+
+  @override
+  String get noActivitiesMatchYourSearch => 'لا توجد أنشطة تطابق بحثك';
+
+  @override
+  String get hideFromRecentTitle => 'إخفاء من الأنشطة الأخيرة؟';
+
+  @override
+  String get hideFromRecentMessage => 'لن يظهر لأصدقائك في ملفك بعد الآن.';
+
+  @override
+  String get hide => 'إخفاء';
+
+  @override
+  String get hiddenActivities => 'المخفية';
+
+  @override
+  String get hiddenActivitiesTitle => 'الأنشطة المخفية';
+
+  @override
+  String get unhide => 'إظهار';
 }

@@ -41,7 +41,7 @@ Instead of steps 1–4, you can `flutter run` straight onto your iPhone, like on
    brew install cocoapods
    flutter config --no-enable-swift-package-manager
    ```
-3. Add the secret files (ask a teammate for the values):
+3. Add the secret files (see Environment and Keys in the [README](../README.md#3-environment)):
    - `.env` in the project root (`SUPABASE_URL`, `SUPABASE_ANON_KEY`)
    - `ios/Flutter/Secrets.xcconfig` containing `MAPS_API_KEY=<the iOS Maps key>`
 4. Run `flutter pub get`, then `open ios/Runner.xcworkspace`.

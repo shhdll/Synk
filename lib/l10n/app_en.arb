@@ -1465,4 +1465,13 @@
   "opened": "Opened",
   "alreadyOpened": "You've already opened this",
   "addCaption": "Add a caption…"
+  "removePastActivityMessage": "It's removed from your list and your recent activities. Everyone else still sees the activity.",
+  "searchActivities": "Search activities",
+  "noActivitiesMatchYourSearch": "No activities match your search",
+  "hideFromRecentTitle": "Hide from recent activities?",
+  "hideFromRecentMessage": "Your friends won't see it on your profile anymore.",
+  "hide": "Hide",
+  "hiddenActivities": "Hidden",
+  "hiddenActivitiesTitle": "Hidden activities",
+  "unhide": "Unhide"
 }

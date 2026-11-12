@@ -510,13 +510,20 @@ class _HomeViewState extends State<HomeView> {
 
     return Row(
       children: [
-        // The photo and name both open the profile.
+        // The photo and name both open the profile, by tap or by a swipe
+        // away from the photo's edge.
         Expanded(
           child: Semantics(
             button: true,
             label: context.l10n.profile,
             child: GestureDetector(
               onTap: _openProfile,
+              onHorizontalDragEnd: (details) {
+                final toEnd = Directionality.of(context) == TextDirection.ltr
+                    ? details.primaryVelocity ?? 0
+                    : -(details.primaryVelocity ?? 0);
+                if (toEnd > 300) _openProfile();
+              },
               behavior: HitTestBehavior.opaque,
               child: Row(
                 children: [
