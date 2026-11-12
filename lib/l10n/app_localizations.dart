@@ -6121,12 +6121,6 @@ abstract class AppLocalizations {
   /// **'Remove from your list?'**
   String get removePastActivityTitle;
 
-  /// No description provided for @removePastActivityMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'It\'s removed from your list and your recent activities. Everyone else still sees the activity.'**
-  String get removePastActivityMessage;
-
   /// No description provided for @sticker.
   ///
   /// In en, this message translates to:
@@ -6330,6 +6324,13 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add a caption…'**
   String get addCaption;
+
+  /// No description provided for @removePastActivityMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'It\'s removed from your list and your recent activities. Everyone else still sees the activity.'**
+  String get removePastActivityMessage;
+
   /// No description provided for @searchActivities.
   ///
   /// In en, this message translates to:
