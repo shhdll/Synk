@@ -3485,10 +3485,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get removePastActivityTitle => 'Remove from your list?';
 
   @override
-  String get removePastActivityMessage =>
-      'It\'s only removed for you. Everyone else still sees it.';
-
-  @override
   String get sticker => 'Sticker';
 
   @override
@@ -3603,6 +3599,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addCaption => 'Add a caption…';
+
+  @override
+  String get removePastActivityMessage =>
       'It\'s removed from your list and your recent activities. Everyone else still sees the activity.';
 
   @override

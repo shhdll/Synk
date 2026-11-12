@@ -3416,9 +3416,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get removePastActivityTitle => 'إزالة من قائمتك؟';
 
   @override
-  String get removePastActivityMessage => 'تزال لك فقط، ويبقى ظاهرًا للآخرين.';
-
-  @override
   String get sticker => 'ملصق';
 
   @override
@@ -3535,6 +3532,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get addCaption => 'أضف تعليق…';
+
+  @override
   String get removePastActivityMessage =>
       'تزال من قائمتك ومن أنشطتك الأخيرة، ويبقى النشاط ظاهرا للآخرين.';
 

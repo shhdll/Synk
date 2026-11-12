@@ -1021,7 +1021,6 @@
   "chatStarterWhereMeet": "وين نتلاقى؟",
   "chatStarterGoTogether": "أحد يبي نروح سوا؟",
   "removePastActivityTitle": "إزالة من قائمتك؟",
-  "removePastActivityMessage": "تزال لك فقط، ويبقى ظاهرًا للآخرين.",
   "sticker": "ملصق",
   "stickers": "الملصقات",
   "keyboard": "لوحة المفاتيح",
@@ -1055,7 +1054,7 @@
   "viewOnceHint": "يقدرون يفتحونها مرة وحدة بس",
   "opened": "تم الفتح",
   "alreadyOpened": "فتحتها من قبل",
-  "addCaption": "أضف تعليق…"
+  "addCaption": "أضف تعليق…",
   "removePastActivityMessage": "تزال من قائمتك ومن أنشطتك الأخيرة، ويبقى النشاط ظاهرا للآخرين.",
   "searchActivities": "ابحث في الأنشطة",
   "noActivitiesMatchYourSearch": "لا توجد أنشطة تطابق بحثك",
