@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
@@ -60,7 +61,8 @@ class ChatSummary {
   final bool lastMessageIsDeleted;
   final bool lastMessageHasPhoto;
 
-  // 'text', 'photo', 'activity' or 'location'.
+  // 'text', 'photo', 'activity', 'location', 'sticker', 'voice', 'contact'
+  // or 'poll'.
   final String lastMessageKind;
 
   // The shared activity's title or the place's name.
@@ -180,10 +182,20 @@ class ChatMessage {
     this.locationName,
     this.locationAddress,
     this.replyToId,
+    this.stickerId,
+    this.audioPath,
+    this.audioDuration,
+    this.audioWaveform = const [],
+    this.sharedUserId,
+    this.sharedUser,
+    this.viewOnce = false,
   });
 
   final String id;
   final String chatId;
+
+  // A photo or voice message each other member can open one time.
+  final bool viewOnce;
 
   // Null when the sender deleted their account. For a sender who blocked
   // the viewer, the stand-in id from get_chat_members, not the real one.
@@ -202,7 +214,8 @@ class ChatMessage {
 
   bool get isDeleted => deletedAt != null;
 
-  // 'text', 'photo', 'activity' or 'location'.
+  // 'text', 'photo', 'activity', 'location', 'sticker', 'voice', 'contact'
+  // or 'poll'.
   final String kind;
 
   // Activity messages. The id is null once the activity is deleted; the
@@ -219,7 +232,35 @@ class ChatMessage {
   // The message this one replies to; null once that message is gone.
   final String? replyToId;
 
+  // Sticker messages: the sticker's id in the built-in pack.
+  final String? stickerId;
+
+  // Voice messages: the recording in the chat-voice bucket, how long it is,
+  // and its loudness (0-100 per bar) for the waveform.
+  final String? audioPath;
+  final Duration? audioDuration;
+  final List<int> audioWaveform;
+
+  // Contact messages: the friend who was shared. The id is null once their
+  // account is gone; the snapshot still has the name for the card.
+  final String? sharedUserId;
+  final FriendUser? sharedUser;
+
   bool get isActivityShare => kind == 'activity' && sharedActivity != null;
+
+  bool get isSticker => !isDeleted && kind == 'sticker' && stickerId != null;
+
+  bool get isVoice => !isDeleted && kind == 'voice' && audioPath != null;
+
+  bool get isContact => !isDeleted && kind == 'contact' && sharedUser != null;
+
+  bool get isPoll => !isDeleted && poll != null;
+
+  // What the user typed; empty for stickers, polls and the like.
+  String get text => kind == 'text' || kind == 'photo' ? body : '';
+
+  // Poll messages keep the question and options as JSON in the text.
+  ChatPoll? get poll => kind == 'poll' ? ChatPoll.tryParse(body) : null;
 
   bool get isLocation =>
       kind == 'location' && latitude != null && longitude != null;
@@ -246,6 +287,22 @@ class ChatMessage {
       locationName: map['location_name'] as String?,
       locationAddress: map['location_address'] as String?,
       replyToId: map['reply_to_id'] as String?,
+      stickerId: map['sticker_id'] as String?,
+      audioPath: map['audio_path'] as String?,
+      audioDuration: map['audio_duration_ms'] == null
+          ? null
+          : Duration(milliseconds: (map['audio_duration_ms'] as num).toInt()),
+      audioWaveform: [
+        for (final v in (map['audio_waveform'] as List?) ?? const [])
+          (v as num).toInt(),
+      ],
+      sharedUserId: map['shared_user_id'] as String?,
+      sharedUser: map['shared_user'] is Map
+          ? FriendUser.fromMap(
+              Map<String, dynamic>.from(map['shared_user'] as Map),
+            )
+          : null,
+      viewOnce: map['view_once'] == true,
     );
   }
 
@@ -262,6 +319,96 @@ class ChatMessage {
       categoryLabel: snapshot['category_label'] as String? ?? '',
       categoryEmoji: snapshot['category_emoji'] as String? ?? '',
     );
+  }
+}
+
+// A poll's question and options, kept as JSON in the message text.
+class ChatPoll {
+  const ChatPoll({
+    required this.question,
+    required this.options,
+    this.multiple = false,
+  });
+
+  final String question;
+  final List<String> options;
+
+  // Voters may pick more than one option.
+  final bool multiple;
+
+  String toJson() => jsonEncode({
+    'question': question,
+    'options': options,
+    'multiple': multiple,
+  });
+
+  static ChatPoll? tryParse(String text) {
+    try {
+      final map = jsonDecode(text);
+      if (map is! Map) return null;
+      final options = (map['options'] as List?)?.whereType<String>().toList();
+      final question = map['question'];
+      if (question is! String || options == null || options.length < 2) {
+        return null;
+      }
+      return ChatPoll(
+        question: question,
+        options: options,
+        multiple: map['multiple'] == true,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+}
+
+// Poll votes and voice listens in a chat, from get_chat_message_extras.
+class ChatMessageExtras {
+  const ChatMessageExtras({
+    this.votes = const {},
+    this.plays = const {},
+    this.opens = const {},
+  });
+
+  // Message id -> voter id -> the options they picked.
+  final Map<String, Map<String, List<int>>> votes;
+
+  // Message id -> who has listened to it.
+  final Map<String, Set<String>> plays;
+
+  // View-once message id -> who has opened it.
+  final Map<String, Set<String>> opens;
+
+  ChatMessageExtras copyWith({
+    Map<String, Map<String, List<int>>>? votes,
+    Map<String, Set<String>>? plays,
+    Map<String, Set<String>>? opens,
+  }) => ChatMessageExtras(
+    votes: votes ?? this.votes,
+    plays: plays ?? this.plays,
+    opens: opens ?? this.opens,
+  );
+
+  factory ChatMessageExtras.fromMap(Map<String, dynamic> map) {
+    final votes = <String, Map<String, List<int>>>{};
+    for (final row in (map['votes'] as List?) ?? const []) {
+      final picked = [
+        for (final i in (row['option_indexes'] as List?) ?? const [])
+          (i as num).toInt(),
+      ];
+      if (picked.isEmpty) continue;
+      (votes[row['message_id'] as String] ??= {})[row['user_id'] as String] =
+          picked;
+    }
+    final plays = <String, Set<String>>{};
+    for (final row in (map['plays'] as List?) ?? const []) {
+      (plays[row['message_id'] as String] ??= {}).add(row['user_id'] as String);
+    }
+    final opens = <String, Set<String>>{};
+    for (final row in (map['opens'] as List?) ?? const []) {
+      (opens[row['message_id'] as String] ??= {}).add(row['user_id'] as String);
+    }
+    return ChatMessageExtras(votes: votes, plays: plays, opens: opens);
   }
 }
 
@@ -288,6 +435,10 @@ class ChatReadState {
 
 class ChatModel {
   static const photoBucket = 'chat-photos';
+  static const voiceBucket = 'chat-voice';
+
+  // Voice messages stop recording here.
+  static const maxVoiceLength = Duration(minutes: 2);
 
   // How long a photo's link works; the chat asks for new ones when reopened.
   static const _photoLinkSeconds = 60 * 60;
@@ -548,6 +699,174 @@ class ChatModel {
     return (result: result, message: message);
   }
 
+  // Uploads a recording (AAC in .m4a) into the chat's folder and returns the
+  // path to send.
+  Future<String> uploadVoice(String chatId, String filePath) async {
+    final path =
+        '$chatId/${DateTime.now().microsecondsSinceEpoch}'
+        '_${_random.nextInt(1 << 32)}.m4a';
+    await _supabase.storage
+        .from(voiceBucket)
+        .upload(
+          path,
+          File(filePath),
+          fileOptions: const FileOptions(contentType: 'audio/mp4'),
+        );
+    return path;
+  }
+
+  // A temporary link for a voice message, or null when it's missing.
+  Future<String?> voiceLink(String path) async {
+    final results = await _supabase.storage
+        .from(voiceBucket)
+        .createSignedUrlsResult([path], _photoLinkSeconds);
+    for (final result in results) {
+      if (result is SignedUrlSuccess) return result.signedUrl;
+    }
+    return null;
+  }
+
+  // Sends a sticker, a voice message, a friend's account or a poll, through
+  // send_chat_extra_message
+  // (supabase/migrations/20261112100000_stickers_voice_contacts_polls.sql).
+  Future<({String result, ChatMessage? message})> sendExtra(
+    String chatId, {
+    String? stickerId,
+    String? audioPath,
+    Duration? audioDuration,
+    List<int>? waveform,
+    String? sharedUserId,
+    ChatPoll? poll,
+    String? replyToId,
+  }) async {
+    final kind = stickerId != null
+        ? 'sticker'
+        : audioPath != null
+        ? 'voice'
+        : sharedUserId != null
+        ? 'contact'
+        : 'poll';
+    final response = await _supabase.rpc(
+      'send_chat_extra_message',
+      params: {
+        'target_chat_id': chatId,
+        'message_kind': kind,
+        'message_body': poll?.toJson() ?? '',
+        'sticker_id': ?stickerId,
+        'audio_path': ?audioPath,
+        'audio_duration_ms': ?audioDuration?.inMilliseconds,
+        'audio_waveform': ?waveform,
+        'shared_user_id': ?sharedUserId,
+        'reply_to_id': ?replyToId,
+      },
+    );
+    if (response is! Map) return (result: '', message: null);
+    final result = response['result'] as String? ?? '';
+    final message = result == 'sent'
+        ? ChatMessage.fromMap(
+            Map<String, dynamic>.from(response['message'] as Map),
+          )
+        : null;
+    return (result: result, message: message);
+  }
+
+  // A view-once photo ([imagePath] from uploadPhoto) or voice message
+  // ([audioPath] from uploadVoice), through send_chat_view_once
+  // (supabase/migrations/20261113100000_view_once.sql).
+  Future<({String result, ChatMessage? message})> sendViewOnce(
+    String chatId, {
+    String? imagePath,
+    String? audioPath,
+    Duration? audioDuration,
+    List<int>? waveform,
+    String? replyToId,
+  }) async {
+    final response = await _supabase.rpc(
+      'send_chat_view_once',
+      params: {
+        'target_chat_id': chatId,
+        'message_kind': imagePath != null ? 'photo' : 'voice',
+        'image_path': ?imagePath,
+        'audio_path': ?audioPath,
+        'audio_duration_ms': ?audioDuration?.inMilliseconds,
+        'audio_waveform': ?waveform,
+        'reply_to_id': ?replyToId,
+      },
+    );
+    if (response is! Map) return (result: '', message: null);
+    final result = response['result'] as String? ?? '';
+    final message = result == 'sent'
+        ? ChatMessage.fromMap(
+            Map<String, dynamic>.from(response['message'] as Map),
+          )
+        : null;
+    return (result: result, message: message);
+  }
+
+  // Opens a view-once message: 'opened' (its file can be fetched for a few
+  // minutes), 'already_opened' or 'not_found'.
+  Future<String> openViewOnce(String messageId) async {
+    final response = await _supabase.rpc(
+      'open_chat_view_once',
+      params: {'target_message_id': messageId},
+    );
+    return response is Map ? response['result'] as String? ?? '' : '';
+  }
+
+  // Your options on a poll; an empty list takes your vote back.
+  Future<bool> votePoll(String messageId, List<int> optionIndexes) async {
+    final response = await _supabase.rpc(
+      'vote_chat_poll',
+      params: {'target_message_id': messageId, 'option_indexes': optionIndexes},
+    );
+    return response is Map && response['result'] == 'voted';
+  }
+
+  // Lets the sender see you listened to their voice message.
+  Future<void> markVoicePlayed(String messageId) => _supabase.rpc(
+    'mark_chat_voice_played',
+    params: {'target_message_id': messageId},
+  );
+
+  Future<ChatMessageExtras> fetchExtras(String chatId) async {
+    final response = await _supabase.rpc(
+      'get_chat_message_extras',
+      params: {'target_chat_id': chatId},
+    );
+    if (response is! Map) return const ChatMessageExtras();
+    return ChatMessageExtras.fromMap(Map<String, dynamic>.from(response));
+  }
+
+  // Calls [onChange] when someone votes or listens to a voice message.
+  // Realtime leaves out who, so reload with fetchExtras.
+  RealtimeChannel listenForExtras(String chatId, void Function() onChange) {
+    final filter = PostgresChangeFilter(
+      type: PostgresChangeFilterType.eq,
+      column: 'chat_id',
+      value: chatId,
+    );
+    var channel = _supabase.channel('chat-extras:$chatId');
+    for (final table in [
+      'chat_poll_votes',
+      'chat_voice_plays',
+      'chat_view_once_opens',
+    ]) {
+      for (final event in [
+        PostgresChangeEvent.insert,
+        PostgresChangeEvent.update,
+      ]) {
+        channel = channel.onPostgresChanges(
+          event: event,
+          schema: 'public',
+          table: table,
+          filter: filter,
+          callback: (_) => onChange(),
+        );
+      }
+    }
+    return channel.subscribe();
+  }
+
   // Deletes your message for everyone. True when it was deleted.
   Future<bool> deleteMessage(String messageId) async {
     final response = await _supabase.rpc(
@@ -556,12 +875,16 @@ class ChatModel {
     );
     if (response is! Map || response['result'] != 'deleted') return false;
     final photo = response['image_path'] as String?;
-    if (photo != null) {
-      try {
+    final audio = response['audio_path'] as String?;
+    try {
+      if (photo != null) {
         await _supabase.storage.from(photoBucket).remove([photo]);
-      } catch (_) {
-        // The message is gone either way; the file just stays in storage.
       }
+      if (audio != null) {
+        await _supabase.storage.from(voiceBucket).remove([audio]);
+      }
+    } catch (_) {
+      // The message is gone either way; the file just stays in storage.
     }
     return true;
   }

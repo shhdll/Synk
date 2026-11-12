@@ -1,0 +1,254 @@
+{
+  "name": "Knot mascot stickers",
+  "count": 40,
+  "sizes": [
+    512,
+    1024
+  ],
+  "folders": {
+    "512": "512/",
+    "1024": "1024/"
+  },
+  "stickers": [
+    {
+      "id": "happy",
+      "name": "Happy",
+      "type": "single",
+      "file": "01-happy.png"
+    },
+    {
+      "id": "laugh",
+      "name": "Laughing",
+      "type": "single",
+      "file": "02-laugh.png"
+    },
+    {
+      "id": "love",
+      "name": "In love",
+      "type": "single",
+      "file": "03-love.png"
+    },
+    {
+      "id": "wink",
+      "name": "Wink",
+      "type": "single",
+      "file": "04-wink.png"
+    },
+    {
+      "id": "wow",
+      "name": "Wow",
+      "type": "single",
+      "file": "05-wow.png"
+    },
+    {
+      "id": "star",
+      "name": "Starstruck",
+      "type": "single",
+      "file": "06-star.png"
+    },
+    {
+      "id": "cool",
+      "name": "Cool",
+      "type": "single",
+      "file": "07-cool.png"
+    },
+    {
+      "id": "thumbs",
+      "name": "Thumbs up",
+      "type": "single",
+      "file": "08-thumbs.png"
+    },
+    {
+      "id": "party",
+      "name": "Party",
+      "type": "single",
+      "file": "09-party.png"
+    },
+    {
+      "id": "kiss",
+      "name": "Kiss",
+      "type": "single",
+      "file": "10-kiss.png"
+    },
+    {
+      "id": "money",
+      "name": "Money",
+      "type": "single",
+      "file": "11-money.png"
+    },
+    {
+      "id": "think",
+      "name": "Thinking",
+      "type": "single",
+      "file": "12-think.png"
+    },
+    {
+      "id": "sad",
+      "name": "Sad",
+      "type": "single",
+      "file": "13-sad.png"
+    },
+    {
+      "id": "cry",
+      "name": "Crying",
+      "type": "single",
+      "file": "14-cry.png"
+    },
+    {
+      "id": "angry",
+      "name": "Angry",
+      "type": "single",
+      "file": "15-angry.png"
+    },
+    {
+      "id": "sleepy",
+      "name": "Sleepy",
+      "type": "single",
+      "file": "16-sleepy.png"
+    },
+    {
+      "id": "shy",
+      "name": "Shy",
+      "type": "single",
+      "file": "17-shy.png"
+    },
+    {
+      "id": "plead",
+      "name": "Pleading",
+      "type": "single",
+      "file": "18-plead.png"
+    },
+    {
+      "id": "scared",
+      "name": "Scared",
+      "type": "single",
+      "file": "19-scared.png"
+    },
+    {
+      "id": "nervous",
+      "name": "Nervous",
+      "type": "single",
+      "file": "20-nervous.png"
+    },
+    {
+      "id": "facepalm",
+      "name": "Facepalm",
+      "type": "single",
+      "file": "21-facepalm.png"
+    },
+    {
+      "id": "eyeroll",
+      "name": "Eye roll",
+      "type": "single",
+      "file": "22-eyeroll.png"
+    },
+    {
+      "id": "sick",
+      "name": "Sick",
+      "type": "single",
+      "file": "23-sick.png"
+    },
+    {
+      "id": "dizzy",
+      "name": "Dizzy",
+      "type": "single",
+      "file": "24-dizzy.png"
+    },
+    {
+      "id": "hello",
+      "name": "Hello",
+      "type": "single",
+      "file": "25-hello.png"
+    },
+    {
+      "id": "coffee",
+      "name": "Coffee",
+      "type": "single",
+      "file": "26-coffee.png"
+    },
+    {
+      "id": "heart",
+      "name": "Sending love",
+      "type": "single",
+      "file": "27-heart.png"
+    },
+    {
+      "id": "blown",
+      "name": "Mind blown",
+      "type": "single",
+      "file": "28-blown.png"
+    },
+    {
+      "id": "silly",
+      "name": "Silly",
+      "type": "single",
+      "file": "29-silly.png"
+    },
+    {
+      "id": "hot",
+      "name": "Hot",
+      "type": "single",
+      "file": "30-hot.png"
+    },
+    {
+      "id": "cold",
+      "name": "Cold",
+      "type": "single",
+      "file": "31-cold.png"
+    },
+    {
+      "id": "angel",
+      "name": "Angel",
+      "type": "single",
+      "file": "32-angel.png"
+    },
+    {
+      "id": "devil",
+      "name": "Devil",
+      "type": "single",
+      "file": "33-devil.png"
+    },
+    {
+      "id": "shh",
+      "name": "Zip it",
+      "type": "single",
+      "file": "34-shh.png"
+    },
+    {
+      "id": "confused",
+      "name": "Confused",
+      "type": "single",
+      "file": "35-confused.png"
+    },
+    {
+      "id": "idea",
+      "name": "Idea",
+      "type": "single",
+      "file": "36-idea.png"
+    },
+    {
+      "id": "besties",
+      "name": "Besties",
+      "type": "duo",
+      "file": "37-besties.png"
+    },
+    {
+      "id": "highfive",
+      "name": "High five",
+      "type": "duo",
+      "file": "38-highfive.png"
+    },
+    {
+      "id": "cheer",
+      "name": "Cheering",
+      "type": "duo",
+      "file": "39-cheer.png"
+    },
+    {
+      "id": "hug",
+      "name": "Hug",
+      "type": "duo",
+      "file": "40-hug.png"
+    }
+  ]
+}

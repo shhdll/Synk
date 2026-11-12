@@ -36,6 +36,8 @@ dependencies:
   flutter_slidable: ^4.0.3
   package_info_plus: ^10.2.2
   http: ^1.5.0
+  record: ^7.2.0
+  just_audio: ^0.10.6
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -55,6 +57,9 @@ flutter:
     - assets/synk_one_jumping.png
     - assets/avatar_female.png
     - assets/avatar_male.png
+    - assets/sticker-pack/stickers.json
+    - assets/sticker-pack/512/
+    - assets/sticker-pack/1024/
 
 flutter_launcher_icons:
   android: true

@@ -145,6 +145,12 @@ class ChatListTile extends StatelessWidget {
         (chat.lastMessageLabel ?? '').trim().isEmpty
             ? '📍 ${context.l10n.sendLocation}'
             : '📍 ${context.l10n.sharedLocationLabel(label)}',
+      'sticker' => '✨ ${context.l10n.sticker}',
+      'voice' => '🎤 ${context.l10n.voiceMessage}',
+      'contact' => '👤 ${context.l10n.contact}',
+      // A poll's text is JSON; show its question.
+      'poll' =>
+        '📊 ${bidiIsolate(ChatPoll.tryParse(message)?.question ?? context.l10n.poll)}',
       _ when message.trim().isNotEmpty => bidiIsolate(message),
       _ => '📷 ${context.l10n.photo}',
     };

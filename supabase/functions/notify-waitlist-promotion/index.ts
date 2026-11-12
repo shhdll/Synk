@@ -160,6 +160,16 @@ function formatStartTime(value: string, language = "en"): string {
   );
 }
 
+// A poll's text is JSON; the preview may be cut short, so it can fail.
+function pollQuestion(preview: string | undefined): string | null {
+  try {
+    const question = JSON.parse(preview ?? "")?.question;
+    return typeof question === "string" && question.trim() ? question.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
 function notificationContent(
   event: PromotionEvent,
   language: string,
@@ -171,6 +181,14 @@ function notificationContent(
       ? (language === "ar" ? "شارك نشاطا" : "Shared an activity")
       : event.message_kind === "location"
       ? (language === "ar" ? "📍 شارك موقعا" : "📍 Shared a location")
+      : event.message_kind === "sticker"
+      ? (language === "ar" ? "ملصق" : "Sticker")
+      : event.message_kind === "voice"
+      ? (language === "ar" ? "🎤 رسالة صوتية" : "🎤 Voice message")
+      : event.message_kind === "contact"
+      ? (language === "ar" ? "👤 شارك حسابا" : "👤 Shared a contact")
+      : event.message_kind === "poll"
+      ? `📊 ${pollQuestion(event.preview) ?? (language === "ar" ? "استطلاع" : "Poll")}`
       : event.preview ?? "";
     return {
       title: event.activity_title,
