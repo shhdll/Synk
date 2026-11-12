@@ -3416,6 +3416,125 @@ class AppLocalizationsAr extends AppLocalizations {
   String get removePastActivityTitle => 'إزالة من قائمتك؟';
 
   @override
+  String get removePastActivityMessage => 'تزال لك فقط، ويبقى ظاهرًا للآخرين.';
+
+  @override
+  String get sticker => 'ملصق';
+
+  @override
+  String get stickers => 'الملصقات';
+
+  @override
+  String get keyboard => 'لوحة المفاتيح';
+
+  @override
+  String get voiceMessage => 'رسالة صوتية';
+
+  @override
+  String get slideToCancel => 'اسحب للإلغاء';
+
+  @override
+  String get holdToRecord => 'اضغط مطولا للتسجيل، وارفع إصبعك للإرسال';
+
+  @override
+  String get microphoneAccessNeeded =>
+      'اسمح بالوصول للمايكروفون من الإعدادات عشان ترسل رسائل صوتية';
+
+  @override
+  String get voiceNotAvailable => 'الرسالة الصوتية غير متاحة';
+
+  @override
+  String get played => 'تم الاستماع';
+
+  @override
+  String get playedByEveryone => 'استمع لها الكل';
+
+  @override
+  String playedByCount(int count) {
+    return 'استمع لها $count';
+  }
+
+  @override
+  String get poll => 'استطلاع';
+
+  @override
+  String get createPoll => 'إنشاء استطلاع';
+
+  @override
+  String get pollQuestion => 'السؤال';
+
+  @override
+  String get pollQuestionHint => 'اطرح سؤال';
+
+  @override
+  String get pollOptions => 'الخيارات';
+
+  @override
+  String pollOptionHint(int number) {
+    return 'الخيار $number';
+  }
+
+  @override
+  String get addOption => 'إضافة خيار';
+
+  @override
+  String get allowMultipleAnswers => 'السماح بأكثر من إجابة';
+
+  @override
+  String votesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count صوت',
+      few: '$count أصوات',
+      two: 'صوتان',
+      one: 'صوت واحد',
+      zero: 'لا أصوات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get selectOne => 'اختر خيار واحد';
+
+  @override
+  String get selectOneOrMore => 'اختر خيار أو أكثر';
+
+  @override
+  String get viewVotes => 'عرض الأصوات';
+
+  @override
+  String get noVotesYet => 'ما فيه أصوات للحين';
+
+  @override
+  String get contact => 'جهة اتصال';
+
+  @override
+  String get friendAccount => 'حساب صديق';
+
+  @override
+  String get shareAFriend => 'شارك صديق';
+
+  @override
+  String get noFriendsToShare => 'ما عندك أصدقاء تشاركهم للحين';
+
+  @override
+  String get friendNotVisibleToAll => 'مو الكل في هالمحادثة يقدر يشوف هالصديق';
+
+  @override
+  String get viewOnce => 'عرض مرة واحدة';
+
+  @override
+  String get viewOnceHint => 'يقدرون يفتحونها مرة وحدة بس';
+
+  @override
+  String get opened => 'تم الفتح';
+
+  @override
+  String get alreadyOpened => 'فتحتها من قبل';
+
+  @override
+  String get addCaption => 'أضف تعليق…';
   String get removePastActivityMessage =>
       'تزال من قائمتك ومن أنشطتك الأخيرة، ويبقى النشاط ظاهرا للآخرين.';
 

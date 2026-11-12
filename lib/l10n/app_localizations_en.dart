@@ -3486,6 +3486,123 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get removePastActivityMessage =>
+      'It\'s only removed for you. Everyone else still sees it.';
+
+  @override
+  String get sticker => 'Sticker';
+
+  @override
+  String get stickers => 'Stickers';
+
+  @override
+  String get keyboard => 'Keyboard';
+
+  @override
+  String get voiceMessage => 'Voice message';
+
+  @override
+  String get slideToCancel => 'Slide to cancel';
+
+  @override
+  String get holdToRecord => 'Hold to record, release to send';
+
+  @override
+  String get microphoneAccessNeeded =>
+      'Allow microphone access in Settings to send voice messages';
+
+  @override
+  String get voiceNotAvailable => 'This voice message isn\'t available';
+
+  @override
+  String get played => 'Played';
+
+  @override
+  String get playedByEveryone => 'Played by everyone';
+
+  @override
+  String playedByCount(int count) {
+    return 'Played by $count';
+  }
+
+  @override
+  String get poll => 'Poll';
+
+  @override
+  String get createPoll => 'Create poll';
+
+  @override
+  String get pollQuestion => 'Question';
+
+  @override
+  String get pollQuestionHint => 'Ask a question';
+
+  @override
+  String get pollOptions => 'Options';
+
+  @override
+  String pollOptionHint(int number) {
+    return 'Option $number';
+  }
+
+  @override
+  String get addOption => 'Add option';
+
+  @override
+  String get allowMultipleAnswers => 'Allow multiple answers';
+
+  @override
+  String votesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count votes',
+      one: '1 vote',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get selectOne => 'Select one';
+
+  @override
+  String get selectOneOrMore => 'Select one or more';
+
+  @override
+  String get viewVotes => 'View votes';
+
+  @override
+  String get noVotesYet => 'No votes yet';
+
+  @override
+  String get contact => 'Contact';
+
+  @override
+  String get friendAccount => 'Friend\'s account';
+
+  @override
+  String get shareAFriend => 'Share a friend';
+
+  @override
+  String get noFriendsToShare => 'No friends to share yet';
+
+  @override
+  String get friendNotVisibleToAll =>
+      'Not everyone in this chat can see this friend';
+
+  @override
+  String get viewOnce => 'View once';
+
+  @override
+  String get viewOnceHint => 'They can open it only once';
+
+  @override
+  String get opened => 'Opened';
+
+  @override
+  String get alreadyOpened => 'You\'ve already opened this';
+
+  @override
+  String get addCaption => 'Add a caption…';
       'It\'s removed from your list and your recent activities. Everyone else still sees the activity.';
 
   @override

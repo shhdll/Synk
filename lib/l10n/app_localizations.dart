@@ -6127,6 +6127,209 @@ abstract class AppLocalizations {
   /// **'It\'s removed from your list and your recent activities. Everyone else still sees the activity.'**
   String get removePastActivityMessage;
 
+  /// No description provided for @sticker.
+  ///
+  /// In en, this message translates to:
+  /// **'Sticker'**
+  String get sticker;
+
+  /// No description provided for @stickers.
+  ///
+  /// In en, this message translates to:
+  /// **'Stickers'**
+  String get stickers;
+
+  /// No description provided for @keyboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Keyboard'**
+  String get keyboard;
+
+  /// No description provided for @voiceMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice message'**
+  String get voiceMessage;
+
+  /// No description provided for @slideToCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Slide to cancel'**
+  String get slideToCancel;
+
+  /// No description provided for @holdToRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold to record, release to send'**
+  String get holdToRecord;
+
+  /// No description provided for @microphoneAccessNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow microphone access in Settings to send voice messages'**
+  String get microphoneAccessNeeded;
+
+  /// No description provided for @voiceNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This voice message isn\'t available'**
+  String get voiceNotAvailable;
+
+  /// No description provided for @played.
+  ///
+  /// In en, this message translates to:
+  /// **'Played'**
+  String get played;
+
+  /// No description provided for @playedByEveryone.
+  ///
+  /// In en, this message translates to:
+  /// **'Played by everyone'**
+  String get playedByEveryone;
+
+  /// No description provided for @playedByCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Played by {count}'**
+  String playedByCount(int count);
+
+  /// No description provided for @poll.
+  ///
+  /// In en, this message translates to:
+  /// **'Poll'**
+  String get poll;
+
+  /// No description provided for @createPoll.
+  ///
+  /// In en, this message translates to:
+  /// **'Create poll'**
+  String get createPoll;
+
+  /// No description provided for @pollQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Question'**
+  String get pollQuestion;
+
+  /// No description provided for @pollQuestionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask a question'**
+  String get pollQuestionHint;
+
+  /// No description provided for @pollOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Options'**
+  String get pollOptions;
+
+  /// No description provided for @pollOptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Option {number}'**
+  String pollOptionHint(int number);
+
+  /// No description provided for @addOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Add option'**
+  String get addOption;
+
+  /// No description provided for @allowMultipleAnswers.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow multiple answers'**
+  String get allowMultipleAnswers;
+
+  /// No description provided for @votesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 vote} other{{count} votes}}'**
+  String votesCount(int count);
+
+  /// No description provided for @selectOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Select one'**
+  String get selectOne;
+
+  /// No description provided for @selectOneOrMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Select one or more'**
+  String get selectOneOrMore;
+
+  /// No description provided for @viewVotes.
+  ///
+  /// In en, this message translates to:
+  /// **'View votes'**
+  String get viewVotes;
+
+  /// No description provided for @noVotesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No votes yet'**
+  String get noVotesYet;
+
+  /// No description provided for @contact.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get contact;
+
+  /// No description provided for @friendAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend\'s account'**
+  String get friendAccount;
+
+  /// No description provided for @shareAFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Share a friend'**
+  String get shareAFriend;
+
+  /// No description provided for @noFriendsToShare.
+  ///
+  /// In en, this message translates to:
+  /// **'No friends to share yet'**
+  String get noFriendsToShare;
+
+  /// No description provided for @friendNotVisibleToAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Not everyone in this chat can see this friend'**
+  String get friendNotVisibleToAll;
+
+  /// No description provided for @viewOnce.
+  ///
+  /// In en, this message translates to:
+  /// **'View once'**
+  String get viewOnce;
+
+  /// No description provided for @viewOnceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'They can open it only once'**
+  String get viewOnceHint;
+
+  /// No description provided for @opened.
+  ///
+  /// In en, this message translates to:
+  /// **'Opened'**
+  String get opened;
+
+  /// No description provided for @alreadyOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve already opened this'**
+  String get alreadyOpened;
+
+  /// No description provided for @addCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a caption…'**
+  String get addCaption;
   /// No description provided for @searchActivities.
   ///
   /// In en, this message translates to:

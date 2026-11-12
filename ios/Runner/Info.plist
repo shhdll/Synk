@@ -36,6 +36,8 @@
 	<string>Synk needs access to your photos so you can choose a profile or activity photo.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Synk needs camera access so you can take a profile or activity photo, or send one in a chat.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Synk needs the microphone so you can send voice messages in chats.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>

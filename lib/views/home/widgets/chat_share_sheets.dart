@@ -21,135 +21,162 @@ import 'user_avatar.dart';
 // Sheets for sending things other than text in a chat: the + menu, picking
 // an activity, and sharing an activity into chats from its details.
 
-enum ChatAttachment { photo, camera, location, activity }
+enum ChatAttachment { photo, camera, location, activity, contact, poll }
 
-// The chat's + button: what to send, in a menu that opens upward from
-// [anchor], the button's rect on screen.
-Future<ChatAttachment?> showAttachmentMenu(BuildContext context, Rect anchor) {
-  return showGeneralDialog<ChatAttachment>(
-    context: context,
-    barrierDismissible: true,
-    barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-    barrierColor: Colors.transparent,
-    // Keeps the keyboard up, so the + button stays under the menu.
-    requestFocus: false,
-    transitionDuration: const Duration(milliseconds: 180),
-    pageBuilder: (menuContext, _, _) {
-      final l10n = menuContext.l10n;
-      final screen = MediaQuery.sizeOf(menuContext);
-      final isRtl = Directionality.of(menuContext) == TextDirection.rtl;
+// The chat's + options, shown where the keyboard would be like WhatsApp.
+// In the app's own style: a white rounded card on the beige background, a
+// pale circle in a Synk colour with a deeper icon, a label under each.
+class AttachmentPanel extends StatelessWidget {
+  const AttachmentPanel({super.key, required this.onPick, this.height = 290});
 
-      // Each option gets its own color: a pale circle, a deeper icon.
-      Widget option(
-        ChatAttachment value,
-        IconData icon,
-        String label,
-        Color color,
-      ) {
-        return InkWell(
-          onTap: () => Navigator.pop(menuContext, value),
-          child: Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(12, 8, 20, 8),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.14),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(icon, size: 20, color: color),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: SynkColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      }
+  final ValueChanged<ChatAttachment> onPick;
 
-      return Stack(
-        children: [
-          Positioned(
-            left: isRtl ? null : anchor.left,
-            right: isRtl ? screen.width - anchor.right : null,
-            bottom: screen.height - anchor.top + 8,
-            child: Material(
-              color: Colors.white,
-              elevation: 8,
-              shadowColor: Colors.black26,
-              clipBehavior: Clip.antiAlias,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: IntrinsicWidth(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      option(
-                        ChatAttachment.activity,
-                        Icons.event_outlined,
-                        l10n.sendActivity,
-                        SynkColors.orangeDeep,
-                      ),
-                      option(
-                        ChatAttachment.location,
-                        Icons.location_on_outlined,
-                        l10n.sendLocation,
-                        SynkColors.tealText,
-                      ),
-                      option(
-                        ChatAttachment.camera,
-                        Icons.photo_camera_outlined,
-                        l10n.camera,
-                        const Color(0xFFC2416F),
-                      ),
-                      option(
-                        ChatAttachment.photo,
-                        Icons.photo_library_outlined,
-                        l10n.photos,
-                        const Color(0xFF3F64C8),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      );
-    },
-    // Grows up out of the + button.
-    transitionBuilder: (menuContext, animation, _, child) {
-      final curved = CurvedAnimation(
-        parent: animation,
-        curve: Curves.easeOutCubic,
-      );
-      return FadeTransition(
-        opacity: curved,
-        child: ScaleTransition(
-          scale: Tween<double>(begin: 0.85, end: 1).animate(curved),
-          alignment: Alignment(
-            (anchor.center.dx / MediaQuery.sizeOf(menuContext).width) * 2 - 1,
-            (anchor.top / MediaQuery.sizeOf(menuContext).height) * 2 - 1,
-          ),
+  // Fixed, like the keyboard it replaces; scrolls if large text needs more.
+  final double height;
+
+  // The pink from SynkColors, deep enough to read as an icon.
+  static const _pinkDeep = Color(0xFFD9578A);
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final options = [
+      (
+        ChatAttachment.photo,
+        Icons.photo_library_rounded,
+        l10n.photos,
+        SynkColors.orangeDark,
+      ),
+      (
+        ChatAttachment.camera,
+        Icons.photo_camera_rounded,
+        l10n.camera,
+        _pinkDeep,
+      ),
+      (
+        ChatAttachment.location,
+        Icons.location_on_rounded,
+        l10n.sendLocation,
+        SynkColors.tealText,
+      ),
+      (
+        ChatAttachment.contact,
+        Icons.person_rounded,
+        l10n.friendAccount,
+        SynkColors.beigeDark,
+      ),
+      (ChatAttachment.poll, Icons.poll_rounded, l10n.poll, SynkColors.teal),
+      (
+        ChatAttachment.activity,
+        Icons.event_rounded,
+        l10n.sendActivity,
+        SynkColors.orangeDeep,
+      ),
+    ];
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      builder: (context, t, child) => Opacity(
+        opacity: t,
+        child: Transform.translate(
+          offset: Offset(0, 24 * (1 - t)),
           child: child,
         ),
-      );
-    },
-  );
+      ),
+      child: Container(
+        width: double.infinity,
+        height: height,
+        color: SynkColors.background,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(4, 18, 4, 14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: SynkColors.textSecondary.withValues(alpha: 0.10),
+              ),
+            ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Three to a row.
+                final width = constraints.maxWidth / 3;
+                return Wrap(
+                  runSpacing: 14,
+                  children: [
+                    for (final (value, icon, label, color) in options)
+                      SizedBox(
+                        width: width,
+                        child: _AttachmentOption(
+                          icon: icon,
+                          label: label,
+                          color: color,
+                          onTap: () => onPick(value),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AttachmentOption extends StatelessWidget {
+  const _AttachmentOption({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.14),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 27, color: color),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: SynkColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 // Your upcoming activities, then other upcoming ones from the Home feed.
@@ -270,6 +297,135 @@ class _ActivityPickerSheetState extends State<_ActivityPickerSheet> {
               ],
             ),
         ],
+      ),
+    );
+  }
+}
+
+// One of your friends, to share their account in a chat. [exclude] leaves
+// people out, e.g. the friend you're already chatting with.
+Future<FriendUser?> showFriendPickerSheet(
+  BuildContext context, {
+  Set<String> exclude = const {},
+}) {
+  unawaited(FriendsController.instance.refresh());
+  return showModalBottomSheet<FriendUser>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: SynkColors.background,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (_) => _FriendPickerSheet(exclude: exclude),
+  );
+}
+
+class _FriendPickerSheet extends StatefulWidget {
+  const _FriendPickerSheet({required this.exclude});
+
+  final Set<String> exclude;
+
+  @override
+  State<_FriendPickerSheet> createState() => _FriendPickerSheetState();
+}
+
+class _FriendPickerSheetState extends State<_FriendPickerSheet> {
+  final TextEditingController _search = TextEditingController();
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final friends = FriendsController.instance;
+    return DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.7,
+      maxChildSize: 0.92,
+      builder: (context, scrollController) => ListenableBuilder(
+        listenable: friends,
+        builder: (context, _) {
+          final list = friends
+              .searchFriends(_search.text)
+              .where((f) => !widget.exclude.contains(f.id))
+              .toList();
+          return ListView(
+            controller: scrollController,
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+            children: [
+              const _Handle(),
+              const SizedBox(height: 16),
+              Text(
+                context.l10n.shareAFriend,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: SynkColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 14),
+              FriendsSearchField(
+                controller: _search,
+                hint: context.l10n.searchFriends,
+                onChanged: (_) => setState(() {}),
+              ),
+              const SizedBox(height: 14),
+              if (!friends.hasLoaded)
+                const Padding(
+                  padding: EdgeInsets.only(top: 40),
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: SynkColors.orangeDark,
+                    ),
+                  ),
+                )
+              else if (list.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 24),
+                  child: EmptyState(
+                    icon: Icons.people_outline_rounded,
+                    title: context.l10n.noFriendsToShare,
+                  ),
+                )
+              else
+                FriendsListCard(
+                  children: [
+                    for (final friend in list)
+                      InkWell(
+                        onTap: () => Navigator.pop(context, friend),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                          child: Row(
+                            children: [
+                              UserAvatar(
+                                avatarUrl: friend.avatarUrl,
+                                gender: friend.gender,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: FriendsNameAndSubtitle(
+                                  name: friend.name,
+                                  subtitle:
+                                      (friend.username?.isNotEmpty ?? false)
+                                      ? '@${friend.username}'
+                                      : null,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+            ],
+          );
+        },
       ),
     );
   }
