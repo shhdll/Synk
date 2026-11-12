@@ -423,58 +423,9 @@ class ActivitiesModel {
     return Map<String, dynamic>.from(response as Map);
   }
 
-  // Creates an activity owned by the signed-in user.
-  Future<Activity> create(Activity draft) async {
-    final uid = currentUserId;
-
-    if (uid == null) {
-      throw StateError(appL10n.cannotCreateAnActivityWhileSigned);
-    }
-
-    final payload = draft.toInsertMap()..['host_id'] = uid;
-
-    final row = await _supabase.from(_table).insert(payload).select().single();
-
-    return Activity.fromMap(row);
-  }
-
-  // Updates editable fields on an activity owned by the signed-in user.
-  Future<Activity> update(Activity draft) async {
-    final uid = currentUserId;
-    if (uid == null) {
-      throw StateError(appL10n.cannotUpdateActivitySignedOut);
-    }
-
-    final payload = draft.toInsertMap()..remove('host_id');
-    final rows = await _supabase
-        .from(_table)
-        .update(payload)
-        .eq('id', draft.id)
-        .eq('host_id', uid)
-        .select();
-    if (rows.isEmpty) {
-      throw StateError(appL10n.activityNotFoundOrCannotUpdate);
-    }
-    return Activity.fromMap(rows.first).copyWith(
-      hostName: draft.hostName,
-      hostUsername: draft.hostUsername,
-      hostAvatarUrl: draft.hostAvatarUrl,
-      hostGender: draft.hostGender,
-      participantsCount: draft.participantsCount,
-    );
-  }
-
-  // Updates or removes the activity photo URL.
-  Future<Activity> updatePhotoUrl(String activityId, String? photoUrl) async {
-    final row = await _supabase
-        .from(_table)
-        .update({'photo_url': photoUrl})
-        .eq('id', activityId)
-        .select()
-        .single();
-
-    return Activity.fromMap(row);
-  }
+  // Creating and editing go through the save-activity Edge Function, which
+  // checks the content first (ActivitySaveService in activity_save_model.dart).
+  // Direct inserts and updates are refused once the lock-down has run.
 
   // Deletes an activity owned by the signed-in user.
   // Related participation records are removed by ON DELETE CASCADE.

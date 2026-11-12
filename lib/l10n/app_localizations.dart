@@ -6174,6 +6174,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unhide'**
   String get unhide;
+
+  /// No description provided for @checkingActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking…'**
+  String get checkingActivity;
+
+  /// No description provided for @activityGuidelinesRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'This doesn\'t follow our community guidelines. Please edit the highlighted parts.'**
+  String get activityGuidelinesRejected;
+
+  /// No description provided for @activityFieldRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Please change this to follow our community guidelines'**
+  String get activityFieldRejected;
+
+  /// No description provided for @activityPhotoRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'This photo doesn\'t follow our community guidelines. Please choose another one.'**
+  String get activityPhotoRejected;
+
+  /// No description provided for @activityPhotoCantBeUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'This photo can\'t be used. Please choose another one.'**
+  String get activityPhotoCantBeUsed;
+
+  /// No description provided for @activityPhotoTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'This photo is too large. Please choose a smaller one.'**
+  String get activityPhotoTooLarge;
+
+  /// No description provided for @activityCheckUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t check your activity right now. Please try again.'**
+  String get activityCheckUnavailable;
+
+  /// No description provided for @activityCouldntConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t confirm your activity was saved. Please try again.'**
+  String get activityCouldntConfirm;
+
+  /// No description provided for @activityStillSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Your activity is still being saved. Please try again in a moment.'**
+  String get activityStillSaving;
+
+  /// No description provided for @activityChangedElsewhere.
+  ///
+  /// In en, this message translates to:
+  /// **'This activity was changed on another device. Review the latest version and edit it again.'**
+  String get activityChangedElsewhere;
+
+  /// No description provided for @activityNoLongerExists.
+  ///
+  /// In en, this message translates to:
+  /// **'This activity no longer exists.'**
+  String get activityNoLongerExists;
+
+  /// No description provided for @notHostAnymore.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re no longer the host of this activity.'**
+  String get notHostAnymore;
+
+  /// No description provided for @accountSuspendedCantSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is suspended, so you can\'t create or edit activities.'**
+  String get accountSuspendedCantSave;
+
+  /// No description provided for @activitySaveTooOften.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re saving too often. Please try again in a few minutes.'**
+  String get activitySaveTooOften;
+
+  /// No description provided for @capacityBelowParticipants.
+  ///
+  /// In en, this message translates to:
+  /// **'Capacity can\'t be lower than the number of people who already joined.'**
+  String get capacityBelowParticipants;
+
+  /// No description provided for @activityEndBeforeStart.
+  ///
+  /// In en, this message translates to:
+  /// **'The end time must be after the start time.'**
+  String get activityEndBeforeStart;
+
+  /// No description provided for @activityAlreadySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'This activity was already saved.'**
+  String get activityAlreadySaved;
+
+  /// No description provided for @signInAgainToSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in again to save your activity.'**
+  String get signInAgainToSave;
+
+  /// No description provided for @finishSavingActivityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish saving your activity?'**
+  String get finishSavingActivityTitle;
+
+  /// No description provided for @finishSavingActivityMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'We didn\'t get a confirmation for an activity you saved earlier. We can send it again.'**
+  String get finishSavingActivityMessage;
+
+  /// No description provided for @finishSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish saving'**
+  String get finishSaving;
+
+  /// No description provided for @activitySaveDiscarded.
+  ///
+  /// In en, this message translates to:
+  /// **'Your earlier activity wasn\'t saved'**
+  String get activitySaveDiscarded;
+
+  /// No description provided for @activityRejectedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Content couldn’t be published'**
+  String get activityRejectedTitle;
+
+  /// No description provided for @activityRejectedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your activity may contain content that violates Synk’s community guidelines. Please review the highlighted field and remove any content involving:'**
+  String get activityRejectedMessage;
+
+  /// No description provided for @activityRejectedGuidelines.
+  ///
+  /// In en, this message translates to:
+  /// **'• Violence or threats\n• Hate or harassment\n• Self-harm\n• Illegal or dangerous content\n• Sexual or explicit content'**
+  String get activityRejectedGuidelines;
+
+  /// No description provided for @activityNeedsReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs review'**
+  String get activityNeedsReview;
+
+  /// No description provided for @reviewActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Review activity'**
+  String get reviewActivity;
 }
 
 class _AppLocalizationsDelegate

@@ -1,31 +1,15 @@
-import 'dart:io';
-
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/constants/activity_constants.dart';
-import '../l10n/l10n.dart';
 import '../utils/photo_cropper.dart';
 
-// Result of uploading an activity photo.
+// Picks the single optional photo attached to an activity, and removes an
+// activity's photo files.
 //
-// [url] is the public URL to store in `activities.photo_url`, or null when
-// the upload failed. [warning] is a message to show the user in that case.
-class ActivityPhotoUploadResult {
-  const ActivityPhotoUploadResult({this.url, this.warning});
-
-  final String? url;
-  final String? warning;
-
-  bool get succeeded => url != null;
-}
-
-// Handles the single optional photo attached to an activity.
-//
-// Photo workflow: the user picks a file (local preview only), the activity
-// row is inserted first so it has an id, then the file is uploaded to
-// `<host_id>/<activity_id>.<ext>` and the resulting URL is saved on the row.
-// Creating an activity never fails because of its photo.
+// Uploading happens on the server now: the save-activity Edge Function
+// checks the photo, re-encodes it and stores it together with the activity,
+// so a host can't put an unchecked photo in place.
 class ActivityPhotoUploader {
   ActivityPhotoUploader._();
 
@@ -51,53 +35,6 @@ class ActivityPhotoUploader {
       maxWidth: ActivityConstants.photoMaxWidth.toInt(),
     );
     return croppedPath == null ? null : XFile(croppedPath);
-  }
-
-  // Uploads [file] for an activity that already exists and returns its
-  // public URL. Never throws: a failure comes back as a warning so the
-  // activity itself stays created.
-  static Future<ActivityPhotoUploadResult> upload({
-    required String activityId,
-    required XFile file,
-    bool cacheBust = false,
-  }) async {
-    final hostId = _supabase.auth.currentUser?.id;
-    if (hostId == null) {
-      return ActivityPhotoUploadResult(
-        warning: appL10n.yourPhotoWasntSavedBecauseYoure,
-      );
-    }
-
-    final path = ActivityConstants.photoPath(
-      hostId: hostId,
-      activityId: activityId,
-      extension: _extensionOf(file.path),
-    );
-
-    try {
-      await _supabase.storage
-          .from(ActivityConstants.photoBucket)
-          .upload(
-            path,
-            File(file.path),
-            fileOptions: const FileOptions(upsert: true),
-          );
-
-      final publicUrl = _supabase.storage
-          .from(ActivityConstants.photoBucket)
-          .getPublicUrl(path);
-      final url = cacheBust
-          ? '$publicUrl?v=${DateTime.now().microsecondsSinceEpoch}'
-          : publicUrl;
-
-      return ActivityPhotoUploadResult(url: url);
-    } catch (_) {
-      // Bucket missing, no permission, or the network dropped. The activity
-      // is already saved, so report it and carry on without a photo.
-      return ActivityPhotoUploadResult(
-        warning: appL10n.activityCreatedPhotoNotSaved,
-      );
-    }
   }
 
     // Removes an activity's photo and reports what actually happened, so
@@ -138,11 +75,5 @@ class ActivityPhotoUploader {
     } catch (_) {
       return false;
     }
-  }
-
-  static String _extensionOf(String filePath) {
-    final dot = filePath.lastIndexOf('.');
-    if (dot == -1 || dot == filePath.length - 1) return 'jpg';
-    return filePath.substring(dot + 1);
   }
 }

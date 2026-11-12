@@ -20,6 +20,7 @@ import '../../models/streak_intro.dart';
 import '../../models/telegram_intro.dart';
 import '../../services/push_notification_service.dart';
 import '../create_activity/create_activity_view.dart';
+import '../create_activity/pending_activity_save_prompt.dart';
 import 'activities_view.dart';
 import 'chats_view.dart';
 import 'home_view.dart';
@@ -207,9 +208,17 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   // The streak greeting first, then a rating offer once it is closed, so
   // the two sheets never stack.
   Future<void> _showOpeningPopups() async {
+    await _offerPendingActivitySave();
     await _offerTelegram();
     await _showStreakOnOpen();
     await _offerActivityRating();
+  }
+
+  // An activity save that never got an answer (the app closed, or the
+  // connection dropped while saving) is offered first, before anything new.
+  Future<void> _offerPendingActivitySave() async {
+    if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
+    await offerPendingActivitySave(context, store: _activityStore);
   }
 
   // iPhones have no native push, so offer Telegram once for each account on

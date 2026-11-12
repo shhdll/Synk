@@ -42,7 +42,8 @@ class _StepDetailsState extends State<StepDetails> {
   @override
   Widget build(BuildContext context) {
     final String description = _c.descriptionController.text;
-    final String? descriptionError = _c.validateDescription(description);
+    // Includes the server flagging it as inappropriate.
+    final String? descriptionError = _c.descriptionError;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),

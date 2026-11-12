@@ -3442,4 +3442,96 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get unhide => 'إظهار';
+
+  @override
+  String get checkingActivity => 'جار التحقق…';
+
+  @override
+  String get activityGuidelinesRejected =>
+      'هذا لا يتوافق مع إرشادات المجتمع. عدل الأجزاء المحددة';
+
+  @override
+  String get activityFieldRejected => 'غير هذا ليتوافق مع إرشادات المجتمع';
+
+  @override
+  String get activityPhotoRejected =>
+      'هذه الصورة لا تتوافق مع إرشادات المجتمع. اختر صورة أخرى';
+
+  @override
+  String get activityPhotoCantBeUsed =>
+      'لا يمكن استخدام هذه الصورة. اختر صورة أخرى';
+
+  @override
+  String get activityPhotoTooLarge => 'هذه الصورة كبيرة جدا. اختر صورة أصغر';
+
+  @override
+  String get activityCheckUnavailable =>
+      'لم نتمكن من التحقق من نشاطك الآن. حاول مرة أخرى';
+
+  @override
+  String get activityCouldntConfirm =>
+      'لم نتمكن من تأكيد حفظ نشاطك. حاول مرة أخرى';
+
+  @override
+  String get activityStillSaving => 'ما زال نشاطك قيد الحفظ. حاول بعد قليل';
+
+  @override
+  String get activityChangedElsewhere =>
+      'تم تغيير هذا النشاط من جهاز آخر. راجع أحدث نسخة وعدله مرة أخرى';
+
+  @override
+  String get activityNoLongerExists => 'هذا النشاط لم يعد موجودا';
+
+  @override
+  String get notHostAnymore => 'لم تعد مضيف هذا النشاط';
+
+  @override
+  String get accountSuspendedCantSave =>
+      'حسابك موقوف، لذلك لا يمكنك إنشاء الأنشطة أو تعديلها';
+
+  @override
+  String get activitySaveTooOften => 'تحفظ كثيرا. حاول مرة أخرى بعد بضع دقائق';
+
+  @override
+  String get capacityBelowParticipants =>
+      'لا يمكن أن يكون العدد أقل من عدد من انضموا';
+
+  @override
+  String get activityEndBeforeStart => 'يجب أن يكون وقت الانتهاء بعد وقت البدء';
+
+  @override
+  String get activityAlreadySaved => 'تم حفظ هذا النشاط من قبل';
+
+  @override
+  String get signInAgainToSave => 'سجل الدخول مرة أخرى لحفظ نشاطك';
+
+  @override
+  String get finishSavingActivityTitle => 'إكمال حفظ نشاطك؟';
+
+  @override
+  String get finishSavingActivityMessage =>
+      'لم يصلنا تأكيد لنشاط حفظته سابقا. يمكننا إرساله مرة أخرى';
+
+  @override
+  String get finishSaving => 'إكمال الحفظ';
+
+  @override
+  String get activitySaveDiscarded => 'لم يحفظ نشاطك السابق';
+
+  @override
+  String get activityRejectedTitle => 'تعذر نشر المحتوى';
+
+  @override
+  String get activityRejectedMessage =>
+      'قد تحتوي الفعالية على محتوى يخالف إرشادات مجتمع سينك. يرجى مراجعة الحقل المحدد وإزالة أي محتوى يتضمن:';
+
+  @override
+  String get activityRejectedGuidelines =>
+      '• العنف أو التهديد\n• الكراهية أو المضايقة\n• إيذاء النفس\n• محتوى غير قانوني أو خطير\n• محتوى جنسي أو صريح';
+
+  @override
+  String get activityNeedsReview => 'يحتاج إلى مراجعة';
+
+  @override
+  String get reviewActivity => 'مراجعة الفعالية';
 }

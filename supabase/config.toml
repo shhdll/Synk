@@ -39,3 +39,13 @@ verify_jwt = false
 enabled = true
 # Checks Telegram's secret token header itself.
 verify_jwt = false
+
+[functions.save-activity]
+enabled = true
+# Creates and edits activities after checking their content with OpenAI.
+# Supabase checks the user token before the function runs, and the function
+# checks it again with Supabase Auth to get the user id. Only switch this
+# to false if Supabase rejects valid tokens (see ACTIVITY_MODERATION.md).
+verify_jwt = true
+import_map = "./functions/save-activity/deno.json"
+entrypoint = "./functions/save-activity/index.ts"

@@ -1,0 +1,19 @@
+{
+  "imports": {
+    "@std/assert": "jsr:@std/assert@1",
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@2",
+    "jpeg-js": "npm:jpeg-js@0.4.4"
+  },
+  "tasks": {
+    "test": "deno test --allow-env --allow-read --allow-net"
+  },
+  "lint": {
+    "rules": {
+      "exclude": [
+        "no-control-regex",
+        "no-misleading-character-class",
+        "require-await"
+      ]
+    }
+  }
+}

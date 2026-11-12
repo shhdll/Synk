@@ -68,6 +68,7 @@ class Activity {
     this.activityCode,
     this.participationId,
     this.participationStatus,
+    this.editVersion,
   }) : endsAt = endsAt ?? dateTime.add(const Duration(hours: 2));
 
   final String id;
@@ -112,6 +113,12 @@ class Activity {
 
   // Possible values: joined, pending, or waitlisted.
   final String? participationStatus;
+
+  // Goes up whenever the host's edits change the activity. An edit sends
+  // the version it started from, so saving over a newer one is refused
+  // (supabase/migrations/20261112100000_activity_save_requests.sql).
+  // Null until that migration runs, or when a query leaves it out.
+  final int? editVersion;
 
   bool get isPast => dateTime.isBefore(DateTime.now());
 
@@ -186,6 +193,7 @@ class Activity {
       activityCode: map['activity_code'] as String?,
       participationId: map['participation_id'] as String?,
       participationStatus: map['participation_status'] as String?,
+      editVersion: (map['edit_version'] as num?)?.toInt(),
     );
   }
 
@@ -246,6 +254,7 @@ class Activity {
       activityCode: activityCode ?? this.activityCode,
       participationId: participationId ?? this.participationId,
       participationStatus: participationStatus ?? this.participationStatus,
+      editVersion: editVersion,
     );
   }
 }

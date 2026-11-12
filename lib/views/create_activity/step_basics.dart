@@ -226,8 +226,9 @@ class _StepBasicsState extends State<StepBasics> {
                 _ActivityNameInputFormatter(
                   onRejected: _c.markInvalidTitleAttempt,
                 ),
-                noArabicFormatter,
               ],
+              // Arabic, English or mixed: right to left when it starts in Arabic.
+              textDirection: textDirectionOf(_c.titleController.text),
               textCapitalization: TextCapitalization.sentences,
               textInputAction: TextInputAction.done,
               onChanged: (_) {

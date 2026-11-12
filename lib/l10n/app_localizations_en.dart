@@ -3512,4 +3512,101 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unhide => 'Unhide';
+
+  @override
+  String get checkingActivity => 'Checking…';
+
+  @override
+  String get activityGuidelinesRejected =>
+      'This doesn\'t follow our community guidelines. Please edit the highlighted parts.';
+
+  @override
+  String get activityFieldRejected =>
+      'Please change this to follow our community guidelines';
+
+  @override
+  String get activityPhotoRejected =>
+      'This photo doesn\'t follow our community guidelines. Please choose another one.';
+
+  @override
+  String get activityPhotoCantBeUsed =>
+      'This photo can\'t be used. Please choose another one.';
+
+  @override
+  String get activityPhotoTooLarge =>
+      'This photo is too large. Please choose a smaller one.';
+
+  @override
+  String get activityCheckUnavailable =>
+      'We couldn\'t check your activity right now. Please try again.';
+
+  @override
+  String get activityCouldntConfirm =>
+      'We couldn\'t confirm your activity was saved. Please try again.';
+
+  @override
+  String get activityStillSaving =>
+      'Your activity is still being saved. Please try again in a moment.';
+
+  @override
+  String get activityChangedElsewhere =>
+      'This activity was changed on another device. Review the latest version and edit it again.';
+
+  @override
+  String get activityNoLongerExists => 'This activity no longer exists.';
+
+  @override
+  String get notHostAnymore => 'You\'re no longer the host of this activity.';
+
+  @override
+  String get accountSuspendedCantSave =>
+      'Your account is suspended, so you can\'t create or edit activities.';
+
+  @override
+  String get activitySaveTooOften =>
+      'You\'re saving too often. Please try again in a few minutes.';
+
+  @override
+  String get capacityBelowParticipants =>
+      'Capacity can\'t be lower than the number of people who already joined.';
+
+  @override
+  String get activityEndBeforeStart =>
+      'The end time must be after the start time.';
+
+  @override
+  String get activityAlreadySaved => 'This activity was already saved.';
+
+  @override
+  String get signInAgainToSave => 'Please sign in again to save your activity.';
+
+  @override
+  String get finishSavingActivityTitle => 'Finish saving your activity?';
+
+  @override
+  String get finishSavingActivityMessage =>
+      'We didn\'t get a confirmation for an activity you saved earlier. We can send it again.';
+
+  @override
+  String get finishSaving => 'Finish saving';
+
+  @override
+  String get activitySaveDiscarded => 'Your earlier activity wasn\'t saved';
+
+  @override
+  String get activityRejectedTitle => 'Content couldn’t be published';
+
+  @override
+  String get activityRejectedMessage =>
+      'Your activity may contain content that violates Synk’s community guidelines. Please review the highlighted field and remove any content involving:';
+
+  @override
+  String get activityRejectedGuidelines =>
+      '• Violence or threats\n• Hate or harassment\n• Self-harm\n• Illegal or dangerous content\n• Sexual or explicit content';
+
+  @override
+  String get activityNeedsReview => 'Needs review';
+
+  @override
+  String get reviewActivity => 'Review activity';
 }
