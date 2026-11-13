@@ -3601,6 +3601,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addCaption => 'Add a caption…';
 
   @override
+  String get typing => 'typing…';
+
+  @override
+  String personTyping(Object name) {
+    return '$name is typing…';
+  }
+
+  @override
+  String peopleTyping(int count) {
+    return '$count people are typing…';
+  }
+
+  @override
+  String get latestMessages => 'Latest messages';
+
+  @override
+  String get recordingAudio => 'recording audio…';
+
+  @override
+  String personRecording(Object name) {
+    return '$name is recording…';
+  }
+
+  @override
   String get removePastActivityMessage =>
       'It\'s removed from your list and your recent activities. Everyone else still sees the activity.';
 

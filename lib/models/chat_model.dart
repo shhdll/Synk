@@ -260,7 +260,19 @@ class ChatMessage {
   String get text => kind == 'text' || kind == 'photo' ? body : '';
 
   // Poll messages keep the question and options as JSON in the text.
-  ChatPoll? get poll => kind == 'poll' ? ChatPoll.tryParse(body) : null;
+  ChatPoll? get poll {
+    if (kind != 'poll') return null;
+    // Parsed once per message, not on every rebuild.
+    if (_pollParsed[this] != true) {
+      _pollParsed[this] = true;
+      final parsed = ChatPoll.tryParse(body);
+      if (parsed != null) _polls[this] = parsed;
+    }
+    return _polls[this];
+  }
+
+  static final Expando<ChatPoll> _polls = Expando();
+  static final Expando<bool> _pollParsed = Expando();
 
   bool get isLocation =>
       kind == 'location' && latitude != null && longitude != null;
@@ -779,6 +791,7 @@ class ChatModel {
     String? audioPath,
     Duration? audioDuration,
     List<int>? waveform,
+    String caption = '',
     String? replyToId,
   }) async {
     final response = await _supabase.rpc(
@@ -790,6 +803,9 @@ class ChatModel {
         'audio_path': ?audioPath,
         'audio_duration_ms': ?audioDuration?.inMilliseconds,
         'audio_waveform': ?waveform,
+        // Kept apart from the message text, so it stays view-once too
+        // (supabase/migrations/20261114100000_view_once_captions.sql).
+        if (caption.isNotEmpty) 'caption': caption,
         'reply_to_id': ?replyToId,
       },
     );
@@ -804,13 +820,69 @@ class ChatModel {
   }
 
   // Opens a view-once message: 'opened' (its file can be fetched for a few
-  // minutes), 'already_opened' or 'not_found'.
-  Future<String> openViewOnce(String messageId) async {
+  // minutes), 'already_opened' or 'not_found', and its caption once opened.
+  Future<({String result, String caption})> openViewOnce(
+    String messageId,
+  ) async {
     final response = await _supabase.rpc(
       'open_chat_view_once',
       params: {'target_message_id': messageId},
     );
-    return response is Map ? response['result'] as String? ?? '' : '';
+    if (response is! Map) return (result: '', caption: '');
+    return (
+      result: response['result'] as String? ?? '',
+      caption: response['caption'] as String? ?? '',
+    );
+  }
+
+  // A fast lane next to the database feed, for things that should feel
+  // instant: someone typing or recording a voice message ('typing':
+  // {user_id, typing, recording}) and "a message just changed, load it"
+  // ('message': {id}; 'extras' for votes, listens and opens). Your own
+  // broadcasts don't come back to you.
+  RealtimeChannel listenLive(
+    String chatId, {
+    required void Function(String userId, bool active, bool recording) onTyping,
+    required void Function(String messageId) onMessage,
+    required void Function() onExtras,
+  }) {
+    return _supabase
+        .channel(
+          'chat-live:$chatId',
+          opts: const RealtimeChannelConfig(self: false),
+        )
+        .onBroadcast(
+          event: 'typing',
+          callback: (p) {
+            final id = p['user_id'];
+            if (id is String) {
+              onTyping(id, p['typing'] == true, p['recording'] == true);
+            }
+          },
+        )
+        .onBroadcast(
+          event: 'message',
+          callback: (p) {
+            final id = p['id'];
+            if (id is String) onMessage(id);
+          },
+        )
+        .onBroadcast(event: 'extras', callback: (_) => onExtras())
+        .subscribe();
+  }
+
+  // Never fails the caller: it's only a speed-up, the database feed still
+  // brings everything.
+  Future<void> broadcast(
+    RealtimeChannel channel,
+    String event,
+    Map<String, dynamic> payload,
+  ) async {
+    try {
+      await channel.sendBroadcastMessage(event: event, payload: payload);
+    } catch (error) {
+      debugPrint('SYNK: chat broadcast failed: $error');
+    }
   }
 
   // Your options on a poll; an empty list takes your vote back.

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../controllers/activity_leave_controller.dart';
+import '../../../controllers/chat_controller.dart';
 import '../../../controllers/friends_controller.dart';
 import '../../../core/constants/synk_colors.dart';
 import '../../../core/constants/synk_icons.dart';
@@ -21,6 +22,7 @@ import '../../widgets/anonymous_avatar.dart';
 import '../../widgets/default_avatar.dart';
 import '../../widgets/crown_icon.dart';
 import '../../widgets/schedule_conflict_text.dart';
+import '../chat_room_view.dart';
 import 'activity_thumbnail.dart';
 import 'activity_weather_card.dart';
 import 'activity_status_chip.dart';
@@ -941,16 +943,91 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
 
   Widget _buildLeaveButton() {
     final copy = activityLeaveCopy(context, _participationStatus);
+    final leave = _buildBarAction(
+      icon: copy.icon,
+      label: copy.action,
+      color: _destructiveColor,
+      onPressed: _isLeaving ? null : () => _runAction(_leaveActivity),
+    );
 
-    return SizedBox(
-      width: double.infinity,
-      child: _buildBarAction(
-        icon: copy.icon,
-        label: copy.action,
-        color: _destructiveColor,
-        onPressed: _isLeaving ? null : () => _runAction(_leaveActivity),
+    // Joined: the activity's group chat sits beside Leave. Waitlisted and
+    // pending people aren't in the chat yet.
+    if (_participationStatus != 'joined') {
+      return SizedBox(width: double.infinity, child: leave);
+    }
+    return Row(
+      children: [
+        Expanded(child: leave),
+        const SizedBox(width: 10),
+        _buildChatButton(),
+      ],
+    );
+  }
+
+  bool _openingChat = false;
+
+  // Same yellow as the chat pill on the Activities tab (my_activity_card).
+  static const Color _chatYellow = Color(0xFFFFEFB8);
+  static const Color _chatYellowText = Color(0xFF8A6500);
+
+  // A round button for this activity's group chat, beside Leave.
+  Widget _buildChatButton() {
+    return Material(
+      color: _chatYellow,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: _openingChat ? null : _openChat,
+        child: SizedBox.square(
+          dimension: 48,
+          child: Center(
+            child: _openingChat
+                ? const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: _chatYellowText,
+                    ),
+                  )
+                : Icon(
+                    Icons.chat_bubble_outline_rounded,
+                    size: 22,
+                    color: _chatYellowText,
+                    semanticLabel: context.l10n.openChat,
+                  ),
+          ),
+        ),
       ),
     );
+  }
+
+  Future<void> _openChat() async {
+    final chats = ChatController.instance;
+    final activityId = _currentActivity.id;
+    var chat = chats.activityChatFor(activityId);
+    if (chat == null) {
+      // Just joined: the chats list may not have it yet.
+      setState(() => _openingChat = true);
+      await chats.refresh();
+      chat = chats.activityChatFor(activityId);
+      if (!mounted) return;
+      setState(() => _openingChat = false);
+    }
+    if (!mounted) return;
+    if (chat == null) {
+      SynkFeedback.showToast(
+        context,
+        title: context.l10n.somethingWentWrongPleaseTryAgain,
+        success: false,
+      );
+      return;
+    }
+    // Opened from that chat: just go back to it.
+    if (ChatRoomView.isOpen(chat.id)) {
+      Navigator.of(context).pop();
+      return;
+    }
+    await openChatRoom(context, chat, activityStore: widget.activityStore);
   }
 
   // Host action: hand the activity to a joined participant and leave.
@@ -960,16 +1037,22 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
       Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
-            width: double.infinity,
-            child: _buildBarAction(
-              icon: SynkIcons.logout,
-              label: context.l10n.leaveActivity,
-              color: SynkColors.orangeDark,
-              onPressed: _isLeaving
-                  ? null
-                  : () => _runAction(_transferHostAndLeave),
-            ),
+          // The host is always in the group chat too.
+          Row(
+            children: [
+              Expanded(
+                child: _buildBarAction(
+                  icon: SynkIcons.logout,
+                  label: context.l10n.leaveActivity,
+                  color: SynkColors.orangeDark,
+                  onPressed: _isLeaving
+                      ? null
+                      : () => _runAction(_transferHostAndLeave),
+                ),
+              ),
+              const SizedBox(width: 10),
+              _buildChatButton(),
+            ],
           ),
           if (_leaveError != null) _buildBarError(_leaveError!),
         ],

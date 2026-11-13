@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -81,6 +82,11 @@ class ChatRoomView extends StatefulWidget {
   final ChatSummary chat;
   final ActivityStore? activityStore;
 
+  // Chats on screen right now, so opening one that's already open (e.g.
+  // from its activity's sheet) goes back to it instead of stacking a copy.
+  static final Set<String> _open = {};
+  static bool isOpen(String chatId) => _open.contains(chatId);
+
   @override
   State<ChatRoomView> createState() => _ChatRoomViewState();
 }
@@ -151,16 +157,49 @@ class _ChatRoomViewState extends State<ChatRoomView> {
   Duration _recorded = Duration.zero;
   Timer? _recordTicker;
 
+  // The recording bar's timer, waveform and slides change many times a
+  // second; bumping this redraws only the message box, not every message.
+  final ValueNotifier<int> _composerTick = ValueNotifier(0);
+  void _redrawComposer() => _composerTick.value++;
+
+  // Typing and instant delivery (ChatModel.listenLive).
+  RealtimeChannel? _liveChannel;
+
+  // Who's typing, and when that runs out if we hear nothing more.
+  final ValueNotifier<Map<String, _Typing>> _typing = ValueNotifier({});
+  Timer? _typingSweep;
+  DateTime? _typingSentAt;
+  bool _typingSentRecording = false;
+
+  // Scrolled up from the newest messages: the ↓ button shows, with how
+  // many came in since.
+  final ScrollController _scroll = ScrollController();
+  final ValueNotifier<bool> _showJump = ValueNotifier(false);
+  final ValueNotifier<int> _unseen = ValueNotifier(0);
+
   String? get _me => Supabase.instance.client.auth.currentUser?.id;
 
   @override
   void initState() {
     super.initState();
+    ChatRoomView._open.add(widget.chat.id);
     _channel = _model.listenForMessages(widget.chat.id, _onMessage);
     _readsChannel = _model.listenForReadStates(widget.chat.id, (state) {
       if (mounted) setState(() => _reads = {..._reads, state.userId: state});
     });
     _extrasChannel = _model.listenForExtras(widget.chat.id, _scheduleExtras);
+    _liveChannel = _model.listenLive(
+      widget.chat.id,
+      onTyping: _onTyping,
+      onMessage: _loadOne,
+      onExtras: _scheduleExtras,
+    );
+    _input.addListener(_onInputChanged);
+    _scroll.addListener(() {
+      final up = _scroll.hasClients && _scroll.offset > 280;
+      if (_showJump.value != up) _showJump.value = up;
+      if (!up) _unseen.value = 0;
+    });
     // Tapping the message box swaps the stickers or options for the
     // keyboard.
     _inputFocus.addListener(() {
@@ -175,6 +214,7 @@ class _ChatRoomViewState extends State<ChatRoomView> {
 
   @override
   void dispose() {
+    ChatRoomView._open.remove(widget.chat.id);
     final channel = _channel;
     if (channel != null) unawaited(_model.removeChannel(channel));
     final readsChannel = _readsChannel;
@@ -183,6 +223,23 @@ class _ChatRoomViewState extends State<ChatRoomView> {
     if (extrasChannel != null) unawaited(_model.removeChannel(extrasChannel));
     _extrasReload?.cancel();
     _recordTicker?.cancel();
+    final live = _liveChannel;
+    if (live != null) {
+      // Don't leave them seeing "typing…".
+      if (_typingSentAt != null) {
+        unawaited(
+          _model.broadcast(live, 'typing', {'user_id': _me, 'typing': false}),
+        );
+      }
+      unawaited(_model.removeChannel(live));
+    }
+    _typingSweep?.cancel();
+    _input.removeListener(_onInputChanged);
+    _scroll.dispose();
+    _showJump.dispose();
+    _unseen.dispose();
+    _typing.dispose();
+    _composerTick.dispose();
     unawaited(_recorder.dispose());
     unawaited(VoicePlayback.instance.stop());
     unawaited(_chats.markRead(widget.chat.id));
@@ -204,8 +261,136 @@ class _ChatRoomViewState extends State<ChatRoomView> {
   void _scheduleExtras() {
     _extrasReload?.cancel();
     _extrasReload = Timer(
-      const Duration(milliseconds: 300),
+      const Duration(milliseconds: 150),
       () => unawaited(_loadExtras()),
+    );
+  }
+
+  // Tells everyone else a vote, listen or open happened, so they reload
+  // straight away instead of waiting on the database feed.
+  void _announceExtras() {
+    final live = _liveChannel;
+    if (live != null) unawaited(_model.broadcast(live, 'extras', const {}));
+  }
+
+  // Tells everyone else to load a message that was just sent or deleted.
+  void _announceMessage(String messageId) {
+    final live = _liveChannel;
+    if (live != null) {
+      unawaited(_model.broadcast(live, 'message', {'id': messageId}));
+    }
+  }
+
+  // A message someone just announced; the database feed may bring it too,
+  // and _onMessage keeps only one.
+  Future<void> _loadOne(String messageId) async {
+    try {
+      final loaded = await _model.fetchMessages(
+        widget.chat.id,
+        ids: [messageId],
+        limit: 1,
+      );
+      if (loaded.isNotEmpty) _onMessage(loaded.first);
+    } catch (error) {
+      debugPrint('SYNK: announced message failed to load: $error');
+    }
+  }
+
+  // ---- Typing ----
+
+  // Not while you've blocked someone here: it would hand them your id.
+  bool get _mayShareTyping => !_members.values.any((u) => u.blockedByMe);
+
+  // Tells the others you're typing or recording ([active]), or stopped.
+  // While active it's repeated at most every 2.5 s; each one lasts 4 s on
+  // the other side.
+  void _shareTyping(bool active, {bool recording = false}) {
+    final live = _liveChannel;
+    if (live == null || _me == null || !_mayShareTyping) return;
+    final now = DateTime.now();
+    if (active) {
+      final last = _typingSentAt;
+      final changed = _typingSentRecording != recording;
+      if (!changed &&
+          last != null &&
+          now.difference(last).inMilliseconds < 2500) {
+        return;
+      }
+      _typingSentAt = now;
+      _typingSentRecording = recording;
+    } else {
+      if (_typingSentAt == null) return;
+      _typingSentAt = null;
+      _typingSentRecording = false;
+    }
+    unawaited(
+      _model.broadcast(live, 'typing', {
+        'user_id': _me,
+        'typing': active,
+        'recording': active && recording,
+      }),
+    );
+  }
+
+  void _onInputChanged() {
+    // Recording takes over from typing until it's done.
+    if (_recording) return;
+    _shareTyping(_input.text.trim().isNotEmpty);
+  }
+
+  void _stopTyping() => _shareTyping(false);
+
+  void _onTyping(String userId, bool active, bool recording) {
+    // Only people shown in this chat; someone who blocked you isn't, by
+    // their real id.
+    if (!mounted || userId == _me || !_members.containsKey(userId)) return;
+    final next = {..._typing.value};
+    if (active) {
+      next[userId] = (
+        until: DateTime.now().add(const Duration(seconds: 4)),
+        recording: recording,
+      );
+    } else {
+      next.remove(userId);
+    }
+    _typing.value = next;
+    _typingSweep ??= Timer.periodic(const Duration(seconds: 1), (_) {
+      final now = DateTime.now();
+      final left = {
+        for (final e in _typing.value.entries)
+          if (e.value.until.isAfter(now)) e.key: e.value,
+      };
+      if (left.length != _typing.value.length) _typing.value = left;
+      if (left.isEmpty) {
+        _typingSweep?.cancel();
+        _typingSweep = null;
+      }
+    });
+  }
+
+  // "typing…", "Reem is typing…", "recording audio…"; null when no one.
+  String? _typingLabel(Map<String, _Typing> typing) {
+    if (typing.isEmpty) return null;
+    final l = context.l10n;
+    final recording = typing.values.any((t) => t.recording);
+    if (!widget.chat.isActivity) {
+      return recording ? l.recordingAudio : l.typing;
+    }
+    if (typing.length > 1) return l.peopleTyping(typing.length);
+    final name = _members[typing.keys.first]?.name.split(' ').first ?? '';
+    if (name.isEmpty) return recording ? l.recordingAudio : l.typing;
+    return recording
+        ? l.personRecording(bidiIsolate(name))
+        : l.personTyping(bidiIsolate(name));
+  }
+
+  void _jumpToLatest() {
+    _unseen.value = 0;
+    if (!_scroll.hasClients) return;
+    _scroll.animateTo(
+      0,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOutCubic,
     );
   }
 
@@ -237,9 +422,12 @@ class _ChatRoomViewState extends State<ChatRoomView> {
       ),
     );
     unawaited(
-      _model.markVoicePlayed(message.id).catchError((Object error) {
-        debugPrint('SYNK: marking voice message played failed: $error');
-      }),
+      _model
+          .markVoicePlayed(message.id)
+          .then((_) => _announceExtras())
+          .catchError((Object error) {
+            debugPrint('SYNK: marking voice message played failed: $error');
+          }),
     );
   }
 
@@ -264,6 +452,7 @@ class _ChatRoomViewState extends State<ChatRoomView> {
     } catch (error) {
       debugPrint('SYNK: voting failed: $error');
     }
+    if (ok) _announceExtras();
     if (!mounted || ok) return;
     await _loadExtras();
     if (mounted) {
@@ -329,10 +518,20 @@ class _ChatRoomViewState extends State<ChatRoomView> {
           _messages = [..._messages, message]
             ..sort((a, b) => a.createdAt.compareTo(b.createdAt)),
     );
+    final sender = message.senderId;
+    if (sender == _me) {
+      // Yours: back to the newest, like WhatsApp.
+      _jumpToLatest();
+    } else {
+      // They sent it, so they've stopped typing.
+      if (_typing.value.containsKey(sender)) {
+        _typing.value = {..._typing.value}..remove(sender);
+      }
+      if (_showJump.value) _unseen.value++;
+    }
     unawaited(_chats.markRead(widget.chat.id));
     unawaited(_loadPhotoLinks([message]));
     // Someone who joined after the chat opened.
-    final sender = message.senderId;
     if (sender != null && !_members.containsKey(sender)) {
       unawaited(_reloadMembers());
     }
@@ -711,7 +910,10 @@ class _ChatRoomViewState extends State<ChatRoomView> {
         unawaited(_finishRecording(send: true));
         return;
       }
-      setState(() => _recorded = elapsed);
+      _recorded = elapsed;
+      _redrawComposer();
+      // Keeps their blinking mic going (repeats at most every 2.5 s).
+      _shareTyping(true, recording: true);
     });
   }
 
@@ -744,10 +946,9 @@ class _ChatRoomViewState extends State<ChatRoomView> {
       });
       return;
     }
-    setState(() {
-      _slide = slide;
-      _lift = lift;
-    });
+    _slide = slide;
+    _lift = lift;
+    _redrawComposer();
   }
 
   void _onMicUp() {
@@ -768,6 +969,9 @@ class _ChatRoomViewState extends State<ChatRoomView> {
       _lift = 0;
       _voiceViewOnce = false;
     });
+    // Their mic bubble goes; back to "typing" if there's text in the box.
+    _shareTyping(false);
+    _onInputChanged();
     if (!send) {
       unawaited(HapticFeedback.heavyImpact());
       await _recorder.cancel();
@@ -854,6 +1058,7 @@ class _ChatRoomViewState extends State<ChatRoomView> {
       return _model.sendViewOnce(
         widget.chat.id,
         imagePath: path,
+        caption: choice.caption,
         replyToId: replyToId,
       );
     });
@@ -875,12 +1080,14 @@ class _ChatRoomViewState extends State<ChatRoomView> {
     if (_openingViewOnce != null) return;
     setState(() => _openingViewOnce = message.id);
     var result = '';
+    var caption = '';
     try {
-      result = await _model.openViewOnce(message.id);
+      (:result, :caption) = await _model.openViewOnce(message.id);
     } catch (error) {
       debugPrint('SYNK: opening view-once message failed: $error');
     }
     if (!mounted) return;
+    if (result == 'opened') _announceExtras();
 
     final me = _me;
     if (me != null && (result == 'opened' || result == 'already_opened')) {
@@ -940,7 +1147,7 @@ class _ChatRoomViewState extends State<ChatRoomView> {
       );
       return;
     }
-    await _showPhoto(context, link);
+    await _showPhoto(context, link, caption: caption);
     if (mounted) setState(() {});
   }
 
@@ -1024,6 +1231,8 @@ class _ChatRoomViewState extends State<ChatRoomView> {
       return false;
     }
     setState(() => _replyingTo = null);
+    _stopTyping();
+    _announceMessage(sent.id);
     _onMessage(sent);
     unawaited(_chats.refresh());
     return true;
@@ -1220,6 +1429,7 @@ class _ChatRoomViewState extends State<ChatRoomView> {
     }
     if (!mounted) return;
     if (!ok) return _showDeleteError();
+    _announceMessage(message.id);
     if (VoicePlayback.instance.isActive(message.id)) {
       unawaited(VoicePlayback.instance.stop());
     }
@@ -1369,8 +1579,16 @@ class _ChatRoomViewState extends State<ChatRoomView> {
               onTap: _dismissPanels,
               child: Stack(
                 children: [
-                  const Positioned.fill(child: ChatWallpaper()),
+                  // Painted once, not again on every scroll or update.
+                  const Positioned.fill(
+                    child: RepaintBoundary(child: ChatWallpaper()),
+                  ),
                   _buildMessages(),
+                  PositionedDirectional(
+                    end: 12,
+                    bottom: 12,
+                    child: _buildJumpButton(),
+                  ),
                 ],
               ),
             ),
@@ -1382,6 +1600,78 @@ class _ChatRoomViewState extends State<ChatRoomView> {
             builder: (context, _) => _buildComposer(),
           ),
         ],
+      ),
+    );
+  }
+
+  // ↓ in a white circle once you've scrolled up, with how many messages
+  // came in since; tap for the newest.
+  Widget _buildJumpButton() {
+    return ValueListenableBuilder<bool>(
+      valueListenable: _showJump,
+      builder: (context, show, _) => IgnorePointer(
+        ignoring: !show,
+        child: AnimatedScale(
+          scale: show ? 1 : 0.6,
+          duration: const Duration(milliseconds: 160),
+          curve: Curves.easeOutBack,
+          child: AnimatedOpacity(
+            opacity: show ? 1 : 0,
+            duration: const Duration(milliseconds: 160),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Material(
+                  color: Colors.white,
+                  shape: const CircleBorder(),
+                  elevation: 3,
+                  shadowColor: Colors.black26,
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: _jumpToLatest,
+                    child: SizedBox.square(
+                      dimension: 42,
+                      child: Icon(
+                        Icons.keyboard_double_arrow_down_rounded,
+                        semanticLabel: context.l10n.latestMessages,
+                        color: SynkColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                ),
+                ValueListenableBuilder<int>(
+                  valueListenable: _unseen,
+                  builder: (context, count, _) => count == 0
+                      ? const SizedBox.shrink()
+                      : PositionedDirectional(
+                          top: -6,
+                          end: -4,
+                          child: Container(
+                            constraints: const BoxConstraints(minWidth: 20),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 5,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: SynkColors.orangeDark,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              count > 99 ? '99+' : '$count',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -1424,17 +1714,30 @@ class _ChatRoomViewState extends State<ChatRoomView> {
                   color: SynkColors.textPrimary,
                 ),
               ),
-              if (subtitle != null)
-                Text(
-                  subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: SynkColors.textSecondary,
-                  ),
-                ),
+              // "typing…" takes the subtitle's place while someone types,
+              // like WhatsApp. Only this line redraws when it changes.
+              ValueListenableBuilder(
+                valueListenable: _typing,
+                builder: (context, typing, _) {
+                  final typingLabel = _typingLabel(typing);
+                  final text = typingLabel ?? subtitle;
+                  if (text == null) return const SizedBox.shrink();
+                  return Text(
+                    text,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: typingLabel != null
+                          ? FontWeight.w700
+                          : FontWeight.w500,
+                      color: typingLabel != null
+                          ? SynkColors.tealText
+                          : SynkColors.textSecondary,
+                    ),
+                  );
+                },
+              ),
             ],
           ),
         ),
@@ -1486,64 +1789,134 @@ class _ChatRoomViewState extends State<ChatRoomView> {
     final myLatest = messages
         .where((m) => m.senderId == _me && !m.isDeleted)
         .firstOrNull;
-    return ListView.builder(
-      reverse: true,
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-      itemCount: messages.length,
-      itemBuilder: (context, index) {
-        final message = messages[index];
-        final older = index + 1 < messages.length ? messages[index + 1] : null;
-        final newer = index > 0 ? messages[index - 1] : null;
-        final newDay =
-            older == null ||
-            !DateUtils.isSameDay(older.createdAt, message.createdAt);
-        // Consecutive messages from one person are grouped under one name.
-        final firstInGroup = newDay || older.senderId != message.senderId;
-        final lastInGroup =
-            newer == null ||
-            newer.senderId != message.senderId ||
-            !DateUtils.isSameDay(newer.createdAt, message.createdAt);
+    final indexById = {
+      for (var i = 0; i < messages.length; i++) messages[i].id: i,
+    };
+    // Dragging the messages puts the keyboard away (onDrag) and closes the
+    // stickers or + options, like WhatsApp.
+    return NotificationListener<ScrollStartNotification>(
+      onNotification: (n) {
+        if (n.dragDetails != null && _panel != _ComposerPanel.none) {
+          setState(() => _panel = _ComposerPanel.none);
+        }
+        return false;
+      },
+      child: ListView.builder(
+        controller: _scroll,
+        reverse: true,
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+        // The first item (at the bottom) is the typing bubble, then the
+        // messages, newest first.
+        itemCount: messages.length + 1,
+        // Keeps each bubble's state (e.g. a playing voice note) with its
+        // message when new ones arrive.
+        findChildIndexCallback: (key) {
+          if (key is! ValueKey<String>) return null;
+          if (key.value == _typingKey) return 0;
+          final i = indexById[key.value];
+          return i == null ? null : i + 1;
+        },
+        itemBuilder: (context, item) {
+          if (item == 0) return _buildTypingItem();
+          final index = item - 1;
+          final message = messages[index];
+          final older = index + 1 < messages.length
+              ? messages[index + 1]
+              : null;
+          final newer = index > 0 ? messages[index - 1] : null;
+          final newDay =
+              older == null ||
+              !DateUtils.isSameDay(older.createdAt, message.createdAt);
+          // Consecutive messages from one person are grouped under one name.
+          final firstInGroup = newDay || older.senderId != message.senderId;
+          final lastInGroup =
+              newer == null ||
+              newer.senderId != message.senderId ||
+              !DateUtils.isSameDay(newer.createdAt, message.createdAt);
 
-        final replyId = message.isDeleted ? null : message.replyToId;
-        final repliedTo = replyId == null ? null : byId[replyId];
-        return Column(
-          children: [
-            if (newDay) _DayDivider(date: message.createdAt),
-            _MessageBubble(
-              quote: replyId == null
-                  ? null
-                  : (
-                      author: repliedTo == null ? '' : _authorOf(repliedTo),
-                      text: repliedTo == null
-                          ? context.l10n.originalMessageUnavailable
-                          : _previewOf(repliedTo),
-                    ),
-              onReply: message.isDeleted ? null : () => _startReply(message),
-              message: message,
-              sender: _members[message.senderId],
-              isMine: message.senderId == _me,
-              showSender: widget.chat.isActivity && firstInGroup,
-              showAvatar: widget.chat.isActivity && lastInGroup,
-              isGroupChat: widget.chat.isActivity,
-              photoLink: _photoLinks[message.imagePath],
-              onSenderTap: _openProfile,
-              onOpenActivity: _openActivity,
-              onLongPress: (bubble) => _showMessageMenu(message, bubble),
-              model: _model,
-              me: _me,
-              heard: message.isVoice && _heard(message),
-              onVoiceStarted: () => _markPlayed(message),
-              votes: _extras.votes[message.id] ?? const {},
-              onVote: _canSend ? (picks) => _vote(message, picks) : null,
-              onViewVotes: () => _showVotes(message),
-              onOpenContact: _openProfile,
-              viewOnceOpened: message.viewOnce && _viewOnceOpened(message),
-              viewOnceOpenNow: _openedNow.contains(message.id),
-              viewOnceLoading: _openingViewOnce == message.id,
-              onOpenViewOnce: () => _openViewOnce(message),
+          final replyId = message.isDeleted ? null : message.replyToId;
+          final repliedTo = replyId == null ? null : byId[replyId];
+          return Column(
+            key: ValueKey<String>(message.id),
+            children: [
+              if (newDay) _DayDivider(date: message.createdAt),
+              _MessageBubble(
+                quote: replyId == null
+                    ? null
+                    : (
+                        author: repliedTo == null ? '' : _authorOf(repliedTo),
+                        text: repliedTo == null
+                            ? context.l10n.originalMessageUnavailable
+                            : _previewOf(repliedTo),
+                      ),
+                onReply: message.isDeleted ? null : () => _startReply(message),
+                message: message,
+                sender: _members[message.senderId],
+                isMine: message.senderId == _me,
+                showSender: widget.chat.isActivity && firstInGroup,
+                showAvatar: widget.chat.isActivity && lastInGroup,
+                isGroupChat: widget.chat.isActivity,
+                photoLink: _photoLinks[message.imagePath],
+                onSenderTap: _openProfile,
+                onOpenActivity: _openActivity,
+                onLongPress: (bubble) => _showMessageMenu(message, bubble),
+                model: _model,
+                me: _me,
+                heard: message.isVoice && _heard(message),
+                onVoiceStarted: () => _markPlayed(message),
+                votes: _extras.votes[message.id] ?? const {},
+                onVote: _canSend ? (picks) => _vote(message, picks) : null,
+                onViewVotes: () => _showVotes(message),
+                onOpenContact: _openProfile,
+                viewOnceOpened: message.viewOnce && _viewOnceOpened(message),
+                viewOnceOpenNow: _openedNow.contains(message.id),
+                viewOnceLoading: _openingViewOnce == message.id,
+                onOpenViewOnce: () => _openViewOnce(message),
+              ),
+              if (message.id == myLatest?.id) _buildSeenLabel(message),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  static const _typingKey = '__typing__';
+
+  // Under the newest message while someone types or records. Only this
+  // item redraws when that changes.
+  Widget _buildTypingItem() {
+    return ValueListenableBuilder<Map<String, _Typing>>(
+      key: const ValueKey<String>(_typingKey),
+      valueListenable: _typing,
+      builder: (context, typing, _) {
+        if (typing.isEmpty) return const SizedBox.shrink();
+        // The most recent one, in a group; recording wins over typing.
+        final entry = typing.entries.reduce(
+          (a, b) => a.value.recording && !b.value.recording
+              ? a
+              : b.value.recording && !a.value.recording
+              ? b
+              : (a.value.until.isAfter(b.value.until) ? a : b),
+        );
+        final user = _members[entry.key];
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 180),
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: SizeTransition(sizeFactor: animation, child: child),
+          ),
+          child: Align(
+            key: ValueKey(entry.value.recording),
+            alignment: AlignmentDirectional.centerStart,
+            child: _TypingBubble(
+              recording: entry.value.recording,
+              avatar: widget.chat.isActivity && user != null
+                  ? _MemberAvatar(user: user, size: 28)
+                  : null,
             ),
-            if (message.id == myLatest?.id) _buildSeenLabel(message),
-          ],
+          ),
         );
       },
     );
@@ -1758,20 +2131,27 @@ class _ChatRoomViewState extends State<ChatRoomView> {
   // the two never overflow the screen together.
   Widget _buildPanel() {
     const height = 290.0;
-    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
-    final visible = (height - keyboard).clamp(0.0, height);
-    return SizedBox(
-      height: visible,
-      child: ClipRect(
-        child: OverflowBox(
-          alignment: Alignment.topCenter,
-          minHeight: height,
-          maxHeight: height,
-          child: _showStickers
-              ? StickerPickerPanel(height: height, onPick: _sendSticker)
-              : AttachmentPanel(height: height, onPick: _sendAttachment),
-        ),
-      ),
+    final panel = _showStickers
+        ? StickerPickerPanel(height: height, onPick: _sendSticker)
+        : AttachmentPanel(height: height, onPick: _sendAttachment);
+    // Its own Builder, so only this redraws each frame the keyboard moves,
+    // not the whole chat.
+    return Builder(
+      builder: (context) {
+        final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+        final visible = (height - keyboard).clamp(0.0, height);
+        return SizedBox(
+          height: visible,
+          child: ClipRect(
+            child: OverflowBox(
+              alignment: Alignment.topCenter,
+              minHeight: height,
+              maxHeight: height,
+              child: panel,
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -1845,7 +2225,8 @@ class _ChatRoomViewState extends State<ChatRoomView> {
     return Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(4, 6, 8, 8),
       child: ListenableBuilder(
-        listenable: _input,
+        // The recording bar redraws through _composerTick.
+        listenable: Listenable.merge([_input, _composerTick]),
         builder: (context, _) {
           final hasText = _input.text.trim().isNotEmpty;
           return Row(
@@ -2100,8 +2481,130 @@ enum _MessageAction { reply, copy, deleteForEveryone, deleteForMe }
 
 enum _ComposerPanel { none, stickers, attachments }
 
+// Someone typing or recording a voice message, until when.
+typedef _Typing = ({DateTime until, bool recording});
+
+// What the others see while you type or record, like WhatsApp: their
+// bubble with three dots blinking in turn, or a blinking red mic. In group
+// chats, the person's photo beside it.
+class _TypingBubble extends StatefulWidget {
+  const _TypingBubble({required this.recording, this.avatar});
+
+  final bool recording;
+  final Widget? avatar;
+
+  @override
+  State<_TypingBubble> createState() => _TypingBubbleState();
+}
+
+class _TypingBubbleState extends State<_TypingBubble>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _blink = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1200),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _blink.dispose();
+    super.dispose();
+  }
+
+  // Each dot brightens and lifts in turn.
+  Widget _dot(int i) {
+    return AnimatedBuilder(
+      animation: _blink,
+      builder: (context, _) {
+        final t = (_blink.value - i * 0.18) % 1.0;
+        // Up and back over the first half of its turn, then rest.
+        final wave = t < 0.5 ? math.sin(t / 0.5 * math.pi) : 0.0;
+        return Transform.translate(
+          offset: Offset(0, -3 * wave),
+          child: Container(
+            width: 8,
+            height: 8,
+            margin: const EdgeInsets.symmetric(horizontal: 2.5),
+            decoration: BoxDecoration(
+              color: SynkColors.textSecondary.withValues(
+                alpha: 0.35 + 0.55 * wave,
+              ),
+              shape: BoxShape.circle,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bubble = Container(
+      height: 38,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadiusDirectional.only(
+          topStart: Radius.circular(18),
+          topEnd: Radius.circular(18),
+          bottomStart: Radius.circular(4),
+          bottomEnd: Radius.circular(18),
+        ),
+        border: Border.all(
+          color: SynkColors.textSecondary.withValues(alpha: 0.10),
+        ),
+      ),
+      child: widget.recording
+          ? FadeTransition(
+              opacity: Tween<double>(begin: 0.25, end: 1).animate(
+                CurvedAnimation(parent: _blink, curve: const _PulseCurve()),
+              ),
+              // Grey, like the typing dots.
+              child: Icon(
+                Icons.mic_rounded,
+                size: 22,
+                color: SynkColors.textSecondary.withValues(alpha: 0.9),
+              ),
+            )
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [for (var i = 0; i < 3; i++) _dot(i)],
+            ),
+    );
+    return Semantics(
+      liveRegion: true,
+      label: widget.recording
+          ? context.l10n.recordingAudio
+          : context.l10n.typing,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 6, bottom: 2),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            if (widget.avatar != null) ...[
+              widget.avatar!,
+              const SizedBox(width: 8),
+            ],
+            bubble,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Fades in and out twice per loop, for the blinking mic.
+class _PulseCurve extends Curve {
+  const _PulseCurve();
+
+  @override
+  double transformInternal(double t) => (math.sin(t * 4 * math.pi) + 1) / 2;
+}
+
 // Shows a chat photo full screen; pinch to zoom, tap to close.
-Future<void> _showPhoto(BuildContext context, String link) {
+// [caption] shows under it (a view-once photo's, which only arrives when
+// it's opened).
+Future<void> _showPhoto(BuildContext context, String link, {String? caption}) {
+  final text = caption?.trim() ?? '';
   return showGeneralDialog<void>(
     context: context,
     barrierDismissible: true,
@@ -2112,9 +2615,34 @@ Future<void> _showPhoto(BuildContext context, String link) {
       behavior: HitTestBehavior.opaque,
       onTap: () => Navigator.of(dialogContext).pop(),
       child: SafeArea(
-        child: InteractiveViewer(
-          maxScale: 4,
-          child: Center(child: Image.network(link, fit: BoxFit.contain)),
+        child: Column(
+          children: [
+            Expanded(
+              child: InteractiveViewer(
+                maxScale: 4,
+                child: Center(child: Image.network(link, fit: BoxFit.contain)),
+              ),
+            ),
+            if (text.isNotEmpty)
+              Container(
+                width: double.infinity,
+                constraints: const BoxConstraints(maxHeight: 160),
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+                child: SingleChildScrollView(
+                  child: Text(
+                    text,
+                    textAlign: TextAlign.center,
+                    textDirection: textDirectionOf(text),
+                    style: const TextStyle(
+                      fontSize: 15,
+                      height: 1.35,
+                      color: Colors.white,
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     ),
