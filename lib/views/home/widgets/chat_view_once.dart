@@ -156,35 +156,30 @@ class _PhotoSendPreviewState extends State<_PhotoSendPreview> {
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
               child: Row(
                 children: [
+                  // A view-once photo's caption is view-once too: it only
+                  // shows when the photo is opened.
                   Expanded(
-                    child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 160),
-                      // A view-once photo has no caption: the text would
-                      // show in notifications and the chats list.
-                      opacity: _viewOnce ? 0.35 : 1,
-                      child: TextField(
-                        controller: _caption,
-                        enabled: !_viewOnce,
-                        maxLength: 2000,
-                        minLines: 1,
-                        maxLines: 4,
-                        textCapitalization: TextCapitalization.sentences,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: InputDecoration(
-                          hintText: _viewOnce ? l.viewOnce : l.addCaption,
-                          hintStyle: const TextStyle(color: Colors.white70),
-                          counterText: '',
-                          filled: true,
-                          fillColor: Colors.white.withValues(alpha: 0.14),
-                          isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 13,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(23),
-                            borderSide: BorderSide.none,
-                          ),
+                    child: TextField(
+                      controller: _caption,
+                      maxLength: 2000,
+                      minLines: 1,
+                      maxLines: 4,
+                      textCapitalization: TextCapitalization.sentences,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: l.addCaption,
+                        hintStyle: const TextStyle(color: Colors.white70),
+                        counterText: '',
+                        filled: true,
+                        fillColor: Colors.white.withValues(alpha: 0.14),
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 13,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(23),
+                          borderSide: BorderSide.none,
                         ),
                       ),
                     ),
@@ -200,7 +195,7 @@ class _PhotoSendPreviewState extends State<_PhotoSendPreview> {
                     tooltip: l.send,
                     onPressed: () => Navigator.pop<PhotoSendChoice>(context, (
                       viewOnce: _viewOnce,
-                      caption: _viewOnce ? '' : _caption.text.trim(),
+                      caption: _caption.text.trim(),
                     )),
                     style: IconButton.styleFrom(
                       backgroundColor: SynkColors.orangeDark,

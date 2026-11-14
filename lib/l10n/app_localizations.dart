@@ -6325,6 +6325,42 @@ abstract class AppLocalizations {
   /// **'Add a caption…'**
   String get addCaption;
 
+  /// No description provided for @typing.
+  ///
+  /// In en, this message translates to:
+  /// **'typing…'**
+  String get typing;
+
+  /// No description provided for @personTyping.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is typing…'**
+  String personTyping(Object name);
+
+  /// No description provided for @peopleTyping.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} people are typing…'**
+  String peopleTyping(int count);
+
+  /// No description provided for @latestMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest messages'**
+  String get latestMessages;
+
+  /// No description provided for @recordingAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'recording audio…'**
+  String get recordingAudio;
+
+  /// No description provided for @personRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is recording…'**
+  String personRecording(Object name);
+
   /// No description provided for @removePastActivityMessage.
   ///
   /// In en, this message translates to:

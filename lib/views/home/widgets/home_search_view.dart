@@ -22,10 +22,14 @@ class HomeSearchView extends StatelessWidget {
     required this.onRecentRemove,
     required this.onOpen,
     this.onCreate,
+    this.joinedIds = const {},
   });
 
   final String query;
   final List<Activity> results;
+
+  // Results you're already in, marked "Joined".
+  final Set<String> joinedIds;
 
   // The top result when it matches the user, labeled "Best match for you".
   final String? bestMatchId;
@@ -70,6 +74,7 @@ class HomeSearchView extends StatelessWidget {
               activity: activity,
               distanceKm: distanceOf(activity),
               bestMatch: activity.id == bestMatchId,
+              joined: joinedIds.contains(activity.id),
               onTap: () => onOpen(activity),
             ),
         ],
@@ -125,12 +130,14 @@ class _ResultRow extends StatelessWidget {
     required this.distanceKm,
     required this.bestMatch,
     required this.onTap,
+    this.joined = false,
   });
 
   final Activity activity;
   final double? distanceKm;
   final bool bestMatch;
   final VoidCallback onTap;
+  final bool joined;
 
   @override
   Widget build(BuildContext context) {
@@ -187,11 +194,15 @@ class _ResultRow extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              left == 0 ? l.full : l.spotsLeftShort(left),
-              style: const TextStyle(
+              joined
+                  ? '✓ ${l.joined}'
+                  : left == 0
+                  ? l.full
+                  : l.spotsLeftShort(left),
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: SynkColors.textSecondary,
+                color: joined ? SynkColors.tealText : SynkColors.textSecondary,
               ),
             ),
           ],

@@ -32,11 +32,15 @@ class ExploreTile extends StatelessWidget {
     required this.distanceKm,
     required this.onTap,
     this.friends = const [],
+    this.joined = false,
   });
 
   final Activity activity;
   final double? distanceKm;
   final VoidCallback onTap;
+
+  // You're in it: the corner says "Joined" instead of the spots left.
+  final bool joined;
 
   // Friends hosting or going, shown as small photos in the corner.
   final List<FriendUser> friends;
@@ -119,18 +123,20 @@ class ExploreTile extends StatelessWidget {
                     horizontal: 8,
                     vertical: 3,
                   ),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.all(Radius.circular(999)),
+                  decoration: BoxDecoration(
+                    color: joined ? SynkColors.tealText : Colors.white,
+                    borderRadius: const BorderRadius.all(Radius.circular(999)),
                   ),
                   child: Text(
-                    left == 0
+                    joined
+                        ? '✓ ${context.l10n.joined}'
+                        : left == 0
                         ? context.l10n.full
                         : context.l10n.spotsLeftShort(left),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: SynkColors.ink,
+                      color: joined ? Colors.white : SynkColors.ink,
                     ),
                   ),
                 ),

@@ -327,21 +327,20 @@ class _HomeViewState extends State<HomeView> {
       if (a.participationStatus != null) a.id,
   };
 
-  // Home leaves out the user's own activities.
-  List<Activity> _notJoined(List<Activity> activities) {
-    final ids = _participatingIds(activities);
-    return [
-      for (final a in activities)
-        if (!ids.contains(a.id)) a,
-    ];
-  }
+  // Ones you've joined stay in Explore and search, marked "Joined". Only
+  // the For you deck leaves them out (rankTopPicks), since it's for
+  // finding new things to join.
+  Set<String> get _joinedIds => {
+    for (final a in widget.activityStore.participating)
+      if (a.isJoined) a.id,
+  };
 
   Map<DateTime, int> _countsByDay() {
     final controller = _discoveryController;
     final matching = controller.filters
         .withDate(DateOption.any)
         .apply(
-          _notJoined(controller.allActivities),
+          controller.allActivities,
           userLocation: controller.userLocation,
           search: controller.searchQuery,
         );
@@ -364,7 +363,8 @@ class _HomeViewState extends State<HomeView> {
   // Search results, best matches for the user first.
   // Returns the results and the id of a top result that matches the user.
   (List<Activity>, String?) _searchResults() {
-    final results = _notJoined(_discoveryController.filteredActivities);
+    // A copy: it's sorted below.
+    final results = [..._discoveryController.filteredActivities];
     final scores = {
       for (final p in _rank(results, limit: results.length))
         p.activity.id: p.score,
@@ -681,6 +681,7 @@ class _HomeViewState extends State<HomeView> {
       query: query,
       results: results,
       bestMatchId: query.isEmpty ? null : best,
+      joinedIds: _joinedIds,
       distanceOf: _distanceOf,
       recent: _recent,
       onRecentTap: _runSearch,
@@ -771,7 +772,8 @@ class _HomeViewState extends State<HomeView> {
       ];
     }
 
-    final activities = _notJoined(_discoveryController.filteredActivities);
+    final activities = _discoveryController.filteredActivities;
+    final joinedIds = _joinedIds;
 
     if (activities.isEmpty) {
       final failed = _discoveryController.errorMessage != null;
@@ -820,6 +822,7 @@ class _HomeViewState extends State<HomeView> {
               activity: activity,
               distanceKm: _distanceOf(activity),
               friends: _friends.friendsGoingIn(activity.id),
+              joined: joinedIds.contains(activity.id),
               onTap: () => _onActivityTap(activity),
             );
           },

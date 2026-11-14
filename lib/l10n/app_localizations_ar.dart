@@ -3534,6 +3534,30 @@ class AppLocalizationsAr extends AppLocalizations {
   String get addCaption => 'أضف تعليق…';
 
   @override
+  String get typing => 'يكتب…';
+
+  @override
+  String personTyping(Object name) {
+    return '$name يكتب…';
+  }
+
+  @override
+  String peopleTyping(int count) {
+    return '$count يكتبون…';
+  }
+
+  @override
+  String get latestMessages => 'آخر الرسائل';
+
+  @override
+  String get recordingAudio => 'يسجل صوت…';
+
+  @override
+  String personRecording(Object name) {
+    return '$name يسجل صوت…';
+  }
+
+  @override
   String get removePastActivityMessage =>
       'تزال من قائمتك ومن أنشطتك الأخيرة، ويبقى النشاط ظاهرا للآخرين.';
 
