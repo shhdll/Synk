@@ -38,6 +38,7 @@ class ChatSummary {
     this.unreadCount = 0,
     this.isMuted = false,
     this.isFriend = true,
+    this.isCleared = false,
   });
 
   final String id;
@@ -74,6 +75,10 @@ class ChatSummary {
 
   // Direct chats: false once either person removes the other as a friend.
   final bool isFriend;
+
+  // Deleted by the user, with nothing new since. Kept out of the list but
+  // can still be opened.
+  final bool isCleared;
 
   // A direct chat with someone who's no longer a friend. Readable, but
   // neither of you can send.
@@ -113,6 +118,7 @@ class ChatSummary {
       unreadCount: unreadCount ?? this.unreadCount,
       isMuted: isMuted ?? this.isMuted,
       isFriend: isFriend,
+      isCleared: isCleared,
     );
   }
 
@@ -161,6 +167,7 @@ class ChatSummary {
       isMuted: map['is_muted'] == true,
       // Missing on servers without the column yet: treat as a friend.
       isFriend: map['is_friend'] != false,
+      isCleared: map['is_cleared'] == true,
     );
   }
 }
