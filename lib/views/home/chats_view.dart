@@ -217,9 +217,8 @@ class _ChatsViewState extends State<ChatsView> {
     final me = Supabase.instance.client.auth.currentUser?.id;
     final showActivities = _filter != _ChatFilter.friends;
     final showFriends = _filter != _ChatFilter.activities;
-    final activityChats = showActivities
-        ? _matching(_chats.activityChats)
-        : <ChatSummary>[];
+    final listed = _chats.activityChats.where((c) => !c.isCleared).toList();
+    final activityChats = showActivities ? _matching(listed) : <ChatSummary>[];
     // A friend chat shows once someone has written in it.
     final talkedTo = _chats.directChats.where((c) => c.hasMessages).toList();
     final directChats = showFriends ? _matching(talkedTo) : <ChatSummary>[];
@@ -229,7 +228,7 @@ class _ChatsViewState extends State<ChatsView> {
     final searching = _search.text.trim().isNotEmpty;
     final nothingYet =
         _chats.hasLoaded &&
-        (!showActivities || _chats.activityChats.isEmpty) &&
+        (!showActivities || listed.isEmpty) &&
         (!showFriends || talkedTo.isEmpty);
 
     // Swipe toward the start to show Mute and Delete.
