@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { badgeName } from "./badges.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SECRET_KEYS = Deno.env.get("SUPABASE_SECRET_KEYS");
@@ -30,7 +31,9 @@ type PromotionEvent = {
   preview?: string;
   participation_id?: string;
   requester_name?: string;
-  event_type?: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received" | "friend_request_received" | "friend_request_accepted" | "host_assigned" | "activity_conflict" | "activity_full" | "activity_reminder" | "chat_message";
+  badge_id?: string;
+  badge_count?: number;
+  event_type?: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received" | "friend_request_received" | "friend_request_accepted" | "host_assigned" | "activity_conflict" | "activity_full" | "activity_reminder" | "chat_message" | "badge_earned";
 };
 
 type FcmCredentials = {
@@ -202,6 +205,16 @@ function notificationContent(
   const when = event.starts_at ? formatScheduleTime(event.starts_at, language) : null;
 
   switch (event.event_type) {
+    case "badge_earned": {
+      const name = badgeName(event.badge_id ?? "", ar);
+      const more = (event.badge_count ?? 1) > 1;
+      return {
+        title: t("New badge", "شارة جديدة"),
+        body: more
+          ? t(`You earned ${name} and more.`, `حصلت على «${name}» ومعها شارات ثانية`)
+          : t(`You earned ${name}.`, `حصلت على شارة «${name}»`),
+      };
+    }
     case "join_request_accepted":
       return {
         title: t("Request accepted", "تم قبول طلبك"),
@@ -322,6 +335,7 @@ async function sendToToken(
               event_id: event.id,
               ...(event.activity_id ? { activity_id: event.activity_id } : {}),
               ...(event.chat_id ? { chat_id: event.chat_id } : {}),
+              ...(event.badge_id ? { badge_id: event.badge_id } : {}),
               ...(event.event_type === "friend_request_received"
                 ? { requester_name: event.activity_title }
                 : event.event_type === "friend_request_accepted"
@@ -342,7 +356,8 @@ async function sendToToken(
                     event.event_type === "friend_request_received" ||
                     event.event_type === "friend_request_accepted" ||
                     event.event_type === "activity_reminder" ||
-                    event.event_type === "chat_message"
+                    event.event_type === "chat_message" ||
+                    event.event_type === "badge_earned"
                   ? "activity_updates"
                   : "waitlist_promotions",
                 tag: `${event.event_type ?? "waitlist_promotion"}_${event.id}`,
@@ -460,6 +475,8 @@ function preferenceColumn(eventType: NonNullable<PromotionEvent["event_type"]>):
       return "reminders";
     case "chat_message":
       return "chats";
+    case "badge_earned":
+      return "badges";
     default:
       return "activity_updates";
   }
@@ -481,7 +498,7 @@ Deno.serve(async (request: Request) => {
   }
 
   let eventId: string;
-  let eventType: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received" | "friend_request_received" | "friend_request_accepted" | "host_assigned" | "activity_conflict" | "activity_full" | "activity_reminder" | "chat_message";
+  let eventType: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received" | "friend_request_received" | "friend_request_accepted" | "host_assigned" | "activity_conflict" | "activity_full" | "activity_reminder" | "chat_message" | "badge_earned";
   try {
     const body = await request.json();
     eventId = typeof body.event_id === "string" ? body.event_id : "";
@@ -496,7 +513,8 @@ Deno.serve(async (request: Request) => {
         body.event_type === "friend_request_received" ||
         body.event_type === "friend_request_accepted" ||
         body.event_type === "activity_reminder" ||
-        body.event_type === "chat_message"
+        body.event_type === "chat_message" ||
+        body.event_type === "badge_earned"
       ? body.event_type
       : "waitlist_promotion";
   } catch {
@@ -530,6 +548,8 @@ Deno.serve(async (request: Request) => {
     ? "activity_reminder_notification_outbox"
     : eventType === "chat_message"
     ? "chat_message_notification_outbox"
+    : eventType === "badge_earned"
+    ? "badge_earned_notification_outbox"
     : "waitlist_promotion_notification_outbox";
   const eventColumns = eventType === "activity_updated"
     ? "id, user_id, activity_id, activity_title, status"
@@ -541,6 +561,8 @@ Deno.serve(async (request: Request) => {
     ? "id, user_id, chat_id, activity_title, sender_name, is_group, message_kind, preview, status"
     : eventType === "join_request_received"
     ? "id, user_id, activity_id, activity_title, participation_id, status"
+    : eventType === "badge_earned"
+    ? "id, user_id, activity_title, badge_id, badge_count, status"
     : "id, user_id, activity_id, activity_title, status";
   const { data: event, error: claimError } = await admin
     .from(outboxTable)

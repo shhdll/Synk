@@ -15,10 +15,12 @@ import '../../models/activity_model.dart';
 import '../../models/activity_participation_model.dart';
 import '../../models/activity_rating_model.dart';
 import '../../models/auth_model.dart';
+import '../../models/badges_model.dart';
 import '../../models/home_tab.dart';
 import '../../models/streak_intro.dart';
 import '../../models/telegram_intro.dart';
 import '../../services/push_notification_service.dart';
+import '../../utils/shared_to_synk.dart';
 import '../create_activity/create_activity_view.dart';
 import '../create_activity/pending_activity_save_prompt.dart';
 import 'activities_view.dart';
@@ -27,6 +29,8 @@ import 'home_view.dart';
 import 'map_view.dart';
 import 'schedule_conflict_resolution_view.dart';
 import 'widgets/activity_rating_sheet.dart';
+import 'widgets/badge_celebration.dart';
+import 'widgets/badge_widgets.dart';
 import 'widgets/bottom_bar.dart';
 import 'widgets/streak_widgets.dart';
 import 'widgets/telegram_connect.dart';
@@ -62,6 +66,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   bool _ratingOffered = false;
   bool _offeringRating = false;
 
+  final BadgesModel _badgesModel = BadgesModel();
+  bool _showingBadges = false;
+
   late final HomeDiscoveryController _discoveryController =
       HomeDiscoveryController(activitiesModel: _activitiesModel);
 
@@ -84,9 +91,10 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       _refreshActivity,
     );
     // A push while the app is open adds to the list straight away.
-    PushNotificationService.instance.setMessageReceivedHandler(
-      () => unawaited(_notifications.refresh()),
-    );
+    PushNotificationService.instance.setMessageReceivedHandler(() {
+      unawaited(_notifications.refresh());
+      unawaited(_showNewBadges());
+    });
     FriendsController.instance.onBlocksChanged = _reloadAfterBlockChange;
     unawaited(_notifications.refresh());
     unawaited(FriendsController.instance.refresh());
@@ -105,6 +113,13 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     unawaited(_loadActivities().then((_) => _showOpeningPopups()));
 
     WidgetsBinding.instance.addObserver(this);
+    // A picture or link shared to Synk from another app (or from Synk itself).
+    void askShared() {
+      if (mounted) unawaited(sendSharedToSynk(context));
+    }
+
+    listenForSharedToSynk(askShared);
+    WidgetsBinding.instance.addPostFrameCallback((_) => askShared());
     _requestPoll = Timer.periodic(_requestPollInterval, (_) {
       _loadPendingRequestCount();
       unawaited(_leaveIfAccountGone());
@@ -127,8 +142,13 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      unawaited(sendSharedToSynk(context));
       _ratingOffered = false;
-      unawaited(_loadActivities().then((_) => _offerActivityRating()));
+      unawaited(
+        _loadActivities()
+            .then((_) => _showNewBadges())
+            .then((_) => _offerActivityRating()),
+      );
       unawaited(_discoveryController.loadFeed(isSilent: true));
       _loadPendingRequestCount();
       unawaited(_notifications.refresh());
@@ -211,7 +231,28 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     await _offerPendingActivitySave();
     await _offerTelegram();
     await _showStreakOnOpen();
+    await _showNewBadges();
     await _offerActivityRating();
+  }
+
+  // Badges earned since the last time, once each. Never covers another
+  // screen or sheet; they wait for the next opening instead.
+  Future<void> _showNewBadges() async {
+    if (_showingBadges || !mounted) return;
+    _showingBadges = true;
+    try {
+      final unseen = (await _badgesModel.fetchMine()).unseen;
+      if (unseen.isEmpty || !mounted) return;
+      if (ModalRoute.of(context)?.isCurrent != true) return;
+      await _badgesModel.markSeen();
+      if (!mounted) return;
+      await showNewBadges(context, unseen);
+      BadgesSection.changes.value++;
+    } catch (_) {
+      // Retried on the next opening.
+    } finally {
+      _showingBadges = false;
+    }
   }
 
   // An activity save that never got an answer (the app closed, or the

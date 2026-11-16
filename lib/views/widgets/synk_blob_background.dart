@@ -95,3 +95,24 @@ class _SynkBlobBackgroundState extends State<SynkBlobBackground>
     );
   }
 }
+
+// Puts the blob background behind a whole page, app bar included. The page's
+// Scaffold and AppBar should be transparent.
+class SynkBlobPage extends StatelessWidget {
+  const SynkBlobPage({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: SynkColors.background,
+      child: Stack(
+        children: [
+          const Positioned.fill(child: SynkBlobBackground()),
+          Positioned.fill(child: child),
+        ],
+      ),
+    );
+  }
+}

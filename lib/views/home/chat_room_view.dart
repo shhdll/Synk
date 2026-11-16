@@ -2112,8 +2112,10 @@ class _ChatRoomViewState extends State<ChatRoomView> {
       );
     }
     final replyingTo = _replyingTo;
+    // An open panel runs under the home bar itself, so no strip shows below.
     return SafeArea(
       top: false,
+      bottom: _panel == _ComposerPanel.none,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -2130,7 +2132,7 @@ class _ChatRoomViewState extends State<ChatRoomView> {
   // is still sliding down, the panel only takes the space it has left, so
   // the two never overflow the screen together.
   Widget _buildPanel() {
-    const height = 290.0;
+    final height = 290.0 + MediaQuery.paddingOf(context).bottom;
     final panel = _showStickers
         ? StickerPickerPanel(height: height, onPick: _sendSticker)
         : AttachmentPanel(height: height, onPick: _sendAttachment);
@@ -2316,7 +2318,7 @@ class _ChatRoomViewState extends State<ChatRoomView> {
                                   icon: Icon(
                                     _showStickers
                                         ? Icons.keyboard_alt_outlined
-                                        : Icons.sticky_note_2_outlined,
+                                        : Icons.emoji_emotions_outlined,
                                     size: 23,
                                     color: _showStickers
                                         ? SynkColors.orangeDark

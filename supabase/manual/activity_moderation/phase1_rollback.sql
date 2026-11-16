@@ -1,4 +1,4 @@
--- Removes 20261112100000_activity_save_requests.sql.
+-- Removes 20261112100001_activity_save_requests.sql.
 --
 -- Only after lockdown_rollback.sql has run and no released app version
 -- uses the save-activity function any more: without these functions it

@@ -7,6 +7,7 @@ import '../../utils/custom_widgets/synk_dialog.dart';
 import '../../utils/custom_widgets/synk_feedback.dart';
 import '../welcome_view.dart';
 import 'widgets/settings_row.dart';
+import '../widgets/synk_blob_background.dart';
 
 // What gets removed, with the delete button at the bottom. Tapping it asks
 // for the password, then to confirm, then deletes.
@@ -53,89 +54,91 @@ class _DeleteAccountViewState extends State<DeleteAccountView> {
       (Icons.people_outline_rounded, l10n.deleteAccountItemFriends),
     ];
 
-    return Scaffold(
-      backgroundColor: SynkColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            SettingsHeader(title: l10n.deleteAccount),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-                children: [
-                  Center(
-                    child: Container(
-                      width: 76,
-                      height: 76,
-                      decoration: BoxDecoration(
-                        color: SynkColors.badge.withValues(alpha: 0.10),
-                        shape: BoxShape.circle,
+    return SynkBlobPage(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: Column(
+            children: [
+              SettingsHeader(title: l10n.deleteAccount),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 76,
+                        height: 76,
+                        decoration: BoxDecoration(
+                          color: SynkColors.badge.withValues(alpha: 0.10),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.delete_outline_rounded,
+                          size: 36,
+                          color: SynkColors.badge,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.delete_outline_rounded,
-                        size: 36,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.deleteAccountConfirmTitle,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: SynkColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      l10n.deleteAccountIntro,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 14.5,
+                        height: 1.4,
+                        fontWeight: FontWeight.w500,
+                        color: SynkColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+                    SettingsGroup(
+                      children: [
+                        for (final (icon, label) in items)
+                          SettingsRow(
+                            icon: icon,
+                            iconColor: SynkColors.badge,
+                            title: label,
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      l10n.deleteAccountCantUndo,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
                         color: SynkColors.badge,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    l10n.deleteAccountConfirmTitle,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: SynkColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    l10n.deleteAccountIntro,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 14.5,
-                      height: 1.4,
-                      fontWeight: FontWeight.w500,
-                      color: SynkColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 22),
-                  SettingsGroup(
-                    children: [
-                      for (final (icon, label) in items)
-                        SettingsRow(
-                          icon: icon,
-                          iconColor: SynkColors.badge,
-                          title: label,
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    l10n.deleteAccountCantUndo,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                    const SizedBox(height: 12),
+                    SettingsButton(
+                      label: l10n.deleteAccount,
                       color: SynkColors.badge,
+                      onPressed: _delete,
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  SettingsButton(
-                    label: l10n.deleteAccount,
-                    color: SynkColors.badge,
-                    onPressed: _delete,
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

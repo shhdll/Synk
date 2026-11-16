@@ -15,6 +15,7 @@ import 'widgets/photo_options_sheet.dart';
 import '../widgets/profile_header_banner.dart';
 import '../widgets/synk_date_picker.dart';
 import '../../utils/text_direction.dart';
+import '../widgets/synk_blob_background.dart';
 
 class EditProfileView extends StatefulWidget {
   const EditProfileView({super.key});
@@ -533,153 +534,85 @@ class _EditProfileViewState extends State<EditProfileView> {
 
     final isSaving = _controller.isSaving;
 
-    return Scaffold(
-      backgroundColor: SynkColors.background,
+    return SynkBlobPage(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
 
-      // -----------------------------------------------------------------------
-      // App bar
-      // -----------------------------------------------------------------------
-      appBar: AppBar(
-        backgroundColor: SynkColors.background,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
+        // -----------------------------------------------------------------------
+        // App bar
+        // -----------------------------------------------------------------------
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          surfaceTintColor: Colors.transparent,
 
-        leading: IconButton(
-          onPressed: isSaving ? null : _handleBack,
-          icon: const Icon(
-            Icons.arrow_back_rounded,
-            color: SynkColors.textPrimary,
+          leading: IconButton(
+            onPressed: isSaving ? null : _handleBack,
+            icon: const Icon(
+              Icons.arrow_back_rounded,
+              color: SynkColors.textPrimary,
+            ),
           ),
+
+          title: Text(
+            context.l10n.editProfile,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.6,
+              color: SynkColors.textPrimary,
+            ),
+          ),
+
+          centerTitle: true,
         ),
 
-        title: Text(
-          context.l10n.editProfile,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -0.6,
-            color: SynkColors.textPrimary,
-          ),
-        ),
-
-        centerTitle: true,
-      ),
-
-      // -----------------------------------------------------------------------
-      // Body
-      // -----------------------------------------------------------------------
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: RefreshIndicator(
-                color: SynkColors.orangeDark,
-                backgroundColor: Colors.white,
-                onRefresh: _refreshEmail,
-                child: ListView(
-                  // Lets the pull work even when the page fits on screen.
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-                  children: [
-                    // -------------------------------------------------------------
-                    // Header
-                    // -------------------------------------------------------------
-                    GestureDetector(
-                      onTap: isUploadingPhoto ? null : _openHeaderOptions,
-                      child: Stack(
-                        children: [
-                          ProfileHeaderBanner(
-                            styleId: _controller.headerStyle,
-                            image: _controller.headerImage,
-                            height: 96,
-                          ),
-                          PositionedDirectional(
-                            end: 10,
-                            bottom: 10,
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: SynkColors.orangeDark,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 2,
-                                ),
-                              ),
-                              child: const Icon(
-                                Icons.edit_rounded,
-                                size: 16,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // -------------------------------------------------------------
-                    // Profile photo
-                    // -------------------------------------------------------------
-
-                    Center(
-                      child: GestureDetector(
-                        onTap: isUploadingPhoto ? null : _openPhotoOptions,
+        // -----------------------------------------------------------------------
+        // Body
+        // -----------------------------------------------------------------------
+        body: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: RefreshIndicator(
+                  color: SynkColors.orangeDark,
+                  backgroundColor: Colors.white,
+                  onRefresh: _refreshEmail,
+                  child: ListView(
+                    // Lets the pull work even when the page fits on screen.
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+                    children: [
+                      // -------------------------------------------------------------
+                      // Header
+                      // -------------------------------------------------------------
+                      GestureDetector(
+                        onTap: isUploadingPhoto ? null : _openHeaderOptions,
                         child: Stack(
-                          clipBehavior: Clip.none,
                           children: [
-                            Container(
-                              width: 104,
-                              height: 104,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                image: DecorationImage(
-                                  image: displayImage,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              alignment: Alignment.center,
-                              child: isUploadingPhoto
-                                  ? Container(
-                                      decoration: const BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.black38,
-                                      ),
-                                      alignment: Alignment.center,
-                                      child: const SizedBox(
-                                        width: 26,
-                                        height: 26,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2.5,
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                Colors.white,
-                                              ),
-                                        ),
-                                      ),
-                                    )
-                                  : null,
+                            ProfileHeaderBanner(
+                              styleId: _controller.headerStyle,
+                              image: _controller.headerImage,
+                              height: 96,
                             ),
-
                             PositionedDirectional(
-                              end: -2,
-                              bottom: -2,
+                              end: 10,
+                              bottom: 10,
                               child: Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
                                   color: SynkColors.orangeDark,
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: SynkColors.background,
-                                    width: 3,
+                                    color: Colors.white,
+                                    width: 2,
                                   ),
                                 ),
                                 child: const Icon(
-                                  Icons.camera_alt_rounded,
-                                  size: 17,
+                                  Icons.edit_rounded,
+                                  size: 16,
                                   color: Colors.white,
                                 ),
                               ),
@@ -687,241 +620,311 @@ class _EditProfileViewState extends State<EditProfileView> {
                           ],
                         ),
                       ),
-                    ),
 
-                    const SizedBox(height: 30),
+                      const SizedBox(height: 20),
 
-                    // -------------------------------------------------------------
-                    // Name
-                    // -------------------------------------------------------------
-                    _buildFieldLabel(context.l10n.name),
+                      // -------------------------------------------------------------
+                      // Profile photo
+                      // -------------------------------------------------------------
 
-                    const SizedBox(height: 8),
-
-                    _buildTextField(
-                      controller: _nameController,
-                      hintText: context.l10n.yourName,
-                      textInputAction: TextInputAction.next,
-                      onChanged: _onNameChanged,
-                    ),
-
-                    const SizedBox(height: 22),
-
-                    // -------------------------------------------------------------
-                    // Username
-                    // -------------------------------------------------------------
-                    _buildFieldLabel(context.l10n.username),
-
-                    const SizedBox(height: 8),
-
-                    _buildTextField(
-                      controller: _usernameController,
-                      hintText: context.l10n.username,
-                      prefixIcon: const Icon(
-                        Icons.alternate_email_rounded,
-                        size: 18,
-                        color: SynkColors.textSecondary,
-                      ),
-                      errorText: _usernameError,
-                      textInputAction: TextInputAction.next,
-                      onChanged: _onUsernameChanged,
-                    ),
-
-                    const SizedBox(height: 22),
-
-                    // -------------------------------------------------------------
-                    // Bio
-                    // -------------------------------------------------------------
-                    _buildFieldLabel(context.l10n.bio),
-
-                    const SizedBox(height: 8),
-
-                    _buildTextField(
-                      controller: _bioController,
-                      hintText: context.l10n.tellPeopleABitAboutYourself,
-                      minLines: 3,
-                      maxLines: null,
-                      maxLength: 160,
-                      textInputAction: TextInputAction.newline,
-                      onChanged: _onBioChanged,
-                      textDirection: textDirectionOf(_bioController.text),
-                    ),
-
-                    const SizedBox(height: 22),
-
-                    // -------------------------------------------------------------
-                    // Birthday
-                    // -------------------------------------------------------------
-                    _buildFieldLabel(context.l10n.birthday),
-
-                    const SizedBox(height: 8),
-
-                    _buildTextField(
-                      controller: _birthdayController,
-                      hintText: context.l10n.birthdayHint,
-                      readOnly: true,
-                      onTap: _pickBirthday,
-                      prefixIcon: const Icon(
-                        Icons.cake_outlined,
-                        color: SynkColors.textSecondary,
-                      ),
-                    ),
-
-                    const SizedBox(height: 22),
-
-                    // -------------------------------------------------------------
-                    // Email
-                    // -------------------------------------------------------------
-                    _buildFieldLabel(context.l10n.email),
-
-                    const SizedBox(height: 8),
-
-                    _buildTextField(
-                      controller: _emailController,
-                      hintText: context.l10n.emailAddress,
-                      readOnly: true,
-                      onTap: isSaving ? null : _openChangeEmailSheet,
-                      prefixIcon: const Icon(
-                        Icons.mail_outline_rounded,
-                        size: 18,
-                        color: SynkColors.textSecondary,
-                      ),
-                      suffixIcon: const Icon(
-                        Icons.edit_outlined,
-                        size: 18,
-                        color: SynkColors.textSecondary,
-                      ),
-                    ),
-
-                    if (_controller.hasPendingEmailChange) ...[
-                      const SizedBox(height: 8),
-                      GestureDetector(
-                        onTap: _openChangeEmailSheet,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFBD4B4)
-                                .withValues(alpha: 0.35),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
+                      Center(
+                        child: GestureDetector(
+                          onTap: isUploadingPhoto ? null : _openPhotoOptions,
+                          child: Stack(
+                            clipBehavior: Clip.none,
                             children: [
-                              const Icon(
-                                Icons.info_outline_rounded,
-                                size: 15,
-                                color: SynkColors.orangeDark,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  context.l10n.awaitingConfirmationOn(
-                                    _controller.newEmail ?? '',
-                                  ),
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF8A3B00),
+                              Container(
+                                width: 104,
+                                height: 104,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  image: DecorationImage(
+                                    image: displayImage,
+                                    fit: BoxFit.cover,
                                   ),
                                 ),
+                                alignment: Alignment.center,
+                                child: isUploadingPhoto
+                                    ? Container(
+                                        decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.black38,
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: const SizedBox(
+                                          width: 26,
+                                          height: 26,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2.5,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                  Colors.white,
+                                                ),
+                                          ),
+                                        ),
+                                      )
+                                    : null,
                               ),
-                              const Icon(
-                                Icons.chevron_right_rounded,
-                                size: 16,
-                                color: Color(0xFF8A3B00),
+
+                              PositionedDirectional(
+                                end: -2,
+                                bottom: -2,
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: SynkColors.orangeDark,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: SynkColors.background,
+                                      width: 3,
+                                    ),
+                                  ),
+                                  child: const Icon(
+                                    Icons.camera_alt_rounded,
+                                    size: 17,
+                                    color: Colors.white,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
                         ),
                       ),
-                    ],
 
-                    const SizedBox(height: 22),
+                      const SizedBox(height: 30),
 
-                    // -------------------------------------------------------------
-                    // Password
-                    // -------------------------------------------------------------
-                    _buildFieldLabel(context.l10n.password),
+                      // -------------------------------------------------------------
+                      // Name
+                      // -------------------------------------------------------------
+                      _buildFieldLabel(context.l10n.name),
 
-                    const SizedBox(height: 8),
+                      const SizedBox(height: 8),
 
-                    _buildTextField(
-                      controller: _passwordController,
-                      hintText: context.l10n.changePassword,
-                      readOnly: true,
-                      onTap: isSaving ? null : _openChangePassword,
-                      prefixIcon: const Icon(
-                        Icons.lock_outline_rounded,
-                        size: 18,
-                        color: SynkColors.textSecondary,
+                      _buildTextField(
+                        controller: _nameController,
+                        hintText: context.l10n.yourName,
+                        textInputAction: TextInputAction.next,
+                        onChanged: _onNameChanged,
                       ),
-                      suffixIcon: const Icon(
-                        Icons.chevron_right_rounded,
-                        color: SynkColors.textSecondary,
+
+                      const SizedBox(height: 22),
+
+                      // -------------------------------------------------------------
+                      // Username
+                      // -------------------------------------------------------------
+                      _buildFieldLabel(context.l10n.username),
+
+                      const SizedBox(height: 8),
+
+                      _buildTextField(
+                        controller: _usernameController,
+                        hintText: context.l10n.username,
+                        prefixIcon: const Icon(
+                          Icons.alternate_email_rounded,
+                          size: 18,
+                          color: SynkColors.textSecondary,
+                        ),
+                        errorText: _usernameError,
+                        textInputAction: TextInputAction.next,
+                        onChanged: _onUsernameChanged,
                       ),
-                    ),
 
-                    const SizedBox(height: 24),
-                  ],
-                ),
-              ),
-            ),
+                      const SizedBox(height: 22),
 
-            // -----------------------------------------------------------------
-            // ONE SAVE BUTTON FOR THE WHOLE PAGE
-            // -----------------------------------------------------------------
-            Container(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
-              decoration: BoxDecoration(
-                color: SynkColors.background,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 12,
-                    offset: const Offset(0, -4),
-                  ),
-                ],
-              ),
-              child: SizedBox(
-                width: double.infinity,
-                height: 54,
-                child: ElevatedButton(
-                  onPressed: isSaving ? null : _saveChanges,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: SynkColors.orangeDark,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: SynkColors.orangeDark.withValues(
-                      alpha: 0.45,
-                    ),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(17),
-                    ),
-                  ),
-                  child: isSaving
-                      ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
+                      // -------------------------------------------------------------
+                      // Bio
+                      // -------------------------------------------------------------
+                      _buildFieldLabel(context.l10n.bio),
+
+                      const SizedBox(height: 8),
+
+                      _buildTextField(
+                        controller: _bioController,
+                        hintText: context.l10n.tellPeopleABitAboutYourself,
+                        minLines: 3,
+                        maxLines: null,
+                        maxLength: 160,
+                        textInputAction: TextInputAction.newline,
+                        onChanged: _onBioChanged,
+                        textDirection: textDirectionOf(_bioController.text),
+                      ),
+
+                      const SizedBox(height: 22),
+
+                      // -------------------------------------------------------------
+                      // Birthday
+                      // -------------------------------------------------------------
+                      _buildFieldLabel(context.l10n.birthday),
+
+                      const SizedBox(height: 8),
+
+                      _buildTextField(
+                        controller: _birthdayController,
+                        hintText: context.l10n.birthdayHint,
+                        readOnly: true,
+                        onTap: _pickBirthday,
+                        prefixIcon: const Icon(
+                          Icons.cake_outlined,
+                          color: SynkColors.textSecondary,
+                        ),
+                      ),
+
+                      const SizedBox(height: 22),
+
+                      // -------------------------------------------------------------
+                      // Email
+                      // -------------------------------------------------------------
+                      _buildFieldLabel(context.l10n.email),
+
+                      const SizedBox(height: 8),
+
+                      _buildTextField(
+                        controller: _emailController,
+                        hintText: context.l10n.emailAddress,
+                        readOnly: true,
+                        onTap: isSaving ? null : _openChangeEmailSheet,
+                        prefixIcon: const Icon(
+                          Icons.mail_outline_rounded,
+                          size: 18,
+                          color: SynkColors.textSecondary,
+                        ),
+                        suffixIcon: const Icon(
+                          Icons.edit_outlined,
+                          size: 18,
+                          color: SynkColors.textSecondary,
+                        ),
+                      ),
+
+                      if (_controller.hasPendingEmailChange) ...[
+                        const SizedBox(height: 8),
+                        GestureDetector(
+                          onTap: _openChangeEmailSheet,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFBD4B4)
+                                  .withValues(alpha: 0.35),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.info_outline_rounded,
+                                  size: 15,
+                                  color: SynkColors.orangeDark,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    context.l10n.awaitingConfirmationOn(
+                                      _controller.newEmail ?? '',
+                                    ),
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF8A3B00),
+                                    ),
+                                  ),
+                                ),
+                                const Icon(
+                                  Icons.chevron_right_rounded,
+                                  size: 16,
+                                  color: Color(0xFF8A3B00),
+                                ),
+                              ],
                             ),
                           ),
-                        )
-                      : Text(
-                          context.l10n.saveChanges,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                          ),
                         ),
+                      ],
+
+                      const SizedBox(height: 22),
+
+                      // -------------------------------------------------------------
+                      // Password
+                      // -------------------------------------------------------------
+                      _buildFieldLabel(context.l10n.password),
+
+                      const SizedBox(height: 8),
+
+                      _buildTextField(
+                        controller: _passwordController,
+                        hintText: context.l10n.changePassword,
+                        readOnly: true,
+                        onTap: isSaving ? null : _openChangePassword,
+                        prefixIcon: const Icon(
+                          Icons.lock_outline_rounded,
+                          size: 18,
+                          color: SynkColors.textSecondary,
+                        ),
+                        suffixIcon: const Icon(
+                          Icons.chevron_right_rounded,
+                          color: SynkColors.textSecondary,
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+
+              // -----------------------------------------------------------------
+              // ONE SAVE BUTTON FOR THE WHOLE PAGE
+              // -----------------------------------------------------------------
+              Container(
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+                decoration: BoxDecoration(
+                  color: SynkColors.background,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 12,
+                      offset: const Offset(0, -4),
+                    ),
+                  ],
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: ElevatedButton(
+                    onPressed: isSaving ? null : _saveChanges,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: SynkColors.orangeDark,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: SynkColors.orangeDark.withValues(
+                        alpha: 0.45,
+                      ),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(17),
+                      ),
+                    ),
+                    child: isSaving
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          )
+                        : Text(
+                            context.l10n.saveChanges,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

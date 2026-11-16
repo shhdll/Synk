@@ -1,4 +1,4 @@
--- Scenario tests for 20261112100000_activity_save_requests.sql.
+-- Scenario tests for 20261112100001_activity_save_requests.sql.
 -- Each block asserts; the first failure stops the run (ON_ERROR_STOP).
 -- Run with ./run.sh.
 

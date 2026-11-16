@@ -141,7 +141,7 @@ class _ActivitiesViewState extends State<ActivitiesView> {
     if (!mounted) return;
     if (rating == null && await _dropIfGone(activity)) return;
     if (!mounted) return;
-    if (rating == null || rating.participants.isEmpty) {
+    if (rating == null) {
       SynkFeedback.showToast(
         context,
         title: context.l10n.ratingActivityUnavailable,

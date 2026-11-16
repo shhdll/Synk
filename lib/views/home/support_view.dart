@@ -9,6 +9,7 @@ import '../../l10n/l10n.dart';
 import '../../models/support_model.dart';
 import '../../utils/custom_widgets/synk_feedback.dart';
 import 'widgets/settings_row.dart';
+import '../widgets/synk_blob_background.dart';
 
 class SupportView extends StatefulWidget {
   const SupportView({super.key, this.controller});
@@ -75,26 +76,28 @@ class _SupportViewState extends State<SupportView> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
 
-    return Scaffold(
-      backgroundColor: SynkColors.background,
-      body: SafeArea(
-        child: ListenableBuilder(
-          listenable: _controller,
-          builder: (context, _) => Column(
-            children: [
-              SettingsHeader(title: l10n.contactSupport),
-              Expanded(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 250),
-                  child: _controller.sent
-                      ? const _SentState(key: ValueKey('sent'))
-                      : KeyedSubtree(
-                          key: const ValueKey('form'),
-                          child: _buildForm(),
-                        ),
+    return SynkBlobPage(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: ListenableBuilder(
+            listenable: _controller,
+            builder: (context, _) => Column(
+              children: [
+                SettingsHeader(title: l10n.contactSupport),
+                Expanded(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    child: _controller.sent
+                        ? const _SentState(key: ValueKey('sent'))
+                        : KeyedSubtree(
+                            key: const ValueKey('form'),
+                            child: _buildForm(),
+                          ),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

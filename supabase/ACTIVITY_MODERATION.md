@@ -21,7 +21,7 @@ App ──► save-activity (Edge Function)
 | Piece | Where |
 |---|---|
 | Edge Function | `supabase/functions/save-activity/` (term check in `text_policy.ts`) |
-| Database (phase 1) | `supabase/migrations/20261112100000_activity_save_requests.sql` |
+| Database (phase 1) | `supabase/migrations/20261112100001_activity_save_requests.sql` |
 | Lock-down, rollbacks, inspection | `supabase/manual/activity_moderation/` (kept out of `migrations/` on purpose) |
 | App | `lib/models/activity_save_model.dart`, `lib/models/pending_activity_save_store.dart`, `lib/utils/activity_photo_jpeg.dart`, `lib/controllers/create_activity_controller.dart`, `lib/views/create_activity/` |
 | Tests | `supabase/tests/activity_moderation/`, `supabase/functions/save-activity/*_test.ts` (incl. `text_policy_test.ts`), `test/activity_moderation_test.dart` |
@@ -113,7 +113,7 @@ Scores, categories and database errors are never sent to the app.
 
 If any `activities` policy enforces more than "host is you" or "not suspended", that rule must be added to `finish_activity_save`.
 
-**Phase 1: database.** Run `supabase/migrations/20261112100000_activity_save_requests.sql`. It only adds things, so older app versions keep working.
+**Phase 1: database.** Run `supabase/migrations/20261112100001_activity_save_requests.sql`. It only adds things, so older app versions keep working.
 
 **Phase 2: Edge Function.**
 ```bash

@@ -7,6 +7,7 @@ import '../../models/notification_preferences_model.dart';
 import '../../utils/custom_widgets/synk_feedback.dart';
 import 'iphone_notifications_view.dart';
 import 'widgets/settings_row.dart';
+import '../widgets/synk_blob_background.dart';
 
 class NotificationSettingsView extends StatefulWidget {
   const NotificationSettingsView({super.key});
@@ -69,123 +70,132 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
           : settingsRow;
     }
 
-    return Scaffold(
-      backgroundColor: SynkColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            SettingsHeader(title: l10n.notifications),
-            Expanded(
-              child: ListenableBuilder(
-                listenable: _controller,
-                builder: (context, _) {
-                  if (_controller.isLoading) {
-                    return const Center(
-                      child: CircularProgressIndicator(
-                        color: SynkColors.orangeDark,
-                      ),
-                    );
-                  }
-                  if (_controller.loadFailed) {
-                    return Center(
-                      child: TextButton(
-                        onPressed: _controller.load,
-                        child: Text(l10n.tryAgain),
-                      ),
-                    );
-                  }
+    return SynkBlobPage(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: Column(
+            children: [
+              SettingsHeader(title: l10n.notifications),
+              Expanded(
+                child: ListenableBuilder(
+                  listenable: _controller,
+                  builder: (context, _) {
+                    if (_controller.isLoading) {
+                      return const Center(
+                        child: CircularProgressIndicator(
+                          color: SynkColors.orangeDark,
+                        ),
+                      );
+                    }
+                    if (_controller.loadFailed) {
+                      return Center(
+                        child: TextButton(
+                          onPressed: _controller.load,
+                          child: Text(l10n.tryAgain),
+                        ),
+                      );
+                    }
 
-                  return ListView(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-                    children: [
-                      SettingsGroup(
-                        title: l10n.activities,
-                        children: [
-                          row(
-                            NotificationKind.reminders,
-                            Icons.alarm_rounded,
-                            SynkColors.orangeDark,
-                            l10n.notifPrefReminders,
-                            subtitle: l10n.notifPrefRemindersHint,
-                          ),
-                          row(
-                            NotificationKind.activityUpdates,
-                            Icons.event_note_rounded,
-                            SynkColors.teal,
-                            l10n.notifPrefActivityUpdates,
-                            subtitle: l10n.notifPrefActivityUpdatesHint,
-                          ),
-                          row(
-                            NotificationKind.joinRequests,
-                            Icons.how_to_reg_rounded,
-                            SynkColors.beigeDark,
-                            l10n.notifPrefJoinRequests,
-                          ),
-                          row(
-                            NotificationKind.waitlist,
-                            Icons.hourglass_bottom_rounded,
-                            SynkColors.pink,
-                            l10n.notifPrefWaitlist,
-                            subtitle: l10n.notifPrefWaitlistHint,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      SettingsGroup(
-                        title: l10n.notifPrefPeople,
-                        children: [
-                          row(
-                            NotificationKind.friendRequests,
-                            Icons.person_add_alt_1_rounded,
-                            SynkColors.teal,
-                            l10n.notifPrefFriendRequests,
-                          ),
-                          row(
-                            NotificationKind.chats,
-                            Icons.chat_bubble_rounded,
-                            SynkColors.orangeDark,
-                            l10n.notifPrefChats,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      SettingsGroup(
-                        title: l10n.notifPrefOther,
-                        children: [
-                          row(
-                            NotificationKind.marketing,
-                            Icons.campaign_rounded,
-                            SynkColors.textSecondary,
-                            l10n.notifPrefMarketing,
-                            // Not sent yet; comes in a later phase.
-                            disabled: true,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      SettingsGroup(
-                        title: l10n.notifPrefIphone,
-                        children: [
-                          SettingsRow(
-                            icon: Icons.phone_iphone_rounded,
-                            iconColor: SynkColors.orangeDark,
-                            title: l10n.ntfyPageTitle,
-                            onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => IphoneNotificationsView(
-                                  controller: _controller,
+                    return ListView(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                      children: [
+                        SettingsGroup(
+                          title: l10n.activities,
+                          children: [
+                            row(
+                              NotificationKind.reminders,
+                              Icons.alarm_rounded,
+                              SynkColors.orangeDark,
+                              l10n.notifPrefReminders,
+                              subtitle: l10n.notifPrefRemindersHint,
+                            ),
+                            row(
+                              NotificationKind.activityUpdates,
+                              Icons.event_note_rounded,
+                              SynkColors.teal,
+                              l10n.notifPrefActivityUpdates,
+                              subtitle: l10n.notifPrefActivityUpdatesHint,
+                            ),
+                            row(
+                              NotificationKind.joinRequests,
+                              Icons.how_to_reg_rounded,
+                              SynkColors.beigeDark,
+                              l10n.notifPrefJoinRequests,
+                            ),
+                            row(
+                              NotificationKind.waitlist,
+                              Icons.hourglass_bottom_rounded,
+                              SynkColors.pink,
+                              l10n.notifPrefWaitlist,
+                              subtitle: l10n.notifPrefWaitlistHint,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        SettingsGroup(
+                          title: l10n.notifPrefPeople,
+                          children: [
+                            row(
+                              NotificationKind.friendRequests,
+                              Icons.person_add_alt_1_rounded,
+                              SynkColors.teal,
+                              l10n.notifPrefFriendRequests,
+                            ),
+                            row(
+                              NotificationKind.chats,
+                              Icons.chat_bubble_rounded,
+                              SynkColors.orangeDark,
+                              l10n.notifPrefChats,
+                            ),
+                            row(
+                              NotificationKind.badges,
+                              Icons.workspace_premium_rounded,
+                              SynkColors.pink,
+                              l10n.notifPrefBadges,
+                              subtitle: l10n.notifPrefBadgesHint,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        SettingsGroup(
+                          title: l10n.notifPrefOther,
+                          children: [
+                            row(
+                              NotificationKind.marketing,
+                              Icons.campaign_rounded,
+                              SynkColors.textSecondary,
+                              l10n.notifPrefMarketing,
+                              // Not sent yet; comes in a later phase.
+                              disabled: true,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        SettingsGroup(
+                          title: l10n.notifPrefIphone,
+                          children: [
+                            SettingsRow(
+                              icon: Icons.phone_iphone_rounded,
+                              iconColor: SynkColors.orangeDark,
+                              title: l10n.ntfyPageTitle,
+                              onTap: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => IphoneNotificationsView(
+                                    controller: _controller,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  );
-                },
+                          ],
+                        ),
+                      ],
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

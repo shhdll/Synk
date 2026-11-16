@@ -24,7 +24,7 @@ run -d "$db" -c "do \$\$ begin
 end \$\$;"
 run -d "$db" -f <(grep -v '^create role ' "$here/stub.sql") >/dev/null
 
-migration="$root/supabase/migrations/20261112100000_activity_save_requests.sql"
+migration="$root/supabase/migrations/20261112100001_activity_save_requests.sql"
 run -d "$db" -f "$migration" >/dev/null
 run -d "$db" -f "$migration" >/dev/null
 echo "ok: migration applies, and again"

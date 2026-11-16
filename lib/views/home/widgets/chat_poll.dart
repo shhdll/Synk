@@ -67,6 +67,16 @@ class _CreatePollSheetState extends State<_CreatePollSheet> {
     setState(() {});
   }
 
+  // Dragging an option by its handle moves it; an empty one stays last.
+  void _reorderOption(int from, int to) {
+    setState(() {
+      _options.insert(to, _options.removeAt(from));
+      if (_options.last.text.isNotEmpty && _options.length < _maxOptions) {
+        _options.add(TextEditingController());
+      }
+    });
+  }
+
   void _removeOption(int index) {
     if (_options.length <= 2) return;
     setState(() => _options.removeAt(index).dispose());
@@ -148,16 +158,35 @@ class _CreatePollSheetState extends State<_CreatePollSheet> {
           const SizedBox(height: 16),
           Text(l.pollOptions, style: label),
           const SizedBox(height: 6),
-          for (var i = 0; i < _options.length; i++)
-            Padding(
+          ReorderableListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            buildDefaultDragHandles: false,
+            itemCount: _options.length,
+            onReorderItem: _reorderOption,
+            proxyDecorator: (child, _, _) => Material(
+              color: Colors.transparent,
+              elevation: 4,
+              borderRadius: BorderRadius.circular(14),
+              child: child,
+            ),
+            itemBuilder: (context, i) => Padding(
+              key: ObjectKey(_options[i]),
               padding: const EdgeInsets.only(bottom: 8),
               child: TextField(
-                key: ObjectKey(_options[i]),
                 controller: _options[i],
                 maxLength: 100,
                 textCapitalization: TextCapitalization.sentences,
                 onChanged: (_) => _onOptionChanged(i),
                 decoration: _decoration(l.pollOptionHint(i + 1)).copyWith(
+                  prefixIcon: ReorderableDragStartListener(
+                    index: i,
+                    child: const Icon(
+                      Icons.drag_indicator_rounded,
+                      size: 20,
+                      color: SynkColors.textSecondary,
+                    ),
+                  ),
                   suffixIcon: _options.length > 2
                       ? IconButton(
                           tooltip: l.deleteLabel,
@@ -172,6 +201,7 @@ class _CreatePollSheetState extends State<_CreatePollSheet> {
                 ),
               ),
             ),
+          ),
           const SizedBox(height: 4),
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
