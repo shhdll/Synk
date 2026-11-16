@@ -31,20 +31,22 @@ import UIKit
     }
   }
 
-  // Pictures and links the ShareExtension saved in the shared group folder.
-  // Pictures move into this app's temp folder for
-  // lib/utils/shared_to_synk.dart; links are read and removed.
+  // Pictures and links the ShareExtension saved in the shared group folder
+  // or on the named pasteboard. Pictures move into this app's temp folder
+  // for lib/utils/shared_to_synk.dart; links are read and removed.
   private static func takeShared() -> [String: [String]] {
     var photos: [String] = []
     var texts: [String] = []
     let files = FileManager.default
-    guard let id = Bundle.main.bundleIdentifier,
-      let folder = files.containerURL(
-        forSecurityApplicationGroupIdentifier: "group.\(id)")?
-        .appendingPathComponent("Shared"),
-      let saved = try? files.contentsOfDirectory(
-        at: folder, includingPropertiesForKeys: nil)
-    else { return ["photos": photos, "texts": texts] }
+    var saved: [URL] = []
+    for group in groups() {
+      guard
+        let folder = files.containerURL(forSecurityApplicationGroupIdentifier: group)?
+          .appendingPathComponent("Shared"),
+        let found = try? files.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)
+      else { continue }
+      saved += found
+    }
     for file in saved.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
       if file.pathExtension == "txt" {
         if let text = try? String(contentsOf: file, encoding: .utf8), !text.isEmpty {
@@ -59,6 +61,44 @@ import UIKit
         photos.append(target.path)
       }
     }
+    if let board = UIPasteboard(name: UIPasteboard.Name("synk.shared"), create: false),
+      board.numberOfItems > 0
+    {
+      for item in board.items {
+        if let text = item["public.utf8-plain-text"] as? String, !text.isEmpty {
+          texts.append(text)
+          continue
+        }
+        let png = item["public.png"] as? Data
+        guard let data = png ?? item["public.jpeg"] as? Data else { continue }
+        let name = "\(Int(Date().timeIntervalSince1970 * 1000))_\(UUID().uuidString)"
+        let target = files.temporaryDirectory
+          .appendingPathComponent(name).appendingPathExtension(png == nil ? "jpg" : "png")
+        if (try? data.write(to: target)) != nil { photos.append(target.path) }
+      }
+      board.items = []
+    }
     return ["photos": photos, "texts": texts]
+  }
+
+  // The groups the signer gave this app (from its provisioning profile),
+  // then "group." plus the app's id. Sideloading can rename the group.
+  private static func groups() -> [String] {
+    var found: [String] = []
+    if let file = Bundle.main.url(forResource: "embedded", withExtension: "mobileprovision"),
+      let data = try? Data(contentsOf: file),
+      let start = data.range(of: Data("<?xml".utf8)),
+      let end = data.range(of: Data("</plist>".utf8), in: start.lowerBound..<data.endIndex),
+      let plist = try? PropertyListSerialization.propertyList(
+        from: data[start.lowerBound..<end.upperBound], format: nil) as? [String: Any],
+      let entitlements = plist["Entitlements"] as? [String: Any],
+      let listed = entitlements["com.apple.security.application-groups"] as? [String]
+    {
+      found = listed
+    }
+    if let id = Bundle.main.bundleIdentifier, !found.contains("group.\(id)") {
+      found.append("group.\(id)")
+    }
+    return found
   }
 }
