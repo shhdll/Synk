@@ -5186,6 +5186,12 @@ abstract class AppLocalizations {
   /// **'This activity is no longer available.'**
   String get ratingActivityUnavailable;
 
+  /// No description provided for @ratingNoOneToRate.
+  ///
+  /// In en, this message translates to:
+  /// **'No one else was in this activity, so there is no one to rate.'**
+  String get ratingNoOneToRate;
+
   /// No description provided for @recentActivities.
   ///
   /// In en, this message translates to:

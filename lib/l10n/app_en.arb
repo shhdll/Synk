@@ -1256,6 +1256,7 @@
   "ratingAlreadyRated": "You've already rated this person for this activity.",
   "ratingInvalid": "Choose between 0.5 and 5 stars.",
   "ratingActivityUnavailable": "This activity is no longer available.",
+  "ratingNoOneToRate": "No one else was in this activity, so there is no one to rate.",
   "recentActivities": "Recent activities",
   "userActivitiesTitle": "{name}'s activities",
   "@userActivitiesTitle": {"placeholders": {"name": {}}},

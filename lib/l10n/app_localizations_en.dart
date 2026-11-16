@@ -2962,6 +2962,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'This activity is no longer available.';
 
   @override
+  String get ratingNoOneToRate =>
+      'No one else was in this activity, so there is no one to rate.';
+
+  @override
   String get recentActivities => 'Recent activities';
 
   @override

@@ -99,6 +99,7 @@ class _ActivityRatingSheetState extends State<ActivityRatingSheet> {
           listenable: _controller,
           builder: (context, _) {
             final error = _controller.errorMessage;
+            final participants = widget.pending.participants;
 
             return Column(
               mainAxisSize: MainAxisSize.min,
@@ -125,27 +126,37 @@ class _ActivityRatingSheetState extends State<ActivityRatingSheet> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  context.l10n.rateActivityFun,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: SynkColors.orangeDark,
+                // No one else came, so there is no one to rate.
+                if (participants.isEmpty)
+                  Text(
+                    context.l10n.ratingNoOneToRate,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      height: 1.4,
+                      color: SynkColors.textSecondary,
+                    ),
+                  )
+                else ...[
+                  Text(
+                    context.l10n.rateActivityFun,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: SynkColors.orangeDark,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: maxListHeight),
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: widget.pending.participants.length,
-                    itemBuilder: (context, index) {
-                      return _buildParticipantRow(
-                        widget.pending.participants[index],
-                      );
-                    },
+                  const SizedBox(height: 16),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxHeight: maxListHeight),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: participants.length,
+                      itemBuilder: (context, index) {
+                        return _buildParticipantRow(participants[index]);
+                      },
+                    ),
                   ),
-                ),
+                ],
                 if (error != null) ...[
                   const SizedBox(height: 4),
                   Text(
@@ -157,7 +168,7 @@ class _ActivityRatingSheetState extends State<ActivityRatingSheet> {
                     ),
                   ),
                 ],
-                const SizedBox(height: 12),
+                SizedBox(height: participants.isEmpty ? 20 : 12),
                 _buildButtons(),
               ],
             );
@@ -302,6 +313,7 @@ class _ActivityRatingSheetState extends State<ActivityRatingSheet> {
 
   Widget _buildButtons() {
     final isBusy = _controller.isBusy;
+    final hasPeople = widget.pending.participants.isNotEmpty;
 
     return Row(
       children: [
@@ -329,41 +341,43 @@ class _ActivityRatingSheetState extends State<ActivityRatingSheet> {
             ),
           ),
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: SizedBox(
-            height: 50,
-            child: ElevatedButton(
-              onPressed: _controller.canSubmit ? _submit : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: SynkColors.orangeDark,
-                disabledBackgroundColor: SynkColors.orangeDark.withValues(
-                  alpha: 0.5,
+        if (hasPeople) ...[
+          const SizedBox(width: 12),
+          Expanded(
+            child: SizedBox(
+              height: 50,
+              child: ElevatedButton(
+                onPressed: _controller.canSubmit ? _submit : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: SynkColors.orangeDark,
+                  disabledBackgroundColor: SynkColors.orangeDark.withValues(
+                    alpha: 0.5,
+                  ),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
+                child: isBusy
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        context.l10n.submitRatings,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
               ),
-              child: isBusy
-                  ? const SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Text(
-                      context.l10n.submitRatings,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
-                    ),
             ),
           ),
-        ),
+        ],
       ],
     );
   }

@@ -864,6 +864,7 @@
   "ratingAlreadyRated": "سبق أن قيمت هذا الشخص في هذا النشاط",
   "ratingInvalid": "اختر من 0.5 إلى 5 نجوم",
   "ratingActivityUnavailable": "هذا النشاط لم يعد متاحا",
+  "ratingNoOneToRate": "ما كان معك أحد في هذا النشاط، فما فيه أحد تقيمه",
   "recentActivities": "الأنشطة الأخيرة",
   "userActivitiesTitle": "أنشطة {name}",
   "noCompletedActivitiesYet": "لا توجد أنشطة منتهية حتى الآن",

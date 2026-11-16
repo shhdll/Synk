@@ -2893,6 +2893,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get ratingActivityUnavailable => 'هذا النشاط لم يعد متاحا';
 
   @override
+  String get ratingNoOneToRate =>
+      'ما كان معك أحد في هذا النشاط، فما فيه أحد تقيمه';
+
+  @override
   String get recentActivities => 'الأنشطة الأخيرة';
 
   @override
