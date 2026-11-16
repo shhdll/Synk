@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 import '../../controllers/edit_interests_controller.dart';
@@ -5,6 +7,7 @@ import '../../core/constants/interest_emojis.dart';
 import '../../core/constants/synk_colors.dart';
 import '../../l10n/l10n.dart';
 import '../../utils/custom_widgets/synk_feedback.dart';
+import '../widgets/synk_blob_background.dart';
 
 class EditInterestsView extends StatefulWidget {
   const EditInterestsView({super.key, required this.initialInterests});
@@ -86,110 +89,136 @@ class _EditInterestsViewState extends State<EditInterestsView> {
 
             await _handleBack();
           },
-          child: Scaffold(
-            backgroundColor: SynkColors.background,
-            body: SafeArea(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(4, 8, 20, 8),
-                    child: Row(
-                      children: [
-                        IconButton(
-                          onPressed: _handleBack,
-                          icon: const Icon(
-                            Icons.arrow_back_rounded,
-                            color: SynkColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          context.l10n.editInterests,
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -0.6,
-                            color: SynkColors.textPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: ListView(
-                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-                      children: [
-                        Text(
-                          context.l10n.yourInterests,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: SynkColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        if (selected.isEmpty)
-                          Text(
-                            context.l10n.tapAnInterestBelowToAdd,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontStyle: FontStyle.italic,
-                              color: SynkColors.textSecondary,
+          child: SynkBlobPage(
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              body: SafeArea(
+                bottom: false,
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsetsDirectional.fromSTEB(
+                        4,
+                        8,
+                        20,
+                        8,
+                      ),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            onPressed: _handleBack,
+                            icon: const Icon(
+                              Icons.arrow_back_rounded,
+                              color: SynkColors.textPrimary,
                             ),
-                          )
-                        else
-                          Wrap(
-                            spacing: 10,
-                            runSpacing: 12,
-                            children: selected
-                                .map(
-                                  (interest) => _SelectedChip(
-                                    interest: interest,
-                                    emoji: kInterestEmojis[interest],
-                                    onRemove: () =>
-                                        _controller.toggle(interest),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            context.l10n.editInterests,
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -0.6,
+                              color: SynkColors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      // The list runs under the Save bar, blurred there.
+                      child: Stack(
+                        children: [
+                          ListView(
+                            padding: EdgeInsets.fromLTRB(
+                              24,
+                              8,
+                              24,
+                              24 +
+                                  _saveBarHeight +
+                                  MediaQuery.viewPaddingOf(context).bottom,
+                            ),
+                            children: [
+                              Text(
+                                context.l10n.yourInterests,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  color: SynkColors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              if (selected.isEmpty)
+                                Text(
+                                  context.l10n.tapAnInterestBelowToAdd,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontStyle: FontStyle.italic,
+                                    color: SynkColors.textSecondary,
                                   ),
                                 )
-                                .toList(),
-                          ),
-                        const SizedBox(height: 28),
-                        Text(
-                          context.l10n.addMore,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: SynkColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        if (available.isEmpty)
-                          Text(
-                            context.l10n.youveAddedEveryInterest,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontStyle: FontStyle.italic,
-                              color: SynkColors.textSecondary,
-                            ),
-                          )
-                        else
-                          Wrap(
-                            spacing: 10,
-                            runSpacing: 10,
-                            children: available
-                                .map(
-                                  (interest) => _AvailableChip(
-                                    interest: interest,
-                                    emoji: kInterestEmojis[interest],
-                                    onTap: () => _controller.toggle(interest),
+                              else
+                                Wrap(
+                                  spacing: 10,
+                                  runSpacing: 12,
+                                  children: selected
+                                      .map(
+                                        (interest) => _SelectedChip(
+                                          interest: interest,
+                                          emoji: kInterestEmojis[interest],
+                                          onRemove: () =>
+                                              _controller.toggle(interest),
+                                        ),
+                                      )
+                                      .toList(),
+                                ),
+                              const SizedBox(height: 28),
+                              Text(
+                                context.l10n.addMore,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  color: SynkColors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              if (available.isEmpty)
+                                Text(
+                                  context.l10n.youveAddedEveryInterest,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontStyle: FontStyle.italic,
+                                    color: SynkColors.textSecondary,
                                   ),
                                 )
-                                .toList(),
+                              else
+                                Wrap(
+                                  spacing: 10,
+                                  runSpacing: 10,
+                                  children: available
+                                      .map(
+                                        (interest) => _AvailableChip(
+                                          interest: interest,
+                                          emoji: kInterestEmojis[interest],
+                                          onTap: () =>
+                                              _controller.toggle(interest),
+                                        ),
+                                      )
+                                      .toList(),
+                                ),
+                            ],
                           ),
-                      ],
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            child: _buildSaveBar(isSaving),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  _buildSaveBar(isSaving),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -201,50 +230,95 @@ class _EditInterestsViewState extends State<EditInterestsView> {
   Widget _buildSaveBar(bool isSaving) {
     final canSave = _controller.hasUnsavedChanges && !isSaving;
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
-      decoration: BoxDecoration(
-        color: SynkColors.background,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: SizedBox(
-        width: double.infinity,
-        height: 54,
-        child: ElevatedButton(
-          onPressed: canSave ? _save : null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: SynkColors.orangeDark,
-            foregroundColor: Colors.white,
-            disabledBackgroundColor: SynkColors.orangeDark.withValues(
-              alpha: 0.45,
+    return _FadingBlur(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          24,
+          _saveBarHeight - 54 - 16,
+          24,
+          16 + MediaQuery.viewPaddingOf(context).bottom,
+        ),
+        child: SizedBox(
+          width: double.infinity,
+          height: 54,
+          child: ElevatedButton(
+            onPressed: canSave ? _save : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: SynkColors.orangeDark,
+              foregroundColor: Colors.white,
+              // The same light orange, but solid so the blur doesn't show
+              // through.
+              disabledBackgroundColor: Color.alphaBlend(
+                SynkColors.orangeDark.withValues(alpha: 0.45),
+                SynkColors.background,
+              ),
+              disabledForegroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(17),
+              ),
             ),
-            disabledForegroundColor: Colors.white,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(17),
-            ),
-          ),
-          child: isSaving
-              ? const SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            child: isSaving
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : Text(
+                    context.l10n.save,
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
                   ),
-                )
-              : Text(
-                  context.l10n.save,
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
-                ),
+          ),
         ),
       ),
+    );
+  }
+}
+
+// Space the Save bar takes: the blur fading in above the button, the button,
+// and the gap under it.
+const double _saveBarHeight = 40 + 54 + 16;
+
+// Blurs what's behind [child], from nothing at the top to fully blurred at
+// the bottom. Stacked light blurs add up, so each band down is blurrier.
+class _FadingBlur extends StatelessWidget {
+  const _FadingBlur({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    const bands = 8;
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: IgnorePointer(
+            child: LayoutBuilder(
+              builder: (context, constraints) => Stack(
+                children: [
+                  for (var i = 0; i < bands; i++)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      top: constraints.maxHeight * 0.5 * i / bands,
+                      child: ClipRect(
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 1.5, sigmaY: 1.5),
+                          child: const SizedBox.expand(),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        child,
+      ],
     );
   }
 }

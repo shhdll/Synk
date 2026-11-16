@@ -193,16 +193,45 @@ class _ResultRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Text(
-              joined
-                  ? '✓ ${l.joined}'
-                  : left == 0
-                  ? l.full
-                  : l.spotsLeftShort(left),
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: joined ? SynkColors.tealText : SynkColors.textSecondary,
+            // A soft pill so it stands out from the row.
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: joined
+                    ? SynkColors.teal.withValues(alpha: 0.16)
+                    : left == 0
+                    ? SynkColors.textSecondary.withValues(alpha: 0.12)
+                    : SynkColors.orangeLight,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (joined) ...[
+                    const Icon(
+                      Icons.check_rounded,
+                      size: 14,
+                      color: SynkColors.tealText,
+                    ),
+                    const SizedBox(width: 3),
+                  ],
+                  Text(
+                    joined
+                        ? l.joined
+                        : left == 0
+                        ? l.full
+                        : l.spotsLeftShort(left),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: joined
+                          ? SynkColors.tealText
+                          : left == 0
+                          ? SynkColors.textSecondary
+                          : SynkColors.orangeDeep,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
