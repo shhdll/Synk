@@ -849,8 +849,6 @@ class _OnboardingViewState extends State<OnboardingView>
               ],
             ),
           ),
-        const SizedBox(height: 6),
-        _buildProgress(),
       ],
     );
   }
@@ -860,35 +858,6 @@ class _OnboardingViewState extends State<OnboardingView>
   // ---------------------------------------------------------------------------
   static const _stepCount = 5;
   static const double _sidePadding = 28;
-
-  Widget _buildProgress() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(_stepCount, (index) {
-        return Padding(
-          padding: EdgeInsetsDirectional.only(
-            end: index == _stepCount - 1 ? 0 : 7,
-          ),
-          child: _buildProgressItem(_controller.currentStep == index),
-        );
-      }),
-    );
-  }
-
-  Widget _buildProgressItem(bool active) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOut,
-      width: active ? 28 : 8,
-      height: 8,
-      decoration: BoxDecoration(
-        color: active
-            ? SynkColors.orange
-            : SynkColors.textSecondary.withValues(alpha: 0.25),
-        borderRadius: BorderRadius.circular(10),
-      ),
-    );
-  }
 
   // ---------------------------------------------------------------------------
   // VALIDATION

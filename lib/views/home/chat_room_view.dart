@@ -15,6 +15,7 @@ import '../../models/activity_model.dart';
 import '../../models/chat_model.dart';
 import '../../models/friends_model.dart';
 import '../../models/place_search_model.dart';
+import '../../utils/custom_widgets/linked_text.dart';
 import '../../utils/custom_widgets/synk_dialog.dart';
 import '../../utils/custom_widgets/synk_feedback.dart';
 import '../../utils/emoji_only.dart';
@@ -3208,7 +3209,7 @@ class _MessageBubble extends StatelessWidget {
               padding: _showsPhoto
                   ? const EdgeInsets.fromLTRB(8, 6, 8, 0)
                   : EdgeInsets.zero,
-              child: Text(
+              child: LinkedText(
                 message.text,
                 textDirection: textDirectionOf(message.text),
                 style: TextStyle(

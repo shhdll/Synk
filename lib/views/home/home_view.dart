@@ -387,7 +387,10 @@ class _HomeViewState extends State<HomeView> {
       body: Stack(
         children: [
           const Positioned.fill(child: SynkBlobBackground()),
+          // No bottom inset, so cards scroll under the bar instead of being
+          // cut at its top. The scroll view adds the room back at the end.
           SafeArea(
+            bottom: false,
             child: NotificationListener<ScrollNotification>(
               onNotification: _onUserScroll,
               child: RefreshIndicator(
@@ -495,6 +498,9 @@ class _HomeViewState extends State<HomeView> {
             ..._buildExplore(),
           ],
         ],
+        SliverToBoxAdapter(
+          child: SizedBox(height: MediaQuery.paddingOf(context).bottom),
+        ),
       ],
     );
   }
