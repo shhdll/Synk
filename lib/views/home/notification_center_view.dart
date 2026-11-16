@@ -19,6 +19,7 @@ import 'notification_settings_view.dart';
 import 'schedule_conflict_resolution_view.dart';
 import 'widgets/activity_thumbnail.dart';
 import 'main_shell.dart';
+import '../widgets/synk_blob_background.dart';
 
 // The list behind the bell: friend requests on top, then notifications in
 // New, Today, Yesterday, This week and Earlier. Opening it marks everything
@@ -200,60 +201,64 @@ class _NotificationCenterViewState extends State<NotificationCenterView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: SynkColors.background,
-      appBar: AppBar(
-        backgroundColor: SynkColors.background,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(
-            Icons.arrow_back_rounded,
-            color: SynkColors.textPrimary,
-          ),
-        ),
-        title: Text(
-          context.l10n.notifications,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-            color: SynkColors.textPrimary,
-          ),
-        ),
-        actions: [
-          IconButton(
-            tooltip: context.l10n.notificationSettings,
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const NotificationSettingsView(),
-              ),
-            ),
+    return SynkBlobPage(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          surfaceTintColor: Colors.transparent,
+          leading: IconButton(
+            onPressed: () => Navigator.of(context).pop(),
             icon: const Icon(
-              Icons.settings_outlined,
+              Icons.arrow_back_rounded,
               color: SynkColors.textPrimary,
             ),
           ),
-          const SizedBox(width: 4),
-        ],
-      ),
-      body: SafeArea(
-        top: false,
-        child: ListenableBuilder(
-          listenable: Listenable.merge([_c, _friends]),
-          builder: (context, _) {
-            if (_c.isLoading && !_c.hasLoaded) {
-              return const Center(
-                child: CircularProgressIndicator(color: SynkColors.orangeDark),
+          title: Text(
+            context.l10n.notifications,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: SynkColors.textPrimary,
+            ),
+          ),
+          actions: [
+            IconButton(
+              tooltip: context.l10n.notificationSettings,
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const NotificationSettingsView(),
+                ),
+              ),
+              icon: const Icon(
+                Icons.settings_outlined,
+                color: SynkColors.textPrimary,
+              ),
+            ),
+            const SizedBox(width: 4),
+          ],
+        ),
+        body: SafeArea(
+          top: false,
+          child: ListenableBuilder(
+            listenable: Listenable.merge([_c, _friends]),
+            builder: (context, _) {
+              if (_c.isLoading && !_c.hasLoaded) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    color: SynkColors.orangeDark,
+                  ),
+                );
+              }
+              return RefreshIndicator(
+                color: SynkColors.orangeDark,
+                backgroundColor: Colors.white,
+                onRefresh: _refresh,
+                child: _buildList(),
               );
-            }
-            return RefreshIndicator(
-              color: SynkColors.orangeDark,
-              backgroundColor: Colors.white,
-              onRefresh: _refresh,
-              child: _buildList(),
-            );
-          },
+            },
+          ),
         ),
       ),
     );

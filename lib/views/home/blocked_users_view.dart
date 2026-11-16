@@ -7,6 +7,7 @@ import '../../models/friends_model.dart';
 import '../../utils/custom_widgets/synk_feedback.dart';
 import 'widgets/empty_state.dart';
 import 'widgets/friends_list_widgets.dart';
+import '../widgets/synk_blob_background.dart';
 
 // People the user has blocked, each with an Unblock button.
 class BlockedUsersView extends StatelessWidget {
@@ -30,102 +31,106 @@ class BlockedUsersView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: SynkColors.background,
-      appBar: AppBar(
-        backgroundColor: SynkColors.background,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: const Icon(
-            Icons.arrow_back_rounded,
-            color: SynkColors.textPrimary,
+    return SynkBlobPage(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          surfaceTintColor: Colors.transparent,
+          leading: IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(
+              Icons.arrow_back_rounded,
+              color: SynkColors.textPrimary,
+            ),
+          ),
+          title: Text(
+            context.l10n.blockedUsers,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: SynkColors.textPrimary,
+            ),
           ),
         ),
-        title: Text(
-          context.l10n.blockedUsers,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-            color: SynkColors.textPrimary,
-          ),
-        ),
-      ),
-      body: SafeArea(
-        top: false,
-        child: ListenableBuilder(
-          listenable: FriendsController.instance,
-          builder: (context, _) {
-            final friends = FriendsController.instance;
-            final blocked = friends.blocked;
+        body: SafeArea(
+          top: false,
+          child: ListenableBuilder(
+            listenable: FriendsController.instance,
+            builder: (context, _) {
+              final friends = FriendsController.instance;
+              final blocked = friends.blocked;
 
-            if (!friends.hasLoaded) {
-              return const Center(
-                child: CircularProgressIndicator(color: SynkColors.orangeDark),
-              );
-            }
+              if (!friends.hasLoaded) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    color: SynkColors.orangeDark,
+                  ),
+                );
+              }
 
-            if (blocked.isEmpty) {
-              return EmptyState(
-                icon: Icons.verified_user_outlined,
-                title: context.l10n.noBlockedUsers,
-                message: context.l10n.peopleYouBlockShowUpHere,
-              );
-            }
+              if (blocked.isEmpty) {
+                return EmptyState(
+                  icon: Icons.verified_user_outlined,
+                  title: context.l10n.noBlockedUsers,
+                  message: context.l10n.peopleYouBlockShowUpHere,
+                );
+              }
 
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Text(
-                    context.l10n.blockedUsersInfo,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      height: 1.45,
-                      color: SynkColors.textSecondary,
+              return ListView(
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Text(
+                      context.l10n.blockedUsersInfo,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        height: 1.45,
+                        color: SynkColors.textSecondary,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                FriendsListCard(
-                  children: [
-                    for (final user in blocked)
-                      FriendsPersonRow(
-                        user: user,
-                        trailing: Padding(
-                          padding: const EdgeInsetsDirectional.only(end: 4),
-                          child: OutlinedButton(
-                            onPressed: () => _unblock(context, user),
-                            style: OutlinedButton.styleFrom(
-                              minimumSize: const Size(0, 40),
-                              foregroundColor: SynkColors.textPrimary,
-                              side: BorderSide(
-                                color: SynkColors.textSecondary.withValues(
-                                  alpha: 0.30,
+                  const SizedBox(height: 16),
+                  FriendsListCard(
+                    children: [
+                      for (final user in blocked)
+                        FriendsPersonRow(
+                          user: user,
+                          trailing: Padding(
+                            padding: const EdgeInsetsDirectional.only(end: 4),
+                            child: OutlinedButton(
+                              onPressed: () => _unblock(context, user),
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: const Size(0, 40),
+                                foregroundColor: SynkColors.textPrimary,
+                                side: BorderSide(
+                                  color: SynkColors.textSecondary.withValues(
+                                    alpha: 0.30,
+                                  ),
+                                  width: 1.5,
                                 ),
-                                width: 1.5,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: Text(
-                              context.l10n.unblock,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
+                              child: Text(
+                                context.l10n.unblock,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                  ],
-                ),
-              ],
-            );
-          },
+                    ],
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );

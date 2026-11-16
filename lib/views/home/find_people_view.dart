@@ -11,6 +11,7 @@ import 'widgets/empty_state.dart';
 import 'widgets/friend_action_button.dart';
 import 'widgets/friend_options_sheet.dart';
 import 'widgets/friends_list_widgets.dart';
+import '../widgets/synk_blob_background.dart';
 
 // Search everyone on Synk by name or username to send friend requests.
 class FindPeopleView extends StatefulWidget {
@@ -93,43 +94,45 @@ class _FindPeopleViewState extends State<FindPeopleView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: SynkColors.background,
-      appBar: AppBar(
-        backgroundColor: SynkColors.background,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: const Icon(
-            Icons.arrow_back_rounded,
-            color: SynkColors.textPrimary,
-          ),
-        ),
-        title: Text(
-          context.l10n.findPeople,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-            color: SynkColors.textPrimary,
-          ),
-        ),
-      ),
-      body: SafeArea(
-        top: false,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
-              child: FriendsSearchField(
-                controller: _search,
-                hint: context.l10n.searchByNameOrUsername,
-                onChanged: _onChanged,
-                autofocus: true,
-              ),
+    return SynkBlobPage(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          surfaceTintColor: Colors.transparent,
+          leading: IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(
+              Icons.arrow_back_rounded,
+              color: SynkColors.textPrimary,
             ),
-            Expanded(child: _buildResults()),
-          ],
+          ),
+          title: Text(
+            context.l10n.findPeople,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: SynkColors.textPrimary,
+            ),
+          ),
+        ),
+        body: SafeArea(
+          top: false,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                child: FriendsSearchField(
+                  controller: _search,
+                  hint: context.l10n.searchByNameOrUsername,
+                  onChanged: _onChanged,
+                  autofocus: true,
+                ),
+              ),
+              Expanded(child: _buildResults()),
+            ],
+          ),
         ),
       ),
     );

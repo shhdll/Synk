@@ -8,6 +8,7 @@ import '../../l10n/l10n.dart';
 import '../../utils/custom_widgets/synk_feedback.dart';
 import 'widgets/settings_row.dart';
 import 'widgets/telegram_connect.dart';
+import '../widgets/synk_blob_background.dart';
 
 final _telegramAppStoreUrl = Uri.parse(
   'https://apps.apple.com/app/telegram-messenger/id686449807',
@@ -85,137 +86,139 @@ class _IphoneNotificationsViewState extends State<IphoneNotificationsView> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
 
-    return Scaffold(
-      backgroundColor: SynkColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            SettingsHeader(title: l10n.ntfyPageTitle),
-            Expanded(
-              child: ListenableBuilder(
-                listenable: _controller,
-                builder: (context, _) {
-                  final linked = _controller.telegramLinked;
-                  final topic = _controller.ntfyTopic;
+    return SynkBlobPage(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: Column(
+            children: [
+              SettingsHeader(title: l10n.ntfyPageTitle),
+              Expanded(
+                child: ListenableBuilder(
+                  listenable: _controller,
+                  builder: (context, _) {
+                    final linked = _controller.telegramLinked;
+                    final topic = _controller.ntfyTopic;
 
-                  return ListView(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-                    children: [
-                      const _IphoneOnlyBanner(),
-                      const SizedBox(height: 24),
-                      Padding(
-                        padding: const EdgeInsetsDirectional.fromSTEB(
-                          16,
-                          0,
-                          16,
-                          10,
-                        ),
-                        child: Text(
-                          l10n.iphoneNotifPickOne,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: SynkColors.textSecondary,
+                    return ListView(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                      children: [
+                        const _IphoneOnlyBanner(),
+                        const SizedBox(height: 24),
+                        Padding(
+                          padding: const EdgeInsetsDirectional.fromSTEB(
+                            16,
+                            0,
+                            16,
+                            10,
+                          ),
+                          child: Text(
+                            l10n.iphoneNotifPickOne,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: SynkColors.textSecondary,
+                            ),
                           ),
                         ),
-                      ),
-                      _FoldableSection(
-                        icon: Icons.send_rounded,
-                        iconColor: SynkColors.teal,
-                        title: l10n.telegramTitle,
-                        status: linked
-                            ? l10n.telegramConnected
-                            : l10n.telegramRecommended,
-                        initiallyOpen: true,
-                        children: [
-                          SettingsRow(
-                            icon: Icons.download_rounded,
-                            iconColor: SynkColors.teal,
-                            title: l10n.telegramGetApp,
-                            subtitle: l10n.ntfyGetAppHint,
-                            onTap: () => _open(_telegramAppStoreUrl),
-                          ),
-                          if (linked) ...[
+                        _FoldableSection(
+                          icon: Icons.send_rounded,
+                          iconColor: SynkColors.teal,
+                          title: l10n.telegramTitle,
+                          status: linked
+                              ? l10n.telegramConnected
+                              : l10n.telegramRecommended,
+                          initiallyOpen: true,
+                          children: [
                             SettingsRow(
-                              icon: Icons.check_circle_rounded,
+                              icon: Icons.download_rounded,
                               iconColor: SynkColors.teal,
-                              title: l10n.telegramConnected,
-                              subtitle: l10n.telegramConnectedHint,
+                              title: l10n.telegramGetApp,
+                              subtitle: l10n.ntfyGetAppHint,
+                              onTap: () => _open(_telegramAppStoreUrl),
                             ),
-                            SettingsRow(
-                              icon: Icons.link_off_rounded,
-                              iconColor: SynkColors.badge,
-                              title: l10n.telegramDisconnect,
-                              destructive: true,
-                              onTap: _disconnectTelegram,
-                            ),
-                          ] else
-                            SettingsRow(
-                              icon: Icons.link_rounded,
-                              iconColor: SynkColors.orangeDark,
-                              title: l10n.telegramConnect,
-                              subtitle: l10n.telegramConnectHint,
-                              trailing: _connecting
-                                  ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: SynkColors.orangeDark,
-                                      ),
-                                    )
-                                  : null,
-                              onTap: _connecting ? null : _connectTelegram,
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      _FoldableSection(
-                        icon: Icons.notifications_rounded,
-                        iconColor: SynkColors.orangeDark,
-                        title: l10n.ntfyTitle,
-                        status: topic != null ? l10n.ntfyOn : null,
-                        initiallyOpen: topic != null,
-                        children: [
-                          SettingsRow(
-                            icon: Icons.download_rounded,
-                            iconColor: SynkColors.teal,
-                            title: l10n.ntfyGetApp,
-                            subtitle: l10n.ntfyGetAppHint,
-                            onTap: () => _open(_ntfyAppStoreUrl),
-                          ),
-                          SettingsRow(
-                            icon: Icons.phone_iphone_rounded,
-                            iconColor: SynkColors.orangeDark,
-                            title: l10n.notifPrefNtfy,
-                            subtitle: l10n.notifPrefNtfyHint,
-                            trailing: Switch.adaptive(
-                              value: topic != null,
-                              activeTrackColor: SynkColors.teal,
-                              onChanged: _setNtfyEnabled,
-                            ),
-                          ),
-                          if (topic != null)
-                            SettingsRow(
-                              icon: Icons.tag_rounded,
-                              iconColor: SynkColors.pink,
-                              title: topic,
-                              subtitle: l10n.ntfyTopicHint,
-                              trailing: const Icon(
-                                Icons.copy_rounded,
-                                size: 18,
-                                color: SynkColors.textSecondary,
+                            if (linked) ...[
+                              SettingsRow(
+                                icon: Icons.check_circle_rounded,
+                                iconColor: SynkColors.teal,
+                                title: l10n.telegramConnected,
+                                subtitle: l10n.telegramConnectedHint,
                               ),
-                              onTap: () => _copyTopic(topic),
+                              SettingsRow(
+                                icon: Icons.link_off_rounded,
+                                iconColor: SynkColors.badge,
+                                title: l10n.telegramDisconnect,
+                                destructive: true,
+                                onTap: _disconnectTelegram,
+                              ),
+                            ] else
+                              SettingsRow(
+                                icon: Icons.link_rounded,
+                                iconColor: SynkColors.orangeDark,
+                                title: l10n.telegramConnect,
+                                subtitle: l10n.telegramConnectHint,
+                                trailing: _connecting
+                                    ? const SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: SynkColors.orangeDark,
+                                        ),
+                                      )
+                                    : null,
+                                onTap: _connecting ? null : _connectTelegram,
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        _FoldableSection(
+                          icon: Icons.notifications_rounded,
+                          iconColor: SynkColors.orangeDark,
+                          title: l10n.ntfyTitle,
+                          status: topic != null ? l10n.ntfyOn : null,
+                          initiallyOpen: topic != null,
+                          children: [
+                            SettingsRow(
+                              icon: Icons.download_rounded,
+                              iconColor: SynkColors.teal,
+                              title: l10n.ntfyGetApp,
+                              subtitle: l10n.ntfyGetAppHint,
+                              onTap: () => _open(_ntfyAppStoreUrl),
                             ),
-                        ],
-                      ),
-                    ],
-                  );
-                },
+                            SettingsRow(
+                              icon: Icons.phone_iphone_rounded,
+                              iconColor: SynkColors.orangeDark,
+                              title: l10n.notifPrefNtfy,
+                              subtitle: l10n.notifPrefNtfyHint,
+                              trailing: Switch.adaptive(
+                                value: topic != null,
+                                activeTrackColor: SynkColors.teal,
+                                onChanged: _setNtfyEnabled,
+                              ),
+                            ),
+                            if (topic != null)
+                              SettingsRow(
+                                icon: Icons.tag_rounded,
+                                iconColor: SynkColors.pink,
+                                title: topic,
+                                subtitle: l10n.ntfyTopicHint,
+                                trailing: const Icon(
+                                  Icons.copy_rounded,
+                                  size: 18,
+                                  color: SynkColors.textSecondary,
+                                ),
+                                onTap: () => _copyTopic(topic),
+                              ),
+                          ],
+                        ),
+                      ],
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

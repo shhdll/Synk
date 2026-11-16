@@ -9,6 +9,7 @@ import 'widgets/empty_state.dart';
 import 'widgets/friend_options_sheet.dart';
 import 'widgets/friends_list_widgets.dart';
 import 'widgets/recent_searches_list.dart';
+import '../widgets/synk_blob_background.dart';
 
 // The user's friends. Friend requests live in the notification center.
 class FriendsView extends StatefulWidget {
@@ -74,44 +75,46 @@ class _FriendsViewState extends State<FriendsView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: SynkColors.background,
-      appBar: AppBar(
-        backgroundColor: SynkColors.background,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: const Icon(
-            Icons.arrow_back_rounded,
-            color: SynkColors.textPrimary,
-          ),
-        ),
-        title: Text(
-          context.l10n.friendsCount(_friends.friends.length),
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-            color: SynkColors.textPrimary,
-          ),
-        ),
-        actions: [
-          IconButton(
-            tooltip: context.l10n.findPeople,
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const FindPeopleView()),
-            ),
+    return SynkBlobPage(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          surfaceTintColor: Colors.transparent,
+          leading: IconButton(
+            onPressed: () => Navigator.pop(context),
             icon: const Icon(
-              Icons.person_add_alt_1_rounded,
+              Icons.arrow_back_rounded,
               color: SynkColors.textPrimary,
             ),
           ),
-          const SizedBox(width: 4),
-        ],
-      ),
-      body: SafeArea(
-        top: false,
-        child: !_friends.hasLoaded ? _buildFirstLoad() : _buildFriends(),
+          title: Text(
+            context.l10n.friendsCount(_friends.friends.length),
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: SynkColors.textPrimary,
+            ),
+          ),
+          actions: [
+            IconButton(
+              tooltip: context.l10n.findPeople,
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const FindPeopleView()),
+              ),
+              icon: const Icon(
+                Icons.person_add_alt_1_rounded,
+                color: SynkColors.textPrimary,
+              ),
+            ),
+            const SizedBox(width: 4),
+          ],
+        ),
+        body: SafeArea(
+          top: false,
+          child: !_friends.hasLoaded ? _buildFirstLoad() : _buildFriends(),
+        ),
       ),
     );
   }

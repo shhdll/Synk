@@ -5,6 +5,7 @@ import '../../core/constants/synk_colors.dart';
 import '../../l10n/l10n.dart';
 import '../../utils/custom_widgets/synk_feedback.dart';
 import '../widgets/password_requirements.dart';
+import '../widgets/synk_blob_background.dart';
 
 class ChangePasswordView extends StatefulWidget {
   const ChangePasswordView({super.key});
@@ -136,150 +137,152 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
 
             await _handleBack();
           },
-          child: Scaffold(
-            backgroundColor: SynkColors.background,
-            appBar: AppBar(
-              backgroundColor: SynkColors.background,
-              elevation: 0,
-              surfaceTintColor: Colors.transparent,
-              leading: IconButton(
-                onPressed: isLoading ? null : _handleBack,
-                icon: const Icon(
-                  Icons.arrow_back_rounded,
-                  color: SynkColors.textPrimary,
-                ),
-              ),
-              title: Text(
-                context.l10n.changePasswordTitle,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.6,
-                  color: SynkColors.textPrimary,
-                ),
-              ),
-              centerTitle: true,
-            ),
-            body: SafeArea(
-              child: Column(
-                children: [
-                  Expanded(
-                    child: ListView(
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-                      children: [
-                        _buildFieldLabel(context.l10n.currentPassword),
-                        const SizedBox(height: 8),
-                        _buildPasswordField(
-                          controller: _currentController,
-                          hintText: context.l10n.enterYourCurrentPassword,
-                          obscure: _obscureCurrent,
-                          onToggle: () => setState(
-                            () => _obscureCurrent = !_obscureCurrent,
-                          ),
-                          errorText: _currentError,
-                          onChanged: (_) {
-                            if (_currentError != null) {
-                              setState(() => _currentError = null);
-                            }
-                          },
-                          textInputAction: TextInputAction.next,
-                        ),
-
-                        const SizedBox(height: 22),
-
-                        _buildFieldLabel(context.l10n.newPassword),
-                        const SizedBox(height: 8),
-                        _buildPasswordField(
-                          controller: _newController,
-                          hintText: context.l10n.enterANewPassword,
-                          obscure: _obscureNew,
-                          onToggle: () =>
-                              setState(() => _obscureNew = !_obscureNew),
-                          errorText: _newError,
-                          // Rebuild on every key so the checklist updates.
-                          onChanged: (_) => setState(() => _newError = null),
-                          textInputAction: TextInputAction.next,
-                        ),
-
-                        const SizedBox(height: 22),
-
-                        _buildFieldLabel(context.l10n.confirmNewPassword),
-                        const SizedBox(height: 8),
-                        _buildPasswordField(
-                          controller: _confirmController,
-                          hintText: context.l10n.reEnterTheNewPassword,
-                          obscure: _obscureConfirm,
-                          onToggle: () => setState(
-                            () => _obscureConfirm = !_obscureConfirm,
-                          ),
-                          errorText: _confirmError,
-                          onChanged: (_) {
-                            if (_confirmError != null) {
-                              setState(() => _confirmError = null);
-                            }
-                          },
-                          textInputAction: TextInputAction.done,
-                          onSubmitted: (_) => _submit(),
-                        ),
-
-                        const SizedBox(height: 8),
-
-                        PasswordRequirements(password: _newController.text),
-                      ],
-                    ),
+          child: SynkBlobPage(
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              appBar: AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                surfaceTintColor: Colors.transparent,
+                leading: IconButton(
+                  onPressed: isLoading ? null : _handleBack,
+                  icon: const Icon(
+                    Icons.arrow_back_rounded,
+                    color: SynkColors.textPrimary,
                   ),
-
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
-                    decoration: BoxDecoration(
-                      color: SynkColors.background,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.04),
-                          blurRadius: 12,
-                          offset: const Offset(0, -4),
-                        ),
-                      ],
-                    ),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 54,
-                      child: ElevatedButton(
-                        onPressed: isLoading ? null : _submit,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: SynkColors.orangeDark,
-                          foregroundColor: Colors.white,
-                          disabledBackgroundColor: SynkColors.orangeDark
-                              .withValues(alpha: 0.45),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(17),
+                ),
+                title: Text(
+                  context.l10n.changePasswordTitle,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.6,
+                    color: SynkColors.textPrimary,
+                  ),
+                ),
+                centerTitle: true,
+              ),
+              body: SafeArea(
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: ListView(
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+                        children: [
+                          _buildFieldLabel(context.l10n.currentPassword),
+                          const SizedBox(height: 8),
+                          _buildPasswordField(
+                            controller: _currentController,
+                            hintText: context.l10n.enterYourCurrentPassword,
+                            obscure: _obscureCurrent,
+                            onToggle: () => setState(
+                              () => _obscureCurrent = !_obscureCurrent,
+                            ),
+                            errorText: _currentError,
+                            onChanged: (_) {
+                              if (_currentError != null) {
+                                setState(() => _currentError = null);
+                              }
+                            },
+                            textInputAction: TextInputAction.next,
                           ),
-                        ),
-                        child: isLoading
-                            ? const SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white,
-                                  ),
-                                ),
-                              )
-                            : Text(
-                                context.l10n.updatePassword,
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
+
+                          const SizedBox(height: 22),
+
+                          _buildFieldLabel(context.l10n.newPassword),
+                          const SizedBox(height: 8),
+                          _buildPasswordField(
+                            controller: _newController,
+                            hintText: context.l10n.enterANewPassword,
+                            obscure: _obscureNew,
+                            onToggle: () =>
+                                setState(() => _obscureNew = !_obscureNew),
+                            errorText: _newError,
+                            // Rebuild on every key so the checklist updates.
+                            onChanged: (_) => setState(() => _newError = null),
+                            textInputAction: TextInputAction.next,
+                          ),
+
+                          const SizedBox(height: 22),
+
+                          _buildFieldLabel(context.l10n.confirmNewPassword),
+                          const SizedBox(height: 8),
+                          _buildPasswordField(
+                            controller: _confirmController,
+                            hintText: context.l10n.reEnterTheNewPassword,
+                            obscure: _obscureConfirm,
+                            onToggle: () => setState(
+                              () => _obscureConfirm = !_obscureConfirm,
+                            ),
+                            errorText: _confirmError,
+                            onChanged: (_) {
+                              if (_confirmError != null) {
+                                setState(() => _confirmError = null);
+                              }
+                            },
+                            textInputAction: TextInputAction.done,
+                            onSubmitted: (_) => _submit(),
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          PasswordRequirements(password: _newController.text),
+                        ],
                       ),
                     ),
-                  ),
-                ],
+
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+                      decoration: BoxDecoration(
+                        color: SynkColors.background,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 12,
+                            offset: const Offset(0, -4),
+                          ),
+                        ],
+                      ),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 54,
+                        child: ElevatedButton(
+                          onPressed: isLoading ? null : _submit,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: SynkColors.orangeDark,
+                            foregroundColor: Colors.white,
+                            disabledBackgroundColor: SynkColors.orangeDark
+                                .withValues(alpha: 0.45),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(17),
+                            ),
+                          ),
+                          child: isLoading
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                              : Text(
+                                  context.l10n.updatePassword,
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

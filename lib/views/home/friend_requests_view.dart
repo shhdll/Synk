@@ -9,6 +9,7 @@ import 'widgets/empty_state.dart';
 import 'widgets/friend_options_sheet.dart';
 import 'widgets/friends_list_widgets.dart';
 import 'widgets/user_avatar.dart';
+import '../widgets/synk_blob_background.dart';
 
 // Every friend request, received and sent. Opened from "See all" in the
 // notification center and from friend request notifications.
@@ -30,33 +31,35 @@ class _FriendRequestsViewState extends State<FriendRequestsView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: SynkColors.background,
-      appBar: AppBar(
-        backgroundColor: SynkColors.background,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: const Icon(
-            Icons.arrow_back_rounded,
-            color: SynkColors.textPrimary,
+    return SynkBlobPage(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          surfaceTintColor: Colors.transparent,
+          leading: IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(
+              Icons.arrow_back_rounded,
+              color: SynkColors.textPrimary,
+            ),
+          ),
+          title: Text(
+            context.l10n.friendRequests,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: SynkColors.textPrimary,
+            ),
           ),
         ),
-        title: Text(
-          context.l10n.friendRequests,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-            color: SynkColors.textPrimary,
+        body: SafeArea(
+          top: false,
+          child: ListenableBuilder(
+            listenable: _friends,
+            builder: (context, _) => _buildBody(),
           ),
-        ),
-      ),
-      body: SafeArea(
-        top: false,
-        child: ListenableBuilder(
-          listenable: _friends,
-          builder: (context, _) => _buildBody(),
         ),
       ),
     );
