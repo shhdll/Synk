@@ -102,7 +102,12 @@ class StickerPickerPanel extends StatelessWidget {
             );
           }
           return GridView.builder(
-            padding: const EdgeInsets.fromLTRB(10, 10, 10, 16),
+            padding: EdgeInsets.fromLTRB(
+              10,
+              10,
+              10,
+              16 + MediaQuery.paddingOf(context).bottom,
+            ),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 4,
               mainAxisSpacing: 6,

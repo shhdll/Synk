@@ -7,6 +7,7 @@ import '../../../controllers/friends_controller.dart';
 import '../../../core/constants/synk_colors.dart';
 import '../../../l10n/l10n.dart';
 import '../../../models/activities_model.dart';
+import '../../../models/activity_filters.dart';
 import '../../../models/activity_model.dart';
 import '../../../models/chat_model.dart';
 import '../../../models/friends_model.dart';
@@ -40,6 +41,7 @@ class AttachmentPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final bottom = MediaQuery.paddingOf(context).bottom;
     final options = [
       (
         ChatAttachment.photo,
@@ -90,8 +92,11 @@ class AttachmentPanel extends StatelessWidget {
         height: height,
         color: SynkColors.background,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+          padding: EdgeInsets.fromLTRB(12, 4, 12, 12 + bottom),
+          // The card fills the panel, its options centred inside.
           child: Container(
+            constraints: BoxConstraints(minHeight: height - 16 - bottom),
+            alignment: Alignment.center,
             padding: const EdgeInsets.fromLTRB(4, 18, 4, 14),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -206,7 +211,26 @@ class _ActivityPickerSheet extends StatefulWidget {
 }
 
 class _ActivityPickerSheetState extends State<_ActivityPickerSheet> {
+  final TextEditingController _search = TextEditingController();
   List<Activity>? _activities;
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  // Forgives typos, best match first; ties keep yours before the feed.
+  List<Activity> _matching(List<Activity> activities) {
+    final query = _search.text.trim();
+    if (query.isEmpty) return activities;
+    final scored = [
+      for (var i = 0; i < activities.length; i++)
+        if (ActivityFilters.searchScore(activities[i], query) case final score?)
+          (score, i, activities[i]),
+    ]..sort((a, b) => a.$1 != b.$1 ? a.$1 - b.$1 : a.$2 - b.$2);
+    return [for (final (_, _, activity) in scored) activity];
+  }
 
   @override
   void initState() {
@@ -250,6 +274,7 @@ class _ActivityPickerSheetState extends State<_ActivityPickerSheet> {
   @override
   Widget build(BuildContext context) {
     final activities = _activities;
+    final shown = activities == null ? null : _matching(activities);
 
     return DraggableScrollableSheet(
       expand: false,
@@ -270,7 +295,15 @@ class _ActivityPickerSheetState extends State<_ActivityPickerSheet> {
             ),
           ),
           const SizedBox(height: 14),
-          if (activities == null)
+          if (activities != null && activities.isNotEmpty) ...[
+            FriendsSearchField(
+              controller: _search,
+              hint: context.l10n.searchActivities,
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 14),
+          ],
+          if (activities == null || shown == null)
             const Padding(
               padding: EdgeInsets.only(top: 40),
               child: Center(
@@ -286,10 +319,18 @@ class _ActivityPickerSheetState extends State<_ActivityPickerSheet> {
                 message: context.l10n.joinOrCreateToShare,
               ),
             )
+          else if (shown.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 24),
+              child: EmptyState(
+                icon: Icons.search_off_rounded,
+                title: context.l10n.noActivitiesMatchYourSearch,
+              ),
+            )
           else
             FriendsListCard(
               children: [
-                for (final activity in activities)
+                for (final activity in shown)
                   _ActivityRow(
                     activity: activity,
                     onTap: () => Navigator.pop(context, activity),
