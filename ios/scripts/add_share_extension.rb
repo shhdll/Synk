@@ -27,8 +27,7 @@ ext.build_configurations.each do |config|
   s['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
   s['GENERATE_INFOPLIST_FILE'] = 'NO'
   s['SKIP_INSTALL'] = 'YES'
-  # Opening Synk from the extension goes through UIApplication.
-  s['APPLICATION_EXTENSION_API_ONLY'] = 'NO'
+  s['APPLICATION_EXTENSION_API_ONLY'] = 'YES'
   s['LD_RUNPATH_SEARCH_PATHS'] = ['$(inherited)', '@executable_path/Frameworks', '@executable_path/../../Frameworks']
 end
 

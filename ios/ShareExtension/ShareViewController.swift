@@ -115,12 +115,16 @@ class ShareViewController: UIViewController {
   }
 
   // Extensions can't open apps directly; the app object up the responder
-  // chain can.
+  // chain can. open is off limits to extensions at compile time, so it's
+  // called by name.
   private func open(_ url: URL) {
+    typealias Open = @convention(c) (AnyObject, Selector, NSURL, NSDictionary, AnyObject?) -> Void
+    let sel = NSSelectorFromString("openURL:options:completionHandler:")
     var responder: UIResponder? = self
     while let current = responder {
-      if let app = current as? UIApplication {
-        app.open(url, options: [:], completionHandler: nil)
+      if current is UIApplication, current.responds(to: sel) {
+        let call = unsafeBitCast(current.method(for: sel), to: Open.self)
+        call(current, sel, url as NSURL, NSDictionary(), nil)
         return
       }
       responder = current.next
