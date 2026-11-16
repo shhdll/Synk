@@ -71,3 +71,4 @@ flutter_launcher_icons:
   image_path: "assets/synk_logo.png"
   adaptive_icon_background: "#F6F1E6"
   adaptive_icon_foreground: "assets/synk_logo_transparent.png"
+  adaptive_icon_foreground_inset: 26
