@@ -51,22 +51,24 @@ class ShareViewController: UIViewController {
     }
   }
 
-  // Saves in the shared group folder, or on the named pasteboard when the
-  // group isn't there (sideloading can rename or drop it).
+  // Saves in the shared group folder and on the named pasteboard. Sideloading
+  // can rename the group, so the app may not see the folder; it reads the
+  // pasteboard then.
   private func keep(_ items: [[String: Any]]) -> Bool {
+    var saved = false
     if let folder = sharedFolder() {
-      var saved = false
       for item in items {
         let (name, data) = file(item)
         if let data = data, (try? data.write(to: folder.appendingPathComponent(name))) != nil {
           saved = true
         }
       }
-      if saved { return true }
     }
-    guard let board = UIPasteboard(name: Self.board, create: true) else { return false }
-    board.items = items
-    return board.numberOfItems > 0
+    if let board = UIPasteboard(name: Self.board, create: true) {
+      board.items = items
+      if board.numberOfItems > 0 { saved = true }
+    }
+    return saved
   }
 
   private func file(_ item: [String: Any]) -> (String, Data?) {

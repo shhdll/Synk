@@ -1,4 +1,7 @@
+import 'dart:async';
 import 'dart:io';
+
+import 'package:app_links/app_links.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,8 +16,10 @@ import '../views/home/widgets/chat_share_sheets.dart';
 const _channel = MethodChannel('synk/shared');
 
 bool _asking = false;
+StreamSubscription<Uri>? _links;
 
 // Android calls [onAdded] when something is shared while the app is open.
+// On iOS the ShareExtension opens a synk-share:// link.
 void listenForSharedToSynk(VoidCallback? onAdded) {
   _channel.setMethodCallHandler(
     onAdded == null
@@ -23,6 +28,12 @@ void listenForSharedToSynk(VoidCallback? onAdded) {
             if (call.method == 'added') onAdded();
           },
   );
+  unawaited(_links?.cancel());
+  _links = onAdded == null || !Platform.isIOS
+      ? null
+      : AppLinks().uriLinkStream.listen((uri) {
+          if (uri.scheme == 'synk-share') onAdded();
+        }, onError: (Object _) {});
 }
 
 // Asks which chats the waiting pictures or links go to, if there are any.
