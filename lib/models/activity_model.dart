@@ -116,7 +116,7 @@ class Activity {
 
   // Goes up whenever the host's edits change the activity. An edit sends
   // the version it started from, so saving over a newer one is refused
-  // (supabase/migrations/20261112100000_activity_save_requests.sql).
+  // (supabase/migrations/20261112100001_activity_save_requests.sql).
   // Null until that migration runs, or when a query leaves it out.
   final int? editVersion;
 
