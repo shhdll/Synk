@@ -38,6 +38,8 @@ dependencies:
   http: ^1.5.0
   record: ^7.2.0
   just_audio: ^0.10.6
+  sensors_plus: ^7.1.1
+  audio_session: ^0.2.4
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -60,6 +62,7 @@ flutter:
     - assets/sticker-pack/stickers.json
     - assets/sticker-pack/512/
     - assets/sticker-pack/1024/
+    - assets/sounds/
 
 flutter_launcher_icons:
   android: true

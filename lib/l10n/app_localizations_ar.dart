@@ -1557,6 +1557,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get interests => 'الاهتمامات';
 
   @override
+  String get interestsAndPreferences => 'الاهتمامات والتفضيلات';
+
+  @override
   String get preferences => 'التفضيلات';
 
   @override
@@ -3680,4 +3683,523 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get reviewActivity => 'مراجعة الفعالية';
+
+  @override
+  String get badgesTitle => 'الشارات';
+
+  @override
+  String badgesEarnedCount(Object earned, Object total) {
+    return '$earned من $total';
+  }
+
+  @override
+  String get badgesNoneYet => 'أول طلعة تجيب لك أول شارة';
+
+  @override
+  String get badgesSeeAllMine => 'كل الشارات';
+
+  @override
+  String get badgeNewTitle => 'شارة جديدة';
+
+  @override
+  String get badgesNewTitle => 'شارات جديدة';
+
+  @override
+  String get badgeNewAction => 'حلو';
+
+  @override
+  String get badgeShare => 'شاركها';
+
+  @override
+  String get sharedSendTo => 'ترسلها لمين؟';
+
+  @override
+  String badgeShareMessage(Object badge) {
+    return 'جبت شارة $badge في Synk\nsynk.cc';
+  }
+
+  @override
+  String get badgesAlsoEarned => 'وجبت كمان';
+
+  @override
+  String badgeEarnedOn(Object date) {
+    return 'حصلت عليها $date';
+  }
+
+  @override
+  String get badgeSecretName => 'شارة سرية';
+
+  @override
+  String get badgeSecretRule => 'تنكشف مع الطلعات';
+
+  @override
+  String get badgeGroupGoingOut => 'الطلعات';
+
+  @override
+  String get badgeGroupHosting => 'العزايم';
+
+  @override
+  String get badgeGroupVariety => 'التنوع';
+
+  @override
+  String get badgeGroupCategory => 'الفئات';
+
+  @override
+  String get badgeGroupFriends => 'أصدقاء';
+
+  @override
+  String get badgeGroupStreaks => 'السلسلة';
+
+  @override
+  String get badgeGroupRatings => 'التقييمات';
+
+  @override
+  String get badgeGroupSecret => 'السرية';
+
+  @override
+  String badgeCategoryFan(Object category) {
+    return 'من أهل $category';
+  }
+
+  @override
+  String get badgeCategoryAny => 'من أهل الفئة';
+
+  @override
+  String get badgeCategoryFanRule => 'حضور 5 أنشطة من نفس الفئة';
+
+  @override
+  String get badgeAttend1 => 'أول طلعة';
+
+  @override
+  String get badgeAttend1Rule => 'حضور أول نشاط';
+
+  @override
+  String get badgeAttend10 => 'صار لك اسم';
+
+  @override
+  String get badgeAttend10Rule => 'حضور 10 أنشطة';
+
+  @override
+  String get badgeAttend25 => 'نجم سينك';
+
+  @override
+  String get badgeAttend25Rule => 'حضور 25 نشاط';
+
+  @override
+  String get badgeAttend50 => 'أسطورة سينك';
+
+  @override
+  String get badgeAttend50Rule => 'حضور 50 نشاط';
+
+  @override
+  String get badgeHost1 => 'أول عزيمة';
+
+  @override
+  String get badgeHost1Rule => 'استضافة نشاط ينضم له أحد';
+
+  @override
+  String get badgeHost10 => 'عزايمك ما تنرد';
+
+  @override
+  String get badgeHost10Rule => 'استضافة 10 أنشطة ينضم لها ناس';
+
+  @override
+  String get badgeFullHouse => 'ما بقى مكان';
+
+  @override
+  String get badgeFullHouseRule => 'استضافة نشاط فيه 4 أماكن أو أكثر ويكتمل';
+
+  @override
+  String get badgeVariety5 => 'حب التجربة';
+
+  @override
+  String get badgeVariety5Rule => 'تجربة 5 فئات مختلفة';
+
+  @override
+  String get badgeVariety10 => 'ما يفوتك شي';
+
+  @override
+  String get badgeVariety10Rule => 'تجربة 10 فئات مختلفة';
+
+  @override
+  String get badgeVariety20 => 'جربت كل شي';
+
+  @override
+  String get badgeVariety20Rule => 'تجربة 20 فئة مختلفة';
+
+  @override
+  String get badgeFriends5 => 'صار لك أصدقاء';
+
+  @override
+  String get badgeFriends5Rule => '5 أصدقاء في سينك';
+
+  @override
+  String get badgeFriends15 => 'الكل يعرفك';
+
+  @override
+  String get badgeFriends15Rule => '15 صديق في سينك';
+
+  @override
+  String get badgeFriends30 => 'روح الجمعة';
+
+  @override
+  String get badgeFriends30Rule => '30 صديق في سينك';
+
+  @override
+  String get badgeTogether5 => 'مع صديقك';
+
+  @override
+  String get badgeTogether5Rule => 'حضور 5 أنشطة مع صديق';
+
+  @override
+  String get badgeStreak3 => 'بدأت تولع';
+
+  @override
+  String get badgeStreak3Rule => 'سلسلة 3 أسابيع ورا بعض';
+
+  @override
+  String get badgeStreak8 => 'ولعت';
+
+  @override
+  String get badgeStreak8Rule => 'سلسلة 8 أسابيع ورا بعض';
+
+  @override
+  String get badgeStreak20 => 'نار ما تنطفي';
+
+  @override
+  String get badgeStreak20Rule => 'سلسلة 20 أسبوع ورا بعض';
+
+  @override
+  String get badgeFiveStar => 'أول خمس نجوم';
+
+  @override
+  String get badgeFiveStarRule => 'أول تقييم خمس نجوم';
+
+  @override
+  String get badgeRated45 => 'تقييمك يشرف';
+
+  @override
+  String get badgeRated45Rule => 'معدل 4.5 نجوم أو أكثر من 10 تقييمات';
+
+  @override
+  String get badgeRated48 => 'رفقتك ذهب';
+
+  @override
+  String get badgeRated48Rule => 'معدل 4.8 نجوم أو أكثر من 25 تقييم';
+
+  @override
+  String get badgeRater10 => 'كلمة حق';
+
+  @override
+  String get badgeRater10Rule => 'تقييم المشاركين بعد 10 أنشطة';
+
+  @override
+  String get badgeEarlyBird => 'من صباح الله خير';
+
+  @override
+  String get badgeEarlyBirdRule => 'حضور نشاط يبدأ قبل 7 الصبح';
+
+  @override
+  String get badgeNightOwl => 'أهل السهر';
+
+  @override
+  String get badgeNightOwlRule => 'حضور نشاط يبدأ 11 الليل أو بعدها';
+
+  @override
+  String get badgeLuckySpot => 'الحظ معك';
+
+  @override
+  String get badgeLuckySpotRule => 'الدخول من قائمة الانتظار وحضور النشاط';
+
+  @override
+  String get badgeWeekend => 'ويكند على أصوله';
+
+  @override
+  String get badgeWeekendRule =>
+      'حضور نشاط يوم الجمعة ونشاط يوم السبت بنفس الويكند';
+
+  @override
+  String get notifPrefBadges => 'الشارات';
+
+  @override
+  String get notifPrefBadgesHint => 'لما تحصل على شارة جديدة';
+
+  @override
+  String get badgeHost25 => 'بيتك مفتوح';
+
+  @override
+  String get badgeHost25Rule => 'استضافة 25 نشاط ينضم لها ناس';
+
+  @override
+  String get badgeVariety30 => 'ما خليت شي';
+
+  @override
+  String get badgeVariety30Rule => 'تجربة 30 فئة مختلفة';
+
+  @override
+  String get badgeStreak52 => 'سنة كاملة';
+
+  @override
+  String get badgeStreak52Rule => 'سلسلة 52 أسبوع ورا بعض';
+
+  @override
+  String badgeCategoryFanBy(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name حضرت 5 أنشطة من نفس الفئة',
+      'other': '$name حضر 5 أنشطة من نفس الفئة',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeAttend1By(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name حضرت أول نشاط',
+      'other': '$name حضر أول نشاط',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeAttend10By(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name حضرت 10 أنشطة',
+      'other': '$name حضر 10 أنشطة',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeAttend25By(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name حضرت 25 نشاط',
+      'other': '$name حضر 25 نشاط',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeAttend50By(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name حضرت 50 نشاط',
+      'other': '$name حضر 50 نشاط',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeHost1By(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name استضافت نشاط وانضم له أحد',
+      'other': '$name استضاف نشاط وانضم له أحد',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeHost10By(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name استضافت 10 أنشطة انضم لها ناس',
+      'other': '$name استضاف 10 أنشطة انضم لها ناس',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeHost25By(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name استضافت 25 نشاط انضم لها ناس',
+      'other': '$name استضاف 25 نشاط انضم لها ناس',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeFullHouseBy(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name استضافت نشاط فيه 4 أماكن أو أكثر واكتمل',
+      'other': '$name استضاف نشاط فيه 4 أماكن أو أكثر واكتمل',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeVariety5By(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name جربت 5 فئات مختلفة',
+      'other': '$name جرب 5 فئات مختلفة',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeVariety10By(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name جربت 10 فئات مختلفة',
+      'other': '$name جرب 10 فئات مختلفة',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeVariety20By(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name جربت 20 فئة مختلفة',
+      'other': '$name جرب 20 فئة مختلفة',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeVariety30By(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name جربت 30 فئة مختلفة',
+      'other': '$name جرب 30 فئة مختلفة',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeFriends5By(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name عندها 5 أصدقاء في سينك',
+      'other': '$name عنده 5 أصدقاء في سينك',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeFriends15By(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name عندها 15 صديق في سينك',
+      'other': '$name عنده 15 صديق في سينك',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeFriends30By(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name عندها 30 صديق في سينك',
+      'other': '$name عنده 30 صديق في سينك',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeTogether5By(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name حضرت 5 أنشطة مع صديق',
+      'other': '$name حضر 5 أنشطة مع صديق',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeStreak3By(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name كملت سلسلة 3 أسابيع ورا بعض',
+      'other': '$name كمل سلسلة 3 أسابيع ورا بعض',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeStreak8By(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name كملت سلسلة 8 أسابيع ورا بعض',
+      'other': '$name كمل سلسلة 8 أسابيع ورا بعض',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeStreak20By(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name كملت سلسلة 20 أسبوع ورا بعض',
+      'other': '$name كمل سلسلة 20 أسبوع ورا بعض',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeStreak52By(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name كملت سلسلة 52 أسبوع ورا بعض',
+      'other': '$name كمل سلسلة 52 أسبوع ورا بعض',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeFiveStarBy(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name أخذت أول تقييم خمس نجوم',
+      'other': '$name أخذ أول تقييم خمس نجوم',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeRated45By(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name معدلها 4.5 نجوم أو أكثر من 10 تقييمات',
+      'other': '$name معدله 4.5 نجوم أو أكثر من 10 تقييمات',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeRated48By(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name معدلها 4.8 نجوم أو أكثر من 25 تقييم',
+      'other': '$name معدله 4.8 نجوم أو أكثر من 25 تقييم',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeRater10By(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name قيمت المشاركين بعد 10 أنشطة',
+      'other': '$name قيم المشاركين بعد 10 أنشطة',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeEarlyBirdBy(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name حضرت نشاط يبدأ قبل 7 الصبح',
+      'other': '$name حضر نشاط يبدأ قبل 7 الصبح',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeNightOwlBy(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name حضرت نشاط يبدأ 11 الليل أو بعدها',
+      'other': '$name حضر نشاط يبدأ 11 الليل أو بعدها',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeLuckySpotBy(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name دخلت من قائمة الانتظار وحضرت النشاط',
+      'other': '$name دخل من قائمة الانتظار وحضر النشاط',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String badgeWeekendBy(String name, String gender) {
+    String _temp0 = intl.Intl.selectLogic(gender, {
+      'female': '$name حضرت نشاط يوم الجمعة ونشاط يوم السبت بنفس الويكند',
+      'other': '$name حضر نشاط يوم الجمعة ونشاط يوم السبت بنفس الويكند',
+    });
+    return '$_temp0';
+  }
 }

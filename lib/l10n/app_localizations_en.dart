@@ -1593,6 +1593,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get interests => 'Interests';
 
   @override
+  String get interestsAndPreferences => 'Interests & preferences';
+
+  @override
   String get preferences => 'Preferences';
 
   @override
@@ -3753,4 +3756,409 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reviewActivity => 'Review activity';
+
+  @override
+  String get badgesTitle => 'Badges';
+
+  @override
+  String badgesEarnedCount(Object earned, Object total) {
+    return '$earned of $total earned';
+  }
+
+  @override
+  String get badgesNoneYet => 'Your first activity gets you your first badge.';
+
+  @override
+  String get badgesSeeAllMine => 'See all badges';
+
+  @override
+  String get badgeNewTitle => 'New badge';
+
+  @override
+  String get badgesNewTitle => 'New badges';
+
+  @override
+  String get badgeNewAction => 'Nice';
+
+  @override
+  String get badgeShare => 'Share';
+
+  @override
+  String get sharedSendTo => 'Send to';
+
+  @override
+  String badgeShareMessage(Object badge) {
+    return 'I just got the $badge badge on Synk\nsynk.cc';
+  }
+
+  @override
+  String get badgesAlsoEarned => 'Also earned';
+
+  @override
+  String badgeEarnedOn(Object date) {
+    return 'Earned $date';
+  }
+
+  @override
+  String get badgeSecretName => 'Secret badge';
+
+  @override
+  String get badgeSecretRule => 'Keep going out and you\'ll find it.';
+
+  @override
+  String get badgeGroupGoingOut => 'Going out';
+
+  @override
+  String get badgeGroupHosting => 'Hosting';
+
+  @override
+  String get badgeGroupVariety => 'Variety';
+
+  @override
+  String get badgeGroupCategory => 'Categories';
+
+  @override
+  String get badgeGroupFriends => 'Friends';
+
+  @override
+  String get badgeGroupStreaks => 'Streaks';
+
+  @override
+  String get badgeGroupRatings => 'Ratings';
+
+  @override
+  String get badgeGroupSecret => 'Secret';
+
+  @override
+  String badgeCategoryFan(Object category) {
+    return '$category Fan';
+  }
+
+  @override
+  String get badgeCategoryAny => 'Category Fan';
+
+  @override
+  String get badgeCategoryFanRule => 'Attend 5 activities in one category';
+
+  @override
+  String get badgeAttend1 => 'First Step';
+
+  @override
+  String get badgeAttend1Rule => 'Attend a first activity';
+
+  @override
+  String get badgeAttend10 => 'Regular';
+
+  @override
+  String get badgeAttend10Rule => 'Attend 10 activities';
+
+  @override
+  String get badgeAttend25 => 'Synk Star';
+
+  @override
+  String get badgeAttend25Rule => 'Attend 25 activities';
+
+  @override
+  String get badgeAttend50 => 'Legend';
+
+  @override
+  String get badgeAttend50Rule => 'Attend 50 activities';
+
+  @override
+  String get badgeHost1 => 'First Host';
+
+  @override
+  String get badgeHost1Rule => 'Host an activity that someone joins';
+
+  @override
+  String get badgeHost10 => 'Go-To Host';
+
+  @override
+  String get badgeHost10Rule => 'Host 10 activities that people join';
+
+  @override
+  String get badgeFullHouse => 'Full House';
+
+  @override
+  String get badgeFullHouseRule =>
+      'Host an activity with 4 or more spots and fill every one';
+
+  @override
+  String get badgeVariety5 => 'Explorer';
+
+  @override
+  String get badgeVariety5Rule => 'Try 5 different categories';
+
+  @override
+  String get badgeVariety10 => 'Adventurer';
+
+  @override
+  String get badgeVariety10Rule => 'Try 10 different categories';
+
+  @override
+  String get badgeVariety20 => 'All-Rounder';
+
+  @override
+  String get badgeVariety20Rule => 'Try 20 different categories';
+
+  @override
+  String get badgeFriends5 => 'Friendly';
+
+  @override
+  String get badgeFriends5Rule => 'Have 5 friends on Synk';
+
+  @override
+  String get badgeFriends15 => 'Well Known';
+
+  @override
+  String get badgeFriends15Rule => 'Have 15 friends on Synk';
+
+  @override
+  String get badgeFriends30 => 'Heart of the Group';
+
+  @override
+  String get badgeFriends30Rule => 'Have 30 friends on Synk';
+
+  @override
+  String get badgeTogether5 => 'Better Together';
+
+  @override
+  String get badgeTogether5Rule => 'Attend 5 activities with a friend';
+
+  @override
+  String get badgeStreak3 => 'Warming Up';
+
+  @override
+  String get badgeStreak3Rule => 'Keep a 3-week streak';
+
+  @override
+  String get badgeStreak8 => 'On Fire';
+
+  @override
+  String get badgeStreak8Rule => 'Keep an 8-week streak';
+
+  @override
+  String get badgeStreak20 => 'Unstoppable';
+
+  @override
+  String get badgeStreak20Rule => 'Keep a 20-week streak';
+
+  @override
+  String get badgeFiveStar => 'Rising Star';
+
+  @override
+  String get badgeFiveStarRule => 'Get a 5-star rating';
+
+  @override
+  String get badgeRated45 => 'Trusted';
+
+  @override
+  String get badgeRated45Rule => 'Average 4.5 stars or more across 10 ratings';
+
+  @override
+  String get badgeRated48 => 'Golden Company';
+
+  @override
+  String get badgeRated48Rule => 'Average 4.8 stars or more across 25 ratings';
+
+  @override
+  String get badgeRater10 => 'Fair Say';
+
+  @override
+  String get badgeRater10Rule => 'Rate the other people after 10 activities';
+
+  @override
+  String get badgeEarlyBird => 'Early Bird';
+
+  @override
+  String get badgeEarlyBirdRule => 'Attend an activity that starts before 7 AM';
+
+  @override
+  String get badgeNightOwl => 'Night Owl';
+
+  @override
+  String get badgeNightOwlRule =>
+      'Attend an activity that starts at 11 PM or later';
+
+  @override
+  String get badgeLuckySpot => 'Lucky Spot';
+
+  @override
+  String get badgeLuckySpotRule => 'Get in from the waitlist and go';
+
+  @override
+  String get badgeWeekend => 'Weekend Mode';
+
+  @override
+  String get badgeWeekendRule =>
+      'Attend activities on Friday and Saturday of the same weekend';
+
+  @override
+  String get notifPrefBadges => 'Badges';
+
+  @override
+  String get notifPrefBadgesHint => 'When you earn a new badge';
+
+  @override
+  String get badgeHost25 => 'Open House';
+
+  @override
+  String get badgeHost25Rule => 'Host 25 activities that people join';
+
+  @override
+  String get badgeVariety30 => 'Tried It All';
+
+  @override
+  String get badgeVariety30Rule => 'Try 30 different categories';
+
+  @override
+  String get badgeStreak52 => 'Full Year';
+
+  @override
+  String get badgeStreak52Rule => 'Keep a 52-week streak';
+
+  @override
+  String badgeCategoryFanBy(String name, String gender) {
+    return '$name attended 5 activities in one category';
+  }
+
+  @override
+  String badgeAttend1By(String name, String gender) {
+    return '$name attended a first activity';
+  }
+
+  @override
+  String badgeAttend10By(String name, String gender) {
+    return '$name attended 10 activities';
+  }
+
+  @override
+  String badgeAttend25By(String name, String gender) {
+    return '$name attended 25 activities';
+  }
+
+  @override
+  String badgeAttend50By(String name, String gender) {
+    return '$name attended 50 activities';
+  }
+
+  @override
+  String badgeHost1By(String name, String gender) {
+    return '$name hosted an activity that someone joined';
+  }
+
+  @override
+  String badgeHost10By(String name, String gender) {
+    return '$name hosted 10 activities that people joined';
+  }
+
+  @override
+  String badgeHost25By(String name, String gender) {
+    return '$name hosted 25 activities that people joined';
+  }
+
+  @override
+  String badgeFullHouseBy(String name, String gender) {
+    return '$name hosted an activity with 4 or more spots and filled every one';
+  }
+
+  @override
+  String badgeVariety5By(String name, String gender) {
+    return '$name tried 5 different categories';
+  }
+
+  @override
+  String badgeVariety10By(String name, String gender) {
+    return '$name tried 10 different categories';
+  }
+
+  @override
+  String badgeVariety20By(String name, String gender) {
+    return '$name tried 20 different categories';
+  }
+
+  @override
+  String badgeVariety30By(String name, String gender) {
+    return '$name tried 30 different categories';
+  }
+
+  @override
+  String badgeFriends5By(String name, String gender) {
+    return '$name has 5 friends on Synk';
+  }
+
+  @override
+  String badgeFriends15By(String name, String gender) {
+    return '$name has 15 friends on Synk';
+  }
+
+  @override
+  String badgeFriends30By(String name, String gender) {
+    return '$name has 30 friends on Synk';
+  }
+
+  @override
+  String badgeTogether5By(String name, String gender) {
+    return '$name attended 5 activities with a friend';
+  }
+
+  @override
+  String badgeStreak3By(String name, String gender) {
+    return '$name kept a 3-week streak';
+  }
+
+  @override
+  String badgeStreak8By(String name, String gender) {
+    return '$name kept an 8-week streak';
+  }
+
+  @override
+  String badgeStreak20By(String name, String gender) {
+    return '$name kept a 20-week streak';
+  }
+
+  @override
+  String badgeStreak52By(String name, String gender) {
+    return '$name kept a 52-week streak';
+  }
+
+  @override
+  String badgeFiveStarBy(String name, String gender) {
+    return '$name got a 5-star rating';
+  }
+
+  @override
+  String badgeRated45By(String name, String gender) {
+    return '$name averaged 4.5 stars or more across 10 ratings';
+  }
+
+  @override
+  String badgeRated48By(String name, String gender) {
+    return '$name averaged 4.8 stars or more across 25 ratings';
+  }
+
+  @override
+  String badgeRater10By(String name, String gender) {
+    return '$name rated the other people after 10 activities';
+  }
+
+  @override
+  String badgeEarlyBirdBy(String name, String gender) {
+    return '$name attended an activity that started before 7 AM';
+  }
+
+  @override
+  String badgeNightOwlBy(String name, String gender) {
+    return '$name attended an activity that started at 11 PM or later';
+  }
+
+  @override
+  String badgeLuckySpotBy(String name, String gender) {
+    return '$name got in from the waitlist and went';
+  }
+
+  @override
+  String badgeWeekendBy(String name, String gender) {
+    return '$name attended activities on Friday and Saturday of the same weekend';
+  }
 }

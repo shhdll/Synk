@@ -16,6 +16,7 @@ import 'edit_profile_view.dart';
 import 'friends_view.dart';
 import 'logout_view.dart';
 import 'settings_view.dart';
+import 'widgets/badge_widgets.dart';
 import 'widgets/field_editor_sheet.dart';
 import 'widgets/option_picker_sheet.dart';
 import 'widgets/profile_info_row.dart';
@@ -24,6 +25,7 @@ import 'widgets/section_label.dart';
 import '../../utils/text_direction.dart';
 import '../widgets/avatar_preview.dart';
 import '../widgets/profile_header_banner.dart';
+import '../widgets/synk_blob_background.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key, this.activityStore});
@@ -233,390 +235,409 @@ class _ProfileViewState extends State<ProfileView> {
       if (age != null) context.l10n.ageYears(age),
     ].join(' · ');
 
-    return Scaffold(
-      backgroundColor: SynkColors.background,
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-              sliver: SliverList.list(
-                children: [
-                  // A swipe from the settings side toward the middle opens
-                  // settings, like tapping the button.
-                  GestureDetector(
-                    behavior: HitTestBehavior.translucent,
-                    onHorizontalDragEnd: (details) {
-                      final toStart =
-                          Directionality.of(context) == TextDirection.ltr
-                          ? -(details.primaryVelocity ?? 0)
-                          : details.primaryVelocity ?? 0;
-                      if (toStart > 300) _openSettings();
-                    },
-                    child: Row(
-                      children: [
-                        // Opened from the avatar in the home header.
-                        if (Navigator.of(context).canPop()) ...[
+    return SynkBlobPage(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          bottom: false,
+          child: CustomScrollView(
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+                sliver: SliverList.list(
+                  children: [
+                    // A swipe from the settings side toward the middle opens
+                    // settings, like tapping the button.
+                    GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onHorizontalDragEnd: (details) {
+                        final toStart =
+                            Directionality.of(context) == TextDirection.ltr
+                            ? -(details.primaryVelocity ?? 0)
+                            : details.primaryVelocity ?? 0;
+                        if (toStart > 300) _openSettings();
+                      },
+                      child: Row(
+                        children: [
+                          // Opened from the avatar in the home header.
+                          if (Navigator.of(context).canPop()) ...[
+                            IconButton(
+                              tooltip: MaterialLocalizations.of(context)
+                                  .backButtonTooltip,
+                              onPressed: () => Navigator.pop(context),
+                              icon: const Icon(
+                                Icons.arrow_back_rounded,
+                                color: SynkColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                          ],
+                          const Spacer(),
                           IconButton(
-                            tooltip: MaterialLocalizations.of(context)
-                                .backButtonTooltip,
-                            onPressed: () => Navigator.pop(context),
+                            tooltip: context.l10n.settings,
+                            onPressed: _openSettings,
                             icon: const Icon(
-                              Icons.arrow_back_rounded,
+                              Icons.settings_outlined,
                               color: SynkColors.textPrimary,
                             ),
                           ),
-                          const SizedBox(width: 4),
                         ],
-                        const Spacer(),
-                        IconButton(
-                          tooltip: context.l10n.settings,
-                          onPressed: _openSettings,
-                          icon: const Icon(
-                            Icons.settings_outlined,
-                            color: SynkColors.textPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Container(
-                    clipBehavior: Clip.antiAlias,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: SynkColors.textSecondary.withValues(alpha: 0.10),
                       ),
                     ),
-                    child: Column(
-                      children: [
-                        // Synk-gradient banner, framed by the card's own white
-                        // padding rather than flush with its edges, with the
-                        // avatar hanging off its bottom edge.
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                          // Photo on the left and Edit on the right in both
-                          // languages, matching the English layout.
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            alignment: Alignment.bottomLeft,
-                            children: [
-                              // The user's chosen color or photo.
-                              ProfileHeaderBanner.forProfile(profile),
-                              Positioned(
-                                left: 4,
-                                bottom: -40,
-                                child: GestureDetector(
-                                  onTap: () =>
-                                      showAvatarPreview(context, displayImage),
-                                  child: Container(
-                                    width: 84,
-                                    height: 84,
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
+                    const SizedBox(height: 20),
+                    Container(
+                      clipBehavior: Clip.antiAlias,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: SynkColors.textSecondary.withValues(
+                            alpha: 0.10,
+                          ),
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          // Synk-gradient banner, framed by the card's own white
+                          // padding rather than flush with its edges, with the
+                          // avatar hanging off its bottom edge.
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                            // Photo on the left and Edit on the right in both
+                            // languages, matching the English layout.
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              alignment: Alignment.bottomLeft,
+                              children: [
+                                // The user's chosen color or photo.
+                                ProfileHeaderBanner.forProfile(profile),
+                                Positioned(
+                                  left: 4,
+                                  bottom: -40,
+                                  child: GestureDetector(
+                                    onTap: () => showAvatarPreview(
+                                      context,
+                                      displayImage,
                                     ),
                                     child: Container(
-                                      decoration: BoxDecoration(
+                                      width: 84,
+                                      height: 84,
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.white,
                                         shape: BoxShape.circle,
-                                        image: DecorationImage(
-                                          image: displayImage,
-                                          fit: BoxFit.cover,
-                                        ),
                                       ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-                          child: Align(
-                            alignment: Alignment.centerRight,
-                            child: _EditInfoButton(onTap: _openEditProfile),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Left-aligned under the photo in both languages, and
-                              // left to right so "@user · 21" doesn't get reordered.
-                              Directionality(
-                                textDirection: TextDirection.ltr,
-                                child: SizedBox(
-                                  width: double.infinity,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        (fullName?.isNotEmpty ?? false)
-                                            ? fullName!
-                                            : context.l10n.synkMember,
-                                        style: const TextStyle(
-                                          fontSize: 19,
-                                          fontWeight: FontWeight.w800,
-                                          color: SynkColors.textPrimary,
-                                        ),
-                                      ),
-                                      if (subtitle.isNotEmpty) ...[
-                                        const SizedBox(height: 3),
-                                        Text(
-                                          subtitle,
-                                          style: const TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w500,
-                                            color: SynkColors.textSecondary,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          image: DecorationImage(
+                                            image: displayImage,
+                                            fit: BoxFit.cover,
                                           ),
                                         ),
-                                      ],
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 18),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: InkWell(
-                                      borderRadius: BorderRadius.circular(12),
-                                      onTap: () => Navigator.of(context).push(
-                                        MaterialPageRoute<void>(
-                                          builder: (_) => const FriendsView(),
-                                        ),
                                       ),
-                                      child: ListenableBuilder(
-                                        listenable: FriendsController.instance,
-                                        builder: (context, _) => _StatItem(
-                                          icon: Icons.people_alt_rounded,
-                                          value:
-                                              '${FriendsController.instance.friends.length}',
-                                          label: context.l10n.friends,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const _StatDivider(),
-                                  Expanded(
-                                    child: _StatItem(
-                                      icon: Icons.local_activity_rounded,
-                                      value: '$activitiesCount',
-                                      label: context.l10n.activities,
-                                    ),
-                                  ),
-                                  const _StatDivider(),
-                                  Expanded(
-                                    child: _StatItem(
-                                      icon: Icons.star_rounded,
-                                      value: ratingText,
-                                      // "12 reviews" under the stars once rated.
-                                      label:
-                                          ratingCount is int && ratingCount > 0
-                                          ? context.l10n.reviewsCount(
-                                              ratingCount,
-                                            )
-                                          : context.l10n.rating,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Divider(height: 1),
-                              const SizedBox(height: 14),
-                              GestureDetector(
-                                behavior: HitTestBehavior.opaque,
-                                onTap: () => _editBio(bio),
-                                child: SizedBox(
-                                  width: double.infinity,
-                                  child: Text(
-                                    (bio?.isNotEmpty ?? false)
-                                        ? bio!
-                                        : context.l10n.addAShortBioSoPeople,
-                                    // Follows the bio's own language, not the app's.
-                                    textDirection: textDirectionOf(bio ?? ''),
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      fontStyle: (bio?.isNotEmpty ?? false)
-                                          ? FontStyle.normal
-                                          : FontStyle.italic,
-                                      height: 1.4,
-                                      color: (bio?.isNotEmpty ?? false)
-                                          ? SynkColors.textPrimary
-                                          : SynkColors.textSecondary,
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  _ExpandableSection(
-                    title: context.l10n.interests,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (interests.isNotEmpty)
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: interests
-                                .map(
-                                  (interest) => Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 8,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.transparent,
-                                      borderRadius: BorderRadius.circular(999),
-                                      border: Border.all(
-                                        color: SynkColors.textSecondary
-                                            .withValues(alpha: 0.35),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                            child: Align(
+                              alignment: Alignment.centerRight,
+                              child: _EditInfoButton(onTap: _openEditProfile),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Left-aligned under the photo in both languages, and
+                                // left to right so "@user · 21" doesn't get reordered.
+                                Directionality(
+                                  textDirection: TextDirection.ltr,
+                                  child: SizedBox(
+                                    width: double.infinity,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        if (kInterestEmojis[interest] !=
-                                            null) ...[
-                                          Text(
-                                            kInterestEmojis[interest]!,
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 6),
-                                        ],
                                         Text(
-                                          valueLabel(interest),
+                                          (fullName?.isNotEmpty ?? false)
+                                              ? fullName!
+                                              : context.l10n.synkMember,
                                           style: const TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w700,
+                                            fontSize: 19,
+                                            fontWeight: FontWeight.w800,
                                             color: SynkColors.textPrimary,
                                           ),
                                         ),
+                                        if (subtitle.isNotEmpty) ...[
+                                          const SizedBox(height: 3),
+                                          Text(
+                                            subtitle,
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w500,
+                                              color: SynkColors.textSecondary,
+                                            ),
+                                          ),
+                                        ],
                                       ],
                                     ),
                                   ),
-                                )
-                                .toList(),
-                          )
-                        else
-                          Text(
-                            context.l10n.addInterestsSoPeopleGetTo,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontStyle: FontStyle.italic,
-                              color: SynkColors.textSecondary,
+                                ),
+                                const SizedBox(height: 18),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(12),
+                                        onTap: () => Navigator.of(context).push(
+                                          MaterialPageRoute<void>(
+                                            builder: (_) => const FriendsView(),
+                                          ),
+                                        ),
+                                        child: ListenableBuilder(
+                                          listenable:
+                                              FriendsController.instance,
+                                          builder: (context, _) => _StatItem(
+                                            icon: Icons.people_alt_rounded,
+                                            value:
+                                                '${FriendsController.instance.friends.length}',
+                                            label: context.l10n.friends,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const _StatDivider(),
+                                    Expanded(
+                                      child: _StatItem(
+                                        icon: Icons.local_activity_rounded,
+                                        value: '$activitiesCount',
+                                        label: context.l10n.activities,
+                                      ),
+                                    ),
+                                    const _StatDivider(),
+                                    Expanded(
+                                      child: _StatItem(
+                                        icon: Icons.star_rounded,
+                                        value: ratingText,
+                                        // "12 reviews" under the stars once rated.
+                                        label:
+                                            ratingCount is int &&
+                                                ratingCount > 0
+                                            ? context.l10n.reviewsCount(
+                                                ratingCount,
+                                              )
+                                            : context.l10n.rating,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
-                        const SizedBox(height: 12),
-                        Align(
-                          alignment: AlignmentDirectional.centerEnd,
-                          child: _EditInfoButton(
-                            onTap: () => _openEditInterests(interests),
+                          const SizedBox(height: 12),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Divider(height: 1),
+                                const SizedBox(height: 14),
+                                GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: () => _editBio(bio),
+                                  child: SizedBox(
+                                    width: double.infinity,
+                                    child: Text(
+                                      (bio?.isNotEmpty ?? false)
+                                          ? bio!
+                                          : context.l10n.addAShortBioSoPeople,
+                                      // Follows the bio's own language, not the app's.
+                                      textDirection: textDirectionOf(bio ?? ''),
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        fontStyle: (bio?.isNotEmpty ?? false)
+                                            ? FontStyle.normal
+                                            : FontStyle.italic,
+                                        height: 1.4,
+                                        color: (bio?.isNotEmpty ?? false)
+                                            ? SynkColors.textPrimary
+                                            : SynkColors.textSecondary,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _ExpandableSection(
-                    title: context.l10n.preferences,
-                    child: Column(
-                      children: [
-                        ProfileInfoRow(
-                          icon: Icons.local_activity_rounded,
-                          label: context.l10n.activityType,
-                          value: (activityType?.isNotEmpty ?? false)
-                              ? valueLabel(activityType!)
-                              : context.l10n.notSet,
-                          onEdit: () => _editActivityType(activityType),
-                        ),
-                        const Divider(height: 20),
-                        ProfileInfoRow(
-                          icon: Icons.place_rounded,
-                          label: context.l10n.preferredLocation,
-                          value: (locationPreference?.isNotEmpty ?? false)
-                              ? valueLabel(locationPreference!)
-                              : context.l10n.notSet,
-                          onEdit: () =>
-                              _editLocationPreference(locationPreference),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (Supabase.instance.client.auth.currentUser?.id
-                      case final myId?)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: RecentActivitiesSection(
-                        userId: myId,
-                        userName: fullName ?? '',
-                        frame: (title, child) =>
-                            _ExpandableSection(title: title, child: child),
+                        ],
                       ),
                     ),
-                ],
-              ),
-            ),
-            // Log out sits at the bottom of the screen, or after the
-            // sections when they don't fit.
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    SizedBox(
-                      height: 52,
-                      child: OutlinedButton.icon(
-                        onPressed: _openLogout,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: SynkColors.orangeDark,
-                          side: BorderSide.none,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                    const SizedBox(height: 24),
+                    _ExpandableSection(
+                      title: context.l10n.interestsAndPreferences,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (interests.isNotEmpty)
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: interests
+                                  .map(
+                                    (interest) => Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                        vertical: 8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.transparent,
+                                        borderRadius: BorderRadius.circular(
+                                          999,
+                                        ),
+                                        border: Border.all(
+                                          color: SynkColors.textSecondary
+                                              .withValues(alpha: 0.35),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          if (kInterestEmojis[interest] !=
+                                              null) ...[
+                                            Text(
+                                              kInterestEmojis[interest]!,
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                          ],
+                                          Text(
+                                            valueLabel(interest),
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w700,
+                                              color: SynkColors.textPrimary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                            )
+                          else
+                            Text(
+                              context.l10n.addInterestsSoPeopleGetTo,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontStyle: FontStyle.italic,
+                                color: SynkColors.textSecondary,
+                              ),
+                            ),
+                          const SizedBox(height: 12),
+                          Align(
+                            alignment: AlignmentDirectional.centerEnd,
+                            child: _EditInfoButton(
+                              onTap: () => _openEditInterests(interests),
+                            ),
                           ),
-                        ),
-                        icon: const Icon(SynkIcons.logout),
-                        label: Text(
-                          context.l10n.logOut,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
+                          const Divider(height: 28),
+                          ProfileInfoRow(
+                            icon: Icons.local_activity_rounded,
+                            label: context.l10n.activityType,
+                            value: (activityType?.isNotEmpty ?? false)
+                                ? valueLabel(activityType!)
+                                : context.l10n.notSet,
+                            onEdit: () => _editActivityType(activityType),
                           ),
-                        ),
+                          const Divider(height: 20),
+                          ProfileInfoRow(
+                            icon: Icons.place_rounded,
+                            label: context.l10n.preferredLocation,
+                            value: (locationPreference?.isNotEmpty ?? false)
+                                ? valueLabel(locationPreference!)
+                                : context.l10n.notSet,
+                            onEdit: () =>
+                                _editLocationPreference(locationPreference),
+                          ),
+                        ],
                       ),
                     ),
+                    if (Supabase.instance.client.auth.currentUser?.id
+                        case final myId?) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: BadgesSection(
+                          userId: myId,
+                          isMine: true,
+                          frame: (title, child) =>
+                              _ExpandableSection(title: title, child: child),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: RecentActivitiesSection(
+                          userId: myId,
+                          userName: fullName ?? '',
+                          frame: (title, child) =>
+                              _ExpandableSection(title: title, child: child),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
-            ),
-          ],
+              // Log out sits at the bottom of the screen, or after the
+              // sections when they don't fit.
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    24,
+                    28,
+                    24,
+                    32 + MediaQuery.viewPaddingOf(context).bottom,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(
+                        height: 52,
+                        child: OutlinedButton.icon(
+                          onPressed: _openLogout,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: SynkColors.orangeDark,
+                            side: BorderSide.none,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          icon: const Icon(SynkIcons.logout),
+                          label: Text(
+                            context.l10n.logOut,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

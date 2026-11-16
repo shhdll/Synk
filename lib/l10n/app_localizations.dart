@@ -2810,6 +2810,12 @@ abstract class AppLocalizations {
   /// **'Interests'**
   String get interests;
 
+  /// No description provided for @interestsAndPreferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Interests & preferences'**
+  String get interestsAndPreferences;
+
   /// No description provided for @preferences.
   ///
   /// In en, this message translates to:
@@ -6582,6 +6588,678 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Review activity'**
   String get reviewActivity;
+
+  /// No description provided for @badgesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Badges'**
+  String get badgesTitle;
+
+  /// No description provided for @badgesEarnedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{earned} of {total} earned'**
+  String badgesEarnedCount(Object earned, Object total);
+
+  /// No description provided for @badgesNoneYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Your first activity gets you your first badge.'**
+  String get badgesNoneYet;
+
+  /// No description provided for @badgesSeeAllMine.
+  ///
+  /// In en, this message translates to:
+  /// **'See all badges'**
+  String get badgesSeeAllMine;
+
+  /// No description provided for @badgeNewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New badge'**
+  String get badgeNewTitle;
+
+  /// No description provided for @badgesNewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New badges'**
+  String get badgesNewTitle;
+
+  /// No description provided for @badgeNewAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Nice'**
+  String get badgeNewAction;
+
+  /// No description provided for @badgeShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get badgeShare;
+
+  /// No description provided for @sharedSendTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to'**
+  String get sharedSendTo;
+
+  /// No description provided for @badgeShareMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'I just got the {badge} badge on Synk\nsynk.cc'**
+  String badgeShareMessage(Object badge);
+
+  /// No description provided for @badgesAlsoEarned.
+  ///
+  /// In en, this message translates to:
+  /// **'Also earned'**
+  String get badgesAlsoEarned;
+
+  /// No description provided for @badgeEarnedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Earned {date}'**
+  String badgeEarnedOn(Object date);
+
+  /// No description provided for @badgeSecretName.
+  ///
+  /// In en, this message translates to:
+  /// **'Secret badge'**
+  String get badgeSecretName;
+
+  /// No description provided for @badgeSecretRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep going out and you\'ll find it.'**
+  String get badgeSecretRule;
+
+  /// No description provided for @badgeGroupGoingOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Going out'**
+  String get badgeGroupGoingOut;
+
+  /// No description provided for @badgeGroupHosting.
+  ///
+  /// In en, this message translates to:
+  /// **'Hosting'**
+  String get badgeGroupHosting;
+
+  /// No description provided for @badgeGroupVariety.
+  ///
+  /// In en, this message translates to:
+  /// **'Variety'**
+  String get badgeGroupVariety;
+
+  /// No description provided for @badgeGroupCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories'**
+  String get badgeGroupCategory;
+
+  /// No description provided for @badgeGroupFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends'**
+  String get badgeGroupFriends;
+
+  /// No description provided for @badgeGroupStreaks.
+  ///
+  /// In en, this message translates to:
+  /// **'Streaks'**
+  String get badgeGroupStreaks;
+
+  /// No description provided for @badgeGroupRatings.
+  ///
+  /// In en, this message translates to:
+  /// **'Ratings'**
+  String get badgeGroupRatings;
+
+  /// No description provided for @badgeGroupSecret.
+  ///
+  /// In en, this message translates to:
+  /// **'Secret'**
+  String get badgeGroupSecret;
+
+  /// No description provided for @badgeCategoryFan.
+  ///
+  /// In en, this message translates to:
+  /// **'{category} Fan'**
+  String badgeCategoryFan(Object category);
+
+  /// No description provided for @badgeCategoryAny.
+  ///
+  /// In en, this message translates to:
+  /// **'Category Fan'**
+  String get badgeCategoryAny;
+
+  /// No description provided for @badgeCategoryFanRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Attend 5 activities in one category'**
+  String get badgeCategoryFanRule;
+
+  /// No description provided for @badgeAttend1.
+  ///
+  /// In en, this message translates to:
+  /// **'First Step'**
+  String get badgeAttend1;
+
+  /// No description provided for @badgeAttend1Rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Attend a first activity'**
+  String get badgeAttend1Rule;
+
+  /// No description provided for @badgeAttend10.
+  ///
+  /// In en, this message translates to:
+  /// **'Regular'**
+  String get badgeAttend10;
+
+  /// No description provided for @badgeAttend10Rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Attend 10 activities'**
+  String get badgeAttend10Rule;
+
+  /// No description provided for @badgeAttend25.
+  ///
+  /// In en, this message translates to:
+  /// **'Synk Star'**
+  String get badgeAttend25;
+
+  /// No description provided for @badgeAttend25Rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Attend 25 activities'**
+  String get badgeAttend25Rule;
+
+  /// No description provided for @badgeAttend50.
+  ///
+  /// In en, this message translates to:
+  /// **'Legend'**
+  String get badgeAttend50;
+
+  /// No description provided for @badgeAttend50Rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Attend 50 activities'**
+  String get badgeAttend50Rule;
+
+  /// No description provided for @badgeHost1.
+  ///
+  /// In en, this message translates to:
+  /// **'First Host'**
+  String get badgeHost1;
+
+  /// No description provided for @badgeHost1Rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Host an activity that someone joins'**
+  String get badgeHost1Rule;
+
+  /// No description provided for @badgeHost10.
+  ///
+  /// In en, this message translates to:
+  /// **'Go-To Host'**
+  String get badgeHost10;
+
+  /// No description provided for @badgeHost10Rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Host 10 activities that people join'**
+  String get badgeHost10Rule;
+
+  /// No description provided for @badgeFullHouse.
+  ///
+  /// In en, this message translates to:
+  /// **'Full House'**
+  String get badgeFullHouse;
+
+  /// No description provided for @badgeFullHouseRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Host an activity with 4 or more spots and fill every one'**
+  String get badgeFullHouseRule;
+
+  /// No description provided for @badgeVariety5.
+  ///
+  /// In en, this message translates to:
+  /// **'Explorer'**
+  String get badgeVariety5;
+
+  /// No description provided for @badgeVariety5Rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Try 5 different categories'**
+  String get badgeVariety5Rule;
+
+  /// No description provided for @badgeVariety10.
+  ///
+  /// In en, this message translates to:
+  /// **'Adventurer'**
+  String get badgeVariety10;
+
+  /// No description provided for @badgeVariety10Rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Try 10 different categories'**
+  String get badgeVariety10Rule;
+
+  /// No description provided for @badgeVariety20.
+  ///
+  /// In en, this message translates to:
+  /// **'All-Rounder'**
+  String get badgeVariety20;
+
+  /// No description provided for @badgeVariety20Rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Try 20 different categories'**
+  String get badgeVariety20Rule;
+
+  /// No description provided for @badgeFriends5.
+  ///
+  /// In en, this message translates to:
+  /// **'Friendly'**
+  String get badgeFriends5;
+
+  /// No description provided for @badgeFriends5Rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Have 5 friends on Synk'**
+  String get badgeFriends5Rule;
+
+  /// No description provided for @badgeFriends15.
+  ///
+  /// In en, this message translates to:
+  /// **'Well Known'**
+  String get badgeFriends15;
+
+  /// No description provided for @badgeFriends15Rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Have 15 friends on Synk'**
+  String get badgeFriends15Rule;
+
+  /// No description provided for @badgeFriends30.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart of the Group'**
+  String get badgeFriends30;
+
+  /// No description provided for @badgeFriends30Rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Have 30 friends on Synk'**
+  String get badgeFriends30Rule;
+
+  /// No description provided for @badgeTogether5.
+  ///
+  /// In en, this message translates to:
+  /// **'Better Together'**
+  String get badgeTogether5;
+
+  /// No description provided for @badgeTogether5Rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Attend 5 activities with a friend'**
+  String get badgeTogether5Rule;
+
+  /// No description provided for @badgeStreak3.
+  ///
+  /// In en, this message translates to:
+  /// **'Warming Up'**
+  String get badgeStreak3;
+
+  /// No description provided for @badgeStreak3Rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep a 3-week streak'**
+  String get badgeStreak3Rule;
+
+  /// No description provided for @badgeStreak8.
+  ///
+  /// In en, this message translates to:
+  /// **'On Fire'**
+  String get badgeStreak8;
+
+  /// No description provided for @badgeStreak8Rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep an 8-week streak'**
+  String get badgeStreak8Rule;
+
+  /// No description provided for @badgeStreak20.
+  ///
+  /// In en, this message translates to:
+  /// **'Unstoppable'**
+  String get badgeStreak20;
+
+  /// No description provided for @badgeStreak20Rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep a 20-week streak'**
+  String get badgeStreak20Rule;
+
+  /// No description provided for @badgeFiveStar.
+  ///
+  /// In en, this message translates to:
+  /// **'Rising Star'**
+  String get badgeFiveStar;
+
+  /// No description provided for @badgeFiveStarRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Get a 5-star rating'**
+  String get badgeFiveStarRule;
+
+  /// No description provided for @badgeRated45.
+  ///
+  /// In en, this message translates to:
+  /// **'Trusted'**
+  String get badgeRated45;
+
+  /// No description provided for @badgeRated45Rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Average 4.5 stars or more across 10 ratings'**
+  String get badgeRated45Rule;
+
+  /// No description provided for @badgeRated48.
+  ///
+  /// In en, this message translates to:
+  /// **'Golden Company'**
+  String get badgeRated48;
+
+  /// No description provided for @badgeRated48Rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Average 4.8 stars or more across 25 ratings'**
+  String get badgeRated48Rule;
+
+  /// No description provided for @badgeRater10.
+  ///
+  /// In en, this message translates to:
+  /// **'Fair Say'**
+  String get badgeRater10;
+
+  /// No description provided for @badgeRater10Rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate the other people after 10 activities'**
+  String get badgeRater10Rule;
+
+  /// No description provided for @badgeEarlyBird.
+  ///
+  /// In en, this message translates to:
+  /// **'Early Bird'**
+  String get badgeEarlyBird;
+
+  /// No description provided for @badgeEarlyBirdRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Attend an activity that starts before 7 AM'**
+  String get badgeEarlyBirdRule;
+
+  /// No description provided for @badgeNightOwl.
+  ///
+  /// In en, this message translates to:
+  /// **'Night Owl'**
+  String get badgeNightOwl;
+
+  /// No description provided for @badgeNightOwlRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Attend an activity that starts at 11 PM or later'**
+  String get badgeNightOwlRule;
+
+  /// No description provided for @badgeLuckySpot.
+  ///
+  /// In en, this message translates to:
+  /// **'Lucky Spot'**
+  String get badgeLuckySpot;
+
+  /// No description provided for @badgeLuckySpotRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Get in from the waitlist and go'**
+  String get badgeLuckySpotRule;
+
+  /// No description provided for @badgeWeekend.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekend Mode'**
+  String get badgeWeekend;
+
+  /// No description provided for @badgeWeekendRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Attend activities on Friday and Saturday of the same weekend'**
+  String get badgeWeekendRule;
+
+  /// No description provided for @notifPrefBadges.
+  ///
+  /// In en, this message translates to:
+  /// **'Badges'**
+  String get notifPrefBadges;
+
+  /// No description provided for @notifPrefBadgesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'When you earn a new badge'**
+  String get notifPrefBadgesHint;
+
+  /// No description provided for @badgeHost25.
+  ///
+  /// In en, this message translates to:
+  /// **'Open House'**
+  String get badgeHost25;
+
+  /// No description provided for @badgeHost25Rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Host 25 activities that people join'**
+  String get badgeHost25Rule;
+
+  /// No description provided for @badgeVariety30.
+  ///
+  /// In en, this message translates to:
+  /// **'Tried It All'**
+  String get badgeVariety30;
+
+  /// No description provided for @badgeVariety30Rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Try 30 different categories'**
+  String get badgeVariety30Rule;
+
+  /// No description provided for @badgeStreak52.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Year'**
+  String get badgeStreak52;
+
+  /// No description provided for @badgeStreak52Rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep a 52-week streak'**
+  String get badgeStreak52Rule;
+
+  /// No description provided for @badgeCategoryFanBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} attended 5 activities in one category'**
+  String badgeCategoryFanBy(String name, String gender);
+
+  /// No description provided for @badgeAttend1By.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} attended a first activity'**
+  String badgeAttend1By(String name, String gender);
+
+  /// No description provided for @badgeAttend10By.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} attended 10 activities'**
+  String badgeAttend10By(String name, String gender);
+
+  /// No description provided for @badgeAttend25By.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} attended 25 activities'**
+  String badgeAttend25By(String name, String gender);
+
+  /// No description provided for @badgeAttend50By.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} attended 50 activities'**
+  String badgeAttend50By(String name, String gender);
+
+  /// No description provided for @badgeHost1By.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} hosted an activity that someone joined'**
+  String badgeHost1By(String name, String gender);
+
+  /// No description provided for @badgeHost10By.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} hosted 10 activities that people joined'**
+  String badgeHost10By(String name, String gender);
+
+  /// No description provided for @badgeHost25By.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} hosted 25 activities that people joined'**
+  String badgeHost25By(String name, String gender);
+
+  /// No description provided for @badgeFullHouseBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} hosted an activity with 4 or more spots and filled every one'**
+  String badgeFullHouseBy(String name, String gender);
+
+  /// No description provided for @badgeVariety5By.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} tried 5 different categories'**
+  String badgeVariety5By(String name, String gender);
+
+  /// No description provided for @badgeVariety10By.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} tried 10 different categories'**
+  String badgeVariety10By(String name, String gender);
+
+  /// No description provided for @badgeVariety20By.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} tried 20 different categories'**
+  String badgeVariety20By(String name, String gender);
+
+  /// No description provided for @badgeVariety30By.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} tried 30 different categories'**
+  String badgeVariety30By(String name, String gender);
+
+  /// No description provided for @badgeFriends5By.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} has 5 friends on Synk'**
+  String badgeFriends5By(String name, String gender);
+
+  /// No description provided for @badgeFriends15By.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} has 15 friends on Synk'**
+  String badgeFriends15By(String name, String gender);
+
+  /// No description provided for @badgeFriends30By.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} has 30 friends on Synk'**
+  String badgeFriends30By(String name, String gender);
+
+  /// No description provided for @badgeTogether5By.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} attended 5 activities with a friend'**
+  String badgeTogether5By(String name, String gender);
+
+  /// No description provided for @badgeStreak3By.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} kept a 3-week streak'**
+  String badgeStreak3By(String name, String gender);
+
+  /// No description provided for @badgeStreak8By.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} kept an 8-week streak'**
+  String badgeStreak8By(String name, String gender);
+
+  /// No description provided for @badgeStreak20By.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} kept a 20-week streak'**
+  String badgeStreak20By(String name, String gender);
+
+  /// No description provided for @badgeStreak52By.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} kept a 52-week streak'**
+  String badgeStreak52By(String name, String gender);
+
+  /// No description provided for @badgeFiveStarBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} got a 5-star rating'**
+  String badgeFiveStarBy(String name, String gender);
+
+  /// No description provided for @badgeRated45By.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} averaged 4.5 stars or more across 10 ratings'**
+  String badgeRated45By(String name, String gender);
+
+  /// No description provided for @badgeRated48By.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} averaged 4.8 stars or more across 25 ratings'**
+  String badgeRated48By(String name, String gender);
+
+  /// No description provided for @badgeRater10By.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} rated the other people after 10 activities'**
+  String badgeRater10By(String name, String gender);
+
+  /// No description provided for @badgeEarlyBirdBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} attended an activity that started before 7 AM'**
+  String badgeEarlyBirdBy(String name, String gender);
+
+  /// No description provided for @badgeNightOwlBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} attended an activity that started at 11 PM or later'**
+  String badgeNightOwlBy(String name, String gender);
+
+  /// No description provided for @badgeLuckySpotBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} got in from the waitlist and went'**
+  String badgeLuckySpotBy(String name, String gender);
+
+  /// No description provided for @badgeWeekendBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} attended activities on Friday and Saturday of the same weekend'**
+  String badgeWeekendBy(String name, String gender);
 }
 
 class _AppLocalizationsDelegate

@@ -9,6 +9,7 @@ enum NotificationKind {
   reminders('reminders'),
   friendRequests('friend_requests'),
   chats('chats'),
+  badges('badges'),
   marketing('marketing');
 
   const NotificationKind(this.column);
