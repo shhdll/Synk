@@ -13,6 +13,7 @@ import '../../../models/chat_model.dart';
 import '../../../models/friends_model.dart';
 import '../../../utils/custom_widgets/synk_feedback.dart';
 import '../../../utils/share_activity.dart';
+import '../chat_room_view.dart';
 import 'activity_thumbnail.dart';
 import 'discovery_activity_card.dart';
 import 'empty_state.dart';
@@ -474,7 +475,40 @@ class _FriendPickerSheetState extends State<_FriendPickerSheet> {
 
 // Sends [activity] into chats, picked from your chats and friends you don't
 // have a chat with yet. The sheet stays open so it can go to several.
-Future<void> showShareToChatSheet(BuildContext context, Activity activity) {
+Future<void> showShareToChatSheet(BuildContext context, Activity activity) =>
+    showSendToChatSheet(
+      context,
+      title: context.l10n.share,
+      outside: (
+        label: context.l10n.shareLink,
+        icon: Icons.link_rounded,
+        onTap: (buttonContext) => shareActivityLink(buttonContext, activity),
+      ),
+      send: (chatId) async {
+        final (:result, message: _) = await ChatController.instance.model.send(
+          chatId,
+          '',
+          activityId: activity.id,
+        );
+        return result;
+      },
+    );
+
+// The same picker for anything else. [send] sends into one chat and returns
+// send_chat_message's result. [outside] adds a row on top that shares
+// outside Synk.
+typedef ShareOutside = ({
+  String label,
+  IconData icon,
+  void Function(BuildContext buttonContext) onTap,
+});
+
+Future<void> showSendToChatSheet(
+  BuildContext context, {
+  required String title,
+  required Future<String> Function(String chatId) send,
+  ShareOutside? outside,
+}) {
   unawaited(ChatController.instance.refresh());
   unawaited(FriendsController.instance.refresh());
   return showModalBottomSheet<void>(
@@ -484,14 +518,21 @@ Future<void> showShareToChatSheet(BuildContext context, Activity activity) {
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
-    builder: (_) => _ShareToChatSheet(activity: activity),
+    builder: (_) =>
+        _ShareToChatSheet(title: title, send: send, outside: outside),
   );
 }
 
 class _ShareToChatSheet extends StatefulWidget {
-  const _ShareToChatSheet({required this.activity});
+  const _ShareToChatSheet({
+    required this.title,
+    required this.send,
+    this.outside,
+  });
 
-  final Activity activity;
+  final String title;
+  final Future<String> Function(String chatId) send;
+  final ShareOutside? outside;
 
   @override
   State<_ShareToChatSheet> createState() => _ShareToChatSheetState();
@@ -503,6 +544,8 @@ class _ShareToChatSheetState extends State<_ShareToChatSheet> {
   // Keyed by chat id, or by user id for friends without a chat yet.
   final Set<String> _sending = {};
   final Set<String> _sent = {};
+  // Row key to the chat it went to, so Sent can open that chat.
+  final Map<String, String> _sentTo = {};
 
   @override
   void dispose() {
@@ -513,22 +556,21 @@ class _ShareToChatSheetState extends State<_ShareToChatSheet> {
   Future<void> _send(String key, Future<String?> Function() chatId) async {
     setState(() => _sending.add(key));
     var result = '';
+    String? id;
     try {
-      final id = await chatId();
-      if (id != null) {
-        (:result, message: _) = await ChatController.instance.model.send(
-          id,
-          '',
-          activityId: widget.activity.id,
-        );
-      }
+      id = await chatId();
+      if (id != null) result = await widget.send(id);
     } catch (error) {
-      debugPrint('SYNK: sharing activity failed: $error');
+      debugPrint('SYNK: sharing to chat failed: $error');
     }
     if (!mounted) return;
     setState(() {
       _sending.remove(key);
-      if (result == 'sent') _sent.add(key);
+      if (result == 'sent' && id != null) {
+        // A friend's new chat shows up later as a chat row, keyed by its id.
+        _sent.addAll([key, id]);
+        _sentTo[key] = id;
+      }
     });
     if (result == 'sent') {
       unawaited(ChatController.instance.refresh());
@@ -541,6 +583,19 @@ class _ShareToChatSheetState extends State<_ShareToChatSheet> {
           : context.l10n.messageNotSent,
       success: false,
     );
+  }
+
+  // Opens the chat over this sheet; back comes here again.
+  Future<void> _open(String key) async {
+    final chatId = _sentTo[key] ?? key;
+    final chats = ChatController.instance;
+    var chat = chats.byId(chatId);
+    if (chat == null) {
+      await chats.refresh();
+      chat = chats.byId(chatId);
+    }
+    if (chat == null || !mounted) return;
+    await openChatRoom(context, chat);
   }
 
   @override
@@ -580,7 +635,7 @@ class _ShareToChatSheetState extends State<_ShareToChatSheet> {
               const _Handle(),
               const SizedBox(height: 16),
               Text(
-                context.l10n.share,
+                widget.title,
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
@@ -588,55 +643,56 @@ class _ShareToChatSheetState extends State<_ShareToChatSheet> {
                 ),
               ),
               const SizedBox(height: 14),
-              // Outside Synk: the phone's share menu with a link.
-              Builder(
-                builder: (buttonContext) => Material(
-                  color: SynkColors.orangeDark.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(14),
-                  child: InkWell(
-                    onTap: () =>
-                        shareActivityLink(buttonContext, widget.activity),
+              // Outside Synk: the phone's share menu.
+              if (widget.outside case final outside?) ...[
+                Builder(
+                  builder: (buttonContext) => Material(
+                    color: SynkColors.orangeDark.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(14),
-                    // Same height as the search field below it.
-                    child: Container(
-                      height: 48,
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.link_rounded,
-                            size: 20,
-                            color: SynkColors.orangeDark,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              context.l10n.shareLink,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w800,
-                                color: SynkColors.orangeDark,
+                    child: InkWell(
+                      onTap: () => outside.onTap(buttonContext),
+                      borderRadius: BorderRadius.circular(14),
+                      // Same height as the search field below it.
+                      child: Container(
+                        height: 48,
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        child: Row(
+                          children: [
+                            Icon(
+                              outside.icon,
+                              size: 20,
+                              color: SynkColors.orangeDark,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                outside.label,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  color: SynkColors.orangeDark,
+                                ),
                               ),
                             ),
-                          ),
-                          const Icon(
-                            Icons.ios_share_rounded,
-                            size: 18,
-                            color: SynkColors.orangeDark,
-                          ),
-                        ],
+                            const Icon(
+                              Icons.ios_share_rounded,
+                              size: 18,
+                              color: SynkColors.orangeDark,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Divider(
-                height: 1,
-                thickness: 1,
-                color: SynkColors.textSecondary.withValues(alpha: 0.15),
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: SynkColors.textSecondary.withValues(alpha: 0.15),
+                ),
+                const SizedBox(height: 16),
+              ],
               FriendsSearchField(
                 controller: _search,
                 hint: context.l10n.searchChats,
@@ -672,6 +728,7 @@ class _ShareToChatSheetState extends State<_ShareToChatSheet> {
                         sending: _sending.contains(chat.id),
                         sent: _sent.contains(chat.id),
                         onSend: () => _send(chat.id, () async => chat.id),
+                        onOpen: () => _open(chat.id),
                       ),
                     for (final friend in newFriends)
                       _ShareTargetRow(
@@ -686,6 +743,7 @@ class _ShareToChatSheetState extends State<_ShareToChatSheet> {
                           friend.id,
                           () => chats.openDirectChat(friend.id),
                         ),
+                        onOpen: () => _open(friend.id),
                       ),
                   ],
                 ),
@@ -712,6 +770,7 @@ class _ShareTargetRow extends StatelessWidget {
     required this.title,
     required this.sending,
     required this.sent,
+    required this.onOpen,
     required this.onSend,
   });
 
@@ -719,6 +778,7 @@ class _ShareTargetRow extends StatelessWidget {
   final String title;
   final bool sending;
   final bool sent;
+  final VoidCallback onOpen;
   final VoidCallback onSend;
 
   @override
@@ -742,25 +802,34 @@ class _ShareTargetRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
+          // Send and Sent share one slot so they line up.
           if (sent)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.check_rounded,
-                  size: 18,
-                  color: SynkColors.tealText,
+            InkWell(
+              onTap: onOpen,
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                constraints: const BoxConstraints(minWidth: 88, minHeight: 36),
+                alignment: Alignment.center,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.check_rounded,
+                      size: 18,
+                      color: SynkColors.tealText,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      context.l10n.sent,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: SynkColors.tealText,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 4),
-                Text(
-                  context.l10n.sent,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: SynkColors.tealText,
-                  ),
-                ),
-              ],
+              ),
             )
           else
             FilledButton(
@@ -769,7 +838,7 @@ class _ShareTargetRow extends StatelessWidget {
                 backgroundColor: SynkColors.orangeLight,
                 foregroundColor: SynkColors.orangeDeep,
                 disabledBackgroundColor: SynkColors.orangeLight,
-                minimumSize: const Size(72, 36),
+                minimumSize: const Size(88, 36),
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),

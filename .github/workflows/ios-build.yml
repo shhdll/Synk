@@ -42,6 +42,12 @@ jobs:
       - name: Use CocoaPods
         run: flutter config --no-enable-swift-package-manager
 
+      # Synk in the iPhone share menu (ios/ShareExtension).
+      - name: Add share extension
+        run: |
+          ruby -e "require 'xcodeproj'" 2>/dev/null || sudo gem install xcodeproj
+          ruby ios/scripts/add_share_extension.rb
+
       - run: flutter pub get
 
       # 1.<merged pull requests>.0+<commits>, e.g. 1.70.0+240. The About page
@@ -53,6 +59,21 @@ jobs:
           echo "Version 1.${prs}.0+${commits}"
           flutter build ios --release --no-codesign \
             --build-name="1.${prs}.0" --build-number="${commits}"
+
+      # The build is unsigned. A quick local signature carries the shared
+      # group the app and its share extension use to pass the picture;
+      # Sideloadly / AltStore sign it properly when installing.
+      - name: Sign share extension
+        run: |
+          app=build/ios/iphoneos/Runner.app
+          ext=$app/PlugIns/ShareExtension.appex
+          plist=/usr/libexec/PlistBuddy
+          name=$($plist -c 'Print CFBundleShortVersionString' "$app/Info.plist")
+          number=$($plist -c 'Print CFBundleVersion' "$app/Info.plist")
+          $plist -c "Set CFBundleShortVersionString $name" -c "Set CFBundleVersion $number" "$ext/Info.plist"
+          find "$app/Frameworks" -maxdepth 1 \( -name '*.framework' -o -name '*.dylib' \) -exec codesign -f -s - {} \;
+          codesign -f -s - --entitlements ios/ShareExtension/ShareExtension.entitlements "$ext"
+          codesign -f -s - --entitlements ios/Runner/Runner.entitlements "$app"
 
       - name: Package IPA
         run: |
