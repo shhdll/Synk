@@ -1,10 +1,10 @@
 import UIKit
 import UniformTypeIdentifiers
 
-// Synk in the share menu for pictures and links. Saves what was shared in
-// the folder the app shares with this extension (or a named pasteboard),
-// then opens Synk, which asks which chats it goes to (AppDelegate takes it
-// from there).
+// Synk in the share menu for pictures and links. Opens Synk with what was
+// shared in the link, and also saves it in the folder the app shares with
+// this extension and on a named pasteboard (AppDelegate reads those). Synk
+// then asks which chats it goes to.
 class ShareViewController: UIViewController {
   private var started = false
 
@@ -38,10 +38,11 @@ class ShareViewController: UIViewController {
         if let picture = await picture(provider) { items.append(picture) }
       }
     }
-    guard !items.isEmpty, keep(items) else {
+    guard !items.isEmpty else {
       return finish(note: Self.ar ? "ما قدرنا نشارك هذا" : "Couldn't share this")
     }
-    guard let url = URL(string: "synk-share://open") else { return finish() }
+    _ = keep(items)
+    guard let url = link(items) else { return finish() }
     open(url) { opened in
       if opened {
         self.finish()
@@ -69,6 +70,45 @@ class ShareViewController: UIViewController {
       if board.numberOfItems > 0 { saved = true }
     }
     return saved
+  }
+
+  // The link that opens Synk also carries what was shared (text as is,
+  // pictures made smaller), so the app gets it even when the folder and
+  // pasteboard don't reach it.
+  private func link(_ items: [[String: Any]]) -> URL? {
+    let allowed = CharacterSet(
+      charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~")
+    var parts: [String] = []
+    for item in items {
+      if let text = item[UTType.utf8PlainText.identifier] as? String {
+        if let value = text.addingPercentEncoding(withAllowedCharacters: allowed) {
+          parts.append("text=\(value)")
+        }
+      } else if let data = (item[UTType.png.identifier] ?? item[UTType.jpeg.identifier]) as? Data,
+        let photo = small(data)
+      {
+        let value = photo.base64EncodedString()
+          .replacingOccurrences(of: "+", with: "-")
+          .replacingOccurrences(of: "/", with: "_")
+          .replacingOccurrences(of: "=", with: "")
+        parts.append("photo=\(value)")
+      }
+    }
+    return URL(string: "synk-share://open" + (parts.isEmpty ? "" : "?" + parts.joined(separator: "&")))
+  }
+
+  private func small(_ data: Data) -> Data? {
+    guard let image = UIImage(data: data), image.size.width > 0, image.size.height > 0 else {
+      return nil
+    }
+    let scale = min(1, 1600 / max(image.size.width, image.size.height))
+    let size = CGSize(width: image.size.width * scale, height: image.size.height * scale)
+    let format = UIGraphicsImageRendererFormat()
+    format.scale = 1
+    let resized = UIGraphicsImageRenderer(size: size, format: format).image { _ in
+      image.draw(in: CGRect(origin: .zero, size: size))
+    }
+    return resized.jpegData(compressionQuality: 0.75)
   }
 
   private func file(_ item: [String: Any]) -> (String, Data?) {
