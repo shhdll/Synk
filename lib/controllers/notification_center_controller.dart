@@ -93,4 +93,18 @@ class NotificationCenterController extends ChangeNotifier {
       await refresh();
     }
   }
+
+  // A refresh can finish after the home screen is gone.
+  bool _disposed = false;
+
+  @override
+  void notifyListeners() {
+    if (!_disposed) super.notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
 }

@@ -268,8 +268,17 @@ class HomeDiscoveryController extends ChangeNotifier {
   static bool matchesCategory(Activity activity, String category) =>
       ActivityFilters.matchesCategory(activity, category);
 
+  // A load can finish after the home screen is gone.
+  bool _disposed = false;
+
+  @override
+  void notifyListeners() {
+    if (!_disposed) super.notifyListeners();
+  }
+
   @override
   void dispose() {
+    _disposed = true;
     searchController.dispose();
     super.dispose();
   }

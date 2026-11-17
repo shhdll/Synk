@@ -61,10 +61,14 @@ import UIKit
         photos.append(target.path)
       }
     }
+    // The extension puts the same things on the pasteboard, read only when
+    // the folder had nothing.
     if let board = UIPasteboard(name: UIPasteboard.Name("synk.shared"), create: false),
       board.numberOfItems > 0
     {
-      for item in board.items {
+      let items = photos.isEmpty && texts.isEmpty ? board.items : []
+      board.items = []
+      for item in items {
         if let text = item["public.utf8-plain-text"] as? String, !text.isEmpty {
           texts.append(text)
           continue
@@ -76,7 +80,6 @@ import UIKit
           .appendingPathComponent(name).appendingPathExtension(png == nil ? "jpg" : "png")
         if (try? data.write(to: target)) != nil { photos.append(target.path) }
       }
-      board.items = []
     }
     return ["photos": photos, "texts": texts]
   }
