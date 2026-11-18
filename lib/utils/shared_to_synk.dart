@@ -20,7 +20,8 @@ const _channel = MethodChannel('synk/shared');
 bool _asking = false;
 StreamSubscription<Uri>? _links;
 Uri? _link;
-final Set<int> _seenLinks = {};
+bool _checkedFirstLink = false;
+bool _streamGotLink = false;
 
 // Android calls [onAdded] when something is shared while the app is open.
 // iOS calls it when a synk-share:// link opens the app.
@@ -35,17 +36,27 @@ void listenForSharedToSynk(VoidCallback? onAdded) {
   unawaited(_links?.cancel());
   _links = null;
   if (onAdded == null || !Platform.isIOS) return;
+  // Every link counts, even one like the last: sharing the same picture
+  // twice gives the same link.
   void got(Uri? uri) {
     if (uri == null || uri.scheme != 'synk-share') return;
-    if (!_seenLinks.add(uri.toString().hashCode)) return;
     _link = uri;
     onAdded();
   }
 
-  _links = AppLinks().uriLinkStream.listen(got, onError: (Object _) {});
-  // The link that started the app, which the stream may have given out
-  // before this listened.
-  unawaited(AppLinks().getInitialLink().then(got, onError: (Object _) {}));
+  _links = AppLinks().uriLinkStream.listen((uri) {
+    if (uri.scheme == 'synk-share') _streamGotLink = true;
+    got(uri);
+  }, onError: (Object _) {});
+  // The link that started the app, which the stream gave out before this
+  // listened. Only once, as it stays the same while the app runs.
+  if (_checkedFirstLink) return;
+  _checkedFirstLink = true;
+  unawaited(
+    AppLinks().getInitialLink().then((uri) {
+      if (!_streamGotLink) got(uri);
+    }, onError: (Object _) {}),
+  );
 }
 
 // What the link carries: texts as they are, pictures saved to temp files.
