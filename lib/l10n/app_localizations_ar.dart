@@ -2980,10 +2980,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notifPrefOther => 'أخرى';
 
   @override
-  String get notifPrefMarketing => 'الأخبار والنصائح';
+  String get notifPrefMarketing => 'تنبيهات ونصائح';
 
   @override
-  String get notifPrefMarketingHint => 'ميزات جديدة وأفكار للتجربة';
+  String get notifPrefMarketingHint =>
+      'لما يكون الجو حلو للطلعة، أو سلسلتك بتنقطع. مرة باليوم كحد أقصى.';
 
   @override
   String get notifPrefIphone => 'آيفون';

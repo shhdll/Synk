@@ -166,8 +166,10 @@ class _NotificationSettingsViewState extends State<NotificationSettingsView> {
                               Icons.campaign_rounded,
                               SynkColors.textSecondary,
                               l10n.notifPrefMarketing,
-                              // Not sent yet; comes in a later phase.
-                              disabled: true,
+                              // Nice-weather evenings and a streak about
+                              // to end; at most one a day
+                              // (20261121100000_marketing_nudges.sql).
+                              subtitle: l10n.notifPrefMarketingHint,
                             ),
                           ],
                         ),
