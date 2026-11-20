@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { badgeName } from "./badges.ts";
+import { niceEveningSpots, type Spot } from "./weather.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SECRET_KEYS = Deno.env.get("SUPABASE_SECRET_KEYS");
@@ -33,7 +34,12 @@ type PromotionEvent = {
   requester_name?: string;
   badge_id?: string;
   badge_count?: number;
-  event_type?: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received" | "friend_request_received" | "friend_request_accepted" | "host_assigned" | "activity_conflict" | "activity_full" | "activity_reminder" | "chat_message" | "badge_earned";
+  // Marketing nudges: 'nice_weather' (with the evening's temperature) or
+  // 'streak_ending' (with the streak's length in weeks).
+  kind?: string;
+  temperature?: number | null;
+  streak_weeks?: number | null;
+  event_type?: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received" | "friend_request_received" | "friend_request_accepted" | "host_assigned" | "activity_conflict" | "activity_full" | "activity_reminder" | "chat_message" | "badge_earned" | "marketing";
 };
 
 type FcmCredentials = {
@@ -205,6 +211,41 @@ function notificationContent(
   const when = event.starts_at ? formatScheduleTime(event.starts_at, language) : null;
 
   switch (event.event_type) {
+    case "marketing": {
+      if (event.kind === "streak_ending") {
+        const n = event.streak_weeks ?? 1;
+        const weeksAr = n === 1
+          ? "أسبوع"
+          : n === 2
+          ? "أسبوعين"
+          : n <= 10
+          ? `${n} أسابيع`
+          : `${n} أسبوع`;
+        return {
+          title: t(
+            `Don't lose your ${n}-week streak 🔥`,
+            "لا تخسر سلسلتك 🔥",
+          ),
+          body: t(
+            "Join an activity before Saturday ends to keep it going.",
+            `انضم لنشاط قبل نهاية السبت عشان تحافظ على سلسلة ${weeksAr}`,
+          ),
+        };
+      }
+      const temp = event.temperature;
+      return {
+        title: t("Perfect weather tonight 🌤️", "الجو حلو الليلة 🌤️"),
+        body: temp != null
+          ? t(
+            `It's ${temp}° this evening, a great time to get out. See what's on near you.`,
+            `${temp}° هالمساء، وقت مثالي تطلع. شوف وش فيه أنشطة قريبة منك`,
+          )
+          : t(
+            "A great evening to get out. See what's on near you.",
+            "مساء مثالي للطلعة. شوف وش فيه أنشطة قريبة منك",
+          ),
+      };
+    }
     case "badge_earned": {
       const name = badgeName(event.badge_id ?? "", ar);
       const more = (event.badge_count ?? 1) > 1;
@@ -477,8 +518,40 @@ function preferenceColumn(eventType: NonNullable<PromotionEvent["event_type"]>):
       return "chats";
     case "badge_earned":
       return "badges";
+    case "marketing":
+      return "marketing";
     default:
       return "activity_updates";
+  }
+}
+
+// Finds which users' places have a nice evening ahead and queues their
+// nice_weather nudge; the database decides who may get one (marketing on,
+// not nudged lately). Each queued row then comes back here to be sent.
+async function runNiceWeatherCheck(): Promise<Response> {
+  if (!admin) return jsonResponse({ error: "server_misconfigured" }, 500);
+  try {
+    const { data: spots, error } = await admin.rpc("marketing_weather_spots");
+    if (error) throw error;
+    const places = ((spots ?? []) as Spot[]).map((s) => ({
+      latitude: Number(s.latitude),
+      longitude: Number(s.longitude),
+    }));
+    if (!places.length) return jsonResponse({ ok: true, checked: 0, queued: 0 });
+
+    const nice = await niceEveningSpots(places);
+    if (!nice.length) {
+      return jsonResponse({ ok: true, checked: places.length, queued: 0 });
+    }
+    const { data: queued, error: queueError } = await admin.rpc(
+      "queue_nice_weather_nudges",
+      { spots: nice },
+    );
+    if (queueError) throw queueError;
+    return jsonResponse({ ok: true, checked: places.length, nice: nice.length, queued });
+  } catch (error) {
+    console.error("Nice weather check failed:", error);
+    return jsonResponse({ error: "weather_check_failed" }, 500);
   }
 }
 
@@ -498,9 +571,12 @@ Deno.serve(async (request: Request) => {
   }
 
   let eventId: string;
-  let eventType: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received" | "friend_request_received" | "friend_request_accepted" | "host_assigned" | "activity_conflict" | "activity_full" | "activity_reminder" | "chat_message" | "badge_earned";
+  let eventType: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received" | "friend_request_received" | "friend_request_accepted" | "host_assigned" | "activity_conflict" | "activity_full" | "activity_reminder" | "chat_message" | "badge_earned" | "marketing";
   try {
     const body = await request.json();
+    // The daily weather check (cron, request_nice_weather_check), not a
+    // notification to send.
+    if (body.task === "nice_weather_check") return await runNiceWeatherCheck();
     eventId = typeof body.event_id === "string" ? body.event_id : "";
     eventType = body.event_type === "activity_updated" ||
         body.event_type === "activity_deleted" ||
@@ -514,7 +590,8 @@ Deno.serve(async (request: Request) => {
         body.event_type === "friend_request_accepted" ||
         body.event_type === "activity_reminder" ||
         body.event_type === "chat_message" ||
-        body.event_type === "badge_earned"
+        body.event_type === "badge_earned" ||
+        body.event_type === "marketing"
       ? body.event_type
       : "waitlist_promotion";
   } catch {
@@ -550,6 +627,8 @@ Deno.serve(async (request: Request) => {
     ? "chat_message_notification_outbox"
     : eventType === "badge_earned"
     ? "badge_earned_notification_outbox"
+    : eventType === "marketing"
+    ? "marketing_notification_outbox"
     : "waitlist_promotion_notification_outbox";
   const eventColumns = eventType === "activity_updated"
     ? "id, user_id, activity_id, activity_title, status"
@@ -563,6 +642,8 @@ Deno.serve(async (request: Request) => {
     ? "id, user_id, activity_id, activity_title, participation_id, status"
     : eventType === "badge_earned"
     ? "id, user_id, activity_title, badge_id, badge_count, status"
+    : eventType === "marketing"
+    ? "id, user_id, activity_title, kind, temperature, streak_weeks, status"
     : "id, user_id, activity_id, activity_title, status";
   const { data: event, error: claimError } = await admin
     .from(outboxTable)
