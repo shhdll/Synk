@@ -375,18 +375,26 @@ class ActivityStore extends ChangeNotifier {
           .toList()
         ..sort((first, second) => second.dateTime.compareTo(first.dateTime));
 
-  // Activities the user hosted or was accepted into whose time has passed.
-  // Pending and waitlisted requests don't count.
-  int get completedCount => _attended.length;
+  // Activities the user checked in to, as host or member, for the profile
+  // count, and their start times for the streak. Both come from the server
+  // (get_completed_activities_count, get_user_streak_times); empty until
+  // loaded.
+  int _checkedInCount = 0;
+  List<DateTime> _checkedInTimes = const [];
 
-  // Weeks in a row with at least one attended activity, by the same rule as
-  // [completedCount].
-  WeeklyStreak get weeklyStreak =>
-      WeeklyStreak.from(_attended.map((activity) => activity.dateTime));
+  int get checkedInCount => _checkedInCount;
 
-  // Start times of attended activities, for the streak sheet.
-  List<DateTime> get attendedTimes =>
-      _attended.map((activity) => activity.dateTime).toList();
+  void setCheckedIn({required int count, required List<DateTime> times}) {
+    _checkedInCount = count;
+    _checkedInTimes = List.unmodifiable(times);
+    notifyListeners();
+  }
+
+  // Weeks in a row with at least one checked-in activity.
+  WeeklyStreak get weeklyStreak => WeeklyStreak.from(_checkedInTimes);
+
+  // Start times of checked-in activities, for the streak sheet.
+  List<DateTime> get attendedTimes => _checkedInTimes;
 
   // True near the end of the week when the streak will break unless the
   // user books something. Pending and waitlisted requests aren't bookings.
@@ -399,12 +407,6 @@ class ActivityStore extends ChangeNotifier {
               (activity.isHostedBy(_currentUserId) || activity.isJoined),
         )
         .map((activity) => activity.dateTime),
-  );
-
-  Iterable<Activity> get _attended => _personalActivities.where(
-    (activity) =>
-        activity.isPast &&
-        (activity.isHostedBy(_currentUserId) || activity.isJoined),
   );
 
   List<Activity> get feedUpcoming =>

@@ -31,7 +31,7 @@ import '../widgets/synk_blob_background.dart';
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key, this.activityStore});
 
-  // Source of the completed activities count.
+  // Source of the checked-in activities count.
   final ActivityStore? activityStore;
 
   @override
@@ -222,7 +222,7 @@ class _ProfileViewState extends State<ProfileView> {
     final avatarImage = AvatarUploader.imageFor(profile);
     final displayImage =
         avatarImage ?? AvatarUploader.defaultImageForGender(gender);
-    final activitiesCount = widget.activityStore?.completedCount ?? 0;
+    final activitiesCount = widget.activityStore?.checkedInCount ?? 0;
     final ratingValue = profile['rating'];
     final ratingCount = profile['rating_count'];
     final ratingText = ratingValue is num

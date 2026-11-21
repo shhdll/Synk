@@ -7326,6 +7326,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Meet {name} on Synk! ✨\n{link}'**
   String shareProfileMessage(Object name, Object link);
+
+  /// No description provided for @checkIn.
+  ///
+  /// In en, this message translates to:
+  /// **'I am here!'**
+  String get checkIn;
+
+  /// No description provided for @checkedInAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Checked in at {time}'**
+  String checkedInAt(Object time);
+
+  /// No description provided for @checkedInTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re checked in!'**
+  String get checkedInTitle;
+
+  /// No description provided for @checkedInMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Enjoy the activity.'**
+  String get checkedInMessage;
+
+  /// No description provided for @checkInFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check in'**
+  String get checkInFailedTitle;
+
+  /// No description provided for @checkInTooFarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Not there yet'**
+  String get checkInTooFarTitle;
+
+  /// No description provided for @checkInTooFar.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re not there yet.. excited to see you!'**
+  String get checkInTooFar;
+
+  /// No description provided for @checkInNotStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-in opens when the activity starts.'**
+  String get checkInNotStarted;
+
+  /// No description provided for @checkInEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'This activity has ended.'**
+  String get checkInEnded;
+
+  /// No description provided for @checkInNoLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'This activity has no location to check in at.'**
+  String get checkInNoLocation;
+
+  /// No description provided for @checkInMembersOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only members of this activity can check in.'**
+  String get checkInMembersOnly;
+
+  /// No description provided for @checkInLocationOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on location services to check in.'**
+  String get checkInLocationOff;
+
+  /// No description provided for @checkInPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow location access for Synk to check in.'**
+  String get checkInPermissionDenied;
+
+  /// No description provided for @checkInUnableToLocate.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t get your location. Please try again.'**
+  String get checkInUnableToLocate;
+
+  /// No description provided for @checkInMockedLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off fake location apps to check in.'**
+  String get checkInMockedLocation;
+
+  /// No description provided for @checkInFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check you in. Please try again.'**
+  String get checkInFailed;
+
+  /// No description provided for @checkedInTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Checked in'**
+  String get checkedInTag;
 }
 
 class _AppLocalizationsDelegate

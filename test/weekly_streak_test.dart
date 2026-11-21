@@ -140,37 +140,22 @@ void main() {
     final lastWeek = today.subtract(const Duration(days: 7));
     final twoWeeksAgo = today.subtract(const Duration(days: 14));
 
-    test('counts hosted and joined activities', () {
+    // The server sends the start times of checked-in activities.
+    test('counts checked-in activities', () {
+      final store = ActivityStore()
+        ..currentUserId = me
+        ..setCheckedIn(count: 2, times: [lastWeek, twoWeeksAgo]);
+
+      expect(store.weeklyStreak.weeks, 2);
+    });
+
+    test('ignores hosted and joined activities without a check-in', () {
       final store = ActivityStore()
         ..currentUserId = me
         ..setMine([activity('hosted', at: lastWeek, hostId: me)])
         ..setParticipating([
           activity('joined', at: twoWeeksAgo, hostId: 'x', status: 'joined'),
-        ]);
-
-      expect(store.weeklyStreak.weeks, 2);
-    });
-
-    test('ignores pending and waitlisted requests', () {
-      final store = ActivityStore()
-        ..currentUserId = me
-        ..setParticipating([
           activity('pending', at: lastWeek, hostId: 'x', status: 'pending'),
-          activity('wait', at: lastWeek, hostId: 'x', status: 'waitlisted'),
-        ]);
-
-      expect(store.weeklyStreak, WeeklyStreak.none);
-    });
-
-    test('ignores upcoming activities', () {
-      final store = ActivityStore()
-        ..currentUserId = me
-        ..setMine([
-          activity(
-            'soon',
-            at: today.add(const Duration(minutes: 5)),
-            hostId: me,
-          ),
         ]);
 
       expect(store.weeklyStreak, WeeklyStreak.none);
