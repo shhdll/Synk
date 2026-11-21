@@ -5351,13 +5351,13 @@ abstract class AppLocalizations {
   /// No description provided for @notifPrefMarketing.
   ///
   /// In en, this message translates to:
-  /// **'News and tips'**
+  /// **'Nudges and tips'**
   String get notifPrefMarketing;
 
   /// No description provided for @notifPrefMarketingHint.
   ///
   /// In en, this message translates to:
-  /// **'New features and things to try'**
+  /// **'Nice weather to go out, or a streak about to end. At most one a day.'**
   String get notifPrefMarketingHint;
 
   /// No description provided for @notifPrefIphone.

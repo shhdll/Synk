@@ -3049,10 +3049,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifPrefOther => 'Other';
 
   @override
-  String get notifPrefMarketing => 'News and tips';
+  String get notifPrefMarketing => 'Nudges and tips';
 
   @override
-  String get notifPrefMarketingHint => 'New features and things to try';
+  String get notifPrefMarketingHint =>
+      'Nice weather to go out, or a streak about to end. At most one a day.';
 
   @override
   String get notifPrefIphone => 'iPhone';

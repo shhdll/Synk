@@ -10,6 +10,7 @@ import 'friends_controller.dart';
 import '../models/activity_filters.dart';
 import '../models/activity_model.dart';
 import '../models/user_profile_model.dart';
+import '../models/weather_spot_model.dart';
 
 // Feed + filters shared by Home and Map.
 class HomeDiscoveryController extends ChangeNotifier {
@@ -170,6 +171,10 @@ class HomeDiscoveryController extends ChangeNotifier {
       _userLocation = (
         latitude: position.latitude,
         longitude: position.longitude,
+      );
+      // Rounded to about 10 km, for the "nice weather tonight" nudge.
+      unawaited(
+        WeatherSpotModel.instance.save(position.latitude, position.longitude),
       );
     } catch (error) {
       debugPrint('SYNK: Could not get location for filters: $error');
