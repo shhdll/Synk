@@ -18,6 +18,7 @@ import 'views/home/activity_join_requests_view.dart';
 import 'views/home/friend_requests_view.dart';
 import 'views/home/friends_view.dart';
 import 'views/home/main_shell.dart';
+import 'views/home/widgets/user_profile_sheet.dart';
 import 'views/new_password_view.dart';
 import 'views/welcome_view.dart';
 
@@ -173,6 +174,7 @@ class _MyAppState extends State<MyApp> {
       _drainPendingFriendRequestsNotification();
       _drainPendingFriendsNotification();
       _drainPendingScheduleConflictsNotification();
+      _drainPendingProfileLink();
       unawaited(PushNotificationService.instance.initialize());
     });
 
@@ -184,6 +186,14 @@ class _MyAppState extends State<MyApp> {
       (state) {
         if (state.event == AuthChangeEvent.passwordRecovery) {
           _openNewPasswordScreen(linkExpired: false);
+        }
+        // A profile link opened before signing in waits for the home screen.
+        if (state.event == AuthChangeEvent.signedIn ||
+            state.event == AuthChangeEvent.initialSession) {
+          Future<void>.delayed(
+            const Duration(milliseconds: 800),
+            _drainPendingProfileLink,
+          );
         }
       },
       onError: (Object error) {
@@ -202,6 +212,7 @@ class _MyAppState extends State<MyApp> {
       onResult: _onAuthLinkResult,
       // Shared activity links open the same way as a notification.
       onActivityLink: _openNotificationActivity,
+      onProfileLink: _openProfileLink,
     )..start();
 
     LanguageController.instance.addListener(_onLanguageChanged);
@@ -240,6 +251,36 @@ class _MyAppState extends State<MyApp> {
             ActivityNotificationRoute(activityId: activityId, code: code),
       ),
     );
+  }
+
+  String? _pendingProfileId;
+
+  // Signed in with a confirmed email, as the home screen checks below.
+  bool get _signedIn {
+    final user = Supabase.instance.client.auth.currentUser;
+    return user?.emailConfirmedAt?.isNotEmpty ?? false;
+  }
+
+  // A shared profile link opens the profile sheet, which shows Add friend
+  // and hides anyone who blocked the viewer. Before sign-in it waits.
+  void _openProfileLink(String userId) {
+    final navigator = _navigatorKey.currentState;
+    if (navigator == null || !_signedIn) {
+      _pendingProfileId = userId;
+      return;
+    }
+    _pendingProfileId = null;
+    showUserProfileSheet(
+      context: navigator.overlay?.context ?? navigator.context,
+      userId: userId,
+      name: '',
+    );
+  }
+
+  void _drainPendingProfileLink() {
+    final userId = _pendingProfileId;
+    if (userId == null || !mounted) return;
+    _openProfileLink(userId);
   }
 
   void _drainPendingActivityNotification() {

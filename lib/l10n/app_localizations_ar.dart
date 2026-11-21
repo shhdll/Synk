@@ -4202,4 +4202,58 @@ class AppLocalizationsAr extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get savePhoto => 'حفظ الصورة';
+
+  @override
+  String get photoSaved => 'انحفظت الصورة في الاستديو';
+
+  @override
+  String get couldntSavePhoto => 'ما قدرنا نحفظ الصورة';
+
+  @override
+  String get allowPhotosToSave =>
+      'اسمح لـ Synk يضيف للصور، وبعدها جرّب مرة ثانية.';
+
+  @override
+  String get allPhotos => 'كل الصور';
+
+  @override
+  String photoCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count صورة',
+      many: '$count صورة',
+      few: '$count صور',
+      two: 'صورتين',
+      one: 'صورة وحدة',
+      zero: 'ما فيه صور',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String photoSentAt(Object date, Object year, Object time) {
+    return '$date $year · $time';
+  }
+
+  @override
+  String photoDay(Object date, Object year) {
+    return '$date $year';
+  }
+
+  @override
+  String get shareProfile => 'مشاركة الحساب';
+
+  @override
+  String shareMyProfileMessage(Object link) {
+    return 'يلا نتواصل على Synk! ✨\n$link';
+  }
+
+  @override
+  String shareProfileMessage(Object name, Object link) {
+    return 'تعرّف على $name في Synk! ✨\n$link';
+  }
 }

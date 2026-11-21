@@ -12,6 +12,7 @@ class AuthDeepLinkHandler {
   AuthDeepLinkHandler({
     required this.onResult,
     this.onActivityLink,
+    this.onProfileLink,
     AppLinks? appLinks,
   }) : _appLinks = appLinks ?? AppLinks();
 
@@ -19,6 +20,9 @@ class AuthDeepLinkHandler {
 
   // A shared activity link, io.supabase.synk://activity?id=...
   final void Function(String activityId, String? code)? onActivityLink;
+
+  // A shared profile link, io.supabase.synk://profile?id=...
+  final void Function(String userId)? onProfileLink;
   final AppLinks _appLinks;
 
   StreamSubscription<Uri>? _subscription;
@@ -89,6 +93,14 @@ class AuthDeepLinkHandler {
       final id = uri.queryParameters['id'];
       if (id != null && id.isNotEmpty) {
         onActivityLink?.call(id, uri.queryParameters['code']);
+      }
+      return;
+    }
+
+    if (uri.host == 'profile') {
+      final id = uri.queryParameters['id'] ?? '';
+      if (RegExp(r'^[0-9a-fA-F-]{36}$').hasMatch(id)) {
+        onProfileLink?.call(id.toLowerCase());
       }
       return;
     }

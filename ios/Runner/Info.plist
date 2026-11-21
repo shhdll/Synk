@@ -42,6 +42,8 @@
 	<string>Synk uses your location to show activities near you.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Synk needs access to your photos so you can choose a profile or activity photo.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Synk saves photos from your chats to your library.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Synk needs camera access so you can take a profile or activity photo, or send one in a chat.</string>
 	<key>NSMicrophoneUsageDescription</key>

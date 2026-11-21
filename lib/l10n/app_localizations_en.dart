@@ -3237,8 +3237,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count reviews',
-      one: '1 review',
+      other: '$count ratings',
+      one: '1 rating',
     );
     return '$_temp0';
   }
@@ -4160,5 +4160,55 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String badgeWeekendBy(String name, String gender) {
     return '$name attended activities on Friday and Saturday of the same weekend';
+  }
+
+  @override
+  String get savePhoto => 'Save photo';
+
+  @override
+  String get photoSaved => 'Saved to your photos';
+
+  @override
+  String get couldntSavePhoto => 'Couldn\'t save the photo';
+
+  @override
+  String get allowPhotosToSave =>
+      'Allow Synk to add to your photos, then try again.';
+
+  @override
+  String get allPhotos => 'All photos';
+
+  @override
+  String photoCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count photos',
+      one: '1 photo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String photoSentAt(Object date, Object year, Object time) {
+    return '$date, $year · $time';
+  }
+
+  @override
+  String photoDay(Object date, Object year) {
+    return '$date, $year';
+  }
+
+  @override
+  String get shareProfile => 'Share profile';
+
+  @override
+  String shareMyProfileMessage(Object link) {
+    return 'Let\'s Synk! ✨\n$link';
+  }
+
+  @override
+  String shareProfileMessage(Object name, Object link) {
+    return 'Meet $name on Synk! ✨\n$link';
   }
 }

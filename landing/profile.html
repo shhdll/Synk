@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Add me on Synk</title>
+    <link rel="icon" type="image/png" href="logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="orbs" aria-hidden="true">
+      <div class="orb teal"></div>
+      <div class="orb sand"></div>
+      <div class="orb peach"></div>
+    </div>
+
+    <header class="brand"><img src="logo.png" alt="" />Synk</header>
+
+    <main class="content">
+      <h1 id="title">Let's be friends on Synk!</h1>
+      <p id="message" class="subtitle">Open the profile in Synk to add them as a friend.</p>
+      <a id="open-app" class="button" href="io.supabase.synk://profile"><img class="button-logo" src="logo.png" alt="" /><span>Open in Synk</span></a>
+    </main>
+
+    <script>
+      // synk.cc/profile.html?id=<user id> opens that profile in the app.
+      // Nothing about the person is loaded here: the app shows the profile
+      // only to people allowed to see it.
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+        var id = params.get("id") || "";
+        var button = document.getElementById("open-app");
+        if (!/^[0-9a-f-]{36}$/i.test(id)) {
+          document.getElementById("title").textContent = "This link doesn't work";
+          document.getElementById("message").textContent = "Ask your friend to share it again.";
+          button.hidden = true;
+          return;
+        }
+        var url = "io.supabase.synk://profile?id=" + encodeURIComponent(id);
+        button.href = url;
+        // Android opens the app straight away; iPhone needs the tap.
+        if (/android/i.test(navigator.userAgent)) window.location.href = url;
+      })();
+    </script>
+  </body>
+</html>
