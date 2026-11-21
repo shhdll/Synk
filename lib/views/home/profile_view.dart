@@ -22,6 +22,7 @@ import 'widgets/option_picker_sheet.dart';
 import 'widgets/profile_info_row.dart';
 import 'widgets/recent_activities_section.dart';
 import 'widgets/section_label.dart';
+import '../../utils/share_profile.dart';
 import '../../utils/text_direction.dart';
 import '../widgets/avatar_preview.dart';
 import '../widgets/profile_header_banner.dart';
@@ -273,6 +274,26 @@ class _ProfileViewState extends State<ProfileView> {
                             const SizedBox(width: 4),
                           ],
                           const Spacer(),
+                          Builder(
+                            builder: (buttonContext) => IconButton(
+                              tooltip: context.l10n.shareProfile,
+                              onPressed: () {
+                                final id = Supabase
+                                    .instance
+                                    .client
+                                    .auth
+                                    .currentUser
+                                    ?.id;
+                                if (id != null) {
+                                  shareProfileLink(buttonContext, userId: id);
+                                }
+                              },
+                              icon: const Icon(
+                                Icons.ios_share_rounded,
+                                color: SynkColors.textPrimary,
+                              ),
+                            ),
+                          ),
                           IconButton(
                             tooltip: context.l10n.settings,
                             onPressed: _openSettings,
@@ -426,7 +447,7 @@ class _ProfileViewState extends State<ProfileView> {
                                       child: _StatItem(
                                         icon: Icons.star_rounded,
                                         value: ratingText,
-                                        // "12 reviews" under the stars once rated.
+                                        // "12 ratings" under the stars once rated.
                                         label:
                                             ratingCount is int &&
                                                 ratingCount > 0

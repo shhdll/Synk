@@ -5675,7 +5675,7 @@ abstract class AppLocalizations {
   /// No description provided for @reviewsCount.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{1 review} other{{count} reviews}}'**
+  /// **'{count, plural, =1{1 rating} other{{count} ratings}}'**
   String reviewsCount(int count);
 
   /// No description provided for @couldntFindYourThing.
@@ -7260,6 +7260,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name} attended activities on Friday and Saturday of the same weekend'**
   String badgeWeekendBy(String name, String gender);
+
+  /// No description provided for @savePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Save photo'**
+  String get savePhoto;
+
+  /// No description provided for @photoSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to your photos'**
+  String get photoSaved;
+
+  /// No description provided for @couldntSavePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the photo'**
+  String get couldntSavePhoto;
+
+  /// No description provided for @allowPhotosToSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow Synk to add to your photos, then try again.'**
+  String get allowPhotosToSave;
+
+  /// No description provided for @allPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'All photos'**
+  String get allPhotos;
+
+  /// No description provided for @photoCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 photo} other{{count} photos}}'**
+  String photoCount(int count);
+
+  /// No description provided for @photoSentAt.
+  ///
+  /// In en, this message translates to:
+  /// **'{date}, {year} · {time}'**
+  String photoSentAt(Object date, Object year, Object time);
+
+  /// No description provided for @photoDay.
+  ///
+  /// In en, this message translates to:
+  /// **'{date}, {year}'**
+  String photoDay(Object date, Object year);
+
+  /// No description provided for @shareProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Share profile'**
+  String get shareProfile;
+
+  /// No description provided for @shareMyProfileMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s Synk! ✨\n{link}'**
+  String shareMyProfileMessage(Object link);
+
+  /// No description provided for @shareProfileMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet {name} on Synk! ✨\n{link}'**
+  String shareProfileMessage(Object name, Object link);
 }
 
 class _AppLocalizationsDelegate

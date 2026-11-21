@@ -1210,5 +1210,16 @@
   "badgeEarlyBirdBy": "{gender, select, female{{name} حضرت نشاط يبدأ قبل 7 الصبح} other{{name} حضر نشاط يبدأ قبل 7 الصبح}}",
   "badgeNightOwlBy": "{gender, select, female{{name} حضرت نشاط يبدأ 11 الليل أو بعدها} other{{name} حضر نشاط يبدأ 11 الليل أو بعدها}}",
   "badgeLuckySpotBy": "{gender, select, female{{name} دخلت من قائمة الانتظار وحضرت النشاط} other{{name} دخل من قائمة الانتظار وحضر النشاط}}",
-  "badgeWeekendBy": "{gender, select, female{{name} حضرت نشاط يوم الجمعة ونشاط يوم السبت بنفس الويكند} other{{name} حضر نشاط يوم الجمعة ونشاط يوم السبت بنفس الويكند}}"
+  "badgeWeekendBy": "{gender, select, female{{name} حضرت نشاط يوم الجمعة ونشاط يوم السبت بنفس الويكند} other{{name} حضر نشاط يوم الجمعة ونشاط يوم السبت بنفس الويكند}}",
+  "savePhoto": "حفظ الصورة",
+  "photoSaved": "انحفظت الصورة في الاستديو",
+  "couldntSavePhoto": "ما قدرنا نحفظ الصورة",
+  "allowPhotosToSave": "اسمح لـ Synk يضيف للصور، وبعدها جرّب مرة ثانية.",
+  "allPhotos": "كل الصور",
+  "photoCount": "{count, plural, zero{ما فيه صور} one{صورة وحدة} two{صورتين} few{{count} صور} many{{count} صورة} other{{count} صورة}}",
+  "photoSentAt": "{date} {year} · {time}",
+  "photoDay": "{date} {year}",
+  "shareProfile": "مشاركة الحساب",
+  "shareMyProfileMessage": "يلا نتواصل على Synk! ✨\n{link}",
+  "shareProfileMessage": "تعرّف على {name} في Synk! ✨\n{link}"
 }

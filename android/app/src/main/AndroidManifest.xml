@@ -9,11 +9,17 @@
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <!-- Voice messages in chats. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Saving chat photos to the gallery (gal). Only Android 10 and older
+         ask for it; newer versions need no permission. -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29" />
 
     <application
         android:label="synk"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:requestLegacyExternalStorage="true">
 
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
@@ -94,6 +100,17 @@
                 <data
                     android:scheme="io.supabase.synk"
                     android:host="activity"/>
+            </intent-filter>
+            <!-- Shared profile link.
+                 synk.cc/profile.html?id=... opens
+                 io.supabase.synk://profile?id=..., which opens the profile. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data
+                    android:scheme="io.supabase.synk"
+                    android:host="profile"/>
             </intent-filter>
         </activity>
         <!-- Synk in the phone's share menu for pictures and links

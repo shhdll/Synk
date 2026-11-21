@@ -10,6 +10,7 @@ import '../../../models/avatar_uploader.dart';
 import '../../../models/friends_model.dart';
 import '../../../models/weekly_streak.dart';
 import '../../../utils/custom_widgets/synk_feedback.dart';
+import '../../../utils/share_profile.dart';
 import '../../widgets/avatar_preview.dart';
 import '../../widgets/default_avatar.dart';
 import '../../widgets/profile_header_banner.dart';
@@ -430,7 +431,7 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
                           value: rating is num
                               ? rating.toStringAsFixed(1)
                               : '—',
-                          // "12 reviews" under the stars once rated.
+                          // "12 ratings" under the stars once rated.
                           label: ratingCount is int && ratingCount > 0
                               ? context.l10n.reviewsCount(ratingCount)
                               : context.l10n.rating,
@@ -721,6 +722,14 @@ class _FriendActions extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
               ),
               itemBuilder: (_) => [
+                PopupMenuItem(
+                  value: () => shareProfileLink(
+                    context,
+                    userId: user.id,
+                    name: user.name,
+                  ),
+                  child: Text(context.l10n.shareProfile),
+                ),
                 PopupMenuItem(
                   value: () =>
                       showReportUserSheet(context: context, user: user),

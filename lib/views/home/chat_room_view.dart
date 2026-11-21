@@ -26,6 +26,7 @@ import 'activity_notification_route.dart';
 import 'widgets/activity_details_sheet.dart';
 import 'widgets/activity_thumbnail.dart';
 import 'widgets/chat_list_tile.dart';
+import 'widgets/chat_photo_viewer.dart';
 import 'widgets/chat_poll.dart';
 import 'widgets/chat_share_sheets.dart';
 import 'widgets/chat_stickers.dart';
@@ -1370,6 +1371,30 @@ class _ChatRoomViewState extends State<ChatRoomView> {
     return name.isNotEmpty ? name : context.l10n.communityMember;
   }
 
+  // Opens the photo viewer at [message], with every photo loaded in this
+  // chat to swipe through, oldest first. View-once photos stay out: they
+  // open on their own and can't be saved.
+  void _openPhotos(ChatMessage message) {
+    final photos = <ChatPhoto>[];
+    int? start;
+    for (final m in _messages) {
+      final link = _photoLinks[m.imagePath];
+      if (!m.hasPhoto || m.viewOnce || m.isDeleted || link == null) continue;
+      if (m.id == message.id) start = photos.length;
+      photos.add(
+        ChatPhoto(
+          id: m.id,
+          link: link,
+          sender: _authorOf(m),
+          sentAt: m.createdAt,
+          caption: m.text,
+        ),
+      );
+    }
+    if (start == null) return;
+    showChatPhotoViewer(context, photos: photos, initialIndex: start);
+  }
+
   // One line describing a message, for reply quotes.
   String _previewOf(ChatMessage message) {
     if (message.isDeleted) return context.l10n.messageWasDeleted;
@@ -1859,6 +1884,7 @@ class _ChatRoomViewState extends State<ChatRoomView> {
                 showAvatar: widget.chat.isActivity && lastInGroup,
                 isGroupChat: widget.chat.isActivity,
                 photoLink: _photoLinks[message.imagePath],
+                onOpenPhoto: () => _openPhotos(message),
                 onSenderTap: _openProfile,
                 onOpenActivity: _openActivity,
                 onLongPress: (bubble) => _showMessageMenu(message, bubble),
@@ -2683,6 +2709,7 @@ class _MessageBubble extends StatelessWidget {
     required this.showAvatar,
     required this.isGroupChat,
     this.photoLink,
+    this.onOpenPhoto,
     this.onSenderTap,
     this.onLongPress,
     this.onOpenActivity,
@@ -2743,6 +2770,9 @@ class _MessageBubble extends StatelessWidget {
 
   // Null until the photo's link has loaded.
   final String? photoLink;
+
+  // Opens the chat's photo viewer; a lone photo opens on its own without it.
+  final VoidCallback? onOpenPhoto;
 
   // Opens the sender's profile from their photo.
   final ValueChanged<FriendUser>? onSenderTap;
@@ -3096,7 +3126,7 @@ class _MessageBubble extends StatelessWidget {
       child: link == null
           ? placeholder
           : GestureDetector(
-              onTap: () => _showPhoto(context, link),
+              onTap: onOpenPhoto ?? () => _showPhoto(context, link),
               child: Image.network(
                 link,
                 width: _photoSize,
