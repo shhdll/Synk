@@ -79,7 +79,7 @@ class ActivityLeaveController extends ChangeNotifier {
   }
 
   // Takes a joined participant out of the host's activity. Their place
-  // goes to the waitlist, and they can't join again.
+  // goes to the waitlist.
   Future<ActivityJoinResult?> removeParticipant({
     required String activityId,
     required String participantUserId,

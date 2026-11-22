@@ -4267,8 +4267,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get removeParticipantMessage =>
-      'سيتم إخراجه من النشاط ومحادثته، ولن يتمكن من الانضمام إليه مرة أخرى';
+  String get removeParticipantMessage => 'سيتم إخراجه من النشاط ومحادثته';
 
   @override
   String get participantRemovedTitle => 'تمت الإزالة';
@@ -4285,9 +4284,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String notifParticipantRemoved(String title) {
     return 'أزالك المنظم من $title';
   }
-
-  @override
-  String get serverHostRemovedYou => 'أزالك المنظم من هذا النشاط';
 
   @override
   String get serverOnlyHostCanRemove => 'المنظم فقط يمكنه إزالة المشاركين';

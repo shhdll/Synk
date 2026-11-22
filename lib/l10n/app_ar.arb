@@ -1224,12 +1224,11 @@
   "shareProfileMessage": "تعرّف على {name} في Synk! ✨\n{link}",
   "removeParticipant": "إزالة",
   "removeParticipantTitle": "إزالة {name}؟",
-  "removeParticipantMessage": "سيتم إخراجه من النشاط ومحادثته، ولن يتمكن من الانضمام إليه مرة أخرى",
+  "removeParticipantMessage": "سيتم إخراجه من النشاط ومحادثته",
   "participantRemovedTitle": "تمت الإزالة",
   "participantRemovedMessage": "{name} لم يعد في هذا النشاط",
   "unableToRemoveParticipant": "تعذرت إزالة المشارك، حاول مرة أخرى",
   "notifParticipantRemoved": "أزالك المنظم من {title}",
-  "serverHostRemovedYou": "أزالك المنظم من هذا النشاط",
   "serverOnlyHostCanRemove": "المنظم فقط يمكنه إزالة المشاركين",
   "removeFromActivity": "إزالة من النشاط"
 }

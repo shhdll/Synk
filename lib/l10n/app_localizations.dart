@@ -7342,7 +7342,7 @@ abstract class AppLocalizations {
   /// No description provided for @removeParticipantMessage.
   ///
   /// In en, this message translates to:
-  /// **'They\'ll be taken out of the activity and its chat, and won\'t be able to join it again.'**
+  /// **'They\'ll be taken out of the activity and its chat.'**
   String get removeParticipantMessage;
 
   /// No description provided for @participantRemovedTitle.
@@ -7368,12 +7368,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The host removed you from {title}.'**
   String notifParticipantRemoved(String title);
-
-  /// No description provided for @serverHostRemovedYou.
-  ///
-  /// In en, this message translates to:
-  /// **'The host removed you from this activity.'**
-  String get serverHostRemovedYou;
 
   /// No description provided for @serverOnlyHostCanRemove.
   ///

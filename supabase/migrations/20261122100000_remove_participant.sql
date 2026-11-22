@@ -1,16 +1,11 @@
 -- Hosts can remove a joined participant from their activity before it
 -- starts.
 --
--- The participant's row is kept as 'rejected', marked removed_by_host_at,
--- rather than deleted, so:
+-- The participant's row is deleted, as when they leave, so:
 --   * they're out of the count, the group chat (the chat sync trigger from
---     20261029120000_chats.sql) and their activity lists, like any
---     rejected request;
---   * they can't join the same activity again, by browsing or by code:
---     join_activity_by_code already refuses anyone with a row, and now
---     says the host removed them;
---   * the freed place goes to the waitlist through promote_eligible_waitlist,
---     as when someone leaves.
+--     20261029120000_chats.sql) and their activity lists;
+--   * the freed place goes to the waitlist through promote_eligible_waitlist;
+--   * they can join the same activity again later, like anyone else.
 -- The removed person gets a "participant_removed" notification (push and
 -- notification center).
 --
@@ -18,12 +13,7 @@
 
 begin;
 
--- ---- 1. Who was removed by the host -------------------------------------------
-
-alter table public.activity_participants
-  add column if not exists removed_by_host_at timestamptz;
-
--- ---- 2. Notification for the removed person -----------------------------------
+-- ---- 1. Notification for the removed person -----------------------------------
 
 create table if not exists public.participant_removed_notification_outbox (
   id uuid primary key default gen_random_uuid(),
@@ -104,7 +94,7 @@ $$;
 revoke all on function private.queue_participant_removed_push(uuid, uuid, text)
   from public, anon, authenticated;
 
--- ---- 3. Removing a participant ------------------------------------------------
+-- ---- 2. Removing a participant ------------------------------------------------
 
 create or replace function public.remove_participant(
   requested_activity_id uuid,
@@ -145,10 +135,7 @@ begin
       'activity_title',selected_activity.title,'message','This activity has already started.');
   end if;
 
-  update public.activity_participants
-  set status = 'rejected',
-      removed_by_host_at = now(),
-      updated_at = now()
+  delete from public.activity_participants
   where activity_id = selected_activity.id
     and user_id = participant_user_id
     and status = 'joined'
@@ -174,87 +161,7 @@ $$;
 revoke all on function public.remove_participant(uuid, uuid) from public, anon;
 grant execute on function public.remove_participant(uuid, uuid) to authenticated;
 
--- ---- 4. A removed person can't join again --------------------------------------
-
--- Same as 20261108110000_same_gender_activity_codes.sql, except that
--- someone the host removed is told so, instead of "Your request was
--- rejected by the host."
-create or replace function public.join_activity_by_code(entered_code text)
-returns jsonb
-language plpgsql
-security definer
-set search_path = ''
-as $$
-declare
-  current_user_id uuid := auth.uid();
-  selected_activity public.activities%rowtype;
-  existing_status text;
-  existing_removed_at timestamptz;
-  resulting_status text;
-  joined_participants integer;
-begin
-  if current_user_id is null then raise exception 'You must be signed in.'; end if;
-  if entered_code is null or trim(entered_code) !~ '^[0-9]{6}$' then
-    return jsonb_build_object('result','invalid_code','message','Enter a valid six-digit activity code.');
-  end if;
-  perform pg_advisory_xact_lock(hashtextextended(current_user_id::text, 0));
-  select * into selected_activity from public.activities
-  where activity_code = trim(entered_code) for update;
-  -- Another gender's activity is answered as if the code didn't exist.
-  if not found
-      or (selected_activity.host_id <> current_user_id
-        and not private.same_gender(current_user_id, selected_activity.host_id)) then
-    return jsonb_build_object('result','invalid_code','message','No activity was found with this code.');
-  end if;
-  if public.users_blocked_either_way(current_user_id, selected_activity.host_id) then
-    return jsonb_build_object('result','unavailable','message','This activity is unavailable.');
-  end if;
-  if selected_activity.starts_at <= now() then
-    return jsonb_build_object('result','activity_started','activity_id',selected_activity.id,
-      'activity_title',selected_activity.title,'message','This activity is no longer available to join.');
-  end if;
-  if selected_activity.host_id = current_user_id then
-    return jsonb_build_object('result','host','activity_id',selected_activity.id,
-      'activity_title',selected_activity.title,'message','You are the host of this activity.');
-  end if;
-  select status, removed_by_host_at into existing_status, existing_removed_at
-  from public.activity_participants
-  where activity_id = selected_activity.id and user_id = current_user_id;
-  if existing_status is not null then
-    return jsonb_build_object('result',existing_status,'activity_id',selected_activity.id,
-      'activity_title',selected_activity.title,'is_public',selected_activity.is_public,
-      'message',case
-        when existing_status = 'joined' then 'You have already joined this activity.'
-        when existing_status = 'pending' then 'Your request is waiting for host approval.'
-        when existing_status = 'waitlisted' then 'You are already on the waitlist.'
-        when existing_removed_at is not null then 'The host removed you from this activity.'
-        else 'Your request was rejected by the host.' end);
-  end if;
-  if public.activity_schedule_conflicts(current_user_id, selected_activity.starts_at,
-      selected_activity.ends_at, selected_activity.id) then
-    return jsonb_build_object('result','time_conflict','activity_id',selected_activity.id,
-      'activity_title',selected_activity.title,
-      'message','You already have an activity scheduled during this time. Please choose a different date or time.');
-  end if;
-  if selected_activity.is_public then
-    select 1 + count(*) into joined_participants from public.activity_participants
-      where activity_id = selected_activity.id and status = 'joined';
-    resulting_status := case when joined_participants >= selected_activity.max_participants
-      then 'waitlisted' else 'joined' end;
-  else
-    resulting_status := 'pending';
-  end if;
-  insert into public.activity_participants(activity_id,user_id,status)
-  values(selected_activity.id,current_user_id,resulting_status);
-  return jsonb_build_object('result',resulting_status,'activity_id',selected_activity.id,
-    'activity_title',selected_activity.title,'is_public',selected_activity.is_public,
-    'message',case resulting_status when 'joined' then 'You joined the activity successfully.'
-      when 'pending' then 'Your request was sent to the host.'
-      else 'The activity is full. You were added to the waitlist.' end);
-end;
-$$;
-
--- ---- 5. Notification center ---------------------------------------------------
+-- ---- 3. Notification center ---------------------------------------------------
 
 -- Same as 20261104120000_notification_rows.sql, plus participant_removed.
 drop function if exists public.get_my_notifications(integer);

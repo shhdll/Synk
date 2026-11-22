@@ -104,13 +104,6 @@ void main() {
   group('removed participant messages in Arabic', () {
     setUp(() => LanguageController.instance.setLocale(const Locale('ar')));
 
-    test('rejoining says the host removed them', () {
-      expect(
-        serverMessage('The host removed you from this activity.'),
-        'أزالك المنظم من هذا النشاط',
-      );
-    });
-
     test('only the host can remove participants', () {
       expect(
         serverMessage('Only the host can remove participants.'),

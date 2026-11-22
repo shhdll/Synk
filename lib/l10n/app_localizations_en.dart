@@ -4223,7 +4223,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get removeParticipantMessage =>
-      'They\'ll be taken out of the activity and its chat, and won\'t be able to join it again.';
+      'They\'ll be taken out of the activity and its chat.';
 
   @override
   String get participantRemovedTitle => 'Participant removed';
@@ -4241,9 +4241,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String notifParticipantRemoved(String title) {
     return 'The host removed you from $title.';
   }
-
-  @override
-  String get serverHostRemovedYou => 'The host removed you from this activity.';
 
   @override
   String get serverOnlyHostCanRemove =>

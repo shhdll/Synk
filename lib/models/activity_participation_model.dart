@@ -251,7 +251,6 @@ class ActivityParticipationModel {
   }
 
   // Lets the host remove a joined participant before the activity starts.
-  // The removed person can't join the same activity again.
   Future<ActivityJoinResult> removeParticipant({
     required String activityId,
     required String participantUserId,
