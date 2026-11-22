@@ -1684,5 +1684,19 @@
   "shareMyProfileMessage": "Let's Synk! ✨\n{link}",
   "@shareMyProfileMessage": {"placeholders": {"link": {}}},
   "shareProfileMessage": "Meet {name} on Synk! ✨\n{link}",
-  "@shareProfileMessage": {"placeholders": {"name": {}, "link": {}}}
+  "@shareProfileMessage": {"placeholders": {"name": {}, "link": {}}},
+  "surpriseMe": "Surprise me",
+  "surpriseMeTitle": "Surprise me",
+  "surpriseMeSubtitle": "Shuffle the puzzle and we'll pick a plan for you",
+  "shuffling": "Shuffling…",
+  "shuffleAgain": "Shuffle again",
+  "yourSurprise": "Your surprise",
+  "tapForDetails": "Tap the card for details",
+  "noSurpriseTitle": "No surprises right now",
+  "noSurpriseMessage": "There's nothing new you can join at the moment. Check back soon.",
+  "noSurpriseFiltered": "Nothing fits your filter. Try changing it.",
+  "changeFilter": "Change filter",
+  "surpriseWhen": "When",
+  "surpriseWhere": "Where",
+  "surpriseMeHint": "Can't decide? Let us pick a plan for you"
 }
