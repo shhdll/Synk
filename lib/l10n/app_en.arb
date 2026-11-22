@@ -1684,5 +1684,7 @@
   "shareMyProfileMessage": "Let's Synk! ✨\n{link}",
   "@shareMyProfileMessage": {"placeholders": {"link": {}}},
   "shareProfileMessage": "Meet {name} on Synk! ✨\n{link}",
-  "@shareProfileMessage": {"placeholders": {"name": {}, "link": {}}}
+  "@shareProfileMessage": {"placeholders": {"name": {}, "link": {}}},
+  "addToCalendar": "Add to calendar",
+  "noCalendarAppFound": "No calendar app was found on this phone."
 }

@@ -4212,4 +4212,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String shareProfileMessage(Object name, Object link) {
     return 'Meet $name on Synk! ✨\n$link';
   }
+
+  @override
+  String get addToCalendar => 'Add to calendar';
+
+  @override
+  String get noCalendarAppFound => 'No calendar app was found on this phone.';
 }

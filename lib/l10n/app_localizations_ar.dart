@@ -4257,4 +4257,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String shareProfileMessage(Object name, Object link) {
     return 'تعرّف على $name في Synk! ✨\n$link';
   }
+
+  @override
+  String get addToCalendar => 'أضف للتقويم';
+
+  @override
+  String get noCalendarAppFound =>
+      'لم يتم العثور على تطبيق تقويم في هذا الجوال';
 }

@@ -16,6 +16,7 @@ import '../../../models/friends_model.dart';
 import '../../../models/user_profile_model.dart';
 import '../../../utils/custom_widgets/synk_dialog.dart';
 import '../../../utils/custom_widgets/synk_feedback.dart';
+import '../../../utils/add_to_calendar.dart';
 import '../../../utils/maps_launcher.dart';
 import '../../../utils/share_activity.dart';
 import '../../widgets/anonymous_avatar.dart';
@@ -541,6 +542,10 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                               if (_hasMapRow) ...[
                                 const SizedBox(height: 12),
                                 _buildMapRow(),
+                              ],
+                              if (_canAddToCalendar) ...[
+                                const SizedBox(height: 10),
+                                _buildAddToCalendarButton(),
                               ],
                               if (_currentActivity.description.isNotEmpty) ...[
                                 const SizedBox(height: 20),
@@ -1697,6 +1702,42 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
   );
 
   // Closes this sheet (and any page under it) and shows the pin on our map.
+  // Only for the host and joined participants, until the activity starts.
+  bool get _canAddToCalendar =>
+      !_currentActivity.isPast &&
+      (_isViewerHost || _participationStatus == 'joined');
+
+  Widget _buildAddToCalendarButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: TextButton.icon(
+        onPressed: _addToCalendar,
+        icon: const Icon(
+          Icons.event_available_rounded,
+          size: 20,
+          color: SynkColors.orangeDark,
+        ),
+        label: Text(context.l10n.addToCalendar),
+        style: TextButton.styleFrom(
+          foregroundColor: SynkColors.textPrimary,
+          backgroundColor: Colors.white,
+          shape: _mapButtonShape,
+          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+        ),
+      ),
+    );
+  }
+
+  // Opens the phone's calendar with the activity filled in; the user
+  // saves it there.
+  Future<void> _addToCalendar() async {
+    final opened = await addActivityToCalendar(_currentActivity);
+    if (!opened && mounted) {
+      SynkFeedback.showError(context, context.l10n.noCalendarAppFound);
+    }
+  }
+
   Widget _buildViewOnMapButton() {
     return SizedBox(
       height: 48,

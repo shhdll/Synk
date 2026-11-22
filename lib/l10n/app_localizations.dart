@@ -7326,6 +7326,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Meet {name} on Synk! ✨\n{link}'**
   String shareProfileMessage(Object name, Object link);
+
+  /// No description provided for @addToCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to calendar'**
+  String get addToCalendar;
+
+  /// No description provided for @noCalendarAppFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No calendar app was found on this phone.'**
+  String get noCalendarAppFound;
 }
 
 class _AppLocalizationsDelegate
