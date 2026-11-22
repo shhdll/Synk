@@ -4257,4 +4257,41 @@ class AppLocalizationsAr extends AppLocalizations {
   String shareProfileMessage(Object name, Object link) {
     return 'تعرّف على $name في Synk! ✨\n$link';
   }
+
+  @override
+  String get removeParticipant => 'إزالة';
+
+  @override
+  String removeParticipantTitle(Object name) {
+    return 'إزالة $name؟';
+  }
+
+  @override
+  String get removeParticipantMessage =>
+      'سيتم إخراجه من النشاط ومحادثته، ولن يتمكن من الانضمام إليه مرة أخرى';
+
+  @override
+  String get participantRemovedTitle => 'تمت الإزالة';
+
+  @override
+  String participantRemovedMessage(Object name) {
+    return '$name لم يعد في هذا النشاط';
+  }
+
+  @override
+  String get unableToRemoveParticipant => 'تعذرت إزالة المشارك، حاول مرة أخرى';
+
+  @override
+  String notifParticipantRemoved(String title) {
+    return 'أزالك المنظم من $title';
+  }
+
+  @override
+  String get serverHostRemovedYou => 'أزالك المنظم من هذا النشاط';
+
+  @override
+  String get serverOnlyHostCanRemove => 'المنظم فقط يمكنه إزالة المشاركين';
+
+  @override
+  String get removeFromActivity => 'إزالة من النشاط';
 }

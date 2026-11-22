@@ -249,4 +249,23 @@ class ActivityParticipationModel {
       Map<String, dynamic>.from(response as Map),
     );
   }
+
+  // Lets the host remove a joined participant before the activity starts.
+  // The removed person can't join the same activity again.
+  Future<ActivityJoinResult> removeParticipant({
+    required String activityId,
+    required String participantUserId,
+  }) async {
+    final response = await _client.rpc(
+      'remove_participant',
+      params: {
+        'requested_activity_id': activityId,
+        'participant_user_id': participantUserId,
+      },
+    );
+
+    return ActivityJoinResult.fromJson(
+      Map<String, dynamic>.from(response as Map),
+    );
+  }
 }

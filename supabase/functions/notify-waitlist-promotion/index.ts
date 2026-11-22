@@ -39,7 +39,7 @@ type PromotionEvent = {
   kind?: string;
   temperature?: number | null;
   streak_weeks?: number | null;
-  event_type?: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received" | "friend_request_received" | "friend_request_accepted" | "host_assigned" | "activity_conflict" | "activity_full" | "activity_reminder" | "chat_message" | "badge_earned" | "marketing";
+  event_type?: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received" | "friend_request_received" | "friend_request_accepted" | "host_assigned" | "activity_conflict" | "activity_full" | "activity_reminder" | "chat_message" | "badge_earned" | "marketing" | "participant_removed";
 };
 
 type FcmCredentials = {
@@ -269,6 +269,14 @@ function notificationContent(
           `رفض المنظم طلب انضمامك إلى ${a}`,
         ),
       };
+    case "participant_removed":
+      return {
+        title: t("Removed from activity", "تمت إزالتك من النشاط"),
+        body: t(
+          `The host removed you from ${a}.`,
+          `أزالك المنظم من ${a}`,
+        ),
+      };
     case "join_request_received": {
       const name = event.requester_name || t("Someone", "شخص");
       return {
@@ -398,7 +406,8 @@ async function sendToToken(
                     event.event_type === "friend_request_accepted" ||
                     event.event_type === "activity_reminder" ||
                     event.event_type === "chat_message" ||
-                    event.event_type === "badge_earned"
+                    event.event_type === "badge_earned" ||
+                    event.event_type === "participant_removed"
                   ? "activity_updates"
                   : "waitlist_promotions",
                 tag: `${event.event_type ?? "waitlist_promotion"}_${event.id}`,
@@ -571,7 +580,7 @@ Deno.serve(async (request: Request) => {
   }
 
   let eventId: string;
-  let eventType: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received" | "friend_request_received" | "friend_request_accepted" | "host_assigned" | "activity_conflict" | "activity_full" | "activity_reminder" | "chat_message" | "badge_earned" | "marketing";
+  let eventType: "waitlist_promotion" | "activity_updated" | "activity_deleted" | "join_request_accepted" | "join_request_rejected" | "join_request_received" | "friend_request_received" | "friend_request_accepted" | "host_assigned" | "activity_conflict" | "activity_full" | "activity_reminder" | "chat_message" | "badge_earned" | "marketing" | "participant_removed";
   try {
     const body = await request.json();
     // The daily weather check (cron, request_nice_weather_check), not a
@@ -591,7 +600,8 @@ Deno.serve(async (request: Request) => {
         body.event_type === "activity_reminder" ||
         body.event_type === "chat_message" ||
         body.event_type === "badge_earned" ||
-        body.event_type === "marketing"
+        body.event_type === "marketing" ||
+        body.event_type === "participant_removed"
       ? body.event_type
       : "waitlist_promotion";
   } catch {
@@ -629,6 +639,8 @@ Deno.serve(async (request: Request) => {
     ? "badge_earned_notification_outbox"
     : eventType === "marketing"
     ? "marketing_notification_outbox"
+    : eventType === "participant_removed"
+    ? "participant_removed_notification_outbox"
     : "waitlist_promotion_notification_outbox";
   const eventColumns = eventType === "activity_updated"
     ? "id, user_id, activity_id, activity_title, status"

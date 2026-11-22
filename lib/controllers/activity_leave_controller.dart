@@ -18,6 +18,8 @@ class ActivityLeaveController extends ChangeNotifier {
 
   static const Set<String> _transferSuccessResults = {'transferred'};
 
+  static const Set<String> _removeSuccessResults = {'removed'};
+
   // Refusals whose database message is safe to show as is.
   static const Set<String> _knownFailureResults = {
     'not_found',
@@ -73,6 +75,23 @@ class ActivityLeaveController extends ChangeNotifier {
       ),
       successResults: _transferSuccessResults,
       fallbackError: appL10n.unableToTransferHostingPleaseTry,
+    );
+  }
+
+  // Takes a joined participant out of the host's activity. Their place
+  // goes to the waitlist, and they can't join again.
+  Future<ActivityJoinResult?> removeParticipant({
+    required String activityId,
+    required String participantUserId,
+  }) {
+    return _run(
+      activityId: activityId,
+      request: () => _participationModel.removeParticipant(
+        activityId: activityId,
+        participantUserId: participantUserId,
+      ),
+      successResults: _removeSuccessResults,
+      fallbackError: appL10n.unableToRemoveParticipant,
     );
   }
 

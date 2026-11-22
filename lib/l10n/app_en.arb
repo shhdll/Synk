@@ -1684,5 +1684,18 @@
   "shareMyProfileMessage": "Let's Synk! ✨\n{link}",
   "@shareMyProfileMessage": {"placeholders": {"link": {}}},
   "shareProfileMessage": "Meet {name} on Synk! ✨\n{link}",
-  "@shareProfileMessage": {"placeholders": {"name": {}, "link": {}}}
+  "@shareProfileMessage": {"placeholders": {"name": {}, "link": {}}},
+  "removeParticipant": "Remove",
+  "removeParticipantTitle": "Remove {name}?",
+  "@removeParticipantTitle": {"placeholders":{"name":{}}},
+  "removeParticipantMessage": "They'll be taken out of the activity and its chat, and won't be able to join it again.",
+  "participantRemovedTitle": "Participant removed",
+  "participantRemovedMessage": "{name} is no longer in this activity.",
+  "@participantRemovedMessage": {"placeholders":{"name":{}}},
+  "unableToRemoveParticipant": "Unable to remove the participant. Please try again.",
+  "notifParticipantRemoved": "The host removed you from {title}.",
+  "@notifParticipantRemoved": {"placeholders":{"title":{"type":"String"}}},
+  "serverHostRemovedYou": "The host removed you from this activity.",
+  "serverOnlyHostCanRemove": "Only the host can remove participants.",
+  "removeFromActivity": "Remove from activity"
 }

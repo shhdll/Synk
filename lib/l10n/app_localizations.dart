@@ -7326,6 +7326,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Meet {name} on Synk! ✨\n{link}'**
   String shareProfileMessage(Object name, Object link);
+
+  /// No description provided for @removeParticipant.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get removeParticipant;
+
+  /// No description provided for @removeParticipantTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name}?'**
+  String removeParticipantTitle(Object name);
+
+  /// No description provided for @removeParticipantMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'They\'ll be taken out of the activity and its chat, and won\'t be able to join it again.'**
+  String get removeParticipantMessage;
+
+  /// No description provided for @participantRemovedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Participant removed'**
+  String get participantRemovedTitle;
+
+  /// No description provided for @participantRemovedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is no longer in this activity.'**
+  String participantRemovedMessage(Object name);
+
+  /// No description provided for @unableToRemoveParticipant.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to remove the participant. Please try again.'**
+  String get unableToRemoveParticipant;
+
+  /// No description provided for @notifParticipantRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'The host removed you from {title}.'**
+  String notifParticipantRemoved(String title);
+
+  /// No description provided for @serverHostRemovedYou.
+  ///
+  /// In en, this message translates to:
+  /// **'The host removed you from this activity.'**
+  String get serverHostRemovedYou;
+
+  /// No description provided for @serverOnlyHostCanRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the host can remove participants.'**
+  String get serverOnlyHostCanRemove;
+
+  /// No description provided for @removeFromActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from activity'**
+  String get removeFromActivity;
 }
 
 class _AppLocalizationsDelegate

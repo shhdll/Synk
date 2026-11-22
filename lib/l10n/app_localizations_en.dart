@@ -4212,4 +4212,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String shareProfileMessage(Object name, Object link) {
     return 'Meet $name on Synk! ✨\n$link';
   }
+
+  @override
+  String get removeParticipant => 'Remove';
+
+  @override
+  String removeParticipantTitle(Object name) {
+    return 'Remove $name?';
+  }
+
+  @override
+  String get removeParticipantMessage =>
+      'They\'ll be taken out of the activity and its chat, and won\'t be able to join it again.';
+
+  @override
+  String get participantRemovedTitle => 'Participant removed';
+
+  @override
+  String participantRemovedMessage(Object name) {
+    return '$name is no longer in this activity.';
+  }
+
+  @override
+  String get unableToRemoveParticipant =>
+      'Unable to remove the participant. Please try again.';
+
+  @override
+  String notifParticipantRemoved(String title) {
+    return 'The host removed you from $title.';
+  }
+
+  @override
+  String get serverHostRemovedYou => 'The host removed you from this activity.';
+
+  @override
+  String get serverOnlyHostCanRemove =>
+      'Only the host can remove participants.';
+
+  @override
+  String get removeFromActivity => 'Remove from activity';
 }
