@@ -21,6 +21,7 @@ import '../../utils/text_direction.dart';
 import '../widgets/synk_blob_background.dart';
 import 'activity_code_join_sheet.dart';
 import 'profile_view.dart';
+import 'surprise_me_view.dart';
 import 'widgets/activity_details_sheet.dart';
 import 'widgets/code_bubble.dart';
 import 'widgets/day_strip.dart';
@@ -230,6 +231,27 @@ class _HomeViewState extends State<HomeView> {
     showHomeFilterBottomSheet(
       context: context,
       controller: _discoveryController,
+    );
+  }
+
+  // Surprise Me picks from everything the user could join, scored for them.
+  // Read fresh each time, so a feed still loading when it opens counts too.
+  void _openSurprise() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        fullscreenDialog: true,
+        builder: (_) => SurpriseMeView(
+          ranked: () {
+            final activities = _discoveryController.allActivities;
+            return _rank(activities, limit: activities.length);
+          },
+          activityStore: widget.activityStore,
+          feedChanges: _discoveryController,
+          distanceOf: _distanceOf,
+          onOpen: _onActivityTap,
+          onJoined: () => _discoveryController.loadFeed(isSilent: true),
+        ),
+      ),
     );
   }
 
@@ -445,7 +467,9 @@ class _HomeViewState extends State<HomeView> {
                 // Results sit right under the search bar.
                 if (searching)
                   _buildSearch()
-                else
+                else ...[
+                  const SizedBox(height: 14),
+                  _SurpriseBanner(onTap: _openSurprise),
                   ForYouDeck(
                     picks: _deckPicks(),
                     session: _deckSession,
@@ -458,6 +482,7 @@ class _HomeViewState extends State<HomeView> {
                         : () => widget.onCreateActivity!(),
                     swipes: _swipes,
                   ),
+                ],
               ],
             ),
           ),
@@ -844,6 +869,90 @@ class _HomeViewState extends State<HomeView> {
       ),
       bottomRoom,
     ];
+  }
+}
+
+// Under the search bar: opens Surprise Me.
+class _SurpriseBanner extends StatelessWidget {
+  const _SurpriseBanner({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    return Semantics(
+      button: true,
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(24),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: SynkColors.textSecondary.withValues(alpha: 0.14),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: SynkColors.orangeDark.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.extension_rounded,
+                    size: 22,
+                    color: SynkColors.orangeDark,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l.surpriseMe,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.leagueSpartan(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: SynkColors.ink,
+                        ),
+                      ),
+                      Text(
+                        l.surpriseMeHint,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w500,
+                          color: SynkColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  Directionality.of(context) == TextDirection.rtl
+                      ? Icons.chevron_left_rounded
+                      : Icons.chevron_right_rounded,
+                  color: SynkColors.orangeDark,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

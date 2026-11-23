@@ -1251,5 +1251,19 @@
   "addToCalendar": "أضف للتقويم",
   "noCalendarAppFound": "لم يتم العثور على تطبيق تقويم في هذا الجوال",
   "updateCalendar": "تحديث التقويم",
-  "calendarTimeChanged": "تغير الموعد بعد إضافته إلى تقويمك"
+  "calendarTimeChanged": "تغير الموعد بعد إضافته إلى تقويمك",
+  "surpriseMe": "فاجئني",
+  "surpriseMeTitle": "فاجئني",
+  "surpriseMeSubtitle": "اخلط القطع وبنختار لك نشاط",
+  "shuffling": "جاري الخلط…",
+  "shuffleAgain": "خلطة ثانية",
+  "yourSurprise": "مفاجأتك",
+  "tapForDetails": "اضغط على البطاقة للتفاصيل",
+  "noSurpriseTitle": "ما فيه مفاجآت الحين",
+  "noSurpriseMessage": "ما فيه أنشطة جديدة تقدر تنضم لها الحين، ارجع لنا قريب",
+  "noSurpriseFiltered": "ما فيه شي يناسب الفلتر، جرب تغيره",
+  "changeFilter": "غير الفلتر",
+  "surpriseWhen": "متى",
+  "surpriseWhere": "وين",
+  "surpriseMeHint": "محتار؟ خلنا نختار لك نشاط"
 }

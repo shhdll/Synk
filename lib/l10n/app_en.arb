@@ -1718,5 +1718,19 @@
   "addToCalendar": "Add to calendar",
   "noCalendarAppFound": "No calendar app was found on this phone.",
   "updateCalendar": "Update calendar",
-  "calendarTimeChanged": "The time changed after you added this to your calendar"
+  "calendarTimeChanged": "The time changed after you added this to your calendar",
+  "surpriseMe": "Surprise me",
+  "surpriseMeTitle": "Surprise me",
+  "surpriseMeSubtitle": "Shuffle the puzzle and we'll pick a plan for you",
+  "shuffling": "Shuffling…",
+  "shuffleAgain": "Shuffle again",
+  "yourSurprise": "Your surprise",
+  "tapForDetails": "Tap the card for details",
+  "noSurpriseTitle": "No surprises right now",
+  "noSurpriseMessage": "There's nothing new you can join at the moment. Check back soon.",
+  "noSurpriseFiltered": "Nothing fits your filter. Try changing it.",
+  "changeFilter": "Change filter",
+  "surpriseWhen": "When",
+  "surpriseWhere": "Where",
+  "surpriseMeHint": "Can't decide? Let us pick a plan for you"
 }

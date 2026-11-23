@@ -7506,6 +7506,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The time changed after you added this to your calendar'**
   String get calendarTimeChanged;
+
+  /// No description provided for @surpriseMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Surprise me'**
+  String get surpriseMe;
+
+  /// No description provided for @surpriseMeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Surprise me'**
+  String get surpriseMeTitle;
+
+  /// No description provided for @surpriseMeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shuffle the puzzle and we\'ll pick a plan for you'**
+  String get surpriseMeSubtitle;
+
+  /// No description provided for @shuffling.
+  ///
+  /// In en, this message translates to:
+  /// **'Shuffling…'**
+  String get shuffling;
+
+  /// No description provided for @shuffleAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Shuffle again'**
+  String get shuffleAgain;
+
+  /// No description provided for @yourSurprise.
+  ///
+  /// In en, this message translates to:
+  /// **'Your surprise'**
+  String get yourSurprise;
+
+  /// No description provided for @tapForDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the card for details'**
+  String get tapForDetails;
+
+  /// No description provided for @noSurpriseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No surprises right now'**
+  String get noSurpriseTitle;
+
+  /// No description provided for @noSurpriseMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'There\'s nothing new you can join at the moment. Check back soon.'**
+  String get noSurpriseMessage;
+
+  /// No description provided for @noSurpriseFiltered.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing fits your filter. Try changing it.'**
+  String get noSurpriseFiltered;
+
+  /// No description provided for @changeFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Change filter'**
+  String get changeFilter;
+
+  /// No description provided for @surpriseWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'When'**
+  String get surpriseWhen;
+
+  /// No description provided for @surpriseWhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Where'**
+  String get surpriseWhere;
+
+  /// No description provided for @surpriseMeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t decide? Let us pick a plan for you'**
+  String get surpriseMeHint;
 }
 
 class _AppLocalizationsDelegate

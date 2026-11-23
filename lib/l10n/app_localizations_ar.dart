@@ -4357,4 +4357,47 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get calendarTimeChanged => 'تغير الموعد بعد إضافته إلى تقويمك';
+
+  @override
+  String get surpriseMe => 'فاجئني';
+
+  @override
+  String get surpriseMeTitle => 'فاجئني';
+
+  @override
+  String get surpriseMeSubtitle => 'اخلط القطع وبنختار لك نشاط';
+
+  @override
+  String get shuffling => 'جاري الخلط…';
+
+  @override
+  String get shuffleAgain => 'خلطة ثانية';
+
+  @override
+  String get yourSurprise => 'مفاجأتك';
+
+  @override
+  String get tapForDetails => 'اضغط على البطاقة للتفاصيل';
+
+  @override
+  String get noSurpriseTitle => 'ما فيه مفاجآت الحين';
+
+  @override
+  String get noSurpriseMessage =>
+      'ما فيه أنشطة جديدة تقدر تنضم لها الحين، ارجع لنا قريب';
+
+  @override
+  String get noSurpriseFiltered => 'ما فيه شي يناسب الفلتر، جرب تغيره';
+
+  @override
+  String get changeFilter => 'غير الفلتر';
+
+  @override
+  String get surpriseWhen => 'متى';
+
+  @override
+  String get surpriseWhere => 'وين';
+
+  @override
+  String get surpriseMeHint => 'محتار؟ خلنا نختار لك نشاط';
 }

@@ -4319,4 +4319,48 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get calendarTimeChanged =>
       'The time changed after you added this to your calendar';
+
+  @override
+  String get surpriseMe => 'Surprise me';
+
+  @override
+  String get surpriseMeTitle => 'Surprise me';
+
+  @override
+  String get surpriseMeSubtitle =>
+      'Shuffle the puzzle and we\'ll pick a plan for you';
+
+  @override
+  String get shuffling => 'Shuffling…';
+
+  @override
+  String get shuffleAgain => 'Shuffle again';
+
+  @override
+  String get yourSurprise => 'Your surprise';
+
+  @override
+  String get tapForDetails => 'Tap the card for details';
+
+  @override
+  String get noSurpriseTitle => 'No surprises right now';
+
+  @override
+  String get noSurpriseMessage =>
+      'There\'s nothing new you can join at the moment. Check back soon.';
+
+  @override
+  String get noSurpriseFiltered => 'Nothing fits your filter. Try changing it.';
+
+  @override
+  String get changeFilter => 'Change filter';
+
+  @override
+  String get surpriseWhen => 'When';
+
+  @override
+  String get surpriseWhere => 'Where';
+
+  @override
+  String get surpriseMeHint => 'Can\'t decide? Let us pick a plan for you';
 }
