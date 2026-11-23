@@ -6,6 +6,7 @@
     }
   },
   "redirects": [
-    { "source": "/", "destination": "/home.html", "permanent": false }
+    { "source": "/index.html", "has": [{ "type": "query", "key": "token" }], "destination": "/confirm.html", "permanent": false },
+    { "source": "/home.html", "destination": "/", "permanent": true }
   ]
 }

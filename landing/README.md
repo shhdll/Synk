@@ -6,7 +6,7 @@ it with `verifyOTP` (see `lib/models/auth_deep_link_handler.dart`).
 
 | Page                  | Email          | Opens in app                                              |
 | --------------------- | -------------- | --------------------------------------------------------- |
-| `index.html`          | Confirm signup, Magic link | `io.supabase.synk://login-callback?token=…&type=…` |
+| `confirm.html`        | Confirm signup, Magic link | `io.supabase.synk://login-callback?token=…&type=…` |
 | `reset-password.html` | Reset password | `io.supabase.synk://reset-password?token=…`               |
 | `change-email.html`   | Change email   | `io.supabase.synk://login-callback?token=…&type=email_change` |
 | `expired.html`        | (any, when Supabase reports an expired or used link) | `io.supabase.synk://login-callback` |
@@ -61,7 +61,7 @@ GitHub Pages, etc.). No build step.
 
 | Template       | File                  | Link                                                                        |
 | -------------- | --------------------- | --------------------------------------------------------------------------- |
-| Confirm signup | `confirm_signup.html` | `https://synk.cc/index.html?token={{ .TokenHash }}&type=signup`             |
+| Confirm signup | `confirm_signup.html` | `https://synk.cc/confirm.html?token={{ .TokenHash }}&type=signup`             |
 | Reset password | `reset_password.html` | `https://synk.cc/reset-password.html?token={{ .TokenHash }}`                |
 | Change email   | `change_email.html`   | `https://synk.cc/change-email.html?token={{ .TokenHash }}&type=email_change` |
-| Magic link     | `magic_link.html`     | `https://synk.cc/index.html?token={{ .TokenHash }}&type=magiclink`          |
+| Magic link     | `magic_link.html`     | `https://synk.cc/confirm.html?token={{ .TokenHash }}&type=magiclink`          |
