@@ -1,4 +1,4 @@
-// Shared by the plain pages: language switch, grain, and the color at the top.
+// Shared by the plain pages: language switch and the color at the top.
 (() => {
   const root = document.documentElement;
   const button = document.getElementById("lang");
@@ -25,29 +25,15 @@
   setLang(asked || saved || (navigator.language.startsWith("ar") ? "ar" : "en"));
   button?.addEventListener("click", () => setLang(root.lang === "ar" ? "en" : "ar"));
 
-  // the same grain as the home page
-  const size = 256;
-  const c = document.createElement("canvas");
-  c.width = c.height = size;
-  const g = c.getContext("2d");
-  const img = g.createImageData(size, size);
-  const base = [0xf6, 0xf1, 0xe6];
-  for (let i = 0; i < img.data.length; i += 4) {
-    const n = (Math.random() - 0.5) * 0.1 * 255;
-    img.data[i] = base[0] + n;
-    img.data[i + 1] = base[1] + n;
-    img.data[i + 2] = base[2] + n;
-    img.data[i + 3] = 255;
-  }
-  g.putImageData(img, 0, 0);
-  root.style.background = `#f6f1e6 url(${c.toDataURL()}) 0 0 / ${size}px ${size}px`;
-
   const head = document.querySelector(".head");
   if (head && window.horizonGradient) {
-    horizonGradient(head, {
-      colors: ["#ffc9a3", "#ffcfe0", "#fff5ef", "#f6f1e6"],
+    const HEAD = { light: ["#ffc9a3", "#ffcfe0", "#fff5ef", "#f6f1e6"], dark: ["#7a3f2c", "#5c2c46", "#2a2129", "#17151b"] };
+    const mode = () => (window.synkTheme?.isDark() ? "dark" : "light");
+    const setColors = horizonGradient(head, {
+      colors: HEAD[mode()],
       softness: 1.4,
     });
+    window.synkTheme?.onChange(() => setColors?.(HEAD[mode()]));
   }
 
   // download buttons: same as the home page, the button fills as the file downloads

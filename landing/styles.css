@@ -296,3 +296,31 @@ button.button:disabled {
     animation: none;
   }
 }
+
+/* dark mode */
+
+:root[data-theme="dark"] {
+  --bg: #17151b;
+  --ink: #f1ece4;
+  --muted: #aaa4b0;
+  --sand: #3a3026;
+  color-scheme: dark;
+}
+
+[data-theme="dark"] .orb {
+  opacity: 0.35;
+}
+
+[data-theme="dark"] .brand {
+  background: rgba(32, 29, 37, 0.85);
+}
+
+[data-theme="dark"] .badge,
+[data-theme="dark"] .button.secondary,
+[data-theme="dark"] .field {
+  background: #2a2730;
+}
+
+[data-theme="dark"] .button.secondary {
+  color: var(--coral);
+}
