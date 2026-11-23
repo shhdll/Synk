@@ -246,6 +246,7 @@ class _HomeViewState extends State<HomeView> {
             return _rank(activities, limit: activities.length);
           },
           activityStore: widget.activityStore,
+          feedChanges: _discoveryController,
           distanceOf: _distanceOf,
           onOpen: _onActivityTap,
           onJoined: () => _discoveryController.loadFeed(isSilent: true),

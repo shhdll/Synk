@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 
 import '../../../core/constants/synk_colors.dart';
 import '../../../models/activity_model.dart';
+import 'activity_thumbnail.dart';
 
 // Surprise Me's puzzle.
 //
@@ -165,11 +166,16 @@ class _SurprisePuzzleState extends State<SurprisePuzzle>
     }
   }
 
-  _Face _faceOf(Activity? activity, int index) => _Face(
-    photo: _photos[_urlOf(activity)],
-    emoji: activity?.categoryEmoji ?? '',
-    color: _colors[index % _colors.length],
-  );
+  // Without a photo, the same icon and colour as the activity's card
+  // elsewhere in the app.
+  _Face _faceOf(Activity? activity, int index) {
+    final visual = activity == null ? null : ActivityVisual.of(activity);
+    return _Face(
+      photo: _photos[_urlOf(activity)],
+      icon: visual?.icon ?? Icons.extension_rounded,
+      tint: visual?.tint ?? _colors[index % _colors.length],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -259,13 +265,13 @@ class _Pose {
   );
 }
 
-// An activity's look: its photo, or its category emoji on a colour.
+// An activity's look: its photo, or its kind's icon on its colour.
 class _Face {
-  const _Face({required this.photo, required this.emoji, required this.color});
+  const _Face({required this.photo, required this.icon, required this.tint});
 
   final ui.Image? photo;
-  final String emoji;
-  final Color color;
+  final IconData icon;
+  final Color tint;
 }
 
 // ---- Drawing ----------------------------------------------------------------
@@ -481,13 +487,13 @@ class _PuzzlePainter extends CustomPainter {
         board.width,
         board.height,
       );
-      _paintFace(canvas, face, area, emojiSize: cell * 1.1);
+      _paintFace(canvas, face, area, iconSize: cell * 1.1);
     } else {
       _paintFace(
         canvas,
         face,
         Rect.fromLTWH(0, 0, cell, cell).inflate(cell * 0.2),
-        emojiSize: cell * 0.36,
+        iconSize: cell * 0.42,
       );
     }
     canvas.restore();
@@ -503,11 +509,14 @@ class _PuzzlePainter extends CustomPainter {
     canvas.restore();
   }
 
+  // A photo fills [area]. Without one, a soft gradient of the activity's
+  // colour with its icon in a light circle in the middle, like the
+  // activity cards elsewhere in the app but bolder.
   static void _paintFace(
     Canvas canvas,
     _Face face,
     Rect area, {
-    required double emojiSize,
+    required double iconSize,
   }) {
     if (face.photo != null) {
       paintImage(
@@ -519,10 +528,40 @@ class _PuzzlePainter extends CustomPainter {
       );
       return;
     }
-    canvas.drawRect(area.inflate(emojiSize), Paint()..color = face.color);
-    if (face.emoji.isNotEmpty) {
-      _drawText(canvas, face.emoji, area.center, emojiSize);
-    }
+    final tint = face.tint;
+    canvas.drawRect(area.inflate(iconSize), Paint()..color = Colors.white);
+    canvas.drawRect(
+      area.inflate(iconSize),
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [tint.withValues(alpha: 0.28), tint.withValues(alpha: 0.6)],
+        ).createShader(area),
+    );
+    canvas.drawCircle(
+      area.center,
+      iconSize * 0.78,
+      Paint()..color = Colors.white.withValues(alpha: 0.55),
+    );
+    final icon = face.icon;
+    final painter = TextPainter(
+      text: TextSpan(
+        text: String.fromCharCode(icon.codePoint),
+        style: TextStyle(
+          fontSize: iconSize,
+          fontFamily: icon.fontFamily,
+          package: icon.fontPackage,
+          color: Color.lerp(tint, SynkColors.textPrimary, 0.35),
+          height: 1,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    painter.paint(
+      canvas,
+      area.center - Offset(painter.width / 2, painter.height / 2),
+    );
   }
 
   static void _drawText(

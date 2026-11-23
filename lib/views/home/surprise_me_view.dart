@@ -32,7 +32,12 @@ class SurpriseMeView extends StatefulWidget {
     this.distanceOf,
     this.participationModel,
     this.activitiesModel,
+    this.feedChanges,
   });
+
+  // Notifies when the feed behind [ranked] changes, so pieces that opened
+  // before it finished loading fill in.
+  final Listenable? feedChanges;
 
   final List<TopPick> Function() ranked;
   final ActivityStore activityStore;
@@ -61,6 +66,25 @@ class _SurpriseMeViewState extends State<SurpriseMeView> {
   int _playToken = 0;
   Activity? _picked;
   bool _joining = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.feedChanges?.addListener(_onFeedChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.feedChanges?.removeListener(_onFeedChanged);
+    super.dispose();
+  }
+
+  // Only fills the waiting pieces; never changes them mid-shuffle.
+  void _onFeedChanged() {
+    if (mounted && _stage == _Stage.ready && _loose.length < 9) {
+      setState(() => _loose = _looseActivities());
+    }
+  }
 
   // The activities on the loose pieces, before the puzzle comes together.
   List<Activity> _loose = const [];
