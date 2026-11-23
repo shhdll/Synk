@@ -4313,6 +4313,39 @@ class AppLocalizationsAr extends AppLocalizations {
   String get checkedInTag => 'حاضر';
 
   @override
+  String get removeParticipant => 'إزالة';
+
+  @override
+  String removeParticipantTitle(Object name) {
+    return 'إزالة $name؟';
+  }
+
+  @override
+  String get removeParticipantMessage => 'سيتم إخراجه من النشاط ومحادثته';
+
+  @override
+  String get participantRemovedTitle => 'تمت الإزالة';
+
+  @override
+  String participantRemovedMessage(Object name) {
+    return '$name لم يعد في هذا النشاط';
+  }
+
+  @override
+  String get unableToRemoveParticipant => 'تعذرت إزالة المشارك، حاول مرة أخرى';
+
+  @override
+  String notifParticipantRemoved(String title) {
+    return 'أزالك المنظم من $title';
+  }
+
+  @override
+  String get serverOnlyHostCanRemove => 'المنظم فقط يمكنه إزالة المشاركين';
+
+  @override
+  String get removeFromActivity => 'إزالة من النشاط';
+
+  @override
   String get surpriseMe => 'فاجئني';
 
   @override

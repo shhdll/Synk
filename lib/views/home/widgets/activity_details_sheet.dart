@@ -149,6 +149,9 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
   bool _isLoadingParticipants = true;
   List<Map<String, dynamic>> _participants = [];
 
+  // Participants the host is removing right now.
+  final Set<String> _removingIds = {};
+
   // Only the newest participants request may update the sheet.
   int _participantsRequestId = 0;
 
@@ -291,6 +294,9 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
 
   bool get _isViewerHost =>
       _viewerId != null && _currentActivity.hostId == _viewerId;
+
+  // Hosts can remove participants until the activity starts.
+  bool get _canRemoveParticipants => _isViewerHost && !_currentActivity.isPast;
 
   // Discovery feed activities carry no participation data, so look up the
   // viewer's joined, pending, or waitlisted record in the store.
@@ -1407,6 +1413,71 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     if (mounted) Navigator.of(context).pop();
   }
 
+  // Asks the host to confirm, then removes the participant. Their place
+  // goes to the first person on the waitlist.
+  Future<void> _removeParticipant(String userId, String name) async {
+    if (_removingIds.contains(userId)) return;
+
+    final confirmed = await SynkDialog.confirm(
+      context,
+      icon: Icons.person_remove_rounded,
+      title: context.l10n.removeParticipantTitle(name),
+      message: context.l10n.removeParticipantMessage,
+      action: context.l10n.removeParticipant,
+      red: true,
+    );
+    if (!confirmed || !mounted) return;
+
+    setState(() => _removingIds.add(userId));
+
+    final result = await _leaveController.removeParticipant(
+      activityId: _currentActivity.id,
+      participantUserId: userId,
+    );
+
+    if (!mounted) return;
+
+    if (result == null) {
+      setState(() => _removingIds.remove(userId));
+      // Someone who already left is simply no longer listed.
+      if (_leaveController.failureResult == 'not_eligible') {
+        await _loadParticipants();
+      }
+      if (!mounted) return;
+      SynkFeedback.showError(
+        context,
+        _leaveController.errorMessage ?? context.l10n.unableToRemoveParticipant,
+      );
+      return;
+    }
+
+    setState(() {
+      _removingIds.remove(userId);
+      _participants = _participants
+          .where((p) => p['user_id'] != userId)
+          .toList();
+    });
+
+    // Someone from the waitlist may have taken the place.
+    await _loadParticipants();
+    if (mounted) {
+      setState(() {
+        _currentActivity = _currentActivity.copyWith(
+          participantsCount: _joinedCount,
+        );
+      });
+    }
+    unawaited(_refreshHostedAndParticipating(widget.activityStore));
+    widget.onParticipationChanged?.call();
+
+    if (!mounted) return;
+    await SynkFeedback.showSuccessDialog(
+      context,
+      title: context.l10n.participantRemovedTitle,
+      message: context.l10n.participantRemovedMessage(name),
+    );
+  }
+
   String? _savedParticipationStatus() {
     for (final activity in widget.activityStore.participating) {
       if (activity.id == _currentActivity.id) {
@@ -2088,6 +2159,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
               gender: p['gender'] as String?,
               isHost: false,
               blockedByMe: p['blocked_by_me'] == true,
+              canRemove: _canRemoveParticipants,
             ),
       ]);
     }
@@ -2160,6 +2232,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     required String? gender,
     required bool isHost,
     bool blockedByMe = false,
+    bool canRemove = false,
   }) {
     final checkedIn = userId != null && _checkIns.containsKey(userId);
 
@@ -2335,6 +2408,66 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                 child: HostCrownBadge(),
               ),
             ),
+          if (canRemove && !isHost && !isMe && userId != null)
+            _removingIds.contains(userId)
+                // Same size and spacing as the host's crown, so they line up.
+                ? const Padding(
+                    padding: EdgeInsetsDirectional.only(end: 6),
+                    child: SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: SynkColors.badge,
+                      ),
+                    ),
+                  )
+                // A menu, so a participant isn't removed by a stray tap.
+                : PopupMenuButton<String>(
+                    tooltip: context.l10n.moreOptions,
+                    // After the menu closes, so the dialog isn't closed with it.
+                    onSelected: (_) => _removeParticipant(userId, name),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 180),
+                    style: IconButton.styleFrom(
+                      minimumSize: const Size(30, 30),
+                      fixedSize: const Size(30, 30),
+                      padding: EdgeInsets.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    icon: const Icon(
+                      Icons.more_vert_rounded,
+                      size: 20,
+                      color: SynkColors.textSecondary,
+                    ),
+                    color: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    itemBuilder: (_) => [
+                      PopupMenuItem<String>(
+                        value: 'remove',
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.person_remove_outlined,
+                              size: 20,
+                              color: SynkColors.badge,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              context.l10n.removeFromActivity,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: SynkColors.badge,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
         ],
       ),
     );

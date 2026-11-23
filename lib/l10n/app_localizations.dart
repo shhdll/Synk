@@ -7429,6 +7429,60 @@ abstract class AppLocalizations {
   /// **'Checked in'**
   String get checkedInTag;
 
+  /// No description provided for @removeParticipant.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get removeParticipant;
+
+  /// No description provided for @removeParticipantTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name}?'**
+  String removeParticipantTitle(Object name);
+
+  /// No description provided for @removeParticipantMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'They\'ll be taken out of the activity and its chat.'**
+  String get removeParticipantMessage;
+
+  /// No description provided for @participantRemovedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Participant removed'**
+  String get participantRemovedTitle;
+
+  /// No description provided for @participantRemovedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is no longer in this activity.'**
+  String participantRemovedMessage(Object name);
+
+  /// No description provided for @unableToRemoveParticipant.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to remove the participant. Please try again.'**
+  String get unableToRemoveParticipant;
+
+  /// No description provided for @notifParticipantRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'The host removed you from {title}.'**
+  String notifParticipantRemoved(String title);
+
+  /// No description provided for @serverOnlyHostCanRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the host can remove participants.'**
+  String get serverOnlyHostCanRemove;
+
+  /// No description provided for @removeFromActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from activity'**
+  String get removeFromActivity;
+
   /// No description provided for @surpriseMe.
   ///
   /// In en, this message translates to:
