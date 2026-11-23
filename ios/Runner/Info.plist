@@ -48,6 +48,12 @@
 	<string>Synk needs camera access so you can take a profile or activity photo, or send one in a chat.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Synk needs the microphone so you can send voice messages in chats.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Synk adds activities you join to your calendar.</string>
+	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+	<string>Synk adds activities you join to your calendar.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Your calendar uses contacts to suggest event locations.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>

@@ -1714,5 +1714,9 @@
   "notifParticipantRemoved": "The host removed you from {title}.",
   "@notifParticipantRemoved": {"placeholders":{"title":{"type":"String"}}},
   "serverOnlyHostCanRemove": "Only the host can remove participants.",
-  "removeFromActivity": "Remove from activity"
+  "removeFromActivity": "Remove from activity",
+  "addToCalendar": "Add to calendar",
+  "noCalendarAppFound": "No calendar app was found on this phone.",
+  "updateCalendar": "Update calendar",
+  "calendarTimeChanged": "The time changed after you added this to your calendar"
 }

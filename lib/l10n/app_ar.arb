@@ -1247,5 +1247,9 @@
   "unableToRemoveParticipant": "تعذرت إزالة المشارك، حاول مرة أخرى",
   "notifParticipantRemoved": "أزالك المنظم من {title}",
   "serverOnlyHostCanRemove": "المنظم فقط يمكنه إزالة المشاركين",
-  "removeFromActivity": "إزالة من النشاط"
+  "removeFromActivity": "إزالة من النشاط",
+  "addToCalendar": "أضف للتقويم",
+  "noCalendarAppFound": "لم يتم العثور على تطبيق تقويم في هذا الجوال",
+  "updateCalendar": "تحديث التقويم",
+  "calendarTimeChanged": "تغير الموعد بعد إضافته إلى تقويمك"
 }

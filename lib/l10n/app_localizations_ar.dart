@@ -4344,4 +4344,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get removeFromActivity => 'إزالة من النشاط';
+
+  @override
+  String get addToCalendar => 'أضف للتقويم';
+
+  @override
+  String get noCalendarAppFound =>
+      'لم يتم العثور على تطبيق تقويم في هذا الجوال';
+
+  @override
+  String get updateCalendar => 'تحديث التقويم';
+
+  @override
+  String get calendarTimeChanged => 'تغير الموعد بعد إضافته إلى تقويمك';
 }

@@ -7482,6 +7482,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove from activity'**
   String get removeFromActivity;
+
+  /// No description provided for @addToCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to calendar'**
+  String get addToCalendar;
+
+  /// No description provided for @noCalendarAppFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No calendar app was found on this phone.'**
+  String get noCalendarAppFound;
+
+  /// No description provided for @updateCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Update calendar'**
+  String get updateCalendar;
+
+  /// No description provided for @calendarTimeChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The time changed after you added this to your calendar'**
+  String get calendarTimeChanged;
 }
 
 class _AppLocalizationsDelegate
