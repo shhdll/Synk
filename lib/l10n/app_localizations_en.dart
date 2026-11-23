@@ -4270,4 +4270,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get checkedInTag => 'Checked in';
+
+  @override
+  String get removeParticipant => 'Remove';
+
+  @override
+  String removeParticipantTitle(Object name) {
+    return 'Remove $name?';
+  }
+
+  @override
+  String get removeParticipantMessage =>
+      'They\'ll be taken out of the activity and its chat.';
+
+  @override
+  String get participantRemovedTitle => 'Participant removed';
+
+  @override
+  String participantRemovedMessage(Object name) {
+    return '$name is no longer in this activity.';
+  }
+
+  @override
+  String get unableToRemoveParticipant =>
+      'Unable to remove the participant. Please try again.';
+
+  @override
+  String notifParticipantRemoved(String title) {
+    return 'The host removed you from $title.';
+  }
+
+  @override
+  String get serverOnlyHostCanRemove =>
+      'Only the host can remove participants.';
+
+  @override
+  String get removeFromActivity => 'Remove from activity';
 }

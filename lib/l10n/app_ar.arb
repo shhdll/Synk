@@ -1238,5 +1238,14 @@
   "checkInUnableToLocate": "تعذر تحديد موقعك. حاول مرة أخرى",
   "checkInMockedLocation": "أوقف تطبيقات الموقع الوهمي لتسجيل حضورك",
   "checkInFailed": "تعذر تسجيل حضورك. حاول مرة أخرى",
-  "checkedInTag": "حاضر"
+  "checkedInTag": "حاضر",
+  "removeParticipant": "إزالة",
+  "removeParticipantTitle": "إزالة {name}؟",
+  "removeParticipantMessage": "سيتم إخراجه من النشاط ومحادثته",
+  "participantRemovedTitle": "تمت الإزالة",
+  "participantRemovedMessage": "{name} لم يعد في هذا النشاط",
+  "unableToRemoveParticipant": "تعذرت إزالة المشارك، حاول مرة أخرى",
+  "notifParticipantRemoved": "أزالك المنظم من {title}",
+  "serverOnlyHostCanRemove": "المنظم فقط يمكنه إزالة المشاركين",
+  "removeFromActivity": "إزالة من النشاط"
 }

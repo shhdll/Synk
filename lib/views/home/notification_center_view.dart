@@ -125,7 +125,9 @@ class _NotificationCenterViewState extends State<NotificationCenterView> {
       case 'activity_conflict':
         await showScheduleConflictResolutionDialog(context);
       // The activity is gone, or the user isn't part of it.
-      case 'activity_deleted' || 'join_request_rejected':
+      case 'activity_deleted' ||
+          'join_request_rejected' ||
+          'participant_removed':
         return;
       default:
         if (activityId == null) return;
@@ -547,6 +549,11 @@ class _NotificationTile extends StatelessWidget {
         Icons.close_rounded,
         SynkColors.badge,
         l.notifRequestRejected,
+      ),
+      'participant_removed' => (
+        Icons.person_remove_rounded,
+        SynkColors.badge,
+        l.notifParticipantRemoved,
       ),
       'join_request_received' => (
         Icons.people_alt_rounded,
