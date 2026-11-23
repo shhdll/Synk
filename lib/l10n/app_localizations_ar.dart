@@ -3706,7 +3706,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get badgesNewTitle => 'شارات جديدة';
 
   @override
-  String get badgeNewAction => 'حلو';
+  String get badgeNewAction => 'تم';
 
   @override
   String get badgeShare => 'شاركها';
@@ -3895,7 +3895,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get badgeRater10Rule => 'تقييم المشاركين بعد 10 أنشطة';
 
   @override
-  String get badgeEarlyBird => 'من صباح الله خير';
+  String get badgeEarlyBird => 'من أول الصبح';
 
   @override
   String get badgeEarlyBirdRule => 'حضور نشاط يبدأ قبل 7 الصبح';

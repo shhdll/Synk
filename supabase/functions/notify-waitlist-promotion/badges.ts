@@ -26,7 +26,7 @@ const names: Record<string, [string, string]> = {
   rated_4_5: ["Trusted", "تقييمك يشرف"],
   rated_4_8: ["Golden Company", "رفقتك ذهب"],
   rater_10: ["Fair Say", "كلمة حق"],
-  early_bird: ["Early Bird", "من صباح الله خير"],
+  early_bird: ["Early Bird", "من أول الصبح"],
   night_owl: ["Night Owl", "أهل السهر"],
   lucky_spot: ["Lucky Spot", "الحظ معك"],
   weekend: ["Weekend Mode", "ويكند على أصوله"],
