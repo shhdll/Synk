@@ -51,7 +51,7 @@ class _SurprisePuzzleState extends State<SurprisePuzzle>
   // The loose pieces bobbing while they wait.
   late final AnimationController _float = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 3600),
+    duration: const Duration(milliseconds: 6000),
   )..repeat();
 
   // Where the loose pieces wait, and where they fly while mixing.
@@ -317,22 +317,24 @@ class _PuzzlePainter extends CustomPainter {
       ),
       0,
     );
-    // Each loose piece drifts in a small loop and rocks, out of step with
-    // the others, so the pile feels alive.
+    // Each loose piece circles its spot and slowly turns a full 360° every
+    // loop, half one way and half the other, so they never stand still.
+    // One whole turn per loop, so it carries on without a jump.
     _Pose bobbing(int i) {
       final angle = (float + i / _pieceCount) * 2 * math.pi;
       final way = i.isEven ? 1.0 : -1.0;
       return _Pose(
         loose[i].center +
-            Offset(math.cos(angle) * 0.028 * way, math.sin(angle) * 0.036),
-        loose[i].turn + math.sin(angle + i) * 0.16,
+            Offset(math.cos(angle) * 0.05 * way, math.sin(angle) * 0.055),
+        loose[i].turn + float * 2 * math.pi * way,
       );
     }
 
     // While mixing, the pieces go once all the way round the middle, each
-    // spinning two full turns, half one way and half the other.
+    // spinning two full turns, half one way and half the other. They start
+    // from wherever they were floating, so the shuffle doesn't jump.
     _Pose swirling(int i, double mix) {
-      final pose = _Pose.lerp(loose[i], mixed[i], mix);
+      final pose = _Pose.lerp(bobbing(i), mixed[i], mix);
       final orbit = mix * 2 * math.pi;
       final from = pose.center - const Offset(0.5, 0.5);
       final round = Offset(
