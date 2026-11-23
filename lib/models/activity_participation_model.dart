@@ -46,6 +46,32 @@ class ActivityJoinResult {
   }
 }
 
+// What check_in_to_activity returned: 'checked_in', 'already_checked_in',
+// 'too_far', 'not_started', 'ended', 'not_participating', 'host',
+// 'no_location', 'invalid_location' or 'not_found'.
+class ActivityCheckInResponse {
+  const ActivityCheckInResponse({
+    required this.result,
+    this.checkedInAt,
+    this.distanceMeters,
+  });
+
+  final String result;
+  final DateTime? checkedInAt;
+  final int? distanceMeters;
+
+  factory ActivityCheckInResponse.fromJson(Map<String, dynamic> json) {
+    final checkedInAt = json['checked_in_at'] as String?;
+    return ActivityCheckInResponse(
+      result: json['result'] as String? ?? 'unknown',
+      checkedInAt: checkedInAt == null
+          ? null
+          : DateTime.parse(checkedInAt).toLocal(),
+      distanceMeters: (json['distance_meters'] as num?)?.toInt(),
+    );
+  }
+}
+
 // Contains the information shown to a host for a private join request.
 class PendingActivityRequest {
   const PendingActivityRequest({
@@ -230,6 +256,53 @@ class ActivityParticipationModel {
     );
 
     return (response as num?)?.toInt();
+  }
+
+  // Checks the signed-in member in. The server refuses unless the activity
+  // is running and the given position is within 200 m of its location.
+  Future<ActivityCheckInResponse> checkIn({
+    required String activityId,
+    required double latitude,
+    required double longitude,
+  }) async {
+    final response = await _client.rpc(
+      'check_in_to_activity',
+      params: {
+        'requested_activity_id': activityId,
+        'user_latitude': latitude,
+        'user_longitude': longitude,
+      },
+    );
+
+    return ActivityCheckInResponse.fromJson(
+      Map<String, dynamic>.from(response as Map),
+    );
+  }
+
+  // When the signed-in user checked in to this activity, or null.
+  Future<DateTime?> fetchMyCheckIn(String activityId) async {
+    final response = await _client.rpc(
+      'get_my_activity_check_in',
+      params: {'requested_activity_id': activityId},
+    );
+
+    return response is String ? DateTime.parse(response).toLocal() : null;
+  }
+
+  // Who has checked in, by user id. Empty unless the viewer is the host or
+  // a joined member.
+  Future<Map<String, DateTime>> fetchCheckIns(String activityId) async {
+    final response = await _client.rpc(
+      'get_activity_check_ins',
+      params: {'p_activity_id': activityId},
+    );
+
+    return {
+      for (final row in response as List<dynamic>)
+        row['user_id'] as String: DateTime.parse(
+          row['checked_in_at'] as String,
+        ).toLocal(),
+    };
   }
 
   // Makes a joined participant the new host and removes the current host.

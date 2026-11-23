@@ -1,82 +1,47 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synk/models/activity_model.dart';
 
+// The profile's activities count and the weekly streak count only
+// activities the user checked in to. The server works out which ones; the
+// store just holds the result.
 void main() {
   const me = 'user-me';
   final past = DateTime.now().subtract(const Duration(days: 2));
-  final future = DateTime.now().add(const Duration(days: 2));
 
-  Activity activity(
-    String id, {
-    required DateTime at,
-    String? hostId,
-    String? status,
-  }) {
-    return Activity(
-      id: id,
-      title: id,
-      dateTime: at,
-      location: 'Somewhere',
-      hostId: hostId,
-      participationStatus: status,
-    );
-  }
-
-  ActivityStore storeWith({
-    List<Activity> mine = const [],
-    List<Activity> participating = const [],
-  }) {
+  ActivityStore storeWith({List<Activity> mine = const []}) {
     return ActivityStore()
       ..currentUserId = me
-      ..setMine(mine)
-      ..setParticipating(participating);
+      ..setMine(mine);
   }
 
-  test('counts past activities the user hosted', () {
+  test('hosted or joined activities alone count for nothing', () {
     final store = storeWith(
       mine: [
-        activity('hosted-past', at: past, hostId: me),
-        activity('hosted-future', at: future, hostId: me),
+        Activity(
+          id: 'hosted-past',
+          title: 'hosted-past',
+          dateTime: past,
+          location: 'Somewhere',
+          hostId: me,
+        ),
       ],
     );
 
-    expect(store.completedCount, 1);
+    expect(store.checkedInCount, 0);
+    expect(store.attendedTimes, isEmpty);
+    expect(store.weeklyStreak.weeks, 0);
   });
 
-  test('counts past activities the user joined', () {
-    final store = storeWith(
-      participating: [
-        activity('joined-past', at: past, hostId: 'other', status: 'joined'),
-        activity('joined-future', at: future, hostId: 'other', status: 'joined'),
-      ],
-    );
+  test('count and streak come from the checked-in activities', () {
+    final store = storeWith();
+    var notified = 0;
+    store.addListener(() => notified++);
 
-    expect(store.completedCount, 1);
-  });
+    store.setCheckedIn(count: 3, times: [past]);
 
-  test('ignores pending and waitlisted requests', () {
-    final store = storeWith(
-      participating: [
-        activity('pending', at: past, hostId: 'other', status: 'pending'),
-        activity('waitlisted', at: past, hostId: 'other', status: 'waitlisted'),
-      ],
-    );
-
-    expect(store.completedCount, 0);
-  });
-
-  test('counts an activity once when it is both hosted and joined', () {
-    final store = storeWith(
-      mine: [activity('same', at: past, hostId: me)],
-      participating: [
-        activity('same', at: past, hostId: me, status: 'joined'),
-      ],
-    );
-
-    expect(store.completedCount, 1);
-  });
-
-  test('is zero with no activities', () {
-    expect(storeWith().completedCount, 0);
+    expect(notified, 1);
+    expect(store.checkedInCount, 3);
+    expect(store.attendedTimes, [past]);
+    expect(store.weeklyStreak.weeks, greaterThan(0));
   });
 }

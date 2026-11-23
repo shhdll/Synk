@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../controllers/activity_check_in_controller.dart';
 import '../../../controllers/activity_leave_controller.dart';
 import '../../../controllers/chat_controller.dart';
 import '../../../controllers/friends_controller.dart';
@@ -122,6 +123,8 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
   final ActivityParticipationModel _participationModel =
       ActivityParticipationModel();
   final ActivityLeaveController _leaveController = ActivityLeaveController();
+  final ActivityCheckInController _checkInController =
+      ActivityCheckInController();
 
   // Green used for the "Joined" state across the app.
   static const Color _joinedColor = Color(0xFF3D8B5A);
@@ -152,6 +155,11 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
   // Only the newest participants request may update the sheet.
   int _participantsRequestId = 0;
 
+  // Who has checked in, by user id. Only the host and joined members get
+  // these; they're refreshed while the activity is running.
+  Map<String, DateTime> _checkIns = const {};
+  Timer? _checkInsTimer;
+
   // The viewer's own profile, for their locally saved photo.
   Map<String, dynamic>? _ownProfile;
 
@@ -167,6 +175,30 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     _loadHostProfile();
     _loadPendingScheduleOverlap();
     _loadWaitlistPosition();
+    _checkInController.addListener(_onCheckInChanged);
+    if (_isRunning) {
+      _checkInController.loadStatus(_currentActivity.id);
+      _checkInsTimer = Timer.periodic(
+        const Duration(seconds: 30),
+        (_) => _loadCheckIns(),
+      );
+    }
+    _loadCheckIns();
+  }
+
+  Future<void> _loadCheckIns() async {
+    try {
+      final checkIns = await _participationModel.fetchCheckIns(
+        _currentActivity.id,
+      );
+      if (mounted) setState(() => _checkIns = checkIns);
+    } catch (_) {
+      // Rows just show without the check-in highlight.
+    }
+  }
+
+  void _onCheckInChanged() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _loadWaitlistPosition() async {
@@ -221,6 +253,8 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     widget.activityStore.removeListener(_syncActivityFromStore);
     FriendsController.instance.removeListener(_onFriendsChanged);
     _leaveController.dispose();
+    _checkInController.dispose();
+    _checkInsTimer?.cancel();
     _scroll.dispose();
     super.dispose();
   }
@@ -331,6 +365,18 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
       (_currentActivity.isPublic || _participationStatus != null);
 
   bool get _showHostBar => _isViewerHost && !_currentActivity.isPast;
+
+  // Between the activity's start and end.
+  bool get _isRunning {
+    final now = DateTime.now();
+    return !now.isBefore(_currentActivity.dateTime) &&
+        now.isBefore(_currentActivity.endsAt);
+  }
+
+  // The host and joined members check in on arrival while the activity is
+  // running.
+  bool get _showCheckInBar =>
+      (_isViewerHost || _participationStatus == 'joined') && _isRunning;
 
   Future<void> _joinActivity() async {
     setState(() {
@@ -536,7 +582,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                             20,
                             // The join bar handles the bottom safe area itself.
                             24 +
-                                (_showJoinBar || _showHostBar
+                                (_showJoinBar || _showHostBar || _showCheckInBar
                                     ? 0
                                     : MediaQuery.paddingOf(context).bottom),
                           ),
@@ -579,6 +625,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
             ),
             if (_showJoinBar) _buildJoinBar(),
             if (_showHostBar) _buildHostBar(),
+            if (_showCheckInBar) _buildCheckInBar(),
           ],
         ),
       ),
@@ -1065,6 +1112,135 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
           if (_leaveError != null) _buildBarError(_leaveError!),
         ],
       ),
+    );
+  }
+
+  // Check in, or when already checked in the time it happened, with the
+  // group chat beside it.
+  Widget _buildCheckInBar() {
+    final checkedInAt = _checkInController.checkedInAt;
+    final isBusy = _checkInController.isBusy;
+
+    final Widget action;
+    if (checkedInAt != null) {
+      action = Container(
+        height: 48,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: _joinedColor.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _joinedColor.withValues(alpha: 0.24)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.location_on_rounded,
+              size: 20,
+              color: _joinedColor,
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                context.l10n.checkedInAt(
+                  formatTime(checkedInAt.hour, checkedInAt.minute),
+                ),
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: _joinedColor,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      action = SizedBox(
+        height: 48,
+        child: FilledButton.icon(
+          onPressed: isBusy ? null : _checkIn,
+          style: FilledButton.styleFrom(
+            backgroundColor: SynkColors.orangeDark,
+            disabledBackgroundColor: SynkColors.orangeDark.withValues(
+              alpha: 0.6,
+            ),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            textStyle: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          icon: isBusy
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Icon(Icons.location_on_rounded, size: 20),
+          label: Text(context.l10n.checkIn),
+        ),
+      );
+    }
+
+    return _buildBarContainer(
+      Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Expanded(child: action),
+              const SizedBox(width: 10),
+              _buildChatButton(),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Checking in adds to the profile's activities count and the streak.
+  Future<void> _refreshCheckIns() async {
+    final store = widget.activityStore;
+    try {
+      final checkIns = await _activitiesModel.fetchMyCheckIns();
+      store.setCheckedIn(count: checkIns.count, times: checkIns.times);
+    } catch (_) {
+      // Updated on the next full refresh.
+    }
+  }
+
+  Future<void> _checkIn() async {
+    final failure = await _checkInController.checkIn(_currentActivity.id);
+    if (!mounted) return;
+
+    if (failure == null) {
+      final viewerId = _viewerId;
+      final checkedInAt = _checkInController.checkedInAt;
+      if (viewerId != null && checkedInAt != null) {
+        setState(() => _checkIns = {..._checkIns, viewerId: checkedInAt});
+      }
+      _refreshCheckIns();
+      SynkFeedback.showToast(
+        context,
+        title: context.l10n.checkedInTitle,
+        message: context.l10n.checkedInMessage,
+      );
+      return;
+    }
+
+    await SynkFeedback.showErrorDialog(
+      context,
+      title: failure.title,
+      message: failure.message,
+      icon: Icons.location_off_rounded,
     );
   }
 
@@ -2058,6 +2234,8 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     bool blockedByMe = false,
     bool canRemove = false,
   }) {
+    final checkedIn = userId != null && _checkIns.containsKey(userId);
+
     // Someone the viewer blocked keeps their name but can't be opened or
     // contacted from here. The viewer's own row opens their profile.
     final isMe = userId != null && userId == _viewerId;
@@ -2150,6 +2328,35 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
               ],
             ),
           ),
+          if (checkedIn) ...[
+            Container(
+              padding: const EdgeInsetsDirectional.fromSTEB(6, 3, 8, 3),
+              decoration: BoxDecoration(
+                color: _joinedColor.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.location_on_rounded,
+                    size: 12,
+                    color: _joinedColor,
+                  ),
+                  const SizedBox(width: 3),
+                  Text(
+                    context.l10n.checkedInTag,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: _joinedColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 6),
+          ],
           if (!isHost && userId != null && userId == _viewerId)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),

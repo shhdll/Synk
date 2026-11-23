@@ -4214,6 +4214,64 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get checkIn => 'I am here!';
+
+  @override
+  String checkedInAt(Object time) {
+    return 'Checked in at $time';
+  }
+
+  @override
+  String get checkedInTitle => 'You\'re checked in!';
+
+  @override
+  String get checkedInMessage => 'Enjoy the activity.';
+
+  @override
+  String get checkInFailedTitle => 'Couldn\'t check in';
+
+  @override
+  String get checkInTooFarTitle => 'Not there yet';
+
+  @override
+  String get checkInTooFar => 'You\'re not there yet.. excited to see you!';
+
+  @override
+  String get checkInNotStarted => 'Check-in opens when the activity starts.';
+
+  @override
+  String get checkInEnded => 'This activity has ended.';
+
+  @override
+  String get checkInNoLocation =>
+      'This activity has no location to check in at.';
+
+  @override
+  String get checkInMembersOnly =>
+      'Only members of this activity can check in.';
+
+  @override
+  String get checkInLocationOff => 'Turn on location services to check in.';
+
+  @override
+  String get checkInPermissionDenied =>
+      'Allow location access for Synk to check in.';
+
+  @override
+  String get checkInUnableToLocate =>
+      'Couldn\'t get your location. Please try again.';
+
+  @override
+  String get checkInMockedLocation =>
+      'Turn off fake location apps to check in.';
+
+  @override
+  String get checkInFailed => 'Couldn\'t check you in. Please try again.';
+
+  @override
+  String get checkedInTag => 'Checked in';
+
+  @override
   String get removeParticipant => 'Remove';
 
   @override
