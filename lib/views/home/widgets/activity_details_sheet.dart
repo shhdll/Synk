@@ -19,6 +19,7 @@ import '../../../models/friends_model.dart';
 import '../../../models/user_profile_model.dart';
 import '../../../utils/custom_widgets/synk_dialog.dart';
 import '../../../utils/custom_widgets/synk_feedback.dart';
+import '../../../utils/add_to_calendar.dart';
 import '../../../utils/maps_launcher.dart';
 import '../../../utils/share_activity.dart';
 import '../../widgets/anonymous_avatar.dart';
@@ -141,6 +142,10 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
   String? _joinError;
   bool _hasPendingScheduleOverlap = false;
   bool _isLeaving = false;
+
+  // Times of activities added to the calendar, saved on this phone.
+  final CalendarAdds _calendarAdds = const CalendarAdds();
+  bool _calendarOutdated = false;
   String? _leaveError;
 
   // Blocks a second leave, transfer, or delete before its dialog opens.
@@ -175,6 +180,7 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     _loadHostProfile();
     _loadPendingScheduleOverlap();
     _loadWaitlistPosition();
+    _checkCalendar();
     _checkInController.addListener(_onCheckInChanged);
     if (_isRunning) {
       _checkInController.loadStatus(_currentActivity.id);
@@ -279,6 +285,8 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
             );
     });
     if (_currentActivity.hostName == null) _loadHostProfile();
+    // The host may have just changed the time.
+    _checkCalendar();
   }
 
   Future<void> _loadOwnProfile() async {
@@ -595,6 +603,10 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                               if (_hasMapRow) ...[
                                 const SizedBox(height: 12),
                                 _buildMapRow(),
+                              ],
+                              if (_canAddToCalendar) ...[
+                                const SizedBox(height: 10),
+                                _buildAddToCalendarButton(),
                               ],
                               if (_currentActivity.description.isNotEmpty) ...[
                                 const SizedBox(height: 20),
@@ -1944,6 +1956,88 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
     borderRadius: BorderRadius.circular(14),
     side: BorderSide(color: SynkColors.textSecondary.withValues(alpha: 0.18)),
   );
+
+  // Only for the host and joined participants, until the activity starts.
+  bool get _canAddToCalendar =>
+      !_currentActivity.isPast &&
+      (_isViewerHost || _participationStatus == 'joined');
+
+  // Whether the user can add it to their calendar, and whether the host
+  // has changed the time since they did.
+  Future<void> _checkCalendar() async {
+    final outdated = await _calendarAdds.isOutdated(_currentActivity);
+    if (mounted && outdated != _calendarOutdated) {
+      setState(() => _calendarOutdated = outdated);
+    }
+  }
+
+  Widget _buildAddToCalendarButton() {
+    final l = context.l10n;
+    final button = SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: TextButton.icon(
+        onPressed: _addToCalendar,
+        icon: Icon(
+          _calendarOutdated
+              ? Icons.edit_calendar_rounded
+              : Icons.event_available_rounded,
+          size: 20,
+          color: SynkColors.orangeDark,
+        ),
+        label: Text(_calendarOutdated ? l.updateCalendar : l.addToCalendar),
+        style: TextButton.styleFrom(
+          foregroundColor: SynkColors.textPrimary,
+          backgroundColor: Colors.white,
+          shape: _mapButtonShape,
+          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+        ),
+      ),
+    );
+    if (!_calendarOutdated) return button;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            const Icon(
+              Icons.info_outline_rounded,
+              size: 16,
+              color: SynkColors.orangeDeep,
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                l.calendarTimeChanged,
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: SynkColors.orangeDeep,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        button,
+      ],
+    );
+  }
+
+  // Opens the phone's calendar with the activity filled in; the user
+  // saves it there. Its times are remembered to spot a later change.
+  Future<void> _addToCalendar() async {
+    final activity = _currentActivity;
+    final opened = await addActivityToCalendar(activity);
+    if (!mounted) return;
+    if (!opened) {
+      SynkFeedback.showError(context, context.l10n.noCalendarAppFound);
+      return;
+    }
+    await _calendarAdds.remember(activity);
+    if (mounted) setState(() => _calendarOutdated = false);
+  }
 
   // Closes this sheet (and any page under it) and shows the pin on our map.
   Widget _buildViewOnMapButton() {

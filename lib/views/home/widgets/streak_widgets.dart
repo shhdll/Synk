@@ -162,7 +162,15 @@ class StreakSheet extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 22),
-            _Weeks(attendedAt: attendedAt, today: today),
+            _Weeks(
+              attendedAt: attendedAt,
+              today: today,
+              // Back to the week the streak started: this week counts
+              // once attended, otherwise the run ended last week.
+              weeksBack: streak.attendedThisWeek
+                  ? streak.weeks - 1
+                  : streak.weeks,
+            ),
             const SizedBox(height: 16),
             Text(
               message,
@@ -182,15 +190,20 @@ class StreakSheet extends StatelessWidget {
 }
 
 // The week's seven days, Sunday first; days with an activity show a flame.
-// Swipe back to see earlier weeks.
+// Swipe back to see earlier weeks of the current streak.
 class _Weeks extends StatefulWidget {
-  const _Weeks({required this.attendedAt, required this.today});
+  const _Weeks({
+    required this.attendedAt,
+    required this.today,
+    required this.weeksBack,
+  });
 
   final List<DateTime> attendedAt;
   final DateTime today;
 
-  // How far back the user can swipe.
-  static const int _weeksBack = 52;
+  // How far back the user can swipe: to the week the streak started, or
+  // only this week without a streak.
+  final int weeksBack;
 
   @override
   State<_Weeks> createState() => _WeeksState();
@@ -226,7 +239,7 @@ class _WeeksState extends State<_Weeks> {
         child: PageView.builder(
           controller: _pages,
           reverse: true,
-          itemCount: _Weeks._weeksBack + 1,
+          itemCount: math.max(0, widget.weeksBack) + 1,
           itemBuilder: (context, weeksAgo) => _week(context, weeksAgo),
         ),
       ),
@@ -279,7 +292,7 @@ class _WeeksState extends State<_Weeks> {
                   ? Icons.chevron_right_rounded
                   : Icons.chevron_left_rounded,
               label: l.streakEarlierWeek,
-              onTap: weeksAgo < _Weeks._weeksBack
+              onTap: weeksAgo < widget.weeksBack
                   ? () => _pages.nextPage(
                       duration: const Duration(milliseconds: 250),
                       curve: Curves.easeOutCubic,

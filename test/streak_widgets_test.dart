@@ -267,4 +267,75 @@ void main() {
       expect(find.text('هذا الأسبوع'), findsOneWidget);
     });
   });
+
+  // The sheet only goes back to the week the current streak started.
+  group('earlier weeks', () {
+    // In English the earlier-week arrow points left.
+    final earlier = find.byIcon(Icons.chevron_left_rounded).hitTestable();
+
+    Future<void> goBack(WidgetTester tester) async {
+      await tester.tap(earlier);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('without a streak only this week shows', (tester) async {
+      await tester.pumpWidget(
+        app(
+          StreakSheet(
+            // An old run that has ended.
+            attendedAt: [DateTime(2026, 10, 6), DateTime(2026, 9, 29)],
+            now: now,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('This week'), findsOneWidget);
+      expect(earlier, findsNothing);
+    });
+
+    testWidgets('a streak that includes this week goes back to its start', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        app(
+          StreakSheet(
+            attendedAt: [
+              DateTime(2026, 11, 2), // this week
+              DateTime(2026, 10, 27), // last week
+              DateTime(2026, 10, 20), // started here
+              DateTime(2026, 10, 6), // an older run
+            ],
+            now: now,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await goBack(tester);
+      expect(find.text('Last week'), findsOneWidget);
+      await goBack(tester);
+      expect(find.text('Oct 18 – 24'), findsOneWidget);
+      expect(earlier, findsNothing);
+    });
+
+    testWidgets('a streak kept until last week goes back to its start', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        app(
+          StreakSheet(
+            attendedAt: [DateTime(2026, 10, 27), DateTime(2026, 10, 20)],
+            now: now,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await goBack(tester);
+      await goBack(tester);
+      expect(find.text('Oct 18 – 24'), findsOneWidget);
+      expect(earlier, findsNothing);
+    });
+  });
 }

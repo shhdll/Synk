@@ -4308,6 +4308,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get removeFromActivity => 'Remove from activity';
 
   @override
+  String get addToCalendar => 'Add to calendar';
+
+  @override
+  String get noCalendarAppFound => 'No calendar app was found on this phone.';
+
+  @override
+  String get updateCalendar => 'Update calendar';
+
+  @override
+  String get calendarTimeChanged =>
+      'The time changed after you added this to your calendar';
+
+  @override
   String get surpriseMe => 'Surprise me';
 
   @override
