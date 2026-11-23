@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:synk/models/activity_model.dart';
 import 'package:synk/utils/add_to_calendar.dart';
 
@@ -77,6 +78,66 @@ void main() {
         calendarEventFor(activity()).iosParams.reminder,
         const Duration(hours: 1),
       );
+    });
+  });
+
+  group('CalendarAdds', () {
+    setUp(() => SharedPreferences.setMockInitialValues({}));
+
+    const adds = CalendarAdds();
+    final now = DateTime(2026, 11, 20);
+    final start = DateTime(2026, 11, 23, 18);
+    final end = DateTime(2026, 11, 23, 20);
+    Activity at(DateTime s, DateTime e) => activity(start: s, end: e);
+
+    test('says nothing for an activity never added', () async {
+      expect(await adds.isOutdated(at(start, end)), isFalse);
+    });
+
+    test('says nothing when the time has not changed', () async {
+      await adds.remember(at(start, end), now: now);
+      expect(await adds.isOutdated(at(start, end)), isFalse);
+    });
+
+    test('spots a new start time', () async {
+      await adds.remember(at(start, end), now: now);
+      const hour = Duration(hours: 1);
+      expect(await adds.isOutdated(at(start.add(hour), end.add(hour))), isTrue);
+    });
+
+    test('spots a new end time', () async {
+      await adds.remember(at(start, end), now: now);
+      final later = end.add(const Duration(minutes: 30));
+      expect(await adds.isOutdated(at(start, later)), isTrue);
+    });
+
+    test('adding again with the new time clears it', () async {
+      await adds.remember(at(start, end), now: now);
+      const day = Duration(days: 1);
+      final moved = at(start.add(day), end.add(day));
+      await adds.remember(moved, now: now);
+      expect(await adds.isOutdated(moved), isFalse);
+    });
+
+    test('forgets activities that have started', () async {
+      await adds.remember(at(start, end), now: now);
+      // Saving another after the first started drops the first.
+      await adds.remember(
+        Activity(
+          id: 'later',
+          title: 'Later',
+          dateTime: DateTime(2026, 12, 1),
+          location: 'Riyadh',
+        ),
+        now: DateTime(2026, 11, 24),
+      );
+      final moved = at(start.add(const Duration(hours: 1)), end);
+      expect(await adds.isOutdated(moved), isFalse);
+    });
+
+    test('ignores saved data it cannot read', () async {
+      SharedPreferences.setMockInitialValues({'calendar_adds': 'not json'});
+      expect(await adds.isOutdated(at(start, end)), isFalse);
     });
   });
 }

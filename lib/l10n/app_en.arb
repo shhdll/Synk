@@ -1686,5 +1686,7 @@
   "shareProfileMessage": "Meet {name} on Synk! ✨\n{link}",
   "@shareProfileMessage": {"placeholders": {"name": {}, "link": {}}},
   "addToCalendar": "Add to calendar",
-  "noCalendarAppFound": "No calendar app was found on this phone."
+  "noCalendarAppFound": "No calendar app was found on this phone.",
+  "updateCalendar": "Update calendar",
+  "calendarTimeChanged": "The time changed after you added this to your calendar"
 }

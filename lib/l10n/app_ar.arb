@@ -1223,5 +1223,7 @@
   "shareMyProfileMessage": "يلا نتواصل على Synk! ✨\n{link}",
   "shareProfileMessage": "تعرّف على {name} في Synk! ✨\n{link}",
   "addToCalendar": "أضف للتقويم",
-  "noCalendarAppFound": "لم يتم العثور على تطبيق تقويم في هذا الجوال"
+  "noCalendarAppFound": "لم يتم العثور على تطبيق تقويم في هذا الجوال",
+  "updateCalendar": "تحديث التقويم",
+  "calendarTimeChanged": "تغير الموعد بعد إضافته إلى تقويمك"
 }
