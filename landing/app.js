@@ -273,9 +273,7 @@
 
     // Plain https://synk.cc with nothing to forward: show the brand only.
     if (options.homeWhenEmpty && !window.location.search && !window.location.hash) {
-      el("title").textContent = "Find your missing piece.";
-      el("message").hidden = true;
-      el("open-app").hidden = true;
+      window.location.replace("home.html");
       return;
     }
 
