@@ -216,6 +216,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       _loadParticipatingActivities(),
       _loadPublicFeed(),
       _loadPendingRequestCount(),
+      _loadCheckIns(),
     ]);
     await _requireScheduleConflictResolution();
   }
@@ -224,6 +225,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   // half-loaded data.
   bool _mineLoaded = false;
   bool _participatingLoaded = false;
+  bool _checkInsLoaded = false;
 
   // The streak greeting first, then a rating offer once it is closed, so
   // the two sheets never stack.
@@ -283,7 +285,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   // Pops up the streak sheet once a day when the app opens. Skipped, without
   // using up the day's turn, while another screen, sheet or dialog is open.
   Future<void> _showStreakOnOpen() async {
-    if (!mounted || !_mineLoaded || !_participatingLoaded) return;
+    if (!mounted || !_mineLoaded || !_participatingLoaded || !_checkInsLoaded) {
+      return;
+    }
     if (ModalRoute.of(context)?.isCurrent != true) return;
     if (!await StreakIntro.takeTurn(_activityStore.currentUserId)) return;
     if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
@@ -330,6 +334,22 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       if (!mounted) return;
       _activityStore.pendingRequestCount = count;
     } catch (_) {}
+  }
+
+  // The profile's activities count and the streak: activities the user
+  // checked in to.
+  Future<void> _loadCheckIns() async {
+    try {
+      final checkIns = await _activitiesModel.fetchMyCheckIns();
+      if (!mounted) return;
+      _activityStore.setCheckedIn(
+        count: checkIns.count,
+        times: checkIns.times,
+      );
+      _checkInsLoaded = true;
+    } catch (_) {
+      // Keep the last known count and streak.
+    }
   }
 
   // Loads activities created by the signed-in user.

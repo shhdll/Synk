@@ -4259,6 +4259,60 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get checkIn => 'أنا هنا!';
+
+  @override
+  String checkedInAt(Object time) {
+    return 'سجلت حضورك الساعة $time';
+  }
+
+  @override
+  String get checkedInTitle => 'تم تسجيل حضورك!';
+
+  @override
+  String get checkedInMessage => 'استمتع بالنشاط';
+
+  @override
+  String get checkInFailedTitle => 'تعذر تسجيل الحضور';
+
+  @override
+  String get checkInTooFarTitle => 'لم تصل بعد';
+
+  @override
+  String get checkInTooFar => 'لم تصل بعد.. متحمسين لرؤيتك!';
+
+  @override
+  String get checkInNotStarted => 'يبدأ تسجيل الحضور عند بدء النشاط';
+
+  @override
+  String get checkInEnded => 'انتهى هذا النشاط';
+
+  @override
+  String get checkInNoLocation => 'لا يوجد موقع لهذا النشاط لتسجيل الحضور';
+
+  @override
+  String get checkInMembersOnly => 'تسجيل الحضور متاح لأعضاء النشاط فقط';
+
+  @override
+  String get checkInLocationOff => 'فعل خدمات الموقع لتسجيل حضورك';
+
+  @override
+  String get checkInPermissionDenied =>
+      'اسمح لـ Synk بالوصول إلى موقعك لتسجيل حضورك';
+
+  @override
+  String get checkInUnableToLocate => 'تعذر تحديد موقعك. حاول مرة أخرى';
+
+  @override
+  String get checkInMockedLocation => 'أوقف تطبيقات الموقع الوهمي لتسجيل حضورك';
+
+  @override
+  String get checkInFailed => 'تعذر تسجيل حضورك. حاول مرة أخرى';
+
+  @override
+  String get checkedInTag => 'حاضر';
+
+  @override
   String get surpriseMe => 'فاجئني';
 
   @override

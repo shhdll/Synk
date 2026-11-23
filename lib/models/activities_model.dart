@@ -97,9 +97,9 @@ class ActivitiesModel {
     }
   }
 
-  // Completed activities count for any user, computed on the server.
-  // Defaults to the signed-in user. Needs the
-  // 20261018_completed_activities_count migration.
+  // How many activities a user checked in to, as host or member, computed
+  // on the server. Defaults to the signed-in user. See the
+  // 20261122130000_completed_count_from_check_ins migration.
   Future<int> fetchCompletedCount({String? userId}) async {
     final response = await _supabase.rpc(
       'get_completed_activities_count',
@@ -109,7 +109,19 @@ class ActivitiesModel {
     return (response as num?)?.toInt() ?? 0;
   }
 
-  // Start times of what a friend attended, for their streak.
+  // The signed-in user's check-in count and the start times of those
+  // activities, for the profile count and the weekly streak.
+  Future<({int count, List<DateTime> times})> fetchMyCheckIns() async {
+    final userId = currentUserId;
+    if (userId == null) return (count: 0, times: <DateTime>[]);
+    final (count, times) = await (
+      fetchCompletedCount(),
+      fetchStreakTimes(userId),
+    ).wait;
+    return (count: count, times: times);
+  }
+
+  // Start times of the activities a user checked in to, for their streak.
   Future<List<DateTime>> fetchStreakTimes(String userId) async {
     final response = await _supabase.rpc(
       'get_user_streak_times',
