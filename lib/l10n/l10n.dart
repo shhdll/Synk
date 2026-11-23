@@ -82,6 +82,69 @@ String valueLabel(String value) {
   };
 }
 
+// The interest label inside a sentence ("تحب الفن"). Arabic needs the
+// definite form there; English and unknown values use the plain label.
+String interestInSentence(String value) {
+  if (LanguageController.instance.locale.languageCode != 'ar') {
+    return valueLabel(value);
+  }
+  return _arabicDefinite[value] ?? valueLabel(value);
+}
+
+const _arabicDefinite = {
+  'Padel': 'البادل',
+  'Tennis': 'التنس',
+  'Badminton': 'الريشة الطائرة',
+  'Table Tennis': 'تنس الطاولة',
+  'Football': 'كرة القدم',
+  'Basketball': 'كرة السلة',
+  'Volleyball': 'الكرة الطائرة',
+  'Golf': 'الغولف',
+  'Bowling': 'البولينغ',
+  'Karting': 'الكارتينغ',
+  'Martial Arts': 'الفنون القتالية',
+  'Paintball': 'البينت بول',
+  'Cycling': 'الدراجات',
+  'Running': 'الجري',
+  'Hiking': 'الهايكنغ',
+  'Climbing': 'التسلق',
+  'Camping': 'التخييم',
+  'Desert Trips': 'الرحلات البرية',
+  'Road Trips': 'الرحلات بالسيارة',
+  'Beach': 'الشاطئ',
+  'Picnic': 'النزهة',
+  'Picnics': 'النزهات',
+  'Travel': 'السفر',
+  'Fitness': 'اللياقة',
+  'Yoga': 'اليوغا',
+  'Swimming': 'السباحة',
+  'Diving': 'الغوص',
+  'Skating': 'التزلج',
+  'Dance': 'الرقص',
+  'Coffee': 'القهوة',
+  'Cooking': 'الطبخ',
+  'Food': 'الأكل',
+  'Shopping': 'التسوق',
+  'Board Games': 'الألعاب اللوحية',
+  'Card Games': 'ألعاب الورق',
+  'Chess': 'الشطرنج',
+  'Escape Room': 'غرفة الهروب',
+  'Trivia': 'المسابقات',
+  'Gaming': 'ألعاب الفيديو',
+  'Movies': 'الأفلام',
+  'Comedy': 'الكوميديا',
+  'Karaoke': 'الكاريوكي',
+  'Music': 'الموسيقى',
+  'Art': 'الفن',
+  'Pottery': 'الفخار',
+  'Museums': 'المتاحف',
+  'Books': 'الكتب',
+  'Photography': 'التصوير',
+  'Learning': 'التعلم',
+  'Volunteering': 'التطوع',
+  'Pets': 'الحيوانات الأليفة',
+};
+
 // The database answers joins, reviews and leaves with an English message.
 // This shows it in the app's language; unknown messages stay as they are.
 String serverMessage(String message) {

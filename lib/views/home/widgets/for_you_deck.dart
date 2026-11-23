@@ -531,7 +531,7 @@ class _ForYouDeckState extends State<ForYouDeck>
 String topPickReasonText(TopPickReason reason) => switch (reason) {
   FriendsGoing(:final friends) => friendsGoingText(friends),
   SharedInterest(:final interest) => appL10n.topPickYouLike(
-    valueLabel(interest),
+    interestInSentence(interest),
   ),
   PreferredSetting(setting: ActivitySetting.indoor) =>
     appL10n.topPickLikesIndoor,

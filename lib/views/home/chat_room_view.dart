@@ -2016,7 +2016,7 @@ class _ChatRoomViewState extends State<ChatRoomView> {
 
   // "Board Games, Hiking and Movies", at most three.
   String _joinInterests(List<String> interests) {
-    final labels = interests.take(3).map(valueLabel).toList();
+    final labels = interests.take(3).map(interestInSentence).toList();
     if (labels.length == 1) return labels.first;
     return context.l10n.listAnd(
       labels.sublist(0, labels.length - 1).join(context.l10n.listSeparator),
@@ -2215,8 +2215,8 @@ class _ChatRoomViewState extends State<ChatRoomView> {
   }
 
   // Laid out like WhatsApp: + on the outside, the message box with the
-  // sticker button inside it, then the camera and a round mic that turns
-  // into send once there's text. Holding the mic swaps the box for the
+  // sticker button inside it, then a round mic that turns into send once
+  // there's text. Holding the mic swaps the box for the
   // recording bar.
   Widget _buildComposerRow() {
     final border = OutlineInputBorder(
@@ -2336,15 +2336,6 @@ class _ChatRoomViewState extends State<ChatRoomView> {
                               ),
                             ),
                           ),
-                          // The camera hides while typing, like WhatsApp.
-                          if (!hasText)
-                            _ComposerIcon(
-                              icon: Icons.photo_camera_outlined,
-                              tooltip: context.l10n.camera,
-                              onPressed: _isSending
-                                  ? null
-                                  : () => _sendPhoto(fromCamera: true),
-                            ),
                         ],
                       ),
               ),
