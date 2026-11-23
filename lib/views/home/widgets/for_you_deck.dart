@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
@@ -27,7 +28,6 @@ class ForYouDeck extends StatefulWidget {
     required this.activityStore,
     required this.onOpen,
     required this.onJoined,
-    this.onCreate,
     this.swipes,
     this.participation,
     this.activitiesModel,
@@ -44,9 +44,6 @@ class ForYouDeck extends StatefulWidget {
 
   // After a join is saved, so Home can reload the feed.
   final VoidCallback onJoined;
-
-  // "Couldn't find your thing?" after the last card.
-  final VoidCallback? onCreate;
 
   // Injectable for tests.
   final ActivitySwipesModel? swipes;
@@ -117,7 +114,32 @@ class _ForYouDeckState extends State<ForYouDeck>
       _cards.clear();
       _index = 0;
       _offset = Offset.zero;
+      _joinedSince = false;
+    } else if (_joinedSince) {
+      _takeNewPicks();
     }
+  }
+
+  // After a join, the user's top picks change: the joined activity drops
+  // out and the next best one comes in. The deck takes the new list once
+  // it arrives, staying on the card that was showing.
+  bool _joinedSince = false;
+
+  void _takeNewPicks() {
+    final picks = widget.picks;
+    final deck = _deck;
+    if (picks == null || deck == null || _busy) return;
+    final ids = [for (final p in picks) p.activity.id];
+    if (listEquals(ids, [for (final p in deck) p.activity.id])) return;
+
+    final showing = _current?.activity.id;
+    setState(() {
+      _deck = List.of(picks);
+      _cards.removeWhere((id, _) => !ids.contains(id));
+      final at = showing == null ? -1 : ids.indexOf(showing);
+      _index = at >= 0 ? at : (picks.isEmpty ? 0 : _index % picks.length);
+      _joinedSince = false;
+    });
   }
 
   @override
@@ -195,7 +217,8 @@ class _ForYouDeckState extends State<ForYouDeck>
     _motion.forward(from: 0).then((_) {
       if (!mounted) return;
       setState(() {
-        _index++;
+        // After the last card, back to the first.
+        _index = (_index + 1) % (_deck?.length ?? 1);
         _offset = Offset.zero;
         _busy = false;
       });
@@ -210,17 +233,6 @@ class _ForYouDeckState extends State<ForYouDeck>
     setState(() {
       _index--;
       _offset = Offset(-_width * 1.5, 40);
-    });
-    _animateTo(Offset.zero);
-    _motion.forward(from: 0);
-  }
-
-  // Back to the first card after the last one.
-  void _seeAgain() {
-    _motion.stop();
-    setState(() {
-      _index = 0;
-      _offset = Offset(0, ForYouDeck.cardHeight / 3);
     });
     _animateTo(Offset.zero);
     _motion.forward(from: 0);
@@ -247,12 +259,14 @@ class _ForYouDeckState extends State<ForYouDeck>
     });
   }
 
-  // Undo: the card slides back in from the side it left.
+  // Undo: the card slides back in from the side it left (the last card,
+  // if the deck had gone round to the first).
   void _bringBack() {
-    if (!mounted || _index == 0) return;
+    final length = _deck?.length ?? 0;
+    if (!mounted || length == 0) return;
     _motion.stop();
     setState(() {
-      _index--;
+      _index = (_index - 1 + length) % length;
       _offset = Offset(_width * 1.5, 40);
     });
     _animateTo(Offset.zero);
@@ -285,6 +299,8 @@ class _ForYouDeckState extends State<ForYouDeck>
       if (result.result.contains('waitlisted') && mounted) {
         SynkFeedback.showToast(context, title: context.l10n.addedToWaitlist);
       }
+      // The top picks change; take them once Home has them.
+      _joinedSince = true;
       try {
         final participating = await _activitiesModel.fetchParticipating();
         widget.activityStore.setParticipating(participating);
@@ -323,7 +339,8 @@ class _ForYouDeckState extends State<ForYouDeck>
     if (deck != null && deck.isEmpty) return const SizedBox.shrink();
 
     final l = context.l10n;
-    final done = deck != null && _index >= deck.length;
+    // The deck goes round, so there's always a card showing.
+    if (deck != null && _index >= deck.length) _index = 0;
 
     return Padding(
       padding: const EdgeInsets.only(top: 20),
@@ -334,7 +351,7 @@ class _ForYouDeckState extends State<ForYouDeck>
             title: l.forYou,
             open: _expanded,
             onToggle: () => setState(() => _expanded = !_expanded),
-            trailing: deck != null && !done && _expanded
+            trailing: deck != null && _expanded
                 ? Text(
                     l.deckCounter(_index + 1, deck.length),
                     style: const TextStyle(
@@ -351,7 +368,7 @@ class _ForYouDeckState extends State<ForYouDeck>
             alignment: Alignment.topCenter,
             clipBehavior: Clip.none,
             child: _expanded
-                ? _buildBody(deck, done)
+                ? _buildBody(deck)
                 : const SizedBox(width: double.infinity),
           ),
         ],
@@ -359,46 +376,23 @@ class _ForYouDeckState extends State<ForYouDeck>
     );
   }
 
-  Widget _buildBody(List<TopPick>? deck, bool done) {
+  Widget _buildBody(List<TopPick>? deck) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 12),
         if (deck == null)
           const _DeckSkeleton()
-        else
-          // Eases down to the end card after the last one, and back up on
-          // See again, so Explore slides instead of jumping.
-          AnimatedSize(
-            duration: const Duration(milliseconds: 350),
-            curve: Curves.easeInOutCubic,
-            alignment: Alignment.topCenter,
-            // Dragged and flying cards go past its edges.
-            clipBehavior: Clip.none,
-            child: done
-                ? Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Center(
-                      child: _CaughtUp(
-                        onSeeAgain: _seeAgain,
-                        onCreate: widget.onCreate,
-                      ),
-                    ),
-                  )
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          _width = constraints.maxWidth;
-                          return _buildDeck(deck);
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      _DeckProgress(count: deck.length, index: _index),
-                    ],
-                  ),
+        else ...[
+          LayoutBuilder(
+            builder: (context, constraints) {
+              _width = constraints.maxWidth;
+              return _buildDeck(deck);
+            },
           ),
+          const SizedBox(height: 12),
+          _DeckProgress(count: deck.length, index: _index),
+        ],
       ],
     );
   }
@@ -439,7 +433,8 @@ class _ForYouDeckState extends State<ForYouDeck>
     // Back to front, each keyed by its activity, so a card keeps its state
     // as it moves up the stack.
     Widget layer(int depth) {
-      final pick = deck[_index + depth];
+      // Behind the last cards come the first ones again.
+      final pick = deck[(_index + depth) % deck.length];
       final front = depth == 0;
       // Where it sits: 0 in front, 1 and 2 behind, moving up as the front
       // card is dragged away.
@@ -520,8 +515,9 @@ class _ForYouDeckState extends State<ForYouDeck>
       child: Stack(
         clipBehavior: Clip.none,
         children: [
+          // Never the same card twice in the pile.
           for (final depth in [2, 1, 0])
-            if (_index + depth < deck.length) layer(depth),
+            if (depth < deck.length) layer(depth),
         ],
       ),
     );
@@ -845,76 +841,6 @@ class _DeckProgress extends StatelessWidget {
           ).createShader(bounds),
           child: _segments((i) => i <= index),
         ),
-      ],
-    );
-  }
-}
-
-// After the last card: a button to see them again, then a nudge to make
-// your own.
-class _CaughtUp extends StatelessWidget {
-  const _CaughtUp({required this.onSeeAgain, this.onCreate});
-
-  final VoidCallback onSeeAgain;
-  final VoidCallback? onCreate;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Material(
-          color: Colors.white,
-          shape: const CircleBorder(),
-          elevation: 1,
-          shadowColor: Colors.black12,
-          child: IconButton(
-            tooltip: l.seeAgain,
-            onPressed: onSeeAgain,
-            style: IconButton.styleFrom(fixedSize: const Size(56, 56)),
-            icon: const Icon(
-              Icons.refresh_rounded,
-              size: 26,
-              color: SynkColors.ink,
-            ),
-          ),
-        ),
-        if (onCreate != null) ...[
-          const SizedBox(height: 8),
-          Wrap(
-            alignment: WrapAlignment.center,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              Text(
-                l.couldntFindYourThing,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: SynkColors.textSecondary,
-                ),
-              ),
-              TextButton(
-                onPressed: onCreate,
-                style: TextButton.styleFrom(
-                  foregroundColor: SynkColors.orangeDark,
-                  minimumSize: const Size(44, 44),
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                ),
-                child: Text(
-                  l.createOne,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    decoration: TextDecoration.underline,
-                    decorationColor: SynkColors.orangeDark,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
       ],
     );
   }
