@@ -4363,4 +4363,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get surpriseMeHint => 'Can\'t decide? Let us pick a plan for you';
+
+  @override
+  String get addedToCalendar => 'Added to your calendar';
+
+  @override
+  String get allowCalendarAccess =>
+      'Allow Synk to use your calendar in Settings to add it.';
+
+  @override
+  String get inYourCalendar => 'In your calendar';
+
+  @override
+  String get didYouSaveToCalendar => 'Did you save it in your calendar?';
+
+  @override
+  String get yesSaved => 'Yes, saved';
 }

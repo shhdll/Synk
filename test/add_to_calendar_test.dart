@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:synk/models/activity_model.dart';
@@ -35,7 +36,6 @@ void main() {
       expect(event.title, 'Padel night');
       expect(event.startDate, DateTime(2026, 11, 23, 18));
       expect(event.endDate, DateTime(2026, 11, 23, 20));
-      expect(event.allDay, isFalse);
     });
 
     test('puts the place name before its address', () {
@@ -74,10 +74,7 @@ void main() {
     });
 
     test('reminds an hour before on iPhone', () {
-      expect(
-        calendarEventFor(activity()).iosParams.reminder,
-        const Duration(hours: 1),
-      );
+      expect(calendarEventFor(activity()).reminder, const Duration(hours: 1));
     });
   });
 
@@ -135,9 +132,79 @@ void main() {
       expect(await adds.isOutdated(moved), isFalse);
     });
 
+    test('knows when it is already in the calendar', () async {
+      expect(await adds.stateOf(at(start, end)), CalendarState.notAdded);
+      await adds.remember(at(start, end), now: now);
+      expect(await adds.stateOf(at(start, end)), CalendarState.added);
+      final moved = at(start.add(const Duration(hours: 2)), end);
+      expect(await adds.stateOf(moved), CalendarState.outdated);
+    });
+
     test('ignores saved data it cannot read', () async {
       SharedPreferences.setMockInitialValues({'calendar_adds': 'not json'});
       expect(await adds.isOutdated(at(start, end)), isFalse);
+    });
+  });
+
+  // Both phones answer on our own channel (AppDelegate.swift,
+  // MainActivity.kt).
+  group('addActivityToCalendar', () {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    const channel = MethodChannel('synk/calendar');
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+
+    tearDown(() => messenger.setMockMethodCallHandler(channel, null));
+
+    Future<CalendarOutcome> addAnswering(
+      Object? answer, {
+      void Function(MethodCall call)? onCall,
+    }) {
+      messenger.setMockMethodCallHandler(channel, (call) async {
+        onCall?.call(call);
+        if (answer is Exception) throw answer;
+        return answer;
+      });
+      return addActivityToCalendar(
+        activity(
+          description: 'Bring water',
+          address: 'Eastern Ring Rd',
+          start: DateTime(2026, 11, 23, 18),
+          end: DateTime(2026, 11, 23, 20),
+        ),
+      );
+    }
+
+    test('sends the activity to the editor', () async {
+      late MethodCall sent;
+      await addAnswering('saved', onCall: (call) => sent = call);
+
+      expect(sent.method, 'add');
+      expect(sent.arguments, {
+        'title': 'Padel night',
+        'description': 'Bring water',
+        'location': 'Granada Mall, Eastern Ring Rd',
+        'start': DateTime(2026, 11, 23, 18).millisecondsSinceEpoch,
+        'end': DateTime(2026, 11, 23, 20).millisecondsSinceEpoch,
+        'reminderMinutes': 60,
+      });
+    });
+
+    test('knows when it was saved, cancelled or not allowed', () async {
+      expect(await addAnswering('saved'), CalendarOutcome.saved);
+      expect(await addAnswering('cancelled'), CalendarOutcome.cancelled);
+      expect(await addAnswering('opened'), CalendarOutcome.opened);
+      expect(await addAnswering('denied'), CalendarOutcome.denied);
+      expect(await addAnswering('unavailable'), CalendarOutcome.unavailable);
+      // Tapped again while the calendar was still opening.
+      expect(await addAnswering('busy'), CalendarOutcome.unavailable);
+    });
+
+    test('a failed call counts as unavailable', () async {
+      expect(
+        await addAnswering(PlatformException(code: 'x')),
+        CalendarOutcome.unavailable,
+      );
     });
   });
 }

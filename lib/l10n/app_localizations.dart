@@ -7590,6 +7590,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Can\'t decide? Let us pick a plan for you'**
   String get surpriseMeHint;
+
+  /// No description provided for @addedToCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to your calendar'**
+  String get addedToCalendar;
+
+  /// No description provided for @allowCalendarAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow Synk to use your calendar in Settings to add it.'**
+  String get allowCalendarAccess;
+
+  /// No description provided for @inYourCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'In your calendar'**
+  String get inYourCalendar;
+
+  /// No description provided for @didYouSaveToCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Did you save it in your calendar?'**
+  String get didYouSaveToCalendar;
+
+  /// No description provided for @yesSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, saved'**
+  String get yesSaved;
 }
 
 class _AppLocalizationsDelegate

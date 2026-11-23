@@ -1,13 +1,43 @@
 import 'dart:convert';
 
-import 'package:add_2_calendar/add_2_calendar.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/activity_model.dart';
 
+// What goes into the calendar for an activity.
+class CalendarEvent {
+  const CalendarEvent({
+    required this.title,
+    required this.startDate,
+    required this.endDate,
+    this.description,
+    this.location,
+    this.reminder,
+  });
+
+  final String title;
+  final String? description;
+  final String? location;
+  final DateTime startDate;
+  final DateTime endDate;
+
+  // iPhone only: an alert this long before it starts.
+  final Duration? reminder;
+
+  Map<String, Object?> toMap() => {
+    'title': title,
+    'description': description,
+    'location': location,
+    'start': startDate.millisecondsSinceEpoch,
+    'end': endDate.millisecondsSinceEpoch,
+    'reminderMinutes': reminder?.inMinutes,
+  };
+}
+
 // The calendar event for an activity: its title, start and end, place,
 // and description. The place name comes first, then its address.
-Event calendarEventFor(Activity activity) {
+CalendarEvent calendarEventFor(Activity activity) {
   final place = activity.location.trim();
   final address = activity.locationAddress?.trim() ?? '';
   final location = [
@@ -16,23 +46,61 @@ Event calendarEventFor(Activity activity) {
   ].join(', ');
   final description = activity.description.trim();
 
-  return Event(
+  return CalendarEvent(
     title: activity.title,
     description: description.isEmpty ? null : description,
     location: location.isEmpty ? null : location,
     startDate: activity.dateTime.toLocal(),
     endDate: activity.endsAt.toLocal(),
-    iosParams: const IOSParams(reminder: Duration(hours: 1)),
+    reminder: const Duration(hours: 1),
   );
 }
 
-// Opens the phone's calendar app with the activity filled in, so the user
-// only has to save it. False when there's no calendar app to open.
-Future<bool> addActivityToCalendar(Activity activity) async {
+// What happened after asking to add an activity to the calendar.
+enum CalendarOutcome {
+  // The user saved it.
+  saved,
+  // Android without calendar access: the calendar opened, but there's no
+  // way to tell whether it was saved.
+  opened,
+  // The user closed the calendar without saving.
+  cancelled,
+  // iPhone before iOS 17: calendar access was refused.
+  denied,
+  // No calendar app, nothing to show it on, or already opening.
+  unavailable,
+}
+
+// Whether an activity was added to the calendar on this phone.
+enum CalendarState {
+  notAdded,
+  // Added with the times it has now; adding again would make a duplicate.
+  added,
+  // Added, but the host has changed the time since.
+  outdated,
+}
+
+const _calendar = MethodChannel('synk/calendar');
+
+// Opens the phone's calendar with the activity filled in, so the user only
+// has to save it, and says whether they did. Our own code on both phones
+// (AppDelegate.swift, MainActivity.kt): the iPhone one shows Apple's
+// editor, the Android one checks the calendar after it closes.
+Future<CalendarOutcome> addActivityToCalendar(Activity activity) async {
   try {
-    return await Add2Calendar.addEvent2Cal(calendarEventFor(activity));
+    final outcome = await _calendar.invokeMethod<String>(
+      'add',
+      calendarEventFor(activity).toMap(),
+    );
+    return switch (outcome) {
+      'saved' => CalendarOutcome.saved,
+      'opened' => CalendarOutcome.opened,
+      'cancelled' => CalendarOutcome.cancelled,
+      'denied' => CalendarOutcome.denied,
+      _ => CalendarOutcome.unavailable,
+    };
   } catch (_) {
-    return false;
+    return CalendarOutcome.unavailable;
   }
 }
 
@@ -66,19 +134,25 @@ class CalendarAdds {
     } catch (_) {}
   }
 
-  // True when [activity] was added to the calendar with a different start
-  // or end than it has now.
-  Future<bool> isOutdated(Activity activity) async {
+  // Whether [activity] is in the calendar, and with its current times.
+  Future<CalendarState> stateOf(Activity activity) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final times = _read(prefs)[activity.id];
-      if (times == null) return false;
-      return !times.$1.isAtSameMomentAs(activity.dateTime) ||
-          !times.$2.isAtSameMomentAs(activity.endsAt);
+      if (times == null) return CalendarState.notAdded;
+      final same =
+          times.$1.isAtSameMomentAs(activity.dateTime) &&
+          times.$2.isAtSameMomentAs(activity.endsAt);
+      return same ? CalendarState.added : CalendarState.outdated;
     } catch (_) {
-      return false;
+      return CalendarState.notAdded;
     }
   }
+
+  // True when [activity] was added to the calendar with a different start
+  // or end than it has now.
+  Future<bool> isOutdated(Activity activity) async =>
+      await stateOf(activity) == CalendarState.outdated;
 
   static Map<String, (DateTime, DateTime)> _read(SharedPreferences prefs) {
     final raw = prefs.getString(_key);

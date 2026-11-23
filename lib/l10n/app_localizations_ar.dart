@@ -4400,4 +4400,20 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get surpriseMeHint => 'محتار؟ خلنا نختار لك نشاط';
+
+  @override
+  String get addedToCalendar => 'تمت الإضافة إلى تقويمك';
+
+  @override
+  String get allowCalendarAccess =>
+      'اسمح لـ Synk باستخدام التقويم من الإعدادات لإضافته';
+
+  @override
+  String get inYourCalendar => 'مضاف إلى تقويمك';
+
+  @override
+  String get didYouSaveToCalendar => 'هل حفظته في تقويمك؟';
+
+  @override
+  String get yesSaved => 'نعم، حفظته';
 }

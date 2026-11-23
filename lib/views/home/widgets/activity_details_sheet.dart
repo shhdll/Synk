@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -145,7 +146,8 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
 
   // Times of activities added to the calendar, saved on this phone.
   final CalendarAdds _calendarAdds = const CalendarAdds();
-  bool _calendarOutdated = false;
+  CalendarState _calendarState = CalendarState.notAdded;
+  bool _addingToCalendar = false;
   String? _leaveError;
 
   // Blocks a second leave, transfer, or delete before its dialog opens.
@@ -600,13 +602,9 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
                               _buildTitleAndBadges(),
                               const SizedBox(height: 18),
                               _buildScheduleAndLocationSection(),
-                              if (_hasMapRow) ...[
+                              if (_hasMapRow || _canAddToCalendar) ...[
                                 const SizedBox(height: 12),
                                 _buildMapRow(),
-                              ],
-                              if (_canAddToCalendar) ...[
-                                const SizedBox(height: 10),
-                                _buildAddToCalendarButton(),
                               ],
                               if (_currentActivity.description.isNotEmpty) ...[
                                 const SizedBox(height: 20),
@@ -1923,7 +1921,26 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
       _currentActivity.hasCoordinates || MapsLauncher.canOpen(_currentActivity);
 
   // Its own card under the date and place: the map buttons and the weather.
+  // The map buttons and weather, with "Add to calendar" under them in the
+  // same card.
   Widget _buildMapRow() {
+    final mapRow = Row(
+      children: [
+        if (_currentActivity.hasCoordinates)
+          Expanded(child: _buildViewOnMapButton()),
+        if (_currentActivity.hasCoordinates &&
+            MapsLauncher.canOpen(_currentActivity))
+          const SizedBox(width: 10),
+        if (MapsLauncher.canOpen(_currentActivity)) _buildOpenInMapsButton(),
+        if (_currentActivity.hasCoordinates && !_currentActivity.isPast)
+          ActivityWeatherCard(
+            latitude: _currentActivity.latitude!,
+            longitude: _currentActivity.longitude!,
+            startsAt: _currentActivity.dateTime,
+          ),
+      ],
+    );
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -1933,20 +1950,12 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
           color: SynkColors.textSecondary.withValues(alpha: 0.10),
         ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (_currentActivity.hasCoordinates)
-            Expanded(child: _buildViewOnMapButton()),
-          if (_currentActivity.hasCoordinates &&
-              MapsLauncher.canOpen(_currentActivity))
-            const SizedBox(width: 10),
-          if (MapsLauncher.canOpen(_currentActivity)) _buildOpenInMapsButton(),
-          if (_currentActivity.hasCoordinates && !_currentActivity.isPast)
-            ActivityWeatherCard(
-              latitude: _currentActivity.latitude!,
-              longitude: _currentActivity.longitude!,
-              startsAt: _currentActivity.dateTime,
-            ),
+          if (_hasMapRow) mapRow,
+          if (_hasMapRow && _canAddToCalendar) const SizedBox(height: 10),
+          if (_canAddToCalendar) _buildAddToCalendarButton(),
         ],
       ),
     );
@@ -1962,39 +1971,82 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
       !_currentActivity.isPast &&
       (_isViewerHost || _participationStatus == 'joined');
 
-  // Whether the user can add it to their calendar, and whether the host
-  // has changed the time since they did.
+  // Whether it's already in the user's calendar, and whether the host has
+  // changed the time since.
   Future<void> _checkCalendar() async {
-    final outdated = await _calendarAdds.isOutdated(_currentActivity);
-    if (mounted && outdated != _calendarOutdated) {
-      setState(() => _calendarOutdated = outdated);
+    final state = await _calendarAdds.stateOf(_currentActivity);
+    if (mounted && state != _calendarState) {
+      setState(() => _calendarState = state);
     }
   }
 
   Widget _buildAddToCalendarButton() {
     final l = context.l10n;
+    // Already added with these times: a green note, like "Joined", and no
+    // button, so it can't be added twice.
+    if (_calendarState == CalendarState.added) {
+      return Container(
+        height: 48,
+        decoration: BoxDecoration(
+          color: _joinedColor.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.event_available_rounded,
+              size: 20,
+              color: _joinedColor,
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                l.inYourCalendar,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: _joinedColor,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final outdated = _calendarState == CalendarState.outdated;
     final button = SizedBox(
       width: double.infinity,
       height: 48,
       child: TextButton.icon(
-        onPressed: _addToCalendar,
+        // Not again while the calendar is still open.
+        onPressed: _addingToCalendar ? null : _addToCalendar,
         icon: Icon(
-          _calendarOutdated
-              ? Icons.edit_calendar_rounded
-              : Icons.event_available_rounded,
+          outdated ? Icons.edit_calendar_rounded : Icons.calendar_month_rounded,
           size: 20,
           color: SynkColors.orangeDark,
         ),
-        label: Text(_calendarOutdated ? l.updateCalendar : l.addToCalendar),
+        label: Text(outdated ? l.updateCalendar : l.addToCalendar),
+        // Soft orange, like the date icon above it, so it stands out from
+        // the white map buttons while matching them in size and shape.
         style: TextButton.styleFrom(
-          foregroundColor: SynkColors.textPrimary,
-          backgroundColor: Colors.white,
-          shape: _mapButtonShape,
+          foregroundColor: SynkColors.orangeDeep,
+          backgroundColor: SynkColors.orangeLight,
+          disabledForegroundColor: SynkColors.orangeDeep.withValues(alpha: 0.5),
+          disabledBackgroundColor: SynkColors.orangeLight.withValues(
+            alpha: 0.6,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
           textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
         ),
       ),
     );
-    if (!_calendarOutdated) return button;
+    if (!outdated) return button;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2027,16 +2079,41 @@ class _ActivityDetailsSheetState extends State<ActivityDetailsSheet> {
 
   // Opens the phone's calendar with the activity filled in; the user
   // saves it there. Its times are remembered to spot a later change.
+  // On iPhone we know whether it was saved and say so; on Android the
+  // calendar app confirms it.
   Future<void> _addToCalendar() async {
+    if (_addingToCalendar) return;
     final activity = _currentActivity;
-    final opened = await addActivityToCalendar(activity);
+    setState(() => _addingToCalendar = true);
+    final outcome = await addActivityToCalendar(activity);
     if (!mounted) return;
-    if (!opened) {
-      SynkFeedback.showError(context, context.l10n.noCalendarAppFound);
-      return;
+    setState(() => _addingToCalendar = false);
+    final l = context.l10n;
+    // The button only changes once it's really in the calendar.
+    switch (outcome) {
+      case CalendarOutcome.saved:
+        break;
+      // Not found. On iPhone that means it wasn't saved. On Android some
+      // calendar apps keep events where Synk can't see them, so ask.
+      case CalendarOutcome.cancelled || CalendarOutcome.opened:
+        if (defaultTargetPlatform != TargetPlatform.android) return;
+        final saved = await SynkDialog.confirm(
+          context,
+          icon: Icons.event_available_rounded,
+          title: l.didYouSaveToCalendar,
+          action: l.yesSaved,
+        );
+        if (!saved || !mounted) return;
+      case CalendarOutcome.denied:
+        SynkFeedback.showError(context, l.allowCalendarAccess);
+        return;
+      case CalendarOutcome.unavailable:
+        SynkFeedback.showError(context, l.noCalendarAppFound);
+        return;
     }
+    SynkFeedback.showToast(context, title: l.addedToCalendar);
     await _calendarAdds.remember(activity);
-    if (mounted) setState(() => _calendarOutdated = false);
+    if (mounted) setState(() => _calendarState = CalendarState.added);
   }
 
   // Closes this sheet (and any page under it) and shows the pin on our map.
