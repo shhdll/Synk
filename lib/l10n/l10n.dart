@@ -146,6 +146,7 @@ String serverMessage(String message) {
       l.serverParticipantLeft,
     'You left the activity and transferred hosting.' =>
       l.serverLeftAndTransferred,
+    'Only the host can remove participants.' => l.serverOnlyHostCanRemove,
     _ => message,
   };
 }

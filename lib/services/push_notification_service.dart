@@ -112,6 +112,7 @@ class PushNotificationService {
           'host_assigned',
           'activity_conflict',
           'activity_full',
+          'participant_removed',
         };
         if (refreshTypes.contains(message.data['type'])) {
           final activityId = message.data['activity_id'] as String?;
@@ -302,7 +303,8 @@ class PushNotificationService {
         type != 'host_assigned' &&
         type != 'activity_conflict' &&
         type != 'activity_full' &&
-        type != 'activity_reminder') return;
+        type != 'activity_reminder' &&
+        type != 'participant_removed') return;
     final activityId = message.data['activity_id'] as String?;
     final isFriendRequest = type == 'friend_request_received';
     final isFriendAccepted = type == 'friend_request_accepted';
@@ -322,7 +324,8 @@ class PushNotificationService {
         type == 'host_assigned' ||
         type == 'activity_conflict' ||
         type == 'activity_full' ||
-        type == 'activity_reminder';
+        type == 'activity_reminder' ||
+        type == 'participant_removed';
     final channelId = activityUpdate
         ? _activityUpdatesChannelId
         : _channelId;
