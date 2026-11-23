@@ -273,7 +273,7 @@
 
     // Plain https://synk.cc with nothing to forward: show the brand only.
     if (options.homeWhenEmpty && !window.location.search && !window.location.hash) {
-      window.location.replace("home.html");
+      window.location.replace("/");
       return;
     }
 
