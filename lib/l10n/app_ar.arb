@@ -1265,5 +1265,10 @@
   "changeFilter": "غير الفلتر",
   "surpriseWhen": "متى",
   "surpriseWhere": "وين",
-  "surpriseMeHint": "محتار؟ خلنا نختار لك نشاط"
+  "surpriseMeHint": "محتار؟ خلنا نختار لك نشاط",
+  "addedToCalendar": "تمت الإضافة إلى تقويمك",
+  "allowCalendarAccess": "اسمح لـ Synk باستخدام التقويم من الإعدادات لإضافته",
+  "inYourCalendar": "مضاف إلى تقويمك",
+  "didYouSaveToCalendar": "هل حفظته في تقويمك؟",
+  "yesSaved": "نعم، حفظته"
 }

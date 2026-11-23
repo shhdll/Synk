@@ -1732,5 +1732,10 @@
   "changeFilter": "Change filter",
   "surpriseWhen": "When",
   "surpriseWhere": "Where",
-  "surpriseMeHint": "Can't decide? Let us pick a plan for you"
+  "surpriseMeHint": "Can't decide? Let us pick a plan for you",
+  "addedToCalendar": "Added to your calendar",
+  "allowCalendarAccess": "Allow Synk to use your calendar in Settings to add it.",
+  "inYourCalendar": "In your calendar",
+  "didYouSaveToCalendar": "Did you save it in your calendar?",
+  "yesSaved": "Yes, saved"
 }

@@ -9,6 +9,9 @@
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <!-- Voice messages in chats. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Checking an activity made it into the calendar after "Add to
+         calendar" (MainActivity.kt). Read only; Synk never writes to it. -->
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
     <!-- Saving chat photos to the gallery (gal). Only Android 10 and older
          ask for it; newer versions need no permission. -->
     <uses-permission
