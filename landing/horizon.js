@@ -236,14 +236,16 @@ void main() {
 
     // CSS stand-in until the first frame, and when WebGL2 isn't there
     const at = opt.direction === "bottom" ? "50% 140%" : "50% -40%";
-    box.style.background = `radial-gradient(ellipse 140% 95% at ${at}, ${palette
-      .map((c, i) => `${c} ${Math.round(58 + (i / (palette.length - 1)) * 42)}%`)
-      .join(", ")})`;
+    const standIn = (list) =>
+      (box.style.background = `radial-gradient(ellipse 140% 95% at ${at}, ${list
+        .map((c, i) => `${c} ${Math.round(58 + (i / (list.length - 1)) * 42)}%`)
+        .join(", ")})`);
+    standIn(palette);
 
     const cv = document.createElement("canvas");
     cv.setAttribute("aria-hidden", "true");
     const gl = cv.getContext("webgl2", { alpha: false, antialias: false, depth: false, stencil: false, powerPreference: "low-power" });
-    if (!gl) return;
+    if (!gl) return standIn;
 
     const compile = (type, src) => {
       const s = gl.createShader(type);
@@ -257,14 +259,14 @@ void main() {
     };
     const vs = compile(gl.VERTEX_SHADER, VERT);
     const fs = compile(gl.FRAGMENT_SHADER, HEADER + SHADER + FOOTER);
-    if (!vs || !fs) return;
+    if (!vs || !fs) return standIn;
     const program = gl.createProgram();
     gl.attachShader(program, vs);
     gl.attachShader(program, fs);
     gl.linkProgram(program);
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
       console.error(gl.getProgramInfoLog(program));
-      return;
+      return standIn;
     }
     gl.useProgram(program);
     const loc = (name) => gl.getUniformLocation(program, name);
@@ -330,5 +332,14 @@ void main() {
     // the canvas is drawing now, so the CSS stand-in isn't needed under it
     box.style.background = "none";
     start();
+
+    // swap the colors in place, for the light and dark switch
+    return (list) => {
+      colors.fill(0);
+      list.slice(0, 6).forEach((c, i) => colors.set(hexToOklab(c), i * 3));
+      gl.uniform3fv(loc("u_colors"), colors);
+      gl.uniform1i(loc("u_count"), Math.min(list.length, 6));
+      render();
+    };
   };
 })();

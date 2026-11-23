@@ -3,6 +3,21 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      (() => {
+        let t = null;
+        try {
+          t = localStorage.getItem("theme");
+        } catch {}
+        const theme = t || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        document.documentElement.dataset.theme = theme;
+        const bar = document.createElement("meta");
+        bar.name = "theme-color";
+        bar.content = theme === "dark" ? "#17151b" : "#f6f1e6";
+        document.head.append(bar);
+      })();
+    </script>
     <meta name="robots" content="noindex" />
     <meta name="referrer" content="no-referrer" />
     <title>Link Expired · Synk</title>

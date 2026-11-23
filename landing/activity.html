@@ -3,6 +3,21 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      (() => {
+        let t = null;
+        try {
+          t = localStorage.getItem("theme");
+        } catch {}
+        const theme = t || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        document.documentElement.dataset.theme = theme;
+        const bar = document.createElement("meta");
+        bar.name = "theme-color";
+        bar.content = theme === "dark" ? "#17151b" : "#f6f1e6";
+        document.head.append(bar);
+      })();
+    </script>
     <meta name="referrer" content="no-referrer" />
     <title>Join on Synk</title>
     <link rel="icon" type="image/png" href="logo.png" />
@@ -65,6 +80,14 @@
 
       .activity-line.when {
         color: var(--coral-dark);
+      }
+      [data-theme="dark"] .activity {
+        background: rgba(40, 37, 45, 0.92);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      }
+
+      [data-theme="dark"] .activity-photo {
+        background: #3a2820;
       }
     </style>
   </head>
