@@ -9,9 +9,6 @@ import 'package:synk/views/home/widgets/streak_widgets.dart';
 void main() {
   const me = 'user-me';
 
-  Activity hosted(String id, DateTime at) =>
-      Activity(id: id, title: id, dateTime: at, location: 'X', hostId: me);
-
   Widget app(Widget child, {Locale locale = const Locale('en')}) => MaterialApp(
     locale: locale,
     localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -125,10 +122,13 @@ void main() {
     testWidgets('shows the streak and opens the sheet', (tester) async {
       final store = ActivityStore()
         ..currentUserId = me
-        ..setMine([
-          hosted('a', DateTime.now().subtract(const Duration(days: 7))),
-          hosted('b', DateTime.now().subtract(const Duration(days: 14))),
-        ]);
+        ..setCheckedIn(
+          count: 2,
+          times: [
+            DateTime.now().subtract(const Duration(days: 7)),
+            DateTime.now().subtract(const Duration(days: 14)),
+          ],
+        );
 
       await tester.pumpWidget(app(StreakChip(activityStore: store)));
       expect(find.text('2'), findsOneWidget);
@@ -140,14 +140,15 @@ void main() {
       expect(find.text('This week'), findsOneWidget);
     });
 
-    testWidgets('updates when activities change', (tester) async {
+    testWidgets('updates after a check-in', (tester) async {
       final store = ActivityStore()..currentUserId = me;
       await tester.pumpWidget(app(StreakChip(activityStore: store)));
       expect(find.text('0'), findsOneWidget);
 
-      store.setMine([
-        hosted('a', DateTime.now().subtract(const Duration(minutes: 1))),
-      ]);
+      store.setCheckedIn(
+        count: 1,
+        times: [DateTime.now().subtract(const Duration(minutes: 1))],
+      );
       await tester.pump();
       expect(find.text('1'), findsOneWidget);
     });
