@@ -477,9 +477,6 @@ class _HomeViewState extends State<HomeView> {
                     onOpen: _onActivityTap,
                     onJoined: () =>
                         _discoveryController.loadFeed(isSilent: true),
-                    onCreate: widget.onCreateActivity == null
-                        ? null
-                        : () => widget.onCreateActivity!(),
                     swipes: _swipes,
                   ),
                 ],
