@@ -2926,10 +2926,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get aboutLetterTitle => 'رسالة لك';
 
   @override
-  String get aboutLetterFrom => 'منّا نحن الستة';
+  String get aboutLetterFrom => 'منا نحن الستة';
 
   @override
-  String get madeInRiyadh => 'صُنع بحب في الرياض';
+  String get madeInRiyadh => 'صنع بحب في الرياض';
 
   @override
   String appVersion(Object version, Object build) {
@@ -2984,7 +2984,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notifPrefMarketingHint =>
-      'لما يكون الجو حلو للطلعة، أو سلسلتك بتنقطع. مرة باليوم كحد أقصى.';
+      'لما يكون الجو حلو للطلعة، أو سلسلتك بتنقطع. مرة باليوم كحد أقصى';
 
   @override
   String get notifPrefIphone => 'آيفون';
@@ -3388,10 +3388,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get hiddenProfileExplanation =>
-      'هذا الملف مخفي عنك. يحدث هذا عندما يحد شخص من يستطيع رؤيته، أو عندما يكون الحساب موقوفًا. ما زال يُحسب ضمن المشاركين.';
+      'هذا الملف مخفي عنك. يحدث هذا عندما يحد شخص من يستطيع رؤيته، أو عندما يكون الحساب موقوفا. ما زال يحسب ضمن المشاركين';
 
   @override
-  String get thisActivityWasDeleted => 'تم حذف هذا النشاط.';
+  String get thisActivityWasDeleted => 'تم حذف هذا النشاط';
 
   @override
   String get suggestedForYou => 'مقترحون لك';
@@ -3567,7 +3567,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get removePastActivityMessage =>
-      'تزال من قائمتك ومن أنشطتك الأخيرة، ويبقى النشاط ظاهرا للآخرين.';
+      'تزال من قائمتك ومن أنشطتك الأخيرة، ويبقى النشاط ظاهرا للآخرين';
 
   @override
   String get searchActivities => 'ابحث في الأنشطة';
@@ -3579,7 +3579,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get hideFromRecentTitle => 'إخفاء من الأنشطة الأخيرة؟';
 
   @override
-  String get hideFromRecentMessage => 'لن يظهر لأصدقائك في ملفك بعد الآن.';
+  String get hideFromRecentMessage => 'لن يظهر لأصدقائك في ملفك بعد الآن';
 
   @override
   String get hide => 'إخفاء';
@@ -4215,7 +4215,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get allowPhotosToSave =>
-      'اسمح لـ Synk يضيف للصور، وبعدها جرّب مرة ثانية.';
+      'اسمح لـ Synk يضيف للصور، وبعدها جرب مرة ثانية';
 
   @override
   String get allPhotos => 'كل الصور';
@@ -4255,7 +4255,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String shareProfileMessage(Object name, Object link) {
-    return 'تعرّف على $name في Synk! ✨\n$link';
+    return 'تعرف على $name في Synk! ✨\n$link';
   }
 
   @override
