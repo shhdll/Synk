@@ -13,7 +13,6 @@ class SupportController extends ChangeNotifier {
   String _message = '';
   bool _isSending = false;
   bool _sent = false;
-  String? _replyTo;
   final List<XFile> _screenshots = [];
 
   SupportCategory get category => _category;
@@ -22,9 +21,6 @@ class SupportController extends ChangeNotifier {
   bool get sent => _sent;
   int get length => _message.trim().length;
   bool get canSend => length >= SupportModel.minLength && !_isSending;
-
-  // Where the team replies: the account email unless the user changed it.
-  String? get email => _replyTo ?? _model.userEmail;
 
   // Screenshots can go with any kind of message.
   List<XFile> get screenshots => List.unmodifiable(_screenshots);
@@ -38,12 +34,6 @@ class SupportController extends ChangeNotifier {
 
   void setMessage(String value) {
     _message = value;
-    notifyListeners();
-  }
-
-  void setReplyTo(String value) {
-    final trimmed = value.trim();
-    _replyTo = trimmed.isEmpty || trimmed == _model.userEmail ? null : trimmed;
     notifyListeners();
   }
 
@@ -91,7 +81,6 @@ class SupportController extends ChangeNotifier {
         message: _message,
         appVersion: version,
         screenshots: paths,
-        replyTo: _replyTo,
       );
       _sent = result == SupportResult.sent;
       return result;
