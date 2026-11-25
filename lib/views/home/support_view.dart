@@ -53,19 +53,6 @@ class _SupportViewState extends State<SupportView> {
     }
   }
 
-  Future<void> _changeEmail() async {
-    final email = await showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: SynkColors.background,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) => _EmailSheet(initial: _controller.email ?? ''),
-    );
-    if (email != null) _controller.setReplyTo(email);
-  }
-
   String? _hint(SupportCategory category) => switch (category) {
     SupportCategory.problem => context.l10n.supportBugHint,
     SupportCategory.feedback => context.l10n.supportIdeaHint,
@@ -205,16 +192,6 @@ class _SupportViewState extends State<SupportView> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (_controller.email != null) ...[
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: SynkColors.textSecondary.withValues(alpha: 0.15),
-                ),
-                const SizedBox(height: 4),
-                _ReplyToCard(email: _controller.email!, onChange: _changeEmail),
-                const SizedBox(height: 8),
-              ],
               _SendButton(
                 label: l10n.send,
                 enabled: _controller.canSend,
@@ -512,62 +489,6 @@ class _DashedBorder extends CustomPainter {
   bool shouldRepaint(_DashedBorder oldDelegate) => oldDelegate.color != color;
 }
 
-class _ReplyToCard extends StatelessWidget {
-  const _ReplyToCard({required this.email, required this.onChange});
-
-  final String email;
-  final VoidCallback onChange;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onChange,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsetsDirectional.fromSTEB(4, 8, 4, 8),
-        // Softer than the form, since it rarely needs changing.
-        child: Opacity(
-          opacity: 0.75,
-          child: Row(
-            children: [
-              const Icon(
-                Icons.mail_outline_rounded,
-                size: 20,
-                color: SynkColors.textSecondary,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  email,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textDirection: TextDirection.ltr,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: SynkColors.textSecondary,
-                  ),
-                ),
-              ),
-              Tooltip(
-                message: context.l10n.supportChange,
-                child: const Padding(
-                  padding: EdgeInsets.all(8),
-                  child: Icon(
-                    Icons.edit_outlined,
-                    size: 20,
-                    color: SynkColors.orangeDark,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 // Grey while disabled, orange with a send icon once there's enough to send.
 class _SendButton extends StatelessWidget {
   const _SendButton({
@@ -688,95 +609,3 @@ class _SentState extends StatelessWidget {
   }
 }
 
-class _EmailSheet extends StatefulWidget {
-  const _EmailSheet({required this.initial});
-
-  final String initial;
-
-  @override
-  State<_EmailSheet> createState() => _EmailSheetState();
-}
-
-class _EmailSheetState extends State<_EmailSheet> {
-  late final _field = TextEditingController(text: widget.initial);
-  String? _error;
-
-  static final _pattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
-
-  @override
-  void dispose() {
-    _field.dispose();
-    super.dispose();
-  }
-
-  void _save() {
-    final value = _field.text.trim();
-    if (!_pattern.hasMatch(value)) {
-      setState(() => _error = context.l10n.supportInvalidEmail);
-      return;
-    }
-    Navigator.of(context).pop(value);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
-      borderSide: BorderSide(
-        color: SynkColors.textSecondary.withValues(alpha: 0.15),
-      ),
-    );
-
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        16,
-        20,
-        16,
-        16 + MediaQuery.viewInsetsOf(context).bottom,
-      ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.supportChangeEmailTitle,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: SynkColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _field,
-              autofocus: true,
-              keyboardType: TextInputType.emailAddress,
-              autocorrect: false,
-              textDirection: TextDirection.ltr,
-              onChanged: (_) {
-                if (_error != null) setState(() => _error = null);
-              },
-              onSubmitted: (_) => _save(),
-              decoration: InputDecoration(
-                hintText: l10n.emailAddress,
-                errorText: _error,
-                filled: true,
-                fillColor: Colors.white,
-                border: border,
-                enabledBorder: border,
-                focusedBorder: border.copyWith(
-                  borderSide: const BorderSide(color: SynkColors.orange),
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-            SettingsButton(label: l10n.save, onPressed: _save),
-          ],
-        ),
-      ),
-    );
-  }
-}

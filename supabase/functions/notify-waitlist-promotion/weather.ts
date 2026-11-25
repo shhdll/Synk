@@ -22,10 +22,10 @@ const BATCH = 50;
 
 type Hourly = {
   time: string[];
-  temperature_2m: number[];
+  temperature_2m: (number | null)[];
   precipitation_probability: (number | null)[];
-  weather_code: number[];
-  wind_speed_10m: number[];
+  weather_code: (number | null)[];
+  wind_speed_10m: (number | null)[];
 };
 
 function isNiceEvening(hourly: Hourly): number | null {
@@ -35,11 +35,15 @@ function isNiceEvening(hourly: Hourly): number | null {
     if (!EVENING.includes(hour)) continue;
     const temp = hourly.temperature_2m[i];
     const rain = hourly.precipitation_probability[i] ?? 0;
+    const weatherCode = hourly.weather_code[i];
+    const wind = hourly.wind_speed_10m[i];
     if (
-      temp < MIN_TEMP || temp > MAX_TEMP ||
+      !Number.isFinite(temp) || !Number.isFinite(rain) ||
+      !Number.isFinite(weatherCode) || !Number.isFinite(wind) ||
+      temp! < MIN_TEMP || temp! > MAX_TEMP ||
       rain > MAX_RAIN_CHANCE ||
-      hourly.wind_speed_10m[i] > MAX_WIND_KMH ||
-      hourly.weather_code[i] > MAX_WEATHER_CODE
+      wind! > MAX_WIND_KMH ||
+      weatherCode! > MAX_WEATHER_CODE
     ) {
       return null;
     }
