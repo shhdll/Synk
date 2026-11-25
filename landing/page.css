@@ -58,6 +58,7 @@ html[lang="ar"] [data-l="en"] {
   left: 16px;
   right: 16px;
   z-index: 10;
+  direction: ltr;
   display: flex;
   align-items: center;
   justify-content: space-between;
